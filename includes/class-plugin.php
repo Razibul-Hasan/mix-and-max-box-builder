@@ -20,6 +20,8 @@ final class Plugin {
 
 		$modules = array(
 			Installer::class,
+			SettingsSettings::class,
+			CampaignsPost_Type::class,
 			Assets::class,
 		);
 

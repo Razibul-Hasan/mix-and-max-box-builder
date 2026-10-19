@@ -10,6 +10,7 @@ namespace MixMax\BoxBuilder\Tests\Integration;
 defined( 'ABSPATH' ) || exit;
 
 use MixMax\BoxBuilder\Installer;
+use MixMax\BoxBuilder\Settings\Settings;
 use MixMax\BoxBuilder\Uninstaller;
 
 /**
@@ -37,7 +38,7 @@ class MultisiteLifecycleTest extends \WP_UnitTestCase {
 		try {
 			$this->assertSame( MMBB_VERSION, get_option( 'mmbb_version' ) );
 			$this->assertSame( Installer::DB_VERSION, get_option( 'mmbb_db_version' ) );
-			$this->assertSame( array( 'delete_data' => false ), get_option( 'mmbb_settings' ) );
+			$this->assertSame( Settings::defaults(), get_option( 'mmbb_settings' ) );
 			update_option( 'mmbb_settings', array( 'delete_data' => true ) );
 			update_option( 'mmbb_test', 'delete' );
 		} finally {
@@ -67,7 +68,7 @@ class MultisiteLifecycleTest extends \WP_UnitTestCase {
 			switch_to_blog( $site_id );
 			try {
 				$this->assertSame( MMBB_VERSION, get_option( 'mmbb_version' ) );
-				$this->assertSame( array( 'delete_data' => false ), get_option( 'mmbb_settings' ) );
+				$this->assertSame( Settings::defaults(), get_option( 'mmbb_settings' ) );
 			} finally {
 				restore_current_blog();
 			}

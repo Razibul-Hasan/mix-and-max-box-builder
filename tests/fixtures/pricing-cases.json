@@ -1,0 +1,229 @@
+{
+	"description": "Shared by tests/php/unit/PricingTest.php and tests/js/pricing.test.js. Amounts in items and expectations are integer minor units; config amounts are store-currency numbers.",
+	"cases": [
+		{
+			"name": "tiered: empty box is invalid and points at the first tier",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 4, "discount_type": "percent", "value": 10 }, { "qty": 6, "discount_type": "percent", "value": 15 }, { "qty": 12, "discount_type": "percent", "value": 25 } ] },
+			"items": [],
+			"options": {},
+			"expected": { "valid": false, "errors": [ "empty" ], "count": 0, "subtotal": 0, "discount": 0, "fee": 0, "total": 0, "tier": null, "next": { "qty": 4, "needed": 4, "discount_type": "percent", "value": 10 } }
+		},
+		{
+			"name": "tiered: below the first tier is valid with no discount",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 4, "discount_type": "percent", "value": 10 }, { "qty": 6, "discount_type": "percent", "value": 15 }, { "qty": 12, "discount_type": "percent", "value": 25 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 3, "unit_price_minor": 1000 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 3, "subtotal": 3000, "discount": 0, "fee": 0, "total": 3000, "tier": null, "next": { "qty": 4, "needed": 1, "discount_type": "percent", "value": 10 } }
+		},
+		{
+			"name": "tiered: exactly on the first tier boundary",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 4, "discount_type": "percent", "value": 10 }, { "qty": 6, "discount_type": "percent", "value": 15 }, { "qty": 12, "discount_type": "percent", "value": 25 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 2, "unit_price_minor": 1000 }, { "product_id": 2, "variation_id": 0, "qty": 2, "unit_price_minor": 1000 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 4, "subtotal": 4000, "discount": 400, "fee": 0, "total": 3600, "tier": { "qty": 4, "discount_type": "percent", "value": 10 }, "next": { "qty": 6, "needed": 2, "discount_type": "percent", "value": 15 } }
+		},
+		{
+			"name": "tiered: one above a boundary keeps the lower tier",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 4, "discount_type": "percent", "value": 10 }, { "qty": 6, "discount_type": "percent", "value": 15 }, { "qty": 12, "discount_type": "percent", "value": 25 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 5, "unit_price_minor": 1000 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 5, "subtotal": 5000, "discount": 500, "fee": 0, "total": 4500, "tier": { "qty": 4, "discount_type": "percent", "value": 10 }, "next": { "qty": 6, "needed": 1, "discount_type": "percent", "value": 15 } }
+		},
+		{
+			"name": "tiered: second tier",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 4, "discount_type": "percent", "value": 10 }, { "qty": 6, "discount_type": "percent", "value": 15 }, { "qty": 12, "discount_type": "percent", "value": 25 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 6, "unit_price_minor": 1500 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 6, "subtotal": 9000, "discount": 1350, "fee": 0, "total": 7650, "tier": { "qty": 6, "discount_type": "percent", "value": 15 }, "next": { "qty": 12, "needed": 6, "discount_type": "percent", "value": 25 } }
+		},
+		{
+			"name": "tiered: full box reaches the top tier with nothing next",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 4, "discount_type": "percent", "value": 10 }, { "qty": 6, "discount_type": "percent", "value": 15 }, { "qty": 12, "discount_type": "percent", "value": 25 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 12, "unit_price_minor": 500 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 12, "subtotal": 6000, "discount": 1500, "fee": 0, "total": 4500, "tier": { "qty": 12, "discount_type": "percent", "value": 25 }, "next": null }
+		},
+		{
+			"name": "tiered: over capacity is invalid and gets no discount",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 4, "discount_type": "percent", "value": 10 }, { "qty": 12, "discount_type": "percent", "value": 25 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 13, "unit_price_minor": 100 } ],
+			"options": {},
+			"expected": { "valid": false, "errors": [ "over_capacity" ], "count": 13, "subtotal": 1300, "discount": 0, "fee": 0, "total": 1300, "tier": null, "next": null }
+		},
+		{
+			"name": "tiered: below the minimum to check out",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 4 }, "tiers": [ { "qty": 4, "discount_type": "percent", "value": 10 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 3, "unit_price_minor": 1000 } ],
+			"options": {},
+			"expected": { "valid": false, "errors": [ "below_minimum" ], "count": 3, "subtotal": 3000, "discount": 0, "fee": 0, "total": 3000, "tier": null, "next": { "qty": 4, "needed": 1, "discount_type": "percent", "value": 10 } }
+		},
+		{
+			"name": "rounding: 3 x 3.33 at 15% rounds half up once",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 3, "discount_type": "percent", "value": 15 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 3, "unit_price_minor": 333 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 3, "subtotal": 999, "discount": 150, "fee": 0, "total": 849, "tier": { "qty": 3, "discount_type": "percent", "value": 15 }, "next": null }
+		},
+		{
+			"name": "rounding: an exact half rounds up",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 1, "discount_type": "percent", "value": 5 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 1, "unit_price_minor": 10 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 1, "subtotal": 10, "discount": 1, "fee": 0, "total": 9, "tier": { "qty": 1, "discount_type": "percent", "value": 5 }, "next": null }
+		},
+		{
+			"name": "rounding: a fractional percent",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 2, "discount_type": "percent", "value": 12.5 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 2, "unit_price_minor": 1001 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 2, "subtotal": 2002, "discount": 250, "fee": 0, "total": 1752, "tier": { "qty": 2, "discount_type": "percent", "value": 12.5 }, "next": null }
+		},
+		{
+			"name": "percent: the 90 percent maximum",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 1, "discount_type": "percent", "value": 90 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 1, "unit_price_minor": 1999 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 1, "subtotal": 1999, "discount": 1799, "fee": 0, "total": 200, "tier": { "qty": 1, "discount_type": "percent", "value": 90 }, "next": null }
+		},
+		{
+			"name": "fixed_amount: takes a flat amount off",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 2, "discount_type": "fixed_amount", "value": 5 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 2, "unit_price_minor": 1000 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 2, "subtotal": 2000, "discount": 500, "fee": 0, "total": 1500, "tier": { "qty": 2, "discount_type": "fixed_amount", "value": 5 }, "next": null }
+		},
+		{
+			"name": "fixed_amount: never discounts more than the subtotal",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 2, "discount_type": "fixed_amount", "value": 50 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 2, "unit_price_minor": 100 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 2, "subtotal": 200, "discount": 200, "fee": 0, "total": 0, "tier": { "qty": 2, "discount_type": "fixed_amount", "value": 50 }, "next": null }
+		},
+		{
+			"name": "box_price: tier price below the items",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 3, "discount_type": "box_price", "value": 20 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 3, "unit_price_minor": 1000 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 3, "subtotal": 3000, "discount": 1000, "fee": 0, "total": 2000, "tier": { "qty": 3, "discount_type": "box_price", "value": 20 }, "next": null }
+		},
+		{
+			"name": "box_price: a price above the items never raises the total",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 3, "discount_type": "box_price", "value": 50 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 3, "unit_price_minor": 1000 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 3, "subtotal": 3000, "discount": 0, "fee": 0, "total": 3000, "tier": { "qty": 3, "discount_type": "box_price", "value": 50 }, "next": null }
+		},
+		{
+			"name": "mixed lines with a variation",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 5, "discount_type": "percent", "value": 20 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 2, "unit_price_minor": 250 }, { "product_id": 2, "variation_id": 5, "qty": 3, "unit_price_minor": 199 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 5, "subtotal": 1097, "discount": 219, "fee": 0, "total": 878, "tier": { "qty": 5, "discount_type": "percent", "value": 20 }, "next": null }
+		},
+		{
+			"name": "ignores zero and negative quantities",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 4, "discount_type": "percent", "value": 10 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 0, "unit_price_minor": 500 }, { "product_id": 2, "variation_id": 0, "qty": -2, "unit_price_minor": 500 }, { "product_id": 3, "variation_id": 0, "qty": 4, "unit_price_minor": 0 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 4, "subtotal": 0, "discount": 0, "fee": 0, "total": 0, "tier": { "qty": 4, "discount_type": "percent", "value": 10 }, "next": null }
+		},
+		{
+			"name": "gift wrap: the fee is added after the discount and never discounted",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 4, "discount_type": "percent", "value": 10 } ], "extras": { "gift_message": true, "gift_wrap": { "enabled": true, "fee": 4.5 } } },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 4, "unit_price_minor": 1000 } ],
+			"options": { "gift_wrap": true },
+			"expected": { "valid": true, "errors": [], "count": 4, "subtotal": 4000, "discount": 400, "fee": 450, "total": 4050, "tier": { "qty": 4, "discount_type": "percent", "value": 10 }, "next": null }
+		},
+		{
+			"name": "gift wrap: requested but disabled in the campaign",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 4, "discount_type": "percent", "value": 10 } ], "extras": { "gift_wrap": { "enabled": false, "fee": 4.5 } } },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 4, "unit_price_minor": 1000 } ],
+			"options": { "gift_wrap": true },
+			"expected": { "valid": true, "errors": [], "count": 4, "subtotal": 4000, "discount": 400, "fee": 0, "total": 3600, "tier": { "qty": 4, "discount_type": "percent", "value": 10 }, "next": null }
+		},
+		{
+			"name": "gift wrap: enabled in the campaign but not chosen",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 4, "discount_type": "percent", "value": 10 } ], "extras": { "gift_wrap": { "enabled": true, "fee": 4.5 } } },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 4, "unit_price_minor": 1000 } ],
+			"options": { "gift_wrap": false },
+			"expected": { "valid": true, "errors": [], "count": 4, "subtotal": 4000, "discount": 400, "fee": 0, "total": 3600, "tier": { "qty": 4, "discount_type": "percent", "value": 10 }, "next": null }
+		},
+		{
+			"name": "gift wrap: no fee on an invalid box",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [], "extras": { "gift_wrap": { "enabled": true, "fee": 3 } } },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 13, "unit_price_minor": 100 } ],
+			"options": { "gift_wrap": true },
+			"expected": { "valid": false, "errors": [ "over_capacity" ], "count": 13, "subtotal": 1300, "discount": 0, "fee": 0, "total": 1300, "tier": null, "next": null }
+		},
+		{
+			"name": "zero-decimal currency: config amounts are whole units",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 2, "discount_type": "fixed_amount", "value": 300 } ], "extras": { "gift_wrap": { "enabled": true, "fee": 150 } } },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 2, "unit_price_minor": 1000 } ],
+			"options": { "decimals": 0, "gift_wrap": true },
+			"expected": { "valid": true, "errors": [], "count": 2, "subtotal": 2000, "discount": 300, "fee": 150, "total": 1850, "tier": { "qty": 2, "discount_type": "fixed_amount", "value": 300 }, "next": null }
+		},
+		{
+			"name": "three-decimal currency",
+			"config": { "type": "tiered", "box": { "capacity": 12, "min_items": 1 }, "tiers": [ { "qty": 1, "discount_type": "fixed_amount", "value": 1.5 } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 1, "unit_price_minor": 5000 } ],
+			"options": { "decimals": 3 },
+			"expected": { "valid": true, "errors": [], "count": 1, "subtotal": 5000, "discount": 1500, "fee": 0, "total": 3500, "tier": { "qty": 1, "discount_type": "fixed_amount", "value": 1.5 }, "next": null }
+		},
+		{
+			"name": "fixed box: a full box of the chosen size",
+			"config": { "type": "fixed", "sizes": [ { "qty": 4, "discount_type": "percent", "value": 10, "tag": "" }, { "qty": 6, "discount_type": "percent", "value": 15, "tag": "best_value" } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 2, "unit_price_minor": 1000 }, { "product_id": 2, "variation_id": 0, "qty": 2, "unit_price_minor": 1000 }, { "product_id": 3, "variation_id": 0, "qty": 2, "unit_price_minor": 1000 } ],
+			"options": { "size": 6 },
+			"expected": { "valid": true, "errors": [], "count": 6, "subtotal": 6000, "discount": 900, "fee": 0, "total": 5100, "tier": { "qty": 6, "discount_type": "percent", "value": 15 }, "next": null }
+		},
+		{
+			"name": "fixed box: every slot must be filled",
+			"config": { "type": "fixed", "sizes": [ { "qty": 4, "discount_type": "percent", "value": 10, "tag": "" }, { "qty": 6, "discount_type": "percent", "value": 15, "tag": "" } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 5, "unit_price_minor": 1000 } ],
+			"options": { "size": 6 },
+			"expected": { "valid": false, "errors": [ "wrong_count" ], "count": 5, "subtotal": 5000, "discount": 0, "fee": 0, "total": 5000, "tier": null, "next": null }
+		},
+		{
+			"name": "fixed box: no size chosen",
+			"config": { "type": "fixed", "sizes": [ { "qty": 4, "discount_type": "percent", "value": 10, "tag": "" } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 4, "unit_price_minor": 1000 } ],
+			"options": {},
+			"expected": { "valid": false, "errors": [ "invalid_size" ], "count": 4, "subtotal": 4000, "discount": 0, "fee": 0, "total": 4000, "tier": null, "next": null }
+		},
+		{
+			"name": "fixed box: a size the campaign does not offer",
+			"config": { "type": "fixed", "sizes": [ { "qty": 4, "discount_type": "percent", "value": 10, "tag": "" }, { "qty": 6, "discount_type": "percent", "value": 15, "tag": "" } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 5, "unit_price_minor": 1000 } ],
+			"options": { "size": 5 },
+			"expected": { "valid": false, "errors": [ "invalid_size" ], "count": 5, "subtotal": 5000, "discount": 0, "fee": 0, "total": 5000, "tier": null, "next": null }
+		},
+		{
+			"name": "fixed box: a size priced as a box price",
+			"config": { "type": "fixed", "sizes": [ { "qty": 4, "discount_type": "box_price", "value": 30, "tag": "popular" } ] },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 4, "unit_price_minor": 1000 } ],
+			"options": { "size": 4 },
+			"expected": { "valid": true, "errors": [], "count": 4, "subtotal": 4000, "discount": 1000, "fee": 0, "total": 3000, "tier": { "qty": 4, "discount_type": "box_price", "value": 30 }, "next": null }
+		},
+		{
+			"name": "bundle: exactly N items for one price",
+			"config": { "type": "bundle", "bundle": { "qty": 3, "price": 18 } },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 1, "unit_price_minor": 900 }, { "product_id": 2, "variation_id": 0, "qty": 1, "unit_price_minor": 1000 }, { "product_id": 3, "variation_id": 0, "qty": 1, "unit_price_minor": 1100 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 3, "subtotal": 3000, "discount": 1200, "fee": 0, "total": 1800, "tier": { "qty": 3, "discount_type": "box_price", "value": 18 }, "next": null }
+		},
+		{
+			"name": "bundle: a price above the items never raises the total",
+			"config": { "type": "bundle", "bundle": { "qty": 3, "price": 40 } },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 3, "unit_price_minor": 900 } ],
+			"options": {},
+			"expected": { "valid": true, "errors": [], "count": 3, "subtotal": 2700, "discount": 0, "fee": 0, "total": 2700, "tier": { "qty": 3, "discount_type": "box_price", "value": 40 }, "next": null }
+		},
+		{
+			"name": "bundle: the wrong number of items",
+			"config": { "type": "bundle", "bundle": { "qty": 3, "price": 18 } },
+			"items": [ { "product_id": 1, "variation_id": 0, "qty": 2, "unit_price_minor": 900 } ],
+			"options": {},
+			"expected": { "valid": false, "errors": [ "wrong_count" ], "count": 2, "subtotal": 1800, "discount": 0, "fee": 0, "total": 1800, "tier": null, "next": null }
+		}
+	]
+}

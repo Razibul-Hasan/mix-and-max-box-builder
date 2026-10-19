@@ -7,7 +7,7 @@ Updated by the agent at the end of every phase. Newest entry first under each ph
 | 0 | Tooling and repository | done; Docker checks skipped | `Phase 0: Tooling and repository` |
 | 1 | Plugin skeleton and lifecycle | done; Docker checks skipped | `Phase 1: Plugin skeleton and lifecycle` |
 | 2 | Design system inside the plugin | done; Docker checks skipped | `Phase 2: Design system inside the plugin` |
-| 3 | Data layer and pricing engine | not started | |
+| 3 | Data layer and pricing engine | done; Docker checks skipped | `Phase 3: Data layer and pricing engine` |
 | 4 | REST API for the admin | not started | |
 | 5 | Admin app: shell, dashboard, campaigns | not started | |
 | 6 | Campaign wizard | not started | |
@@ -43,6 +43,70 @@ installable on the minimum supported PHP branch.
 | WordPress / WooCommerce / Plugin Check in wp-env | Not installed here; latest release URLs configured, exact installed versions pending Docker run |
 
 ## Log
+
+### Phase 3 — Data layer and pricing engine (2026-10-19)
+
+**Done:** Added the private `mmbb_campaign` post type (all capabilities map to
+`manage_woocommerce`), `Campaigns\Config` (schema, defaults, sanitize, validate),
+`Campaigns\Status` (computed status), `Campaign_Repository` (find, query, create
+from template, save, publish/unpublish, duplicate, pause, resume, delete), five
+`Templates`, `Settings\Settings` (option `mmbb_settings`, all planned fields), the
+`mmbb_events` and `mmbb_stats_daily` tables in the installer registry
+(`DB_VERSION` 0.3.0), the pure `Pricing` engine with its JS twin
+`src/shared/pricing.js`, and `Quotes` (store decimals plus the
+`mmbb_pricing_quote` filter). Hooks: `mmbb_campaign_config_defaults`,
+`mmbb_templates`, `mmbb_pricing_quote`, `mmbb_campaign_saved`; documented in a
+"Developers" readme FAQ entry. `Plugin` now boots Settings and Post_Type.
+
+**Decisions:**
+
+- Money in a config (fixed amounts, box prices, bundle price, gift wrap fee) is a
+  store-currency number such as 4.5. `Pricing` converts it with the `decimals`
+  option (this is why the option exists); items, quotes and totals are integer minor units.
+- Pure classes (`Pricing`, `Config`, `Status`) call no WordPress function, so they run
+  in the unit suite. Filters live in `Quotes` and the repository. Config reports
+  validation problems as `{ path, code }`; REST (Phase 4) translates the codes.
+- A quote that is not valid has no discount, no fee and no tier; `next` is still
+  returned for a tiered box so the UI can show progress. Errors: `empty`,
+  `below_minimum`, `over_capacity`, `invalid_size`, `wrong_count`.
+- Tiers and sizes: quantities are clamped to the capacity, then the first row per
+  quantity wins, then they are sorted. Lowering the capacity re-clamps everything
+  that depends on it.
+- "Ending soon" counts 7 days on the store wall clock (`wp_timezone()`), so a week
+  across a daylight-saving change is still 7 days. Status is computed in PHP, so
+  `query()` loads all campaigns and filters/paginates in memory (a store has few).
+- `Settings::sanitize` returns only the keys it was given (never fills defaults), and
+  `Settings::get/all` merge defaults on read; `Settings::update` merges partial
+  changes for the Phase 4 route. The installer now seeds the full defaults. Empty
+  `cta_label` and `empty_slot_hint` mean "use the built-in translated text".
+- Query `orderby` supports `date`, `title`, `modified`; `revenue` and `conversion`
+  need Phase 9 data.
+
+**Deviations from the plan (and why):**
+
+- Post meta keys `_mmbb_config` and `_mmbb_paused` start with an underscore because
+  the plan names them, as in Phase 1 for `_mmbb_campaign_id`.
+- Phase 1 integration tests asserted the seeded settings were exactly
+  `{ delete_data: false }`; they now compare with `Settings::defaults()`, and one
+  fixture lists `enabled` before `delete_data` because sanitizing follows the schema order.
+- The "Build-a-gift" template's "no prices inside" and "gift message required" have no
+  config key in the Phase 3 schema; the template turns `gift_message` on and the rest
+  is an open issue.
+- Template prices (bundle 20, gift wrap 3) are placeholders in the store currency.
+
+**Checks run:** build ✅ · lint:js ✅ · lint:css ✅ · composer lint ✅ (30 files) · test:js ✅ (90 tests, 4 suites; 33 shared pricing fixtures plus the minor-unit converter) · test:unit ✅ (63 tests, 378 assertions: Config bad input, bounds, tier sort and dedupe, length clamps; status including a DST edge; the same 33 pricing fixtures) · test:php ⏭ · Plugin Check ⏭
+
+**Skipped checks (and why):** Docker is not installed, so `npx wp-env start`,
+`npm run test:php` and Plugin Check could not run. The new integration tests
+(`CampaignRepositoryTest`, `SettingsAndSchemaTest`: repository CRUD, duplicate,
+query counts, status, templates, filters, settings sanitizing, both tables and
+their keys) are authored and linted but **not executed**. `dbDelta` output, the
+post type registration and `WP_DEBUG` notices are unverified.
+
+**Open issues:** Run the Docker checks and fix anything the integration tests find.
+Decide how the gift template expresses "no prices inside" and "message required"
+(new config keys, Phase 6/8). Phase 7 must trash the container product when a
+campaign is trashed (`Campaign_Repository::delete` does not know about products yet).
 
 ### Phase 2 — Design system inside the plugin (2026-10-19)
 
@@ -373,6 +437,9 @@ phases. This is a tooling scaffold archive, not a submission release.
 
 ## Open issues
 
+- Phase 3: Integration tests (repository, settings, tables), Plugin Check and
+  `WP_DEBUG` checks have not run (no Docker). The gift template needs config keys
+  for "no prices inside" and "message required".
 - Phase 2: Execute Assets integration tests, Plugin Check, live WordPress
   translation/enqueue and WP_DEBUG checks once Docker is available. Verify admin
   padding body classes when Phase 5 introduces actual page hooks.

@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
 /** Manage activation, upgrades, new network sites and deactivation. */
 final class Installer {
 	/** Database schema version; bump when the schema registry changes. */
-	const DB_VERSION = '0.1.0';
+	const DB_VERSION = '0.3.0';
 
 	/** Register upgrade and network-site hooks. */
 	public function register() {
@@ -47,8 +47,7 @@ final class Installer {
 			dbDelta( $statement );
 		}
 
-		// Phase 3 supplies the remaining settings alongside their validation.
-		add_option( 'mmbb_settings', array( 'delete_data' => false ), '', true );
+		add_option( 'mmbb_settings', SettingsSettings::defaults(), '', true );
 		if ( version_compare( (string) get_option( 'mmbb_version', '0' ), MMBB_VERSION, '<' ) ) {
 			update_option( 'mmbb_version', MMBB_VERSION, false );
 		}
@@ -58,12 +57,43 @@ final class Installer {
 	}
 
 	/**
-	 * Table creation statements, extended in Phase 3.
+	 * Table creation statements for dbDelta().
 	 *
 	 * @return string[]
 	 */
 	private static function schema() {
-		return array();
+		global $wpdb;
+		$collate = $wpdb->get_charset_collate();
+
+		return array(
+			"CREATE TABLE {$wpdb->prefix}mmbb_events (
+  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  campaign_id bigint(20) unsigned NOT NULL,
+  event varchar(20) NOT NULL,
+  session char(32) NOT NULL,
+  product_id bigint(20) unsigned DEFAULT NULL,
+  qty smallint(5) unsigned NOT NULL DEFAULT 0,
+  value decimal(19,4) DEFAULT NULL,
+  order_id bigint(20) unsigned DEFAULT NULL,
+  created_at datetime NOT NULL,
+  PRIMARY KEY  (id),
+  KEY campaign_event_created (campaign_id,event,created_at),
+  KEY order_id (order_id)
+) {$collate};",
+			"CREATE TABLE {$wpdb->prefix}mmbb_stats_daily (
+  day date NOT NULL,
+  campaign_id bigint(20) unsigned NOT NULL,
+  views int(10) unsigned NOT NULL DEFAULT 0,
+  started int(10) unsigned NOT NULL DEFAULT 0,
+  tier_reached int(10) unsigned NOT NULL DEFAULT 0,
+  carts int(10) unsigned NOT NULL DEFAULT 0,
+  orders int(10) unsigned NOT NULL DEFAULT 0,
+  items int(10) unsigned NOT NULL DEFAULT 0,
+  revenue decimal(19,4) NOT NULL DEFAULT 0,
+  discount decimal(19,4) NOT NULL DEFAULT 0,
+  PRIMARY KEY  (day,campaign_id)
+) {$collate};",
+		);
 	}
 
 	/**

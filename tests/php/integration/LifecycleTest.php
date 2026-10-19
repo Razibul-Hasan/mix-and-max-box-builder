@@ -10,6 +10,7 @@ namespace MixMax\BoxBuilder\Tests\Integration;
 defined( 'ABSPATH' ) || exit;
 
 use MixMax\BoxBuilder\Installer;
+use MixMax\BoxBuilder\Settings\Settings;
 use MixMax\BoxBuilder\Uninstaller;
 
 /** Installation must be repeatable and uninstall must respect ownership and consent. */
@@ -43,15 +44,15 @@ class LifecycleTest extends \WP_UnitTestCase {
 
 		$this->assertSame( MMBB_VERSION, get_option( 'mmbb_version' ) );
 		$this->assertSame( Installer::DB_VERSION, get_option( 'mmbb_db_version' ) );
-		$this->assertSame( array( 'delete_data' => false ), get_option( 'mmbb_settings' ) );
+		$this->assertSame( Settings::defaults(), get_option( 'mmbb_settings' ) );
 		$this->assertSame( array( 'mmbb-test' => 'index.php' ), get_option( 'rewrite_rules' ) );
 	}
 
 	/** An upgrade updates old versions once and preserves merchant preferences. */
 	public function test_upgrade_is_idempotent() {
 		$settings = array(
-			'delete_data' => true,
 			'enabled'     => false,
+			'delete_data' => true,
 		);
 		update_option( 'mmbb_version', '0.0.1' );
 		update_option( 'mmbb_db_version', '0.0.1' );

@@ -42,6 +42,15 @@ Plugin modules stay inactive. Users who can activate plugins see a dismissible e
 
 No. Orders are retained even when plugin-data deletion is enabled. Each site on a multisite network has its own deletion preference, which defaults to off.
 
+= Developers: which hooks and filters are available? =
+
+All hooks use the mmbb_ prefix.
+
+* mmbb_campaign_config_defaults (filter): the config a blank campaign starts from. The result is sanitized again.
+* mmbb_templates (filter): the templates in the new campaign picker. Each is an array with id, title, type_label, description, art and a partial config.
+* mmbb_pricing_quote (filter): a box quote after the pricing engine has run. Arguments: the quote, the campaign config, the items and the options. All amounts are integer minor units, for example cents.
+* mmbb_campaign_saved (action): fires after a campaign is saved. Arguments: the campaign ID and the sanitized config.
+
 == Screenshots ==
 
 Screenshots will be added when the admin and storefront screens are implemented.
