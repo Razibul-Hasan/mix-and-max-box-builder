@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<ruleset name="Mix and Max Box Builder">
+	<description>WordPress standards and PHP 7.4 compatibility.</description>
+	<file>.</file>
+	<arg name="extensions" value="php"/>
+	<arg value="sp"/>
+	<exclude-pattern>/build/*</exclude-pattern>
+	<exclude-pattern>/node_modules/*</exclude-pattern>
+	<exclude-pattern>/vendor/*</exclude-pattern>
+	<exclude-pattern>/design/*</exclude-pattern>
+	<exclude-pattern>/docs/*</exclude-pattern>
+	<config name="testVersion" value="7.4-"/>
+	<rule ref="WordPress-Extra"/>
+	<rule ref="WordPress-Docs"/>
+	<rule ref="PHPCompatibilityWP"/>
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="mix-and-max-box-builder"/>
+			</property>
+		</properties>
+	</rule>
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="MixMax\BoxBuilder"/>
+				<element value="mmbb"/>
+			</property>
+		</properties>
+	</rule>
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound">
+		<!-- Test bootstraps must define WordPress' own test-library constants. -->
+		<exclude-pattern>/tests/php/*bootstrap.php</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.Files.FileName">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.Security.EscapeOutput">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.PHP.DevelopmentFunctions">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+</ruleset>

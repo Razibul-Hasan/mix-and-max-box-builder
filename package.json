@@ -1,0 +1,45 @@
+{
+	"name": "mix-and-max-box-builder",
+	"version": "0.0.0",
+	"private": true,
+	"license": "GPL-2.0-or-later",
+	"engines": {
+		"node": ">=20.19.0"
+	},
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"lint:js": "wp-scripts lint-js src tests/js webpack.config.js jest-unit.config.js",
+		"lint:css": "wp-scripts lint-style \"src/**/*.css\"",
+		"format": "wp-scripts format src tests/js webpack.config.js jest-unit.config.js package.json",
+		"test:js": "wp-scripts test-unit-js --runInBand",
+		"test:php": "wp-env run tests-cli --env-cwd=wp-content/plugins/mix-and-max-box-builder env MMBB_TEST_SUITE=integration vendor/bin/phpunit --testsuite=integration",
+		"plugin-zip": "wp-scripts plugin-zip",
+		"env:start": "wp-env start",
+		"env:stop": "wp-env stop",
+		"tokens": "node tools/build-tokens.mjs"
+	},
+	"files": [
+		"mix-and-max-box-builder.php",
+		"uninstall.php",
+		"readme.txt",
+		"LICENSE",
+		"includes/",
+		"build/",
+		"src/",
+		"assets/",
+		"languages/",
+		"package.json",
+		"webpack.config.js"
+	],
+	"devDependencies": {
+		"@testing-library/react": "16.3.3",
+		"@wordpress/env": "10.30.0",
+		"@wordpress/scripts": "31.8.0",
+		"typescript": "5.9.3"
+	},
+	"dependencies": {
+		"@wordpress/element": "9.0.0",
+		"@wordpress/i18n": "6.30.0"
+	}
+}

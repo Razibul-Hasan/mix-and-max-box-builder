@@ -34,7 +34,7 @@ Never prefix with `wp_`, `_` or `__`. Never use a 2–3 letter prefix.
 - WordPress 6.6+ (needed for the `react-jsx-runtime` script). Test against the current release too.
 - PHP 7.4+. Code must run unchanged on 7.4 through 8.4: no enums, readonly props, `match`, named arguments, nullsafe `?->`, union types or other 8.x-only syntax.
 - WooCommerce 9.0+, declared with `Requires Plugins: woocommerce`.
-- Node 20+, `@wordpress/scripts`, `@wordpress/env`. Composer is for dev tools only (WPCS, PHPCompatibilityWP, PHPUnit). The plugin has no runtime Composer packages and never ships `vendor/`.
+- Node 20.19+, `@wordpress/scripts`, `@wordpress/env`. Composer is for dev tools only (WPCS, PHPCompatibilityWP, PHPUnit). The plugin has no runtime Composer packages and never ships `vendor/`.
 
 ## Layout
 
@@ -67,9 +67,20 @@ npm run test:js          # Jest
 composer run test:unit   # pure-PHP unit tests (no WordPress)
 npx wp-env start         # WordPress + WooCommerce + Plugin Check at http://localhost:8888 (admin / password)
 npm run test:php         # PHPUnit integration tests inside wp-env
+npx wp-env run tests-cli --env-cwd=wp-content/plugins/mix-and-max-box-builder env MMBB_TEST_SUITE=integration vendor/bin/phpunit --testsuite=integration
 npx wp-env run cli wp plugin check mix-and-max-box-builder
 npm run plugin-zip       # release zip
+npm run tokens           # generator arrives in Phase 2
 ```
+
+The integration command uses the `tests-cli` container in pinned wp-env 10.30.0
+and Composer's PHPUnit. Install dev dependencies first. It loads `wp-phpunit`
+with wp-env's `WP_TESTS_DIR` config and the isolated test database. The current
+online wp-env docs describe `cli`, but this pinned release still provides the
+separate `tests-cli` service (verified in its Docker configuration source).
+Reference: https://developer.wordpress.org/block-editor/reference-guides/packages/packages-env/#using-composer-phpunit-and-wp-cli-tools
+For a PHP 7.4 compatibility run, create the ignored `.wp-env.override.json` with
+`{ "phpVersion": "7.4" }`, then run `npx wp-env start --update`.
 
 ## WordPress.org rules (a broken rule means rejection)
 
