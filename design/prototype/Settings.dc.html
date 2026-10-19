@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings — Mix and Max</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#f5f5f2}
+a:not([class]){color:#c23b0a}a:not([class]):hover{color:#141414}
+</style>
+</helmet>
+<div class="mmbb-root" style="min-height: 1880px; background: var(--canvas); color: var(--ink); font-family: var(--font-sans);">
+<x-import component-from-global-scope="MixMax.AdminShell" active="settings" nav="{{nav}}">
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px;">
+    <x-import component-from-global-scope="MixMax.PageHeader" title="Settings" subtitle="Store-wide defaults. Each campaign can override display and cart options." style="flex: 1 1 320px;"></x-import>
+    <x-import component-from-global-scope="MixMax.Button" variant="primary">Save settings</x-import>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start;">
+    <nav aria-label="Settings sections" style="flex: 1 1 200px; max-width: 220px; display: flex; flex-direction: column; gap: 2px;">
+      <a href="#general" style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--ink); background: var(--surface); box-shadow: var(--shadow-card), inset 0 0 0 1px var(--line); font-weight: 600; text-decoration: none;"><x-import component-from-global-scope="MixMax.Icon" name="settings" size="{{n.i18}}"></x-import>General</a>
+      <a href="#display" style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--ink-muted); font-weight: 600; text-decoration: none;"><x-import component-from-global-scope="MixMax.Icon" name="palette" size="{{n.i18}}"></x-import>Storefront display</a>
+      <a href="#cart" style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--ink-muted); font-weight: 600; text-decoration: none;"><x-import component-from-global-scope="MixMax.Icon" name="cart" size="{{n.i18}}"></x-import>Cart &amp; checkout</a>
+      <a href="#emails" style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--ink-muted); font-weight: 600; text-decoration: none;"><x-import component-from-global-scope="MixMax.Icon" name="mail" size="{{n.i18}}"></x-import>Emails</a>
+      <a href="#advanced" style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--ink-muted); font-weight: 600; text-decoration: none;"><x-import component-from-global-scope="MixMax.Icon" name="code" size="{{n.i18}}"></x-import>Advanced</a>
+    </nav>
+
+    <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+      <section id="general">
+        <x-import component-from-global-scope="MixMax.Card" title="General">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <x-import component-from-global-scope="MixMax.Toggle" label="Box builders are live" description="Turn off to hide every builder at once, for example during a stock count." default-checked="{{yes}}"></x-import>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; padding-top: 16px; border-top: 1px solid var(--line);">
+              <x-import component-from-global-scope="MixMax.SelectField" label="Default builder page" options="{{pages}}" help="Used by the Build a box menu link."></x-import>
+              <x-import component-from-global-scope="MixMax.SelectField" label="Prices" options="{{prices}}"></x-import>
+            </div>
+          </div>
+        </x-import>
+      </section>
+
+      <section id="display">
+        <x-import component-from-global-scope="MixMax.Card" title="Storefront display" subtitle="How the builder looks inside your theme.">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;"><span style="font-size: 13px; line-height: 18px; font-weight: 600;">Products per row on desktop</span><x-import component-from-global-scope="MixMax.SegmentedControl" label="Products per row" options="{{cols}}" default-value="{{n.four}}"></x-import></div>
+              <div style="display: flex; flex-direction: column; gap: 8px;"><span style="font-size: 13px; line-height: 18px; font-weight: 600;">Box summary</span><x-import component-from-global-scope="MixMax.SegmentedControl" label="Box summary" options="{{summary}}" default-value="Both"></x-import><span style="font-size: 13px; line-height: 18px; color: var(--ink-muted);">Phones always get the bottom bar.</span></div>
+            </div>
+            <div style="padding-top: 16px; border-top: 1px solid var(--line);"><x-import component-from-global-scope="MixMax.Toggle" label="Savings stickers" description="Yellow Save X% and Best value stickers on sizes and tiles." default-checked="{{yes}}"></x-import></div>
+            <div style="padding-top: 16px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px;">
+              <x-import component-from-global-scope="MixMax.Toggle" label="Low-stock warnings" description="Shows Only 3 left under the price." default-checked="{{yes}}"></x-import>
+              <x-import component-from-global-scope="MixMax.TextField" label="Warn at" default-value="5" suffix="or fewer" style="max-width: 200px;"></x-import>
+            </div>
+            <div style="padding-top: 16px; border-top: 1px solid var(--line);"><x-import component-from-global-scope="MixMax.Toggle" label="Celebrate unlocked tiers" description="A short toast when the box reaches a new discount." default-checked="{{yes}}"></x-import></div>
+            <div style="padding-top: 16px; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+              <x-import component-from-global-scope="MixMax.TextField" label="Add-to-cart button" default-value="Add box to cart"></x-import>
+              <x-import component-from-global-scope="MixMax.TextField" label="Empty slot hint" default-value="Pick a treat"></x-import>
+            </div>
+          </div>
+        </x-import>
+      </section>
+
+      <section id="cart">
+        <x-import component-from-global-scope="MixMax.Card" title="Cart &amp; checkout">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-size: 13px; line-height: 18px; font-weight: 600;">Show the box in the cart as</span>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+                <x-import component-from-global-scope="MixMax.ChoiceCard" name="cart" value="bundle" selected="{{isBundle}}" on-select="{{pickCart}}" icon="box" title="One bundled line" description="Box name, price, and the items listed underneath."></x-import>
+                <x-import component-from-global-scope="MixMax.ChoiceCard" name="cart" value="items" selected="{{isItems}}" on-select="{{pickCart}}" icon="layers" title="Box plus each item" description="Every item is its own line, grouped under the box."></x-import>
+              </div>
+            </div>
+            <div style="padding-top: 16px; border-top: 1px solid var(--line);"><x-import component-from-global-scope="MixMax.Toggle" label="Let shoppers edit the box from the cart" description="Adds an Edit box link that reopens the builder with their picks." default-checked="{{yes}}"></x-import></div>
+            <div style="padding-top: 16px; border-top: 1px solid var(--line);"><x-import component-from-global-scope="MixMax.Toggle" label="Allow coupons on top of box discounts" description="Off by default so discounts don't stack by accident."></x-import></div>
+            <div style="padding-top: 16px; border-top: 1px solid var(--line);"><x-import component-from-global-scope="MixMax.Toggle" label="Reduce stock for each item" description="Recommended. Keeps WooCommerce inventory accurate." default-checked="{{yes}}"></x-import></div>
+          </div>
+        </x-import>
+      </section>
+
+      <section id="emails">
+        <x-import component-from-global-scope="MixMax.Card" title="Emails" subtitle="What WooCommerce order emails say about a box.">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <x-import component-from-global-scope="MixMax.Toggle" label="List the items in each box" description="Under the box line in order confirmation and invoice emails." default-checked="{{yes}}"></x-import>
+            <div style="padding-top: 16px; border-top: 1px solid var(--line);"><x-import component-from-global-scope="MixMax.Toggle" label="Include the gift message" description="Shown in the admin new-order email and on the packing slip, never in the customer email when the box is a gift." default-checked="{{yes}}"></x-import></div>
+          </div>
+        </x-import>
+      </section>
+
+      <section id="advanced">
+        <x-import component-from-global-scope="MixMax.Card" title="Advanced">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <x-import component-from-global-scope="MixMax.Toggle" label="Load scripts only on pages with a builder" description="Keeps the rest of your store fast." default-checked="{{yes}}"></x-import>
+            <div style="padding-top: 16px; border-top: 1px solid var(--line);"><x-import component-from-global-scope="MixMax.Toggle" label="Delete all plugin data when uninstalling" description="Campaigns, settings and analytics. Orders are never touched."></x-import></div>
+            <x-import component-from-global-scope="MixMax.Notice" tone="info" title="Developers">REST routes live under /wp-json/mmbb/v1. Filters and actions are prefixed mmbb_.</x-import>
+          </div>
+        </x-import>
+      </section>
+    </div>
+  </div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1880}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { cart: 'bundle' };
+  }
+  renderVals() {
+    return {
+      yes: true,
+      nav: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'Main.dc.html' },
+        { id: 'campaigns', label: 'Campaigns', icon: 'campaign', href: 'Campaigns.dc.html' },
+        { id: 'analytics', label: 'Analytics', icon: 'analytics', href: 'Analytics.dc.html' },
+        { id: 'settings', label: 'Settings', icon: 'settings', href: 'Settings.dc.html' }
+      ],
+      n: { i18: 18, four: 4 },
+      pages: ['Build your box (/build)', 'Holiday box (/holiday-box)'],
+      prices: ['Follow WooCommerce ($12.00)', 'No decimals ($12)'],
+      cols: [3, 4, 5],
+      summary: ['Sidebar', 'Bottom bar', 'Both'],
+      isBundle: this.state.cart === 'bundle',
+      isItems: this.state.cart === 'items',
+      pickCart: (v) => this.setState({ cart: v })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New campaign, Products — Mix and Max</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#f5f5f2}
+a:not([class]){color:#c23b0a}a:not([class]):hover{color:#141414}
+</style>
+</helmet>
+<div class="mmbb-root" style="min-height: 1240px; background: var(--canvas); color: var(--ink); font-family: var(--font-sans);">
+<x-import component-from-global-scope="MixMax.AdminShell" active="campaigns" nav="{{nav}}">
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px;">
+    <x-import component-from-global-scope="MixMax.PageHeader" back-label="Campaigns" back-href="Campaigns.dc.html" title="Holiday Treat Box" subtitle="Draft · saved a few seconds ago" style="flex: 1 1 320px;"></x-import>
+    <x-import component-from-global-scope="MixMax.Button" variant="ghost">Save draft</x-import>
+  </div>
+
+  <div style="margin-bottom: 24px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;">
+    <x-import component-from-global-scope="MixMax.Steps" steps="{{steps}}" current="{{n.step}}"></x-import>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+    <div style="flex: 999 1 560px; min-width: 0;">
+      <x-import component-from-global-scope="MixMax.Card" title="Add products" subtitle="Tick what shoppers can put in this box." padding="none">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 0 20px 16px;">
+          <x-import component-from-global-scope="MixMax.SegmentedControl" label="Source" options="{{sources}}" default-value="Pick products"></x-import>
+          <x-import component-from-global-scope="MixMax.TextField" aria-label="Search products" prefix="search" placeholder="Search products by name or SKU" value="{{query}}" on-change="{{onQuery}}"></x-import>
+          <x-import component-from-global-scope="MixMax.Chips" label="Category" options="{{cats}}" value="{{cat}}" on-change="{{onCat}}"></x-import>
+        </div>
+        <ul style="list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line);">
+          <sc-for list="{{shown}}" as="p" hint-placeholder-count="8">
+            <li style="display: flex; align-items: center; gap: 14px; padding: 10px 20px; border-bottom: 1px solid var(--line); background: {{p.bg}};">
+              <x-import component-from-global-scope="MixMax.Checkbox" aria-label="{{p.selLabel}}" checked="{{p.on}}" on-change="{{p.toggle}}" disabled="{{p.out}}"></x-import>
+              <span style="flex: none; display: block; width: 44px; height: 44px; border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="{{p.art}}"></x-import></span>
+              <span style="flex: 1; min-width: 0;"><span class="mmbb-cell-title">{{p.name}}</span><span class="mmbb-cell-meta">{{p.meta}}</span></span>
+              <sc-if value="{{p.low}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="MixMax.Badge" tone="warning" dot="{{yes}}">{{p.stockLabel}}</x-import></sc-if>
+              <sc-if value="{{p.out}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="MixMax.Badge" tone="critical" dot="{{yes}}">Out of stock</x-import></sc-if>
+              <span style="width: 72px; text-align: right; font-weight: 650; font-variant-numeric: tabular-nums;">{{p.priceLabel}}</span>
+            </li>
+          </sc-for>
+        </ul>
+        <div style="padding: 12px 20px; color: var(--ink-muted); font-size: 13px;">{{shownLabel}}</div>
+      </x-import>
+    </div>
+
+    <div style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+      <x-import component-from-global-scope="MixMax.Card" title="{{selTitle}}" subtitle="Drag to set the order shoppers see. Set a cap per product." padding="none">
+        <ol style="list-style: none; margin: 0; padding: 0 0 8px;">
+          <sc-for list="{{chosen}}" as="c" hint-placeholder-count="6">
+            <li style="display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 12px;">
+              <span style="color: var(--ink-subtle); cursor: grab;" aria-hidden="true"><x-import component-from-global-scope="MixMax.Icon" name="grip" size="{{n.i18}}"></x-import></span>
+              <span style="flex: none; display: block; width: 36px; height: 36px; border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="{{c.art}}"></x-import></span>
+              <span style="flex: 1; min-width: 0; font-weight: 600; font-size: 14px; line-height: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{c.name}}</span>
+              <x-import component-from-global-scope="MixMax.QuantityStepper" size="sm" default-value="{{n.cap}}" min="{{n.one}}" max="{{n.twelve}}" label="{{c.capLabel}}"></x-import>
+              <x-import component-from-global-scope="MixMax.Button" variant="ghost" size="sm" icon="close" aria-label="{{c.removeLabel}}" on-click="{{c.toggle}}"></x-import>
+            </li>
+          </sc-for>
+        </ol>
+      </x-import>
+      <x-import component-from-global-scope="MixMax.Notice" tone="info" title="Sold-out products hide themselves">They come back when stock returns. Change this on the next step.</x-import>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line);">
+    <x-import component-from-global-scope="MixMax.Button" href="WizardBasics.dc.html" icon="arrowLeft">Back</x-import>
+    <x-import component-from-global-scope="MixMax.Button" variant="primary" icon-right="arrowRight" href="WizardRules.dc.html">Next: Box rules</x-import>
+  </div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1240}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: [1, 2, 5, 3, 6, 8], query: '', cat: 'all' };
+  }
+  renderVals() {
+    const catalog = [
+      { id: 1, name: 'Brown Butter Chip', meta: 'Cookie · 85 g · SKU NP-101', cat: 'sweets', price: 4.5, art: 'cookie', stock: 42 },
+      { id: 2, name: 'Raspberry Macaron Duo', meta: 'Macaron · 2 pcs · SKU NP-114', cat: 'sweets', price: 5, art: 'macaron', stock: 30 },
+      { id: 3, name: 'Fig & Cedar Candle', meta: 'Soy candle · 120 g · SKU NP-301', cat: 'home', price: 9, art: 'candle', stock: 3 },
+      { id: 4, name: 'Oat Milk Soap', meta: 'Bar soap · 100 g · SKU NP-402', cat: 'home', price: 6.5, art: 'soap', stock: 18 },
+      { id: 5, name: 'Smoky Earl Grey', meta: 'Loose tea · 50 g · SKU NP-205', cat: 'tea', price: 7, art: 'tea', stock: 25 },
+      { id: 6, name: 'Glazed Ring', meta: 'Donut · 1 pc · SKU NP-120', cat: 'sweets', price: 3.5, art: 'donut', stock: 60 },
+      { id: 7, name: '70% Dark Bar', meta: 'Chocolate · 80 g · SKU NP-130', cat: 'sweets', price: 5.5, art: 'chocolate', stock: 0 },
+      { id: 8, name: 'Wildflower Honey', meta: 'Honey · 250 g · SKU NP-210', cat: 'tea', price: 8, art: 'honey', stock: 5 },
+      { id: 9, name: 'Lavender Soap', meta: 'Bar soap · 100 g · SKU NP-403', cat: 'home', price: 6.5, art: 'soap', stock: 22 },
+      { id: 10, name: 'Chai Spice Blend', meta: 'Loose tea · 50 g · SKU NP-206', cat: 'tea', price: 7.5, art: 'tea', stock: 14 }
+    ];
+    const MM = window.MixMax;
+    const money = (v) => (MM ? MM.utils.formatMoney(v) : '$' + v);
+    const sel = this.state.sel;
+    const q = this.state.query.trim().toLowerCase();
+    const toggleFor = (id) => () => this.setState({ sel: sel.indexOf(id) !== -1 ? sel.filter((x) => x !== id) : sel.concat([id]) });
+    const shown = catalog.filter((p) => (this.state.cat === 'all' || p.cat === this.state.cat) && (!q || (p.name + ' ' + p.meta).toLowerCase().indexOf(q) !== -1));
+    const count = (c) => catalog.filter((p) => c === 'all' || p.cat === c).length;
+    return {
+      yes: true,
+      nav: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'Main.dc.html' },
+        { id: 'campaigns', label: 'Campaigns', icon: 'campaign', href: 'Campaigns.dc.html' },
+        { id: 'analytics', label: 'Analytics', icon: 'analytics', href: 'Analytics.dc.html' },
+        { id: 'settings', label: 'Settings', icon: 'settings', href: 'Settings.dc.html' }
+      ],
+      steps: [
+        { label: 'Basics', href: 'WizardBasics.dc.html' },
+        { label: 'Products', href: 'WizardProducts.dc.html' },
+        { label: 'Box rules', href: 'WizardRules.dc.html' },
+        { label: 'Design', href: 'WizardDesign.dc.html' },
+        { label: 'Publish', href: 'WizardPublish.dc.html' }
+      ],
+      sources: ['Pick products', 'By category', 'By tag'],
+      cats: [
+        { value: 'all', label: 'All', count: count('all') },
+        { value: 'sweets', label: 'Sweets', count: count('sweets') },
+        { value: 'tea', label: 'Tea & honey', count: count('tea') },
+        { value: 'home', label: 'Candles & bath', count: count('home') }
+      ],
+      n: { step: 1, i18: 18, cap: 3, one: 1, twelve: 12 },
+      query: this.state.query,
+      onQuery: (e) => this.setState({ query: e.target.value }),
+      cat: this.state.cat,
+      onCat: (v) => this.setState({ cat: v }),
+      shownLabel: shown.length + ' of ' + catalog.length + ' products',
+      shown: shown.map((p) => {
+        const on = sel.indexOf(p.id) !== -1;
+        return Object.assign({}, p, {
+          on: on,
+          bg: on ? 'var(--surface-hover)' : 'var(--surface)',
+          out: p.stock === 0,
+          low: p.stock > 0 && p.stock <= 5,
+          stockLabel: 'Only ' + p.stock + ' left',
+          priceLabel: money(p.price),
+          selLabel: (on ? 'Remove ' : 'Add ') + p.name,
+          toggle: toggleFor(p.id)
+        });
+      }),
+      selTitle: 'In this box · ' + sel.length + ' products',
+      chosen: sel.map((id) => catalog.find((p) => p.id === id)).filter(Boolean).map((p) => Object.assign({}, p, {
+        capLabel: 'Max of ' + p.name + ' per box',
+        removeLabel: 'Remove ' + p.name,
+        toggle: toggleFor(p.id)
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

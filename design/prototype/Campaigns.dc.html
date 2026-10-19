@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Campaigns — Mix and Max</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#f5f5f2}
+a:not([class]){color:#c23b0a}a:not([class]):hover{color:#141414}
+</style>
+</helmet>
+<div class="mmbb-root" style="min-height: 920px; background: var(--canvas); color: var(--ink); font-family: var(--font-sans);">
+<x-import component-from-global-scope="MixMax.AdminShell" active="campaigns" nav="{{nav}}">
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px;">
+    <x-import component-from-global-scope="MixMax.PageHeader" title="Campaigns" subtitle="Every box builder on your store, with what it sold." style="flex: 1 1 320px;"></x-import>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      <x-import component-from-global-scope="MixMax.Button" icon="layers" href="CampaignsTemplates.dc.html">Templates</x-import>
+      <x-import component-from-global-scope="MixMax.Button" variant="primary" icon="plus" href="CampaignsTemplates.dc.html">Create campaign</x-import>
+    </div>
+  </div>
+
+  <x-import component-from-global-scope="MixMax.Card" padding="none">
+    <div style="padding: 0 20px;">
+      <x-import component-from-global-scope="MixMax.Tabs" label="Campaign status" tabs="{{tabs}}" default-value="all"></x-import>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line);">
+      <x-import component-from-global-scope="MixMax.TextField" aria-label="Search campaigns" prefix="search" placeholder="Search campaigns" style="flex: 1 1 280px;"></x-import>
+      <x-import component-from-global-scope="MixMax.SelectField" aria-label="Campaign type" options="{{types}}" style="flex: 0 1 200px;"></x-import>
+      <x-import component-from-global-scope="MixMax.SelectField" aria-label="Sort" options="{{sorts}}" style="flex: 0 1 200px;"></x-import>
+    </div>
+    <sc-if value="{{hasSel}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; min-height: 48px; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--max-soft);">
+        <x-import component-from-global-scope="MixMax.Checkbox" checked="{{allSel}}" indeterminate="{{someSel}}" on-change="{{toggleAll}}" label="{{selLabel}}"></x-import>
+        <div style="display: flex; gap: 8px;">
+          <x-import component-from-global-scope="MixMax.Button" size="sm" icon="copy">Duplicate</x-import>
+          <x-import component-from-global-scope="MixMax.Button" size="sm">Pause</x-import>
+          <x-import component-from-global-scope="MixMax.Button" size="sm" variant="ghost" icon="trash" href="CampaignsDelete.dc.html">Delete</x-import>
+        </div>
+      </div>
+    </sc-if>
+    <div class="mmbb-table-wrap">
+      <table class="mmbb-table">
+        <thead>
+          <tr>
+            <th style="width: 44px; padding-right: 0;"><x-import component-from-global-scope="MixMax.Checkbox" aria-label="Select all" checked="{{allSel}}" indeterminate="{{someSel}}" on-change="{{toggleAll}}"></x-import></th>
+            <th>Campaign</th><th>Status</th><th>Schedule</th><th>Placement</th><th class="is-num">Boxes sold</th><th class="is-num">Revenue</th><th class="is-num">Conversion</th><th style="width: 88px;"><span class="mmbb-sr">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+            <tr class="{{r.rowClass}}">
+              <td style="padding-right: 0;"><x-import component-from-global-scope="MixMax.Checkbox" aria-label="{{r.selLabel}}" checked="{{r.sel}}" on-change="{{r.toggle}}"></x-import></td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span style="display: flex;">
+                    <span style="display: block; width: 36px; height: 36px; border: 2px solid var(--surface); border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="{{r.a1}}"></x-import></span>
+                    <span style="display: block; width: 36px; height: 36px; margin-left: -10px; border: 2px solid var(--surface); border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="{{r.a2}}"></x-import></span>
+                    <span style="display: block; width: 36px; height: 36px; margin-left: -10px; border: 2px solid var(--surface); border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="{{r.a3}}"></x-import></span>
+                  </span>
+                  <span><a class="mmbb-cell-title" href="WizardRules.dc.html" style="color: var(--ink); text-decoration: none;">{{r.name}}</a><span class="mmbb-cell-meta">{{r.type}}</span></span>
+                </div>
+              </td>
+              <td><x-import component-from-global-scope="MixMax.Badge" tone="{{r.tone}}" dot="{{yes}}">{{r.status}}</x-import></td>
+              <td style="color: var(--ink-muted);">{{r.when}}</td>
+              <td>
+                <sc-if value="{{r.isCode}}" hint-placeholder-val="{{ false }}"><code class="mmbb-code">{{r.place}}</code></sc-if>
+                <sc-if value="{{r.isPage}}" hint-placeholder-val="{{ true }}"><span style="display: inline-flex; align-items: center; gap: 6px; color: var(--ink-muted); font-size: 13px;"><x-import component-from-global-scope="MixMax.Icon" name="layers" size="{{n.i14}}"></x-import>{{r.place}}</span></sc-if>
+                <sc-if value="{{r.isNone}}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 6px; color: var(--warn); font-size: 13px; font-weight: 600;"><x-import component-from-global-scope="MixMax.Icon" name="alert" size="{{n.i14}}"></x-import>{{r.place}}</span></sc-if>
+              </td>
+              <td class="is-num">{{r.sold}}</td>
+              <td class="is-num">{{r.rev}}</td>
+              <td class="is-num">{{r.conv}}</td>
+              <td>
+                <div style="display: flex; justify-content: flex-end; gap: 2px;">
+                  <x-import component-from-global-scope="MixMax.Button" variant="ghost" size="sm" icon="edit" aria-label="{{r.editLabel}}" href="WizardRules.dc.html"></x-import>
+                  <x-import component-from-global-scope="MixMax.Button" variant="ghost" size="sm" icon="trash" aria-label="{{r.delLabel}}" href="CampaignsDelete.dc.html"></x-import>
+                </div>
+              </td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--line); color: var(--ink-muted); font-size: 13px;">
+      <span>Showing 1–6 of 9</span>
+      <span style="display: flex; gap: 6px;">
+        <x-import component-from-global-scope="MixMax.Button" size="sm" icon="chevronLeft" aria-label="Previous page" disabled="{{yes}}"></x-import>
+        <x-import component-from-global-scope="MixMax.Button" size="sm" icon="chevronRight" aria-label="Next page"></x-import>
+      </span>
+    </div>
+  </x-import>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":920}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: [11, 15] };
+  }
+  renderVals() {
+    const data = [
+      { id: 12, name: 'Holiday Treat Box', type: 'Tiered mix · up to 12', tone: 'success', status: 'Active', when: 'Nov 1 – Dec 24', kind: 'page', place: '/holiday-box', sold: '214', rev: '$6,480.50', conv: '9.2%', arts: ['cookie', 'macaron', 'donut'] },
+      { id: 9, name: 'Build-a-Spa Kit', type: 'Fixed box · 4 / 6', tone: 'success', status: 'Active', when: 'Always on', kind: 'page', place: '/spa-kit', sold: '131', rev: '$3,920.00', conv: '7.4%', arts: ['soap', 'candle', 'honey'] },
+      { id: 11, name: 'Tea Lover Trio', type: 'Bundle price · any 3 for $18', tone: 'warning', status: 'Ending soon', when: 'Oct 1 – Oct 21', kind: 'code', place: '[mmbb_box id="11"]', sold: '67', rev: '$2,079.50', conv: '6.1%', arts: ['tea', 'honey', 'cookie'] },
+      { id: 15, name: 'Cookie Six-Pack', type: 'Bundle price · any 6 for $24', tone: 'info', status: 'Scheduled', when: 'Starts Nov 15', kind: 'page', place: '/cookies', sold: '0', rev: '$0.00', conv: '—', arts: ['cookie', 'chocolate', 'donut'] },
+      { id: 7, name: 'Chocolate Lab', type: 'Tiered mix · up to 8', tone: 'neutral', status: 'Draft', when: 'Not scheduled', kind: 'none', place: 'Not placed', sold: '0', rev: '$0.00', conv: '—', arts: ['chocolate', 'honey', 'macaron'] },
+      { id: 4, name: 'Summer Candle Duo', type: 'Fixed box · 2', tone: 'neutral', status: 'Ended', when: 'Jun 1 – Aug 31', kind: 'page', place: '/candles', sold: '389', rev: '$7,002.00', conv: '8.8%', arts: ['candle', 'soap', 'candle'] }
+    ];
+    const sel = this.state.sel;
+    const all = sel.length === data.length;
+    return {
+      yes: true,
+      nav: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'Main.dc.html' },
+        { id: 'campaigns', label: 'Campaigns', icon: 'campaign', href: 'Campaigns.dc.html', count: 3 },
+        { id: 'analytics', label: 'Analytics', icon: 'analytics', href: 'Analytics.dc.html' },
+        { id: 'settings', label: 'Settings', icon: 'settings', href: 'Settings.dc.html' }
+      ],
+      tabs: [{ id: 'all', label: 'All', count: 9 }, { id: 'active', label: 'Active', count: 3 }, { id: 'scheduled', label: 'Scheduled', count: 2 }, { id: 'draft', label: 'Drafts', count: 3 }, { id: 'ended', label: 'Ended', count: 1 }],
+      types: ['All types', 'Tiered mix', 'Fixed box', 'Bundle price'],
+      sorts: ['Sort: Newest', 'Sort: Revenue', 'Sort: Conversion'],
+      n: { i14: 14 },
+      hasSel: sel.length > 0,
+      allSel: all,
+      someSel: sel.length > 0 && !all,
+      selLabel: sel.length + ' selected',
+      toggleAll: () => this.setState({ sel: all ? [] : data.map((d) => d.id) }),
+      rows: data.map((d) => {
+        const on = sel.indexOf(d.id) !== -1;
+        return Object.assign({}, d, {
+          a1: d.arts[0], a2: d.arts[1], a3: d.arts[2],
+          isCode: d.kind === 'code', isPage: d.kind === 'page', isNone: d.kind === 'none',
+          sel: on,
+          rowClass: on ? 'is-selected' : '',
+          selLabel: 'Select ' + d.name,
+          editLabel: 'Edit ' + d.name,
+          delLabel: 'Delete ' + d.name,
+          toggle: () => this.setState({ sel: on ? sel.filter((x) => x !== d.id) : sel.concat([d.id]) })
+        });
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

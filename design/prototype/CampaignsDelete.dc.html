@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Delete campaigns — Mix and Max</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#f5f5f2}
+a:not([class]){color:#c23b0a}a:not([class]):hover{color:#141414}
+</style>
+</helmet>
+<div class="mmbb-root" style="position: relative; min-height: 920px; background: var(--canvas); color: var(--ink); font-family: var(--font-sans);">
+<x-import component-from-global-scope="MixMax.AdminShell" active="campaigns" nav="{{nav}}">
+  <x-import component-from-global-scope="MixMax.PageHeader" title="Campaigns" subtitle="Every box builder on your store, with what it sold."></x-import>
+  <x-import component-from-global-scope="MixMax.Card" padding="none">
+    <div style="display: flex; align-items: center; gap: 16px; min-height: 48px; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--max-soft);">
+      <x-import component-from-global-scope="MixMax.Checkbox" checked="{{no}}" indeterminate="{{yes}}" label="2 selected"></x-import>
+    </div>
+    <div class="mmbb-table-wrap">
+      <table class="mmbb-table">
+        <thead><tr><th style="width: 44px; padding-right: 0;"></th><th>Campaign</th><th>Status</th><th>Schedule</th><th class="is-num">Boxes sold</th><th class="is-num">Revenue</th></tr></thead>
+        <tbody>
+          <tr><td style="padding-right: 0;"><x-import component-from-global-scope="MixMax.Checkbox" aria-label="Select Holiday Treat Box"></x-import></td><td><span class="mmbb-cell-title">Holiday Treat Box</span><span class="mmbb-cell-meta">Tiered mix · up to 12</span></td><td><x-import component-from-global-scope="MixMax.Badge" tone="success" dot="{{yes}}">Active</x-import></td><td style="color: var(--ink-muted);">Nov 1 – Dec 24</td><td class="is-num">214</td><td class="is-num">$6,480.50</td></tr>
+          <tr class="is-selected"><td style="padding-right: 0;"><x-import component-from-global-scope="MixMax.Checkbox" aria-label="Select Tea Lover Trio" checked="{{yes}}"></x-import></td><td><span class="mmbb-cell-title">Tea Lover Trio</span><span class="mmbb-cell-meta">Bundle price · any 3 for $18</span></td><td><x-import component-from-global-scope="MixMax.Badge" tone="warning" dot="{{yes}}">Ending soon</x-import></td><td style="color: var(--ink-muted);">Oct 1 – Oct 21</td><td class="is-num">67</td><td class="is-num">$2,079.50</td></tr>
+          <tr class="is-selected"><td style="padding-right: 0;"><x-import component-from-global-scope="MixMax.Checkbox" aria-label="Select Cookie Six-Pack" checked="{{yes}}"></x-import></td><td><span class="mmbb-cell-title">Cookie Six-Pack</span><span class="mmbb-cell-meta">Bundle price · any 6 for $24</span></td><td><x-import component-from-global-scope="MixMax.Badge" tone="info" dot="{{yes}}">Scheduled</x-import></td><td style="color: var(--ink-muted);">Starts Nov 15</td><td class="is-num">0</td><td class="is-num">$0.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </x-import>
+</x-import>
+
+<div style="position: absolute; inset: 0; z-index: 30; display: flex; align-items: flex-start; justify-content: center; padding: 140px 24px 24px; background: var(--scrim);">
+  <section role="alertdialog" aria-modal="true" aria-labelledby="del-title" aria-describedby="del-desc" style="width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 16px; padding: 24px; background: var(--surface); border-radius: 20px; box-shadow: var(--shadow-raise);">
+    <div style="display: flex; align-items: flex-start; gap: 14px;">
+      <span style="flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--alert-soft); color: var(--alert);"><x-import component-from-global-scope="MixMax.Icon" name="trash" size="{{n.i20}}"></x-import></span>
+      <div>
+        <h2 id="del-title" style="margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 24px; font-weight: 700; letter-spacing: -0.01em;">Delete 2 campaigns?</h2>
+        <p id="del-desc" style="margin: 6px 0 0; color: var(--ink-muted);">Tea Lover Trio and Cookie Six-Pack disappear from <b style="color: var(--ink);">/cookies</b> and the <code class="mmbb-code">[mmbb_box id="11"]</code> shortcode. Orders keep their box details.</p>
+      </div>
+    </div>
+    <x-import component-from-global-scope="MixMax.Notice" tone="warning" title="Tea Lover Trio is live">It has sold 67 boxes. Pausing hides it and keeps everything, so you can bring it back.</x-import>
+    <x-import component-from-global-scope="MixMax.Checkbox" label="Also delete their analytics history" description="Revenue totals on the Dashboard will drop."></x-import>
+    <div style="display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding-top: 8px; border-top: 1px solid var(--line);">
+      <x-import component-from-global-scope="MixMax.Button" href="Campaigns.dc.html">Cancel</x-import>
+      <x-import component-from-global-scope="MixMax.Button" href="Campaigns.dc.html">Pause instead</x-import>
+      <x-import component-from-global-scope="MixMax.Button" variant="danger" icon="trash" href="Campaigns.dc.html">Delete 2 campaigns</x-import>
+    </div>
+  </section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":920}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true,
+      no: false,
+      nav: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'Main.dc.html' },
+        { id: 'campaigns', label: 'Campaigns', icon: 'campaign', href: 'Campaigns.dc.html' },
+        { id: 'analytics', label: 'Analytics', icon: 'analytics', href: 'Analytics.dc.html' },
+        { id: 'settings', label: 'Settings', icon: 'settings', href: 'Settings.dc.html' }
+      ],
+      n: { i20: 20 }
+    };
+  }
+}
+</script>
+</body>
+</html>

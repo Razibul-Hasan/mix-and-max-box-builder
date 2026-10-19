@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dashboard, first run — Mix and Max</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#f5f5f2}
+a:not([class]){color:#c23b0a}a:not([class]):hover{color:#141414}
+</style>
+</helmet>
+<div class="mmbb-root" style="min-height: 1000px; background: var(--canvas); color: var(--ink); font-family: var(--font-sans);">
+<x-import component-from-global-scope="MixMax.AdminShell" active="dashboard" nav="{{nav}}">
+  <x-import component-from-global-scope="MixMax.PageHeader" title="Welcome to Mix and Max" subtitle="Let shoppers build their own box. Most stores go live in under 5 minutes."></x-import>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+    <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+      <x-import component-from-global-scope="MixMax.Card" padding="none">
+        <x-import component-from-global-scope="MixMax.EmptyState" icon="box" title="Launch your first box" description="Pick the products, set the discount tiers, drop the builder on a page. Start blank or from a ready-made template."></x-import>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: -32px; padding-bottom: 48px;">
+          <x-import component-from-global-scope="MixMax.Button" variant="max" icon="plus" href="WizardBasics.dc.html">Create campaign</x-import>
+          <x-import component-from-global-scope="MixMax.Button" icon="layers" href="CampaignsTemplates.dc.html">Start from a template</x-import>
+        </div>
+      </x-import>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <h2 style="margin: 0; font-size: 17px; line-height: 24px; font-weight: 650;">How a box campaign works</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;">
+            <span style="display: grid; place-items: center; width: 40px; height: 40px; border-radius: 8px; background: var(--max); color: var(--on-max);"><x-import component-from-global-scope="MixMax.Icon" name="tag" size="{{n.i22}}"></x-import></span>
+            <b style="font-size: 15px; line-height: 22px;">1. Pick products</b>
+            <span style="color: var(--ink-muted); font-size: 13px; line-height: 18px;">Choose products, a category or a tag. Sold-out items hide themselves.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;">
+            <span style="display: grid; place-items: center; width: 40px; height: 40px; border-radius: 8px; background: var(--pop); color: var(--on-pop);"><x-import component-from-global-scope="MixMax.Icon" name="percent" size="{{n.i22}}"></x-import></span>
+            <b style="font-size: 15px; line-height: 22px;">2. Set discount tiers</b>
+            <span style="color: var(--ink-muted); font-size: 13px; line-height: 18px;">4 items 10% off, 6 items 15%, 12 items 25%. Shoppers see what the next item unlocks.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;">
+            <span style="display: grid; place-items: center; width: 40px; height: 40px; border-radius: 8px; background: var(--ink); color: var(--on-ink);"><x-import component-from-global-scope="MixMax.Icon" name="layers" size="{{n.i22}}"></x-import></span>
+            <b style="font-size: 15px; line-height: 22px;">3. Place it on a page</b>
+            <span style="color: var(--ink-muted); font-size: 13px; line-height: 18px;">Add the Box Builder block or paste a shortcode. The box goes to the cart as one line.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+      <x-import component-from-global-scope="MixMax.Card" title="Get set up" subtitle="Your progress is saved as you go.">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <x-import component-from-global-scope="MixMax.ProgressBar" label="Setup" value-label="1 of 6 done" value="{{n.one}}" max="{{n.six}}" tone="max"></x-import>
+          <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px;">
+            <li style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px;"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: var(--on-ink);"><x-import component-from-global-scope="MixMax.Icon" name="check" size="{{n.i14}}" stroke-width="{{n.sw}}"></x-import></span><span style="color: var(--ink-muted); text-decoration: line-through;">Install WooCommerce</span></li>
+            <li style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px; background: var(--max-soft);"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--max); color: var(--on-max); font-size: 12px; font-weight: 700;">2</span><span style="flex: 1; font-weight: 600;">Create a campaign</span><x-import component-from-global-scope="MixMax.Button" size="sm" variant="primary" href="WizardBasics.dc.html">Start</x-import></li>
+            <li style="display: flex; align-items: center; gap: 12px; padding: 8px;"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1.5px dashed var(--line-strong); color: var(--ink-muted); font-size: 12px; font-weight: 700;">3</span><span style="font-weight: 600;">Add products to the box</span></li>
+            <li style="display: flex; align-items: center; gap: 12px; padding: 8px;"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1.5px dashed var(--line-strong); color: var(--ink-muted); font-size: 12px; font-weight: 700;">4</span><span style="font-weight: 600;">Place the builder on a page</span></li>
+            <li style="display: flex; align-items: center; gap: 12px; padding: 8px;"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1.5px dashed var(--line-strong); color: var(--ink-muted); font-size: 12px; font-weight: 700;">5</span><span style="font-weight: 600;">Run a test order</span></li>
+            <li style="display: flex; align-items: center; gap: 12px; padding: 8px;"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1.5px dashed var(--line-strong); color: var(--ink-muted); font-size: 12px; font-weight: 700;">6</span><span style="font-weight: 600;">Go live</span></li>
+          </ol>
+        </div>
+      </x-import>
+      <x-import component-from-global-scope="MixMax.Notice" tone="info" title="Your numbers show up here">Once your first box sells, this page shows revenue, boxes sold and what shoppers pick most.</x-import>
+    </div>
+  </div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      nav: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'Main.dc.html' },
+        { id: 'campaigns', label: 'Campaigns', icon: 'campaign', href: 'Campaigns.dc.html' },
+        { id: 'analytics', label: 'Analytics', icon: 'analytics', href: 'Analytics.dc.html' },
+        { id: 'settings', label: 'Settings', icon: 'settings', href: 'Settings.dc.html' }
+      ],
+      n: { one: 1, six: 6, i14: 14, i22: 22, sw: 2.75 }
+    };
+  }
+}
+</script>
+</body>
+</html>

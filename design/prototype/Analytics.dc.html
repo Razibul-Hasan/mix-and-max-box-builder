@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Analytics — Mix and Max</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#f5f5f2}
+a:not([class]){color:#c23b0a}a:not([class]):hover{color:#141414}
+</style>
+</helmet>
+<div class="mmbb-root" style="min-height: 1800px; background: var(--canvas); color: var(--ink); font-family: var(--font-sans);">
+<x-import component-from-global-scope="MixMax.AdminShell" active="analytics" nav="{{nav}}">
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px;">
+    <x-import component-from-global-scope="MixMax.PageHeader" title="Analytics" subtitle="What sells in boxes, and where shoppers drop off." style="flex: 1 1 320px;"></x-import>
+    <x-import component-from-global-scope="MixMax.Button" icon="download">Export CSV</x-import>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 24px;">
+    <x-import component-from-global-scope="MixMax.SegmentedControl" label="Date range" options="{{ranges}}" default-value="30 days"></x-import>
+    <x-import component-from-global-scope="MixMax.SelectField" aria-label="Campaign" options="{{campaigns}}" style="flex: 0 1 240px;"></x-import>
+    <x-import component-from-global-scope="MixMax.Checkbox" label="Compare to previous period" default-checked="{{yes}}"></x-import>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 24px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+      <x-import component-from-global-scope="MixMax.StatCard" label="Box revenue" value="$12,480" delta="{{d.rev}}" trend="{{t.rev}}"></x-import>
+      <x-import component-from-global-scope="MixMax.StatCard" label="Boxes sold" value="412" delta="{{d.boxes}}" trend="{{t.boxes}}"></x-import>
+      <x-import component-from-global-scope="MixMax.StatCard" label="Avg. items per box" value="6.4" delta="{{d.items}}" trend="{{t.items}}"></x-import>
+      <x-import component-from-global-scope="MixMax.StatCard" label="Discount given" value="$1,842" delta="{{d.disc}}" up-is-good="{{no}}" trend="{{t.disc}}"></x-import>
+    </div>
+
+    <x-import component-from-global-scope="MixMax.Card" title="Revenue from boxes" subtitle="Daily · Sep 20 – Oct 19 vs Aug 21 – Sep 19">
+      <x-import component-from-global-scope="MixMax.LineChart" labels="{{days}}" series="{{series}}" height="{{n.chartH}}" aria-label="Revenue from boxes, daily" format-value="{{money}}" format-tick="{{tick}}"></x-import>
+    </x-import>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+      <x-import component-from-global-scope="MixMax.Card" title="Builder funnel" subtitle="Sessions that opened a builder" style="flex: 1 1 520px; min-width: 0;">
+        <x-import component-from-global-scope="MixMax.FunnelChart" steps="{{funnel}}"></x-import>
+      </x-import>
+      <div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+        <x-import component-from-global-scope="MixMax.Card" title="Most-picked products" subtitle="Times added to a box">
+          <x-import component-from-global-scope="MixMax.BarList" items="{{picks}}"></x-import>
+        </x-import>
+        <x-import component-from-global-scope="MixMax.Card" title="Where boxes stop" subtitle="Share of boxes by the tier they reached">
+          <x-import component-from-global-scope="MixMax.BarList" items="{{stops}}" format-value="{{pct}}" max="{{n.hundred}}"></x-import>
+        </x-import>
+      </div>
+    </div>
+
+    <x-import component-from-global-scope="MixMax.Card" title="Campaign performance" padding="none">
+      <div class="mmbb-table-wrap">
+        <table class="mmbb-table">
+          <thead><tr><th>Campaign</th><th class="is-num">Builder views</th><th class="is-num">Started a box</th><th class="is-num">Boxes sold</th><th class="is-num">Conversion</th><th class="is-num">Avg. box value</th><th class="is-num">Revenue</th></tr></thead>
+          <tbody>
+            <tr><td><a class="mmbb-cell-title" href="WizardRules.dc.html" style="color: var(--ink); text-decoration: none;">Holiday Treat Box</a></td><td class="is-num">2,326</td><td class="is-num">1,402</td><td class="is-num">214</td><td class="is-num">9.2%</td><td class="is-num">$30.28</td><td class="is-num"><b>$6,480.50</b></td></tr>
+            <tr><td><span class="mmbb-cell-title">Build-a-Spa Kit</span></td><td class="is-num">1,770</td><td class="is-num">904</td><td class="is-num">131</td><td class="is-num">7.4%</td><td class="is-num">$29.92</td><td class="is-num"><b>$3,920.00</b></td></tr>
+            <tr><td><span class="mmbb-cell-title">Tea Lover Trio</span></td><td class="is-num">1,184</td><td class="is-num">598</td><td class="is-num">67</td><td class="is-num">5.7%</td><td class="is-num">$31.04</td><td class="is-num"><b>$2,079.50</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </x-import>
+  </div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const MM = window.MixMax;
+    const days = Array.from({ length: 30 }, (_, i) => new Date(2026, 8, 20 + i).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    const cur = [210, 260, 240, 310, 290, 350, 420, 380, 360, 410, 440, 400, 470, 520, 480, 450, 500, 560, 610, 580, 540, 600, 650, 700, 640, 690, 760, 820, 780, 860];
+    const prev = [180, 200, 190, 230, 250, 240, 280, 300, 270, 290, 310, 300, 320, 340, 330, 310, 350, 370, 360, 380, 400, 390, 410, 430, 420, 440, 450, 470, 460, 480];
+    return {
+      yes: true,
+      no: false,
+      nav: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'Main.dc.html' },
+        { id: 'campaigns', label: 'Campaigns', icon: 'campaign', href: 'Campaigns.dc.html' },
+        { id: 'analytics', label: 'Analytics', icon: 'analytics', href: 'Analytics.dc.html' },
+        { id: 'settings', label: 'Settings', icon: 'settings', href: 'Settings.dc.html' }
+      ],
+      ranges: ['Today', '7 days', '30 days', '90 days', 'Custom'],
+      campaigns: ['All campaigns', 'Holiday Treat Box', 'Build-a-Spa Kit', 'Tea Lover Trio'],
+      n: { chartH: 280, hundred: 100 },
+      d: { rev: 18.4, boxes: 9.1, items: 4.9, disc: 6.2 },
+      t: {
+        rev: [6, 7, 6.5, 8, 7.6, 9, 8.8, 10, 9.6, 11, 11.8, 12.5],
+        boxes: [22, 25, 24, 28, 27, 30, 31, 30, 34, 33, 36, 38],
+        items: [5.6, 5.8, 5.7, 5.9, 6, 6.1, 6, 6.2, 6.3, 6.2, 6.4, 6.4],
+        disc: [1.2, 1.3, 1.25, 1.4, 1.38, 1.5, 1.55, 1.6, 1.62, 1.7, 1.78, 1.84]
+      },
+      days: days,
+      series: [
+        { name: 'This period', color: 'chart-1', data: cur, area: true, label: true },
+        { name: 'Previous period', color: 'chart-muted', data: prev }
+      ],
+      money: (v) => (MM ? MM.utils.formatMoney(v) : '$' + v),
+      tick: (v) => (MM ? MM.utils.formatCompact(v, '$') : '$' + v),
+      pct: (v) => v + '%',
+      funnel: [
+        { label: 'Viewed builder', value: 5280 },
+        { label: 'Added first item', value: 2904 },
+        { label: 'Reached a tier', value: 1612 },
+        { label: 'Added box to cart', value: 702 },
+        { label: 'Purchased', value: 412 }
+      ],
+      picks: [
+        { label: 'Brown Butter Chip', value: 486 },
+        { label: 'Raspberry Macaron Duo', value: 402 },
+        { label: 'Smoky Earl Grey', value: 311 },
+        { label: 'Fig & Cedar Candle', value: 248, meta: '3 left' },
+        { label: 'Wildflower Honey', value: 190 }
+      ],
+      stops: [
+        { label: '12 items · 25% off', value: 38 },
+        { label: '6–11 items · 15% off', value: 44 },
+        { label: '4–5 items · 10% off', value: 18 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

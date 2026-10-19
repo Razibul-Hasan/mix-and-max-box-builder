@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pick a template — Mix and Max</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#f5f5f2}
+a:not([class]){color:#c23b0a}a:not([class]):hover{color:#141414}
+</style>
+</helmet>
+<div class="mmbb-root" style="position: relative; min-height: 920px; background: var(--canvas); color: var(--ink); font-family: var(--font-sans);">
+<x-import component-from-global-scope="MixMax.AdminShell" active="campaigns" nav="{{nav}}">
+  <x-import component-from-global-scope="MixMax.PageHeader" title="Campaigns" subtitle="Every box builder on your store, with what it sold."></x-import>
+  <x-import component-from-global-scope="MixMax.Card" padding="none">
+    <div style="padding: 0 20px;"><x-import component-from-global-scope="MixMax.Tabs" label="Campaign status" tabs="{{tabs}}" default-value="all"></x-import></div>
+    <div class="mmbb-table-wrap">
+      <table class="mmbb-table">
+        <thead><tr><th>Campaign</th><th>Status</th><th>Schedule</th><th class="is-num">Boxes sold</th><th class="is-num">Revenue</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mmbb-cell-title">Holiday Treat Box</span><span class="mmbb-cell-meta">Tiered mix · up to 12</span></td><td><x-import component-from-global-scope="MixMax.Badge" tone="success" dot="{{yes}}">Active</x-import></td><td style="color: var(--ink-muted);">Nov 1 – Dec 24</td><td class="is-num">214</td><td class="is-num">$6,480.50</td></tr>
+          <tr><td><span class="mmbb-cell-title">Build-a-Spa Kit</span><span class="mmbb-cell-meta">Fixed box · 4 / 6</span></td><td><x-import component-from-global-scope="MixMax.Badge" tone="success" dot="{{yes}}">Active</x-import></td><td style="color: var(--ink-muted);">Always on</td><td class="is-num">131</td><td class="is-num">$3,920.00</td></tr>
+          <tr><td><span class="mmbb-cell-title">Tea Lover Trio</span><span class="mmbb-cell-meta">Bundle price · any 3 for $18</span></td><td><x-import component-from-global-scope="MixMax.Badge" tone="warning" dot="{{yes}}">Ending soon</x-import></td><td style="color: var(--ink-muted);">Oct 1 – Oct 21</td><td class="is-num">67</td><td class="is-num">$2,079.50</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </x-import>
+</x-import>
+
+<div style="position: absolute; inset: 0; z-index: 30; display: flex; align-items: flex-start; justify-content: center; padding: 72px 24px 24px; background: var(--scrim);">
+  <section role="dialog" aria-modal="true" aria-labelledby="tpl-title" style="width: 100%; max-width: 820px; display: flex; flex-direction: column; background: var(--surface); border-radius: 20px; box-shadow: var(--shadow-raise); overflow: hidden;">
+    <header style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px 24px 0;">
+      <div>
+        <h2 id="tpl-title" style="margin: 0; font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 700; letter-spacing: -0.02em;">Start a new box campaign</h2>
+        <p style="margin: 4px 0 0; color: var(--ink-muted);">Templates fill in the rules, tiers and copy. You pick the products next.</p>
+      </div>
+      <x-import component-from-global-scope="MixMax.Button" variant="ghost" icon="close" aria-label="Close" href="Campaigns.dc.html"></x-import>
+    </header>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; padding: 24px;">
+      <sc-for list="{{tpls}}" as="t" hint-placeholder-count="5">
+        <button type="button" onClick="{{t.pick}}" aria-pressed="{{t.on}}" style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px; margin: 0; text-align: left; font: inherit; color: var(--ink); background: var(--surface); border-radius: 14px; cursor: pointer; border: 1px solid {{t.borderColor}}; box-shadow: {{t.ring}};">
+          <span style="position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; width: 100%; padding: 8px; border-radius: 10px; background: var(--surface-sunken);">
+            <sc-if value="{{t.blank}}" hint-placeholder-val="{{ false }}">
+              <span style="grid-column: 1 / -1; display: grid; place-items: center; height: 100px; color: var(--ink-muted);"><x-import component-from-global-scope="MixMax.Icon" name="plus" size="{{n.i28}}"></x-import></span>
+            </sc-if>
+            <sc-if value="{{t.hasArt}}" hint-placeholder-val="{{ true }}">
+              <span style="display: block; height: 48px; border-radius: 6px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="{{t.a1}}"></x-import></span>
+              <span style="display: block; height: 48px; border-radius: 6px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="{{t.a2}}"></x-import></span>
+              <span style="display: block; height: 48px; border-radius: 6px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="{{t.a3}}"></x-import></span>
+              <span style="display: block; height: 48px; border-radius: 6px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="{{t.a4}}"></x-import></span>
+            </sc-if>
+          </span>
+          <span style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;">
+            <b style="font-size: 15px; line-height: 22px; font-weight: 650;">{{t.name}}</b>
+            <x-import component-from-global-scope="MixMax.Badge" tone="brand">{{t.type}}</x-import>
+          </span>
+          <span style="font-size: 13px; line-height: 18px; color: var(--ink-muted);">{{t.desc}}</span>
+        </button>
+      </sc-for>
+    </div>
+    <footer style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--line);">
+      <span style="color: var(--ink-muted); font-size: 13px;">Selected: <b style="color: var(--ink);">{{picked}}</b></span>
+      <span style="display: flex; gap: 8px;">
+        <x-import component-from-global-scope="MixMax.Button" href="Campaigns.dc.html">Cancel</x-import>
+        <x-import component-from-global-scope="MixMax.Button" variant="primary" icon-right="arrowRight" href="WizardBasics.dc.html">Use template</x-import>
+      </span>
+    </footer>
+  </section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":920}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { picked: 'holiday' };
+  }
+  renderVals() {
+    const list = [
+      { id: 'blank', name: 'Start blank', type: 'Any type', desc: 'Empty rules. Best when you already know your tiers.', blank: true },
+      { id: 'holiday', name: 'Holiday treat box', type: 'Tiered mix', desc: 'Up to 12 items. 10 / 15 / 25% off. Countdown on.', arts: ['cookie', 'macaron', 'donut', 'chocolate'] },
+      { id: 'spa', name: 'Build-a-spa kit', type: 'Fixed box', desc: 'Sizes 4 and 6. Gift wrap add-on.', arts: ['soap', 'candle', 'honey', 'tea'] },
+      { id: 'snack', name: 'Snack pack', type: 'Bundle price', desc: 'Any 6 for one price. Duplicates allowed.', arts: ['cookie', 'chocolate', 'donut', 'cookie'] },
+      { id: 'gift', name: 'Build-a-gift', type: 'Fixed box', desc: 'One size, gift message required, no prices inside.', arts: ['candle', 'tea', 'macaron', 'honey'] }
+    ];
+    return {
+      yes: true,
+      nav: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'Main.dc.html' },
+        { id: 'campaigns', label: 'Campaigns', icon: 'campaign', href: 'Campaigns.dc.html' },
+        { id: 'analytics', label: 'Analytics', icon: 'analytics', href: 'Analytics.dc.html' },
+        { id: 'settings', label: 'Settings', icon: 'settings', href: 'Settings.dc.html' }
+      ],
+      tabs: [{ id: 'all', label: 'All', count: 9 }, { id: 'active', label: 'Active', count: 3 }, { id: 'scheduled', label: 'Scheduled', count: 2 }, { id: 'draft', label: 'Drafts', count: 3 }, { id: 'ended', label: 'Ended', count: 1 }],
+      n: { i28: 28 },
+      picked: (list.find((t) => t.id === this.state.picked) || list[0]).name,
+      tpls: list.map((t) => {
+        const on = t.id === this.state.picked;
+        const arts = t.arts || [];
+        return Object.assign({}, t, {
+          on: on,
+          hasArt: !t.blank,
+          a1: arts[0], a2: arts[1], a3: arts[2], a4: arts[3],
+          borderColor: on ? 'var(--ink)' : 'var(--line-strong)',
+          ring: on ? 'inset 0 0 0 1px var(--ink)' : 'none',
+          pick: () => this.setState({ picked: t.id })
+        });
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

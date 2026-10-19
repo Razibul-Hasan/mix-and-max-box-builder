@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New campaign, Basics — Mix and Max</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#f5f5f2}
+a:not([class]){color:#c23b0a}a:not([class]):hover{color:#141414}
+</style>
+</helmet>
+<div class="mmbb-root" style="min-height: 1120px; background: var(--canvas); color: var(--ink); font-family: var(--font-sans);">
+<x-import component-from-global-scope="MixMax.AdminShell" active="campaigns" nav="{{nav}}">
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px;">
+    <x-import component-from-global-scope="MixMax.PageHeader" back-label="Campaigns" back-href="Campaigns.dc.html" title="New campaign" subtitle="From the Holiday treat box template · draft saved a few seconds ago" style="flex: 1 1 320px;"></x-import>
+    <x-import component-from-global-scope="MixMax.Button" variant="ghost">Save draft</x-import>
+  </div>
+
+  <div style="margin-bottom: 24px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;">
+    <x-import component-from-global-scope="MixMax.Steps" steps="{{steps}}" current="{{n.step}}"></x-import>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+    <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+      <x-import component-from-global-scope="MixMax.Card" title="Campaign" subtitle="The name is for you. The headline is what shoppers see.">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+            <x-import component-from-global-scope="MixMax.TextField" label="Campaign name" default-value="Holiday Treat Box"></x-import>
+            <x-import component-from-global-scope="MixMax.TextField" label="Page address" prefix="/" default-value="holiday-box" help="Used if you create a new page on step 5."></x-import>
+          </div>
+          <x-import component-from-global-scope="MixMax.TextField" label="Headline" default-value="Mix 12 treats. Save 25%." help="Lead with the number. It sits above the builder in the display font."></x-import>
+          <x-import component-from-global-scope="MixMax.TextField" label="Intro line" multiline="{{yes}}" rows="{{n.rows}}" default-value="Pick anything below and we pack it in a gift-ready box. The more you add, the more you save."></x-import>
+        </div>
+      </x-import>
+
+      <x-import component-from-global-scope="MixMax.Card" title="Schedule">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <x-import component-from-global-scope="MixMax.SegmentedControl" label="Runs" options="{{runs}}" default-value="Between dates"></x-import>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+            <x-import component-from-global-scope="MixMax.TextField" label="Starts" prefix="calendar" default-value="Nov 1, 2026 · 12:00 AM"></x-import>
+            <x-import component-from-global-scope="MixMax.TextField" label="Ends" prefix="calendar" default-value="Dec 24, 2026 · 11:59 PM"></x-import>
+          </div>
+          <div style="padding-top: 16px; border-top: 1px solid var(--line);">
+            <x-import component-from-global-scope="MixMax.Toggle" label="Countdown timer" description="Shows above the builder in the last 7 days, counting to the end date above." default-checked="{{yes}}"></x-import>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+      <x-import component-from-global-scope="MixMax.Card" title="From the template">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;">
+            <span style="display: block; border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="cookie"></x-import></span>
+            <span style="display: block; border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="macaron"></x-import></span>
+            <span style="display: block; border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="donut"></x-import></span>
+            <span style="display: block; border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="chocolate"></x-import></span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <x-import component-from-global-scope="MixMax.Badge" tone="brand" icon="percent">Tiered mix</x-import>
+            <x-import component-from-global-scope="MixMax.Badge" icon="box">Up to 12 items</x-import>
+            <x-import component-from-global-scope="MixMax.Badge">10 / 15 / 25% off</x-import>
+          </div>
+          <p style="margin: 0; color: var(--ink-muted); font-size: 13px; line-height: 18px;">Rules and tiers are filled in. Change them on step 3.</p>
+        </div>
+      </x-import>
+      <x-import component-from-global-scope="MixMax.Notice" tone="info" title="Dates follow your store time">WordPress › Settings › General sets the time zone.</x-import>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line);">
+    <x-import component-from-global-scope="MixMax.Button" href="CampaignsTemplates.dc.html" icon="arrowLeft">Back to templates</x-import>
+    <x-import component-from-global-scope="MixMax.Button" variant="primary" icon-right="arrowRight" href="WizardProducts.dc.html">Next: Products</x-import>
+  </div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1120}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true,
+      nav: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'Main.dc.html' },
+        { id: 'campaigns', label: 'Campaigns', icon: 'campaign', href: 'Campaigns.dc.html' },
+        { id: 'analytics', label: 'Analytics', icon: 'analytics', href: 'Analytics.dc.html' },
+        { id: 'settings', label: 'Settings', icon: 'settings', href: 'Settings.dc.html' }
+      ],
+      steps: [
+        { label: 'Basics', href: 'WizardBasics.dc.html' },
+        { label: 'Products', href: 'WizardProducts.dc.html' },
+        { label: 'Box rules', href: 'WizardRules.dc.html' },
+        { label: 'Design', href: 'WizardDesign.dc.html' },
+        { label: 'Publish', href: 'WizardPublish.dc.html' }
+      ],
+      runs: ['Always on', 'Between dates'],
+      n: { step: 0, rows: 3 }
+    };
+  }
+}
+</script>
+</body>
+</html>

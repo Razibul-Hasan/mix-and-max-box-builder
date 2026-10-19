@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dashboard — Mix and Max</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#f5f5f2}
+a:not([class]){color:#c23b0a}a:not([class]):hover{color:#141414}
+</style>
+</helmet>
+<div class="mmbb-root" style="min-height: 1300px; background: var(--canvas); color: var(--ink); font-family: var(--font-sans);">
+<x-import component-from-global-scope="MixMax.AdminShell" active="dashboard" nav="{{nav}}">
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px;">
+    <x-import component-from-global-scope="MixMax.PageHeader" title="Dashboard" subtitle="All campaigns · last 30 days" style="flex: 1 1 320px;"></x-import>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+      <x-import component-from-global-scope="MixMax.SegmentedControl" label="Date range" options="{{ranges}}" default-value="30 days"></x-import>
+      <x-import component-from-global-scope="MixMax.Button" variant="primary" icon="plus" href="CampaignsTemplates.dc.html">Create campaign</x-import>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 24px;">
+    <x-import component-from-global-scope="MixMax.Card">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 6px; max-width: 320px;">
+          <h2 style="margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 24px; font-weight: 700; letter-spacing: -0.01em;">2 steps to your first box sale</h2>
+          <p style="margin: 0 0 12px; color: var(--ink-muted);">Your Holiday Treat Box is ready. Put it on a page and run one test order.</p>
+          <x-import component-from-global-scope="MixMax.ProgressBar" label="Setup" value-label="4 of 6 done" value="{{n.four}}" max="{{n.six}}" tone="max"></x-import>
+        </div>
+        <ul style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 4px 16px;">
+          <li style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px;"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: var(--on-ink);"><x-import component-from-global-scope="MixMax.Icon" name="check" size="{{n.i14}}" stroke-width="{{n.sw}}"></x-import></span><span style="color: var(--ink-muted); text-decoration: line-through;">Install WooCommerce</span></li>
+          <li style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px;"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: var(--on-ink);"><x-import component-from-global-scope="MixMax.Icon" name="check" size="{{n.i14}}" stroke-width="{{n.sw}}"></x-import></span><span style="color: var(--ink-muted); text-decoration: line-through;">Create a campaign</span></li>
+          <li style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px;"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: var(--on-ink);"><x-import component-from-global-scope="MixMax.Icon" name="check" size="{{n.i14}}" stroke-width="{{n.sw}}"></x-import></span><span style="color: var(--ink-muted); text-decoration: line-through;">Add products to the box</span></li>
+          <li style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px; background: var(--max-soft);"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--max); color: var(--on-max); font-size: 12px; font-weight: 700;">4</span><span style="flex: 1; font-weight: 600;">Place the builder on a page</span><x-import component-from-global-scope="MixMax.Button" size="sm" variant="primary" icon="copy">Copy shortcode</x-import></li>
+          <li style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px;"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1.5px dashed var(--line-strong); color: var(--ink-muted); font-size: 12px; font-weight: 700;">5</span><span style="font-weight: 600;">Run a test order</span></li>
+          <li style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px;"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1.5px dashed var(--line-strong); color: var(--ink-muted); font-size: 12px; font-weight: 700;">6</span><span style="font-weight: 600;">Go live</span></li>
+        </ul>
+      </div>
+    </x-import>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+      <x-import component-from-global-scope="MixMax.StatCard" label="Box revenue" value="$12,480" delta="{{d.rev}}" trend="{{t.rev}}"></x-import>
+      <x-import component-from-global-scope="MixMax.StatCard" label="Boxes sold" value="412" delta="{{d.boxes}}" trend="{{t.boxes}}"></x-import>
+      <x-import component-from-global-scope="MixMax.StatCard" label="Avg. box value" value="$30.29" delta="{{d.aov}}" trend="{{t.aov}}"></x-import>
+      <x-import component-from-global-scope="MixMax.StatCard" label="Builder conversion" value="7.8%" delta="{{d.conv}}" trend="{{t.conv}}"></x-import>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+      <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+        <x-import component-from-global-scope="MixMax.Card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px;">
+            <div>
+              <h3 style="margin: 0; font-size: 17px; line-height: 24px; font-weight: 650;">Revenue from boxes</h3>
+              <p style="margin: 2px 0 0; font-size: 13px; line-height: 18px; color: var(--ink-muted);">Daily, this period vs previous</p>
+            </div>
+            <x-import component-from-global-scope="MixMax.Button" size="sm" variant="ghost" icon-right="arrowRight" href="Analytics.dc.html">Analytics</x-import>
+          </div>
+          <x-import component-from-global-scope="MixMax.LineChart" labels="{{days}}" series="{{series}}" height="{{n.chartH}}" aria-label="Revenue from boxes, daily" format-value="{{money}}" format-tick="{{tick}}"></x-import>
+        </x-import>
+
+        <x-import component-from-global-scope="MixMax.Card" padding="none">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;">
+            <h3 style="margin: 0; font-size: 17px; line-height: 24px; font-weight: 650;">Top campaigns</h3>
+            <x-import component-from-global-scope="MixMax.Button" size="sm" variant="ghost" icon-right="arrowRight" href="Campaigns.dc.html">All campaigns</x-import>
+          </div>
+          <div class="mmbb-table-wrap">
+            <table class="mmbb-table">
+              <thead><tr><th>Campaign</th><th>Status</th><th class="is-num">Boxes</th><th class="is-num">Revenue</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div style="display: flex; align-items: center; gap: 12px;"><span style="display: flex;"><span style="display: block; width: 32px; height: 32px; border: 2px solid var(--surface); border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="cookie"></x-import></span><span style="display: block; width: 32px; height: 32px; margin-left: -8px; border: 2px solid var(--surface); border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="macaron"></x-import></span><span style="display: block; width: 32px; height: 32px; margin-left: -8px; border: 2px solid var(--surface); border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="donut"></x-import></span></span><span><a class="mmbb-cell-title" href="WizardRules.dc.html" style="color: var(--ink); text-decoration: none;">Holiday Treat Box</a><span class="mmbb-cell-meta">Tiered mix</span></span></div></td>
+                  <td><x-import component-from-global-scope="MixMax.Badge" tone="success" dot="{{yes}}">Active</x-import></td>
+                  <td class="is-num">214</td>
+                  <td class="is-num">$6,480.50</td>
+                </tr>
+                <tr>
+                  <td><div style="display: flex; align-items: center; gap: 12px;"><span style="display: flex;"><span style="display: block; width: 32px; height: 32px; border: 2px solid var(--surface); border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="soap"></x-import></span><span style="display: block; width: 32px; height: 32px; margin-left: -8px; border: 2px solid var(--surface); border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="candle"></x-import></span><span style="display: block; width: 32px; height: 32px; margin-left: -8px; border: 2px solid var(--surface); border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="honey"></x-import></span></span><span><span class="mmbb-cell-title">Build-a-Spa Kit</span><span class="mmbb-cell-meta">Fixed box · 4 / 6</span></span></div></td>
+                  <td><x-import component-from-global-scope="MixMax.Badge" tone="success" dot="{{yes}}">Active</x-import></td>
+                  <td class="is-num">131</td>
+                  <td class="is-num">$3,920.00</td>
+                </tr>
+                <tr>
+                  <td><div style="display: flex; align-items: center; gap: 12px;"><span style="display: flex;"><span style="display: block; width: 32px; height: 32px; border: 2px solid var(--surface); border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="tea"></x-import></span><span style="display: block; width: 32px; height: 32px; margin-left: -8px; border: 2px solid var(--surface); border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="honey"></x-import></span><span style="display: block; width: 32px; height: 32px; margin-left: -8px; border: 2px solid var(--surface); border-radius: 8px; overflow: hidden;"><x-import component-from-global-scope="MixMax.ProductArt" kind="cookie"></x-import></span></span><span><span class="mmbb-cell-title">Tea Lover Trio</span><span class="mmbb-cell-meta">Bundle price · any 3 for $18</span></span></div></td>
+                  <td><x-import component-from-global-scope="MixMax.Badge" tone="warning" dot="{{yes}}">Ending soon</x-import></td>
+                  <td class="is-num">67</td>
+                  <td class="is-num">$2,079.50</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </x-import>
+      </div>
+
+      <div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+        <x-import component-from-global-scope="MixMax.Card">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <x-import component-from-global-scope="MixMax.Badge" tone="success" dot="{{yes}}">Live now</x-import>
+            <x-import component-from-global-scope="MixMax.Countdown" seconds="{{n.ends}}" tone="soft" label="Ends in"></x-import>
+          </div>
+          <p style="margin: 0; font-size: 17px; line-height: 24px; font-weight: 650;">Holiday Treat Box</p>
+          <p style="margin: 2px 0 0; color: var(--ink-muted);">Tiered mix · up to 12 items · 10 / 15 / 25% off</p>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 16px 0;">
+            <div style="padding: 12px; border-radius: 10px; background: var(--surface-sunken);"><span style="display: block; color: var(--ink-muted); font-size: 12px; line-height: 16px; font-weight: 600;">Boxes today</span><b style="font-size: 20px; line-height: 28px;">18</b></div>
+            <div style="padding: 12px; border-radius: 10px; background: var(--surface-sunken);"><span style="display: block; color: var(--ink-muted); font-size: 12px; line-height: 16px; font-weight: 600;">Conversion</span><b style="font-size: 20px; line-height: 28px;">9.2%</b></div>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <x-import component-from-global-scope="MixMax.Button" variant="primary" icon="edit" href="WizardRules.dc.html">Edit</x-import>
+            <x-import component-from-global-scope="MixMax.Button" icon="eye" href="StoreTiered.dc.html">View on store</x-import>
+          </div>
+        </x-import>
+        <x-import component-from-global-scope="MixMax.Card" title="Most-picked products" subtitle="Times added to a box">
+          <x-import component-from-global-scope="MixMax.BarList" items="{{picks}}"></x-import>
+        </x-import>
+      </div>
+    </div>
+  </div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const MM = window.MixMax;
+    const days = Array.from({ length: 30 }, (_, i) => new Date(2026, 8, 20 + i).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    const cur = [210, 260, 240, 310, 290, 350, 420, 380, 360, 410, 440, 400, 470, 520, 480, 450, 500, 560, 610, 580, 540, 600, 650, 700, 640, 690, 760, 820, 780, 860];
+    const prev = [180, 200, 190, 230, 250, 240, 280, 300, 270, 290, 310, 300, 320, 340, 330, 310, 350, 370, 360, 380, 400, 390, 410, 430, 420, 440, 450, 470, 460, 480];
+    return {
+      yes: true,
+      nav: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'Main.dc.html' },
+        { id: 'campaigns', label: 'Campaigns', icon: 'campaign', href: 'Campaigns.dc.html' },
+        { id: 'analytics', label: 'Analytics', icon: 'analytics', href: 'Analytics.dc.html' },
+        { id: 'settings', label: 'Settings', icon: 'settings', href: 'Settings.dc.html' }
+      ],
+      ranges: ['7 days', '30 days', '90 days'],
+      n: { four: 4, six: 6, i14: 14, sw: 2.75, chartH: 250, ends: 5 * 86400 + 6 * 3600 + 12 * 60 },
+      d: { rev: 18.4, boxes: 9.1, aov: -2.3, conv: 1.2 },
+      t: {
+        rev: [6, 7, 6.5, 8, 7.6, 9, 8.8, 10, 9.6, 11, 11.8, 12.5],
+        boxes: [22, 25, 24, 28, 27, 30, 31, 30, 34, 33, 36, 38],
+        aov: [31, 32, 31.5, 31, 30.8, 31.2, 30.6, 30.9, 30.4, 30.7, 30.1, 30.3],
+        conv: [6.1, 6.4, 6.2, 6.8, 7, 6.9, 7.2, 7.1, 7.5, 7.4, 7.7, 7.8]
+      },
+      days: days,
+      series: [
+        { name: 'This period', color: 'chart-1', data: cur, area: true, label: true },
+        { name: 'Previous period', color: 'chart-muted', data: prev }
+      ],
+      money: (v) => (MM ? MM.utils.formatMoney(v) : '$' + v),
+      tick: (v) => (MM ? MM.utils.formatCompact(v, '$') : '$' + v),
+      picks: [
+        { label: 'Brown Butter Chip', value: 486 },
+        { label: 'Raspberry Macaron Duo', value: 402 },
+        { label: 'Smoky Earl Grey', value: 311 },
+        { label: 'Fig & Cedar Candle', value: 248, meta: '3 left' },
+        { label: 'Wildflower Honey', value: 190 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

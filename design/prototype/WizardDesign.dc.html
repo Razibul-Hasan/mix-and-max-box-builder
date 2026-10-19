@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Design — Mix and Max</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#f5f5f2}
+a:not([class]){color:#c23b0a}a:not([class]):hover{color:#141414}
+</style>
+</helmet>
+<div class="mmbb-root" style="min-height: 1380px; background: var(--canvas); color: var(--ink); font-family: var(--font-sans);">
+<x-import component-from-global-scope="MixMax.AdminShell" active="campaigns" nav="{{nav}}">
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px;">
+    <x-import component-from-global-scope="MixMax.PageHeader" back-label="Campaigns" back-href="Campaigns.dc.html" title="Holiday Treat Box" subtitle="Draft · saved a few seconds ago" style="flex: 1 1 320px;"></x-import>
+    <x-import component-from-global-scope="MixMax.Button" variant="ghost">Save draft</x-import>
+  </div>
+
+  <div style="margin-bottom: 24px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;">
+    <x-import component-from-global-scope="MixMax.Steps" steps="{{steps}}" current="{{n.step}}"></x-import>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+    <div style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+      <x-import component-from-global-scope="MixMax.Card" title="Layout" subtitle="Where the box sits next to the products. Phones always get the bottom bar.">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+            <x-import component-from-global-scope="MixMax.ChoiceCard" name="layout" value="panel" selected="{{isPanel}}" on-select="{{pickLayout}}" icon="layers" title="Sidebar panel" description="Sticky box beside the grid."></x-import>
+            <x-import component-from-global-scope="MixMax.ChoiceCard" name="layout" value="bar" selected="{{isBar}}" on-select="{{pickLayout}}" icon="box" title="Bottom bar" description="Dark bar under the page."></x-import>
+            <x-import component-from-global-scope="MixMax.ChoiceCard" name="layout" value="both" selected="{{isBoth}}" on-select="{{pickLayout}}" icon="dashboard" title="Both" description="Panel on desktop, bar on phones." tag="Best"></x-import>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px; border-top: 1px solid var(--line);">
+            <span style="font-size: 13px; line-height: 18px; font-weight: 600;">Products per row on desktop</span>
+            <x-import component-from-global-scope="MixMax.SegmentedControl" label="Products per row" options="{{cols}}" default-value="{{n.three}}"></x-import>
+          </div>
+        </div>
+      </x-import>
+
+      <x-import component-from-global-scope="MixMax.Card" title="Words" subtitle="Short and number-led. The preview updates as you type.">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <x-import component-from-global-scope="MixMax.TextField" label="Headline" value="{{headline}}" on-change="{{onHeadline}}"></x-import>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+            <x-import component-from-global-scope="MixMax.TextField" label="Sticker" value="{{sticker}}" on-change="{{onSticker}}" help="Two words, shown tilted above the headline."></x-import>
+            <x-import component-from-global-scope="MixMax.TextField" label="Button" value="{{cta}}" on-change="{{onCta}}"></x-import>
+          </div>
+        </div>
+      </x-import>
+
+      <x-import component-from-global-scope="MixMax.Card" title="Attention">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <x-import component-from-global-scope="MixMax.Toggle" label="Sticker above the headline" checked="{{showSticker}}" on-change="{{onShowSticker}}"></x-import>
+          <div style="padding-top: 16px; border-top: 1px solid var(--line);"><x-import component-from-global-scope="MixMax.Toggle" label="Tier ladder in the hero" description="Three bars showing 10%, 15% and 25% at a glance." checked="{{showLadder}}" on-change="{{onShowLadder}}"></x-import></div>
+          <div style="padding-top: 16px; border-top: 1px solid var(--line);"><x-import component-from-global-scope="MixMax.Toggle" label="Countdown" description="Uses the end date from step 1." checked="{{showTimer}}" on-change="{{onShowTimer}}"></x-import></div>
+        </div>
+      </x-import>
+
+      <x-import component-from-global-scope="MixMax.Card" title="Colors">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 8px;"><span style="font-size: 13px; line-height: 18px; font-weight: 600;">Accent</span><x-import component-from-global-scope="MixMax.SegmentedControl" label="Accent" options="{{accents}}" default-value="Max Orange"></x-import></div>
+          <div style="display: flex; flex-direction: column; gap: 8px;"><span style="font-size: 13px; line-height: 18px; font-weight: 600;">Builder theme</span><x-import component-from-global-scope="MixMax.SegmentedControl" label="Builder theme" options="{{themes}}" default-value="Light"></x-import></div>
+        </div>
+      </x-import>
+    </div>
+
+    <div style="flex: 1 1 440px; min-width: 0; position: sticky; top: 76px;">
+      <x-import component-from-global-scope="MixMax.Card" title="Shopper preview" subtitle="Desktop, top of the builder page">
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 16px; border-radius: 14px; background: var(--canvas); border: 1px solid var(--line);">
+          <div style="display: flex; gap: 16px; align-items: flex-end;">
+            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+              <sc-if value="{{showSticker}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="MixMax.Sticker" tone="max" size="sm" tilt="{{yes}}" icon="flame">{{sticker}}</x-import></sc-if>
+              <p style="margin: 0; font-family: var(--font-display); font-size: 28px; line-height: 30px; font-weight: 800; letter-spacing: -0.03em;">{{headline}}</p>
+              <sc-if value="{{showTimer}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="MixMax.Countdown" seconds="{{n.ends}}"></x-import></sc-if>
+            </div>
+            <sc-if value="{{showLadder}}" hint-placeholder-val="{{ true }}">
+              <div style="flex: none; display: flex; align-items: flex-end; gap: 6px; height: 110px;" aria-label="Discount tiers">
+                <div style="width: 44px; height: 45%; display: flex; flex-direction: column; justify-content: flex-end; padding: 6px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line-strong);"><b style="font-family: var(--font-display); font-size: 14px; line-height: 14px; font-weight: 800;">10%</b></div>
+                <div style="width: 44px; height: 70%; display: flex; flex-direction: column; justify-content: flex-end; padding: 6px; border-radius: 8px; background: var(--pop); color: var(--on-pop);"><b style="font-family: var(--font-display); font-size: 14px; line-height: 14px; font-weight: 800;">15%</b></div>
+                <div style="width: 44px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; padding: 6px; border-radius: 8px; background: var(--max); color: var(--on-max);"><b style="font-family: var(--font-display); font-size: 14px; line-height: 14px; font-weight: 800;">25%</b></div>
+              </div>
+            </sc-if>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+            <x-import component-from-global-scope="MixMax.ProductTile" name="Brown Butter Chip" price="{{price.a}}" art="cookie" badge="{{badgeA}}" qty="{{n.two}}"></x-import>
+            <x-import component-from-global-scope="MixMax.ProductTile" name="Smoky Earl Grey" price="{{price.b}}" compare-at="{{price.bWas}}" art="tea" badge="{{badgeB}}"></x-import>
+          </div>
+          <sc-if value="{{previewBar}}" hint-placeholder-val="{{ true }}">
+            <x-import component-from-global-scope="MixMax.BoxSummaryBar" size="{{n.twelve}}" min-items="{{n.four}}" items="{{items}}" tiers="{{tiers}}" total="{{n.total}}" compare-at="{{n.sub}}" cta-label="{{cta}}"></x-import>
+          </sc-if>
+          <sc-if value="{{previewPanel}}" hint-placeholder-val="{{ false }}">
+            <x-import component-from-global-scope="MixMax.BoxPanel" size="{{n.six}}" min-items="{{n.four}}" items="{{items}}" tiers="{{panelTiers}}" subtotal="{{n.sub}}" total="{{n.total}}" cta-label="{{cta}}"></x-import>
+          </sc-if>
+        </div>
+      </x-import>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line);">
+    <x-import component-from-global-scope="MixMax.Button" href="WizardRules.dc.html" icon="arrowLeft">Back</x-import>
+    <x-import component-from-global-scope="MixMax.Button" variant="primary" icon-right="arrowRight" href="WizardPublish.dc.html">Next: Publish</x-import>
+  </div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1380}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { layout: 'both', headline: 'Mix 12 treats. Save 25%.', sticker: 'Holiday drop', cta: 'Add box to cart', showSticker: true, showLadder: true, showTimer: true };
+  }
+  renderVals() {
+    const s = this.state;
+    const items = [
+      { name: 'Brown Butter Chip', art: 'cookie' }, { name: 'Brown Butter Chip', art: 'cookie' },
+      { name: 'Raspberry Macaron Duo', art: 'macaron' }, { name: 'Smoky Earl Grey', art: 'tea' }, { name: 'Fig & Cedar Candle', art: 'candle' }
+    ];
+    return {
+      yes: true,
+      nav: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'Main.dc.html' },
+        { id: 'campaigns', label: 'Campaigns', icon: 'campaign', href: 'Campaigns.dc.html' },
+        { id: 'analytics', label: 'Analytics', icon: 'analytics', href: 'Analytics.dc.html' },
+        { id: 'settings', label: 'Settings', icon: 'settings', href: 'Settings.dc.html' }
+      ],
+      steps: [
+        { label: 'Basics', href: 'WizardBasics.dc.html' },
+        { label: 'Products', href: 'WizardProducts.dc.html' },
+        { label: 'Box rules', href: 'WizardRules.dc.html' },
+        { label: 'Design', href: 'WizardDesign.dc.html' },
+        { label: 'Publish', href: 'WizardPublish.dc.html' }
+      ],
+      cols: [3, 4, 5],
+      accents: ['Max Orange', 'Theme color'],
+      themes: ['Light', 'Dark'],
+      n: { step: 3, three: 3, two: 2, four: 4, six: 6, twelve: 12, ends: 5 * 86400 + 6 * 3600, sub: 30, total: 27 },
+      price: { a: 4.5, b: 7, bWas: 8.75 },
+      badgeA: s.showSticker ? 'Bestseller' : null,
+      badgeB: s.showSticker ? '-20%' : null,
+      isPanel: s.layout === 'panel',
+      isBar: s.layout === 'bar',
+      isBoth: s.layout === 'both',
+      pickLayout: (v) => this.setState({ layout: v }),
+      previewBar: s.layout !== 'panel',
+      previewPanel: s.layout === 'panel',
+      headline: s.headline,
+      onHeadline: (e) => this.setState({ headline: e.target.value }),
+      sticker: s.sticker,
+      onSticker: (e) => this.setState({ sticker: e.target.value }),
+      cta: s.cta,
+      onCta: (e) => this.setState({ cta: e.target.value }),
+      showSticker: s.showSticker,
+      onShowSticker: (v) => this.setState({ showSticker: v }),
+      showLadder: s.showLadder,
+      onShowLadder: (v) => this.setState({ showLadder: v }),
+      showTimer: s.showTimer,
+      onShowTimer: (v) => this.setState({ showTimer: v }),
+      items: items,
+      tiers: [{ qty: 4, label: '10% off' }, { qty: 6, label: '15% off' }, { qty: 12, label: '25% off' }],
+      panelTiers: [{ qty: 4, label: '10% off' }, { qty: 6, label: '15% off' }]
+    };
+  }
+}
+</script>
+</body>
+</html>

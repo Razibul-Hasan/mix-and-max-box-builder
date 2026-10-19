@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Build-a-Spa Kit on a phone — Northwind Pantry</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#f5f5f2}
+a:not([class]){color:#141414}a:not([class]):hover{color:#c23b0a}
+</style>
+</helmet>
+<div class="mmbb-root" style="position: relative; width: 390px; min-height: 1720px; background: var(--canvas); color: var(--ink); font-family: var(--font-sans);">
+  <header style="display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 8px; background: var(--surface); border-bottom: 1px solid var(--line);">
+    <a href="#menu" aria-label="Menu" style="display: grid; place-items: center; width: 44px; height: 44px; color: var(--ink);"><x-import component-from-global-scope="MixMax.Icon" name="more" size="{{n.i22}}"></x-import></a>
+    <span style="font-family: var(--font-display); font-size: 19px; font-weight: 800; letter-spacing: -0.02em;">Northwind Pantry</span>
+    <a href="Cart.dc.html" aria-label="Cart" style="display: grid; place-items: center; width: 44px; height: 44px; color: var(--ink);"><x-import component-from-global-scope="MixMax.Icon" name="cart" size="{{n.i22}}"></x-import></a>
+  </header>
+
+  <section style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 24px 16px 16px;">
+    <x-import component-from-global-scope="MixMax.Sticker" tone="max" size="sm" tilt="{{yes}}" icon="flame">Spa week</x-import>
+    <h1 style="margin: 0; font-family: var(--font-display); font-size: 36px; line-height: 38px; font-weight: 800; letter-spacing: -0.03em;">Build a spa kit. <span style="color: var(--max-strong);">Save up to 25%.</span></h1>
+    <p style="margin: 0; color: var(--ink-muted); font-size: 15px; line-height: 22px;">Choose a box, fill every slot, we wrap it.</p>
+    <x-import component-from-global-scope="MixMax.Countdown" seconds="{{n.ends}}"></x-import>
+  </section>
+
+  <section style="padding: 0 16px 16px;">
+    <x-import component-from-global-scope="MixMax.Steps" compact="{{yes}}" steps="{{flow}}" current="{{n.one}}"></x-import>
+  </section>
+
+  <section style="padding: 0 16px 8px;">
+    <span style="display: block; font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted);">Step 1</span>
+    <span style="display: block; font-size: 17px; line-height: 24px; font-weight: 650;">Pick a box size</span>
+    <x-import component-from-global-scope="MixMax.BoxSizePicker" sizes="{{sizes}}" value="{{size}}" on-change="{{pickSize}}" layout="pills"></x-import>
+  </section>
+
+  <section style="padding: 8px 16px 12px; display: flex; flex-direction: column; gap: 10px;">
+    <div>
+      <span style="display: block; font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted);">Step 2</span>
+      <span style="display: block; font-size: 17px; line-height: 24px; font-weight: 650;">Fill your box</span>
+    </div>
+    <div style="overflow-x: auto; padding-bottom: 4px;"><x-import component-from-global-scope="MixMax.Chips" label="Category" options="{{cats}}" default-value="All"></x-import></div>
+  </section>
+
+  <section style="padding: 0 16px 16px;">
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+      <sc-for list="{{tiles}}" as="p" hint-placeholder-count="6">
+        <x-import component-from-global-scope="MixMax.ProductTile" name="{{p.name}}" price="{{p.price}}" art="{{p.art}}" badge="{{p.badge}}" badge-tone="{{p.badgeTone}}" stock="{{p.stock}}" qty="{{p.qty}}" on-add="{{p.add}}" on-change="{{p.change}}" box-full="{{full}}"></x-import>
+      </sc-for>
+    </div>
+  </section>
+
+  <div style="position: sticky; bottom: 12px; z-index: 10; padding: 0 10px 12px;">
+    <x-import component-from-global-scope="MixMax.BoxSummaryBar" size="{{size}}" items="{{items}}" tiers="{{tiers}}" total="{{total}}" compare-at="{{compareAt}}" open-href="MobileDrawer.dc.html" cta-href="{{ctaHref}}" cta-label="Checkout"></x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1720}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { size: 6, box: [11, 12, 14, 16] };
+  }
+  renderVals() {
+    const P = [
+      { id: 11, name: 'Oat Milk Soap', price: 6.5, art: 'soap', badge: 'Bestseller', badgeTone: 'deal' },
+      { id: 12, name: 'Fig & Cedar Candle', price: 9, art: 'candle', stock: 3 },
+      { id: 13, name: 'Chamomile Calm', price: 7, art: 'tea' },
+      { id: 14, name: 'Lavender Soap', price: 6.5, art: 'soap', badge: 'New', badgeTone: 'info' },
+      { id: 15, name: 'Honey Body Balm', price: 11, art: 'honey' },
+      { id: 16, name: 'Amber Sea Candle', price: 9, art: 'candle' }
+    ];
+    const S = [{ qty: 4, price: 26, save: '10%' }, { qty: 6, price: 38, save: '15%', tag: 'Most popular' }, { qty: 12, price: 72, save: '25%', tag: 'Best value' }];
+    const s = this.state;
+    const cur = S.find((x) => x.qty === s.size) || S[1];
+    const box = s.box.slice(0, s.size);
+    const items = box.map((id) => P.find((p) => p.id === id));
+    const subtotal = items.reduce((a, p) => a + p.price, 0);
+    const full = box.length >= s.size;
+    const setQty = (id, n) => {
+      const c = box.filter((x) => x === id).length;
+      if (n > c) this.setState({ box: box.concat(Array(n - c).fill(id)).slice(0, s.size) });
+      else { let drop = c - n; this.setState({ box: box.filter((x) => (x === id && drop > 0 ? (drop--, false) : true)) }); }
+    };
+    return {
+      yes: true,
+      n: { i22: 22, one: 1, ends: 2 * 86400 + 4 * 3600 + 18 * 60 },
+      flow: ['Pick a size', 'Fill your box', 'Checkout'],
+      sizes: S,
+      size: s.size,
+      pickSize: (v) => this.setState({ size: v, box: s.box.slice(0, v) }),
+      cats: ['All', 'Bath', 'Candles', 'Tea', 'Body'],
+      full: full,
+      tiles: P.map((p) => Object.assign({}, p, {
+        qty: box.filter((x) => x === p.id).length,
+        add: () => setQty(p.id, 1),
+        change: (n) => setQty(p.id, n)
+      })),
+      items: items,
+      tiers: [{ qty: s.size, label: cur.save + ' off' }],
+      total: full ? subtotal * (1 - parseInt(cur.save, 10) / 100) : subtotal,
+      compareAt: full ? subtotal : null,
+      ctaHref: full ? 'Cart.dc.html' : undefined
+    };
+  }
+}
+</script>
+</body>
+</html>

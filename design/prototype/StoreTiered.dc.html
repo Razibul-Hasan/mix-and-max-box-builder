@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Holiday Treat Box — Northwind Pantry</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#f5f5f2}
+a:not([class]){color:#141414}a:not([class]):hover{color:#c23b0a}
+</style>
+</helmet>
+<div class="mmbb-root" style="position: relative; min-height: 1840px; background: var(--canvas); color: var(--ink); font-family: var(--font-sans);">
+  <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 32px; min-height: 68px; padding: 12px 48px; background: var(--surface); border-bottom: 1px solid var(--line);">
+    <span style="font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: -0.02em;">Northwind Pantry</span>
+    <nav aria-label="Store" style="flex: 1; display: flex; flex-wrap: wrap; gap: 24px; font-weight: 600;">
+      <a href="#shop" style="color: var(--ink-muted); text-decoration: none;">Shop</a>
+      <a href="StoreTiered.dc.html" aria-current="page" style="color: var(--ink); text-decoration: none;">Gift boxes</a>
+      <a href="#journal" style="color: var(--ink-muted); text-decoration: none;">Journal</a>
+      <a href="#about" style="color: var(--ink-muted); text-decoration: none;">About</a>
+    </nav>
+    <span style="display: flex; gap: 16px;">
+      <a href="#search" aria-label="Search" style="color: var(--ink);"><x-import component-from-global-scope="MixMax.Icon" name="search" size="{{n.i22}}"></x-import></a>
+      <a href="#account" aria-label="Account" style="color: var(--ink);"><x-import component-from-global-scope="MixMax.Icon" name="users" size="{{n.i22}}"></x-import></a>
+      <a href="Cart.dc.html" aria-label="Cart" style="color: var(--ink);"><x-import component-from-global-scope="MixMax.Icon" name="cart" size="{{n.i22}}"></x-import></a>
+    </span>
+  </header>
+
+  <section style="display: flex; flex-wrap: wrap; align-items: center; gap: 48px; padding: 48px 48px 40px;">
+    <div style="flex: 1 1 480px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 16px;">
+      <x-import component-from-global-scope="MixMax.Sticker" tone="max" tilt="{{yes}}" icon="flame">Holiday drop</x-import>
+      <h1 style="margin: 0; font-family: var(--font-display); font-size: 56px; line-height: 56px; font-weight: 800; letter-spacing: -0.03em;">Mix 12 treats.<br><span style="color: var(--max-strong);">Save 25%.</span></h1>
+      <p style="margin: 0; max-width: 520px; font-size: 16px; line-height: 24px; color: var(--ink-muted);">Pick anything below and we pack it in a gift-ready box. The more you add, the more you save. Discounts apply automatically.</p>
+      <x-import component-from-global-scope="MixMax.Countdown" seconds="{{n.ends}}"></x-import>
+    </div>
+    <div aria-label="Discount tiers" style="flex: 0 1 420px; display: flex; align-items: flex-end; gap: 12px; height: 220px;">
+      <div style="flex: 1; height: 45%; display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line-strong);"><b style="font-family: var(--font-display); font-size: 34px; line-height: 34px; font-weight: 800; letter-spacing: -0.03em;">10%</b><span style="font-size: 13px; font-weight: 700;">4 items</span></div>
+      <div style="flex: 1; height: 70%; display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; border-radius: 14px; background: var(--pop); color: var(--on-pop);"><b style="font-family: var(--font-display); font-size: 34px; line-height: 34px; font-weight: 800; letter-spacing: -0.03em;">15%</b><span style="font-size: 13px; font-weight: 700;">6 items</span></div>
+      <div style="position: relative; flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; border-radius: 14px; background: var(--max); color: var(--on-max);"><span style="position: absolute; top: -12px; right: 10px;"><x-import component-from-global-scope="MixMax.Sticker" tone="ink" size="sm" tilt="{{yes}}">Max deal</x-import></span><b style="font-family: var(--font-display); font-size: 34px; line-height: 34px; font-weight: 800; letter-spacing: -0.03em;">25%</b><span style="font-size: 13px; font-weight: 700;">12 items</span></div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; padding: 0 48px 64px;">
+    <div style="flex: 999 1 560px; min-width: 0;">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px;">
+        <x-import component-from-global-scope="MixMax.Chips" label="Category" options="{{cats}}" default-value="all"></x-import>
+        <x-import component-from-global-scope="MixMax.SelectField" aria-label="Sort" options="{{sorts}}" style="flex: 0 0 190px;"></x-import>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;">
+        <sc-for list="{{tiles}}" as="p" hint-placeholder-count="9">
+          <x-import component-from-global-scope="MixMax.ProductTile" name="{{p.name}}" meta="{{p.meta}}" price="{{p.price}}" compare-at="{{p.compareAt}}" art="{{p.art}}" badge="{{p.badge}}" badge-tone="{{p.badgeTone}}" stock="{{p.stock}}" qty="{{p.qty}}" on-add="{{p.add}}" on-change="{{p.change}}" box-full="{{full}}"></x-import>
+        </sc-for>
+      </div>
+    </div>
+    <div style="flex: 1 1 340px; max-width: 380px; min-width: 0; position: sticky; top: 16px;">
+      <x-import component-from-global-scope="MixMax.BoxPanel" size="{{n.twelve}}" min-items="{{n.four}}" items="{{items}}" tiers="{{tiers}}" subtotal="{{subtotal}}" total="{{total}}" on-remove="{{removeAt}}" cta-href="Cart.dc.html" footnote="Free shipping on boxes of 6+">
+        <x-import component-from-global-scope="MixMax.Checkbox" label="Make it a gift" description="Ribbon, card and no prices inside."></x-import>
+      </x-import>
+    </div>
+  </section>
+
+  <sc-if value="{{toast}}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 50;">
+      <x-import component-from-global-scope="MixMax.Toast" icon="sparkle">{{toastText}}</x-import>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1840}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { box: [1, 1, 2, 5, 3], toast: null };
+  }
+  componentWillUnmount() { clearTimeout(this.t); }
+  renderVals() {
+    const P = [
+      { id: 1, name: 'Brown Butter Chip', meta: 'Cookie · 85 g', price: 4.5, art: 'cookie', badge: 'Bestseller', badgeTone: 'deal' },
+      { id: 2, name: 'Raspberry Macaron Duo', meta: 'Macaron · 2 pcs', price: 5, art: 'macaron', badge: 'New', badgeTone: 'info' },
+      { id: 3, name: 'Fig & Cedar Candle', meta: 'Soy candle · 120 g', price: 9, compareAt: 12, art: 'candle', stock: 3 },
+      { id: 4, name: 'Oat Milk Soap', meta: 'Bar soap · 100 g', price: 6.5, art: 'soap' },
+      { id: 5, name: 'Smoky Earl Grey', meta: 'Loose tea · 50 g', price: 7, compareAt: 8.75, art: 'tea', badge: '-20%', badgeTone: 'deal' },
+      { id: 6, name: 'Glazed Ring', meta: 'Donut · 1 pc', price: 3.5, art: 'donut' },
+      { id: 7, name: '70% Dark Bar', meta: 'Chocolate · 80 g', price: 5.5, art: 'chocolate', stock: 0 },
+      { id: 8, name: 'Wildflower Honey', meta: 'Honey · 250 g', price: 8, art: 'honey', stock: 5 },
+      { id: 9, name: 'Lavender Soap', meta: 'Bar soap · 100 g', price: 6.5, art: 'soap' }
+    ];
+    const T = [{ qty: 4, pct: 10 }, { qty: 6, pct: 15 }, { qty: 12, pct: 25 }];
+    const pctFor = (c) => { let d = 0; T.forEach((t) => { if (c >= t.qty) d = t.pct; }); return d; };
+    const box = this.state.box;
+    const byId = (id) => P.find((p) => p.id === id);
+    const items = box.map(byId);
+    const subtotal = items.reduce((a, p) => a + p.price, 0);
+    const change = (next) => {
+      const before = pctFor(box.length), after = pctFor(next.length);
+      this.setState({ box: next, toast: after > before ? 'You unlocked ' + after + '% off' : this.state.toast });
+      if (after > before) { clearTimeout(this.t); this.t = setTimeout(() => this.setState({ toast: null }), 2600); }
+    };
+    const setQty = (id, n) => {
+      const c = box.filter((x) => x === id).length;
+      if (n > c) change(box.concat(Array(n - c).fill(id)).slice(0, 12));
+      else { let drop = c - n; change(box.filter((x) => (x === id && drop > 0 ? (drop--, false) : true))); }
+    };
+    return {
+      yes: true,
+      n: { i22: 22, twelve: 12, four: 4, ends: 5 * 86400 + 6 * 3600 + 12 * 60 + 33 },
+      cats: [{ value: 'all', label: 'All', count: 24 }, { value: 'sweet', label: 'Sweets', count: 11 }, { value: 'tea', label: 'Tea & honey', count: 6 }, { value: 'home', label: 'Candles & bath', count: 7 }],
+      sorts: ['Bestselling', 'Price: low to high', 'Newest'],
+      full: box.length >= 12,
+      tiles: P.map((p) => Object.assign({}, p, {
+        qty: box.filter((x) => x === p.id).length,
+        add: () => setQty(p.id, 1),
+        change: (n) => setQty(p.id, n)
+      })),
+      items: items,
+      tiers: T.map((t) => ({ qty: t.qty, label: t.pct + '% off' })),
+      subtotal: subtotal,
+      total: subtotal * (1 - pctFor(box.length) / 100),
+      removeAt: (i) => change(box.filter((_, j) => j !== i)),
+      toast: !!this.state.toast,
+      toastText: this.state.toast || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

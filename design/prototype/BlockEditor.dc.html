@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Box Builder block in the editor — Mix and Max</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#ffffff}
+a:not([class]){color:#c23b0a}a:not([class]):hover{color:#141414}
+</style>
+</helmet>
+<div class="mmbb-root" style="min-height: 900px; display: flex; flex-direction: column; background: var(--surface); color: var(--ink); font-family: var(--font-sans);">
+  <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 60px; padding: 0 16px; border-bottom: 1px solid var(--line);">
+    <x-import component-from-global-scope="MixMax.Button" variant="ghost" icon="arrowLeft" aria-label="Back to pages"></x-import>
+    <x-import component-from-global-scope="MixMax.Button" variant="primary" size="sm" icon="plus" aria-label="Add block"></x-import>
+    <span style="flex: 1; text-align: center; font-size: 13px; color: var(--ink-muted);">Holiday Treat Box · Page</span>
+    <x-import component-from-global-scope="MixMax.Button" variant="ghost" size="sm">Save draft</x-import>
+    <x-import component-from-global-scope="MixMax.Button" size="sm" icon="eye">Preview</x-import>
+    <x-import component-from-global-scope="MixMax.Button" variant="primary" size="sm">Publish</x-import>
+  </header>
+
+  <div style="flex: 1; display: flex; flex-wrap: wrap; align-items: stretch;">
+    <main style="flex: 999 1 640px; min-width: 0; padding: 40px 48px; background: var(--canvas);">
+      <div style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+        <h1 style="margin: 0; font-family: var(--font-display); font-size: 40px; line-height: 44px; font-weight: 800; letter-spacing: -0.03em;">Holiday Treat Box</h1>
+        <div style="position: relative; padding: 20px; border-radius: 4px; outline: 2px solid var(--focus); outline-offset: 4px; background: var(--canvas);">
+          <div style="position: absolute; top: -46px; left: 0; display: flex; align-items: center; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--ink); border-radius: 8px; box-shadow: var(--shadow-raise);">
+            <span style="display: grid; place-items: center; width: 30px; height: 30px; border-radius: 6px; background: var(--max); color: var(--on-max);"><x-import component-from-global-scope="MixMax.Icon" name="box" size="{{n.i16}}" stroke-width="{{n.sw}}"></x-import></span>
+            <x-import component-from-global-scope="MixMax.Button" variant="ghost" size="sm" icon="grip" aria-label="Drag block"></x-import>
+            <x-import component-from-global-scope="MixMax.Button" variant="ghost" size="sm" icon="edit" aria-label="Edit campaign" href="WizardRules.dc.html"></x-import>
+            <x-import component-from-global-scope="MixMax.Button" variant="ghost" size="sm" icon="more" aria-label="More options"></x-import>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
+              <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+                <x-import component-from-global-scope="MixMax.Sticker" tone="max" size="sm" tilt="{{yes}}" icon="flame">Holiday drop</x-import>
+                <p style="margin: 0; font-family: var(--font-display); font-size: 34px; line-height: 36px; font-weight: 800; letter-spacing: -0.03em;">Mix 12 treats. <span style="color: var(--max-strong);">Save 25%.</span></p>
+              </div>
+              <x-import component-from-global-scope="MixMax.Countdown" seconds="{{n.ends}}"></x-import>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat({{cols}}, minmax(0, 1fr)); gap: 12px;">
+              <sc-for list="{{tiles}}" as="p" hint-placeholder-count="4">
+                <x-import component-from-global-scope="MixMax.ProductTile" name="{{p.name}}" price="{{p.price}}" art="{{p.art}}" badge="{{p.badge}}" badge-tone="{{p.badgeTone}}" qty="{{p.qty}}"></x-import>
+              </sc-for>
+            </div>
+            <sc-if value="{{showBar}}" hint-placeholder-val="{{ true }}">
+              <x-import component-from-global-scope="MixMax.BoxSummaryBar" size="{{n.twelve}}" min-items="{{n.four}}" items="{{items}}" tiers="{{tiers}}" total="{{n.total}}" compare-at="{{n.sub}}"></x-import>
+            </sc-if>
+          </div>
+        </div>
+        <p style="margin: 0; color: var(--ink-muted); font-size: 15px; line-height: 22px;">Type / to choose a block</p>
+      </div>
+    </main>
+
+    <aside aria-label="Block settings" style="flex: 1 1 300px; max-width: 320px; min-width: 0; border-left: 1px solid var(--line); background: var(--surface);">
+      <div style="display: flex; border-bottom: 1px solid var(--line);">
+        <span style="flex: 1; padding: 14px 16px; font-size: 13px; font-weight: 600; color: var(--ink-muted);">Page</span>
+        <span style="flex: 1; padding: 14px 16px; font-size: 13px; font-weight: 600; box-shadow: inset 0 -3px 0 var(--max);">Block</span>
+      </div>
+      <div style="display: flex; gap: 12px; padding: 16px; border-bottom: 1px solid var(--line);">
+        <span style="flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 8px; background: var(--max); color: var(--on-max); transform: rotate(-4deg);"><x-import component-from-global-scope="MixMax.Icon" name="box" size="{{n.i20}}" stroke-width="{{n.sw}}"></x-import></span>
+        <div><b style="font-size: 14px; line-height: 20px;">Mix and Max Box Builder</b><p style="margin: 2px 0 0; color: var(--ink-muted); font-size: 13px; line-height: 18px;">Shows a box campaign: products, slots, tiers and the add-to-cart bar.</p></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 16px;">
+        <x-import component-from-global-scope="MixMax.SelectField" label="Campaign" options="{{campaigns}}" help="Only active and scheduled campaigns are listed."></x-import>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-size: 13px; line-height: 18px; font-weight: 600;">Box summary</span>
+          <x-import component-from-global-scope="MixMax.SegmentedControl" label="Box summary" options="{{layouts}}" value="{{layout}}" on-change="{{onLayout}}" full-width="{{yes}}"></x-import>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-size: 13px; line-height: 18px; font-weight: 600;">Products per row</span>
+          <x-import component-from-global-scope="MixMax.SegmentedControl" label="Products per row" options="{{colOptions}}" value="{{cols}}" on-change="{{onCols}}" full-width="{{yes}}"></x-import>
+        </div>
+        <x-import component-from-global-scope="MixMax.Toggle" label="Show the hero" description="Sticker, headline and countdown above the products." default-checked="{{yes}}"></x-import>
+        <x-import component-from-global-scope="MixMax.Notice" tone="info">Products, tiers and dates live in the campaign. <a href="WizardRules.dc.html">Edit campaign</a></x-import>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { layout: 'Both', cols: 4 };
+  }
+  renderVals() {
+    const P = [
+      { name: 'Brown Butter Chip', price: 4.5, art: 'cookie', badge: 'Bestseller', badgeTone: 'deal', qty: 2 },
+      { name: 'Raspberry Macaron Duo', price: 5, art: 'macaron', badge: 'New', badgeTone: 'info', qty: 1 },
+      { name: 'Smoky Earl Grey', price: 7, art: 'tea', qty: 1 },
+      { name: 'Glazed Ring', price: 3.5, art: 'donut', qty: 0 }
+    ];
+    return {
+      yes: true,
+      n: { i16: 16, i20: 20, sw: 2.25, twelve: 12, four: 4, sub: 21, total: 18.9, ends: 5 * 86400 + 6 * 3600 },
+      campaigns: ['Holiday Treat Box (Tiered mix)', 'Build-a-Spa Kit (Fixed box)', 'Cookie Six-Pack (Bundle price)'],
+      layouts: ['Panel', 'Bar', 'Both'],
+      layout: this.state.layout,
+      onLayout: (v) => this.setState({ layout: v }),
+      colOptions: [3, 4, 5],
+      cols: this.state.cols,
+      onCols: (v) => this.setState({ cols: v }),
+      tiles: P.slice(0, this.state.cols).concat(this.state.cols > 4 ? [{ name: 'Fig & Cedar Candle', price: 9, art: 'candle', qty: 0 }] : []),
+      showBar: this.state.layout !== 'Panel',
+      items: [{ name: 'Brown Butter Chip', art: 'cookie' }, { name: 'Brown Butter Chip', art: 'cookie' }, { name: 'Raspberry Macaron Duo', art: 'macaron' }, { name: 'Smoky Earl Grey', art: 'tea' }],
+      tiers: [{ qty: 4, label: '10% off' }, { qty: 6, label: '15% off' }, { qty: 12, label: '25% off' }]
+    };
+  }
+}
+</script>
+</body>
+</html>

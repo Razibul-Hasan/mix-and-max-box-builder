@@ -1,0 +1,57 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-19T11:14:00Z" },
+  "title": "Mix and Max Box Builder — Plugin Design",
+  "launch": { "view": "canvas", "page": "admin" },
+  "pages": [
+    { "id": "admin", "name": "Admin" },
+    { "id": "wizard", "name": "Campaign wizard" },
+    { "id": "store", "name": "Storefront" },
+    { "id": "wp", "name": "WordPress & email" }
+  ],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 1300, "title": "Dashboard", "page": "admin", "expand": "fill", "is_interactive": true },
+    "DashboardFirstRun.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 1000, "title": "Dashboard · first run", "page": "admin", "expand": "fill", "is_interactive": true },
+    "Campaigns.dc.html": { "x": 2720, "y": 0, "w": 1280, "h": 920, "title": "Campaigns", "page": "admin", "expand": "fill", "is_interactive": true },
+    "CampaignsTemplates.dc.html": { "x": 4080, "y": 0, "w": 1280, "h": 920, "title": "Campaigns · pick a template", "page": "admin", "expand": "fill", "is_interactive": true },
+    "CampaignsDelete.dc.html": { "x": 0, "y": 1420, "w": 1280, "h": 920, "title": "Campaigns · delete confirmation", "page": "admin", "expand": "fill", "is_interactive": true },
+    "Analytics.dc.html": { "x": 1360, "y": 1420, "w": 1280, "h": 1800, "title": "Analytics", "page": "admin", "expand": "fill", "is_interactive": true },
+    "Settings.dc.html": { "x": 2720, "y": 1420, "w": 1280, "h": 1880, "title": "Settings", "page": "admin", "expand": "fill", "is_interactive": true },
+
+    "WizardBasics.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 1120, "title": "1 · Basics", "page": "wizard", "expand": "fill", "is_interactive": true },
+    "WizardProducts.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 1240, "title": "2 · Products", "page": "wizard", "expand": "fill", "is_interactive": true },
+    "WizardRules.dc.html": { "x": 2720, "y": 0, "w": 1280, "h": 1960, "title": "3 · Box rules & discounts", "page": "wizard", "expand": "fill", "is_interactive": true },
+    "WizardDesign.dc.html": { "x": 0, "y": 2080, "w": 1280, "h": 1380, "title": "4 · Design", "page": "wizard", "expand": "fill", "is_interactive": true },
+    "WizardPublish.dc.html": { "x": 1360, "y": 2080, "w": 1280, "h": 1180, "title": "5 · Publish", "page": "wizard", "expand": "fill", "is_interactive": true },
+    "WizardPublished.dc.html": { "x": 2720, "y": 2080, "w": 1280, "h": 900, "title": "Published", "page": "wizard", "expand": "fill", "is_interactive": true },
+
+    "StoreTiered.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 1840, "title": "Desktop · Tiered mix builder", "page": "store", "expand": "fill", "is_interactive": true },
+    "StoreFixed.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 1620, "title": "Desktop · Fixed box builder", "page": "store", "expand": "fill", "is_interactive": true },
+    "Cart.dc.html": { "x": 2720, "y": 0, "w": 1280, "h": 1000, "title": "Cart · box as one line", "page": "store", "expand": "fill", "is_interactive": true },
+    "MobileFill.dc.html": { "x": 4080, "y": 0, "w": 390, "h": 1720, "title": "Phone · fill the box", "page": "store", "is_interactive": true },
+    "MobileDrawer.dc.html": { "x": 4550, "y": 0, "w": 390, "h": 844, "title": "Phone · box drawer", "page": "store", "is_interactive": true },
+    "MobileComplete.dc.html": { "x": 5020, "y": 0, "w": 390, "h": 844, "title": "Phone · box complete", "page": "store", "is_interactive": true },
+
+    "BlockEditor.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 900, "title": "Block editor · Box Builder block", "page": "wp", "expand": "fill", "is_interactive": true },
+    "OrderEmail.dc.html": { "x": 1520, "y": 0, "w": 680, "h": 1240, "title": "Order email", "page": "wp" }
+  },
+  "order": [
+    "Main.dc.html", "DashboardFirstRun.dc.html", "Campaigns.dc.html", "CampaignsTemplates.dc.html", "CampaignsDelete.dc.html", "Analytics.dc.html", "Settings.dc.html",
+    "WizardBasics.dc.html", "WizardProducts.dc.html", "WizardRules.dc.html", "WizardDesign.dc.html", "WizardPublish.dc.html", "WizardPublished.dc.html",
+    "StoreTiered.dc.html", "StoreFixed.dc.html", "Cart.dc.html", "MobileFill.dc.html", "MobileDrawer.dc.html", "MobileComplete.dc.html",
+    "BlockEditor.dc.html", "OrderEmail.dc.html"
+  ],
+  "notes": {
+    "t_admin": { "x": 0, "y": -300, "text": "Admin · wp-admin › Mix and Max", "kind": "title1", "maxW": 5360, "page": "admin" },
+    "n_admin": { "x": 4080, "y": 1420, "w": 520, "maxH": 760, "fill": "orange", "size": "m", "page": "admin", "text": "Developer notes · Admin\n\n• Frame: MixMax.AdminShell. Nav items carry href = the WP submenu URL (admin.php?page=mmbb, mmbb-campaigns, mmbb-analytics, mmbb-settings). Mount in #mmbb-admin with class mmbb-root; cancel #wpcontent left padding.\n• Every page starts with MixMax.PageHeader: one primary action at most.\n• KPIs: MixMax.StatCard (upIsGood=false for Discount given). Charts: LineChart, FunnelChart, BarList. Data: GET mmbb/v1/stats and /analytics, scoped by the date-range control.\n• Tables use the mmbb-table classes with Badge for status; bulk bar appears on selection.\n• Pop-ups (template picker, delete) are drawn from tokens: scrim, surface, radius-xl, shadow-raise. Escape and the scrim close them; focus starts on the safe action.\n• First run: the checklist replaces the KPI row until a campaign has a sale." },
+    "t_wizard": { "x": 0, "y": -300, "text": "Campaign wizard · Basics → Products → Box rules → Design → Publish", "kind": "title1", "maxW": 4000, "page": "wizard" },
+    "n_wizard": { "x": 4080, "y": 0, "w": 520, "maxH": 760, "fill": "orange", "size": "m", "page": "wizard", "text": "Developer notes · Wizard\n\n• One route per step; MixMax.Steps items carry href so finished steps stay clickable. Next is the primary button, Back is secondary, Save draft is ghost.\n• The dark unsaved-changes bar appears on the first edit and holds Discard + Save campaign (max).\n• Autosave a draft every 30 s: PUT mmbb/v1/campaigns/{id}.\n• Products: GET mmbb/v1/products?search=&category=. Selected products keep manual order (drag handle).\n• The shopper preview mounts the real storefront components with the draft config.\n• Publish runs a checklist: page placed, test order, schedule. Go live is disabled until the page step is done." },
+    "t_store": { "x": 0, "y": -300, "text": "Storefront · the Box Builder block inside the merchant's theme", "kind": "title1", "maxW": 5410, "page": "store" },
+    "n_store": { "x": 5490, "y": 0, "w": 460, "maxH": 760, "fill": "orange", "size": "m", "page": "store", "text": "Developer notes · Storefront\n\n• Desktop: 3-column ProductTile grid + sticky MixMax.BoxPanel. Phone: 2-up grid + MixMax.BoxSummaryBar sticky at bottom 12px.\n• Tiers and prices are recomputed on the server (woocommerce_before_calculate_totals); the client only displays.\n• POST mmbb/v1/cart/box validates rules + stock, then adds one bundled line (or box + items, per Settings).\n• Unlocking a tier shows MixMax.Toast once per tier.\n• Countdown only with the campaign's real end date. Only N left uses real stock at or below the threshold.\n• Northwind Pantry is a made-up shop standing in for any theme." },
+    "t_wp": { "x": 0, "y": -300, "text": "WordPress & email", "kind": "title1", "maxW": 2200, "page": "wp" },
+    "n_wp": { "x": 2280, "y": 0, "w": 460, "maxH": 640, "fill": "orange", "size": "m", "page": "wp", "text": "Developer notes · WordPress\n\n• Block mmbb/box-builder (block.json, dynamic PHP render). Attributes: campaignId, layout (panel | bar | both), columns. The editor shows a live preview of the builder; the sidebar panel picks the campaign.\n• Shortcode [mmbb_box id=\"12\"] renders the same output.\n• Order email: box contents and gift message added via woocommerce_order_item_meta / email hooks; plain table markup, 600–680 px, inline styles only." }
+  },
+  "designSystems": [
+    { "title": "Mix and Max Box Builder", "namespace": "mixmax", "artifact": "https://claude.ai/code/artifact/098794f3-3c50-4a93-a6f5-a23e8f2ca01d", "version": "1792408039-fa99", "copiedAt": "2026-10-19T11:14:00Z" }
+  ]
+}

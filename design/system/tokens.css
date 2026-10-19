@@ -1,0 +1,104 @@
+/* Mix and Max Box Builder tokens for this canvas — generated from tokens.json (reference copy; in the plugin scope it to .mmbb-root) */
+:root, [data-theme="light"] {
+  --canvas: #f5f5f2;
+  --surface: #ffffff;
+  --surface-sunken: #eeeeea;
+  --surface-hover: #f7f7f4;
+  --surface-strong: #141414;
+  --line: #e2e2dd;
+  --line-strong: #8c8c86;
+  --ink: #141414;
+  --ink-muted: #5c5c57;
+  --ink-subtle: #6b6b66;
+  --on-ink: #ffffff;
+  --on-strong: #ffffff;
+  --on-strong-muted: #b8b8b1;
+  --max: #f04e12;
+  --on-max: #141414;
+  --max-strong: #c23b0a;
+  --max-soft: #ffe8dc;
+  --pop: #ffd23f;
+  --on-pop: #141414;
+  --win: #0e7a4f;
+  --win-soft: #dcf3e6;
+  --warn: #8a5a00;
+  --warn-soft: #fff1c7;
+  --alert: #b42318;
+  --alert-soft: #fde6e3;
+  --on-alert: #ffffff;
+  --info: #1f5fbf;
+  --info-soft: #e3edfc;
+  --focus: #1f5fbf;
+  --chart-1: #eb5a1e;
+  --chart-2: #2a78d6;
+  --chart-3: #1baf7a;
+  --chart-muted: #b5b5ae;
+  --chart-grid: #ecece8;
+  --scrim: #14141473;
+  --shadow-card: 0 1px 2px rgba(20,20,20,0.06);
+  --shadow-raise: 0 6px 16px rgba(20,20,20,0.10), 0 1px 3px rgba(20,20,20,0.08);
+  --shadow-bar: 0 -8px 24px rgba(20,20,20,0.12);
+}
+[data-theme="dark"] {
+  --canvas: #0f0f0e;
+  --surface: #1a1a18;
+  --surface-sunken: #242421;
+  --surface-hover: #21211f;
+  --surface-strong: #262624;
+  --line: #2e2e2b;
+  --line-strong: #6e6e68;
+  --ink: #f3f3ef;
+  --ink-muted: #b3b3ac;
+  --ink-subtle: #9a9a93;
+  --on-ink: #141414;
+  --on-strong: #f3f3ef;
+  --on-strong-muted: #b3b3ac;
+  --max: #ff6b33;
+  --on-max: #141414;
+  --max-strong: #ff8a5c;
+  --max-soft: #3a1c0f;
+  --pop: #ffd84d;
+  --on-pop: #141414;
+  --win: #4ade96;
+  --win-soft: #0f2e1f;
+  --warn: #f5c451;
+  --warn-soft: #33270a;
+  --alert: #ff8a7a;
+  --alert-soft: #3a1512;
+  --on-alert: #141414;
+  --info: #8ab4ff;
+  --info-soft: #14233d;
+  --focus: #8ab4ff;
+  --chart-1: #e4602a;
+  --chart-2: #3987e5;
+  --chart-3: #199e70;
+  --chart-muted: #5a5a55;
+  --chart-grid: #2a2a27;
+  --scrim: #00000099;
+  --shadow-card: none;
+  --shadow-raise: 0 6px 16px rgba(0,0,0,0.5);
+  --shadow-bar: 0 -8px 24px rgba(0,0,0,0.6);
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+  --font-sans: Figtree, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Bricolage Grotesque", Figtree, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@font-face { font-family: "Figtree"; src: url("fonts/figtree-latin-wght-normal.woff2") format("woff2"); font-weight: 300 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Bricolage Grotesque"; src: url("fonts/bricolage-grotesque-latin-wght-normal.woff2") format("woff2"); font-weight: 200 800; font-style: normal; font-display: swap; }

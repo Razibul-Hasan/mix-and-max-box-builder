@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Box rules and discounts — Mix and Max</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+<link rel="stylesheet" href="ds/mixmax/components/bundle.css">
+<script src="ds/mixmax/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#f5f5f2}
+a:not([class]){color:#c23b0a}a:not([class]):hover{color:#141414}
+</style>
+</helmet>
+<div class="mmbb-root" style="min-height: 1960px; background: var(--canvas); color: var(--ink); font-family: var(--font-sans);">
+<div style="position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 0 24px; background: var(--surface-strong); color: var(--on-strong);">
+  <span style="flex: 1; display: flex; align-items: center; gap: 8px; font-weight: 600;"><span style="color: var(--pop); display: flex;"><x-import component-from-global-scope="MixMax.Icon" name="alert" size="{{n.i18}}" stroke-width="{{n.sw2}}"></x-import></span>Unsaved changes</span>
+  <a href="WizardRules.dc.html" style="display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border: 1px solid var(--on-strong-muted); border-radius: 8px; color: var(--on-strong); font-size: 13px; font-weight: 600; text-decoration: none;">Discard</a>
+  <x-import component-from-global-scope="MixMax.Button" size="sm" variant="max" href="WizardDesign.dc.html">Save campaign</x-import>
+</div>
+<x-import component-from-global-scope="MixMax.AdminShell" active="campaigns" nav="{{nav}}">
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px;">
+    <x-import component-from-global-scope="MixMax.PageHeader" back-label="Campaigns" back-href="Campaigns.dc.html" title="Holiday Treat Box" subtitle="Active · last saved 4 minutes ago" style="flex: 1 1 320px;"></x-import>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      <x-import component-from-global-scope="MixMax.Button" icon="eye" href="StoreTiered.dc.html">View on store</x-import>
+      <x-import component-from-global-scope="MixMax.Button" variant="ghost" icon="copy">Duplicate</x-import>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 24px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;">
+    <x-import component-from-global-scope="MixMax.Steps" steps="{{steps}}" current="{{n.step}}"></x-import>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+    <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+      <x-import component-from-global-scope="MixMax.Card" title="Campaign type" subtitle="How the discount works. You can switch any time before the first order.">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding-top: 4px;">
+          <x-import component-from-global-scope="MixMax.ChoiceCard" name="type" value="tiered" selected="{{isTiered}}" on-select="{{pickType}}" icon="percent" title="Tiered mix" description="The more items in the box, the bigger the discount. Best for snacks and samplers." tag="Top seller"></x-import>
+          <x-import component-from-global-scope="MixMax.ChoiceCard" name="type" value="fixed" selected="{{isFixed}}" on-select="{{pickType}}" icon="box" title="Fixed box" description="Shoppers pick a size (4, 6, 12) and fill every slot. Each size has its own price."></x-import>
+          <x-import component-from-global-scope="MixMax.ChoiceCard" name="type" value="bundle" selected="{{isBundle}}" on-select="{{pickType}}" icon="tag" title="Bundle price" description="Any 5 items for one set price, like 5 for $25."></x-import>
+        </div>
+      </x-import>
+
+      <x-import component-from-global-scope="MixMax.Card" title="Box rules">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+            <x-import component-from-global-scope="MixMax.TextField" label="Box holds up to" default-value="12" suffix="items" help="Shoppers see 12 slots."></x-import>
+            <x-import component-from-global-scope="MixMax.TextField" label="Minimum to check out" default-value="4" suffix="items" help="Below this the button stays locked."></x-import>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--line);">
+            <x-import component-from-global-scope="MixMax.Toggle" label="Allow the same product twice" description="Limit how many of one product fit in a box." default-checked="{{yes}}"></x-import>
+            <x-import component-from-global-scope="MixMax.TextField" label="Max of one product" default-value="3" suffix="per box" style="max-width: 220px;"></x-import>
+          </div>
+          <div style="padding-top: 16px; border-top: 1px solid var(--line);">
+            <x-import component-from-global-scope="MixMax.Toggle" label="Hide sold-out products" description="Otherwise they show as Sold out and can't be added." default-checked="{{yes}}"></x-import>
+          </div>
+        </div>
+      </x-import>
+
+      <x-import component-from-global-scope="MixMax.Card" title="Discount tiers" subtitle="Each tier unlocks when the box reaches its item count.">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <x-import component-from-global-scope="MixMax.SegmentedControl" size="sm" label="Discount type" options="{{discountTypes}}" default-value="Percent"></x-import>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr>
+                <th style="width: 34px;"></th>
+                <th style="padding: 0 8px 8px 0; color: var(--ink-muted); font-size: 12px; line-height: 16px; font-weight: 600; text-align: left;">When the box has</th>
+                <th style="padding: 0 8px 8px 0; color: var(--ink-muted); font-size: 12px; line-height: 16px; font-weight: 600; text-align: left;">Discount</th>
+                <th style="padding: 0 8px 8px 0; color: var(--ink-muted); font-size: 12px; line-height: 16px; font-weight: 600; text-align: left;">Shoppers see</th>
+                <th style="width: 40px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{tierRows}}" as="t" hint-placeholder-count="3">
+                <tr>
+                  <td style="padding: 6px 8px 6px 0;"><span style="display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--surface-sunken); font-size: 12px; font-weight: 700;">{{t.num}}</span></td>
+                  <td style="padding: 6px 8px 6px 0;"><x-import component-from-global-scope="MixMax.TextField" aria-label="{{t.qtyLabel}}" value="{{t.qty}}" on-change="{{t.onQty}}" suffix="items"></x-import></td>
+                  <td style="padding: 6px 8px 6px 0;"><x-import component-from-global-scope="MixMax.TextField" aria-label="{{t.pctLabel}}" value="{{t.pct}}" on-change="{{t.onPct}}" suffix="%"></x-import></td>
+                  <td style="padding: 6px 8px 6px 0;">
+                    <sc-if value="{{t.isLast}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="MixMax.Sticker" size="sm" tilt="{{yes}}">{{t.sticker}}</x-import></sc-if>
+                    <sc-if value="{{t.notLast}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="MixMax.Badge" tone="brand">{{t.label}}</x-import></sc-if>
+                  </td>
+                  <td style="padding: 6px 0;"><x-import component-from-global-scope="MixMax.Button" variant="ghost" size="sm" icon="trash" aria-label="{{t.removeLabel}}" on-click="{{t.remove}}"></x-import></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <div><x-import component-from-global-scope="MixMax.Button" size="sm" variant="ghost" icon="plus" on-click="{{addTier}}">Add tier</x-import></div>
+          <div style="display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 10px; background: var(--surface-sunken); color: var(--ink-muted); font-size: 13px; line-height: 18px;">
+            <x-import component-from-global-scope="MixMax.Icon" name="eye" size="{{n.i16}}"></x-import>
+            <span>With {{count}} items, shoppers read: <b style="color: var(--ink);">{{sentence}}</b></span>
+          </div>
+        </div>
+      </x-import>
+
+      <x-import component-from-global-scope="MixMax.Card" title="Extras">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <x-import component-from-global-scope="MixMax.Toggle" label="Gift message" description="A text box under the box summary. Printed on the packing slip." default-checked="{{yes}}"></x-import>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; padding-top: 16px; border-top: 1px solid var(--line);">
+            <x-import component-from-global-scope="MixMax.Toggle" label="Gift wrap" description="Optional paid add-on." default-checked="{{yes}}"></x-import>
+            <x-import component-from-global-scope="MixMax.TextField" label="Gift wrap fee" prefix="$" default-value="3.00"></x-import>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <div style="flex: 1 1 400px; min-width: 0; display: flex; flex-direction: column; gap: 24px; position: sticky; top: 132px;">
+      <x-import component-from-global-scope="MixMax.Card" title="Shopper preview" subtitle="Updates as you edit. Try adding items.">
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 14px; border-radius: 14px; background: var(--canvas); border: 1px solid var(--line);">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;">
+            <p style="margin: 0; font-family: var(--font-display); font-size: 22px; line-height: 26px; font-weight: 800; letter-spacing: -0.02em;">Mix 12. Save {{topPct}}%.</p>
+            <x-import component-from-global-scope="MixMax.Countdown" seconds="{{n.ends}}" label="Ends in"></x-import>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+            <sc-for list="{{tiles}}" as="p" hint-placeholder-count="4">
+              <x-import component-from-global-scope="MixMax.ProductTile" name="{{p.name}}" price="{{p.price}}" compare-at="{{p.compareAt}}" art="{{p.art}}" badge="{{p.badge}}" badge-tone="{{p.badgeTone}}" stock="{{p.stock}}" qty="{{p.qty}}" on-add="{{p.add}}" on-change="{{p.change}}" box-full="{{full}}"></x-import>
+            </sc-for>
+          </div>
+          <x-import component-from-global-scope="MixMax.BoxSummaryBar" size="{{n.twelve}}" min-items="{{n.four}}" items="{{items}}" tiers="{{tiers}}" total="{{total}}" compare-at="{{subtotal}}"></x-import>
+        </div>
+      </x-import>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line);">
+    <x-import component-from-global-scope="MixMax.Button" href="WizardProducts.dc.html" icon="arrowLeft">Back</x-import>
+    <x-import component-from-global-scope="MixMax.Button" variant="primary" icon-right="arrowRight" href="WizardDesign.dc.html">Next: Design</x-import>
+  </div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { type: 'tiered', tiers: [{ qty: 4, pct: 10 }, { qty: 6, pct: 15 }, { qty: 12, pct: 25 }], q: { 1: 2, 2: 1, 5: 1, 3: 1 } };
+  }
+  renderVals() {
+    const P = [
+      { id: 1, name: 'Brown Butter Chip', price: 4.5, art: 'cookie', badge: 'Bestseller', badgeTone: 'deal' },
+      { id: 2, name: 'Raspberry Macaron Duo', price: 5, art: 'macaron', badge: 'New', badgeTone: 'info' },
+      { id: 5, name: 'Smoky Earl Grey', price: 7, compareAt: 8.75, art: 'tea', badge: '-20%', badgeTone: 'deal' },
+      { id: 3, name: 'Fig & Cedar Candle', price: 9, compareAt: 12, art: 'candle', stock: 3 }
+    ];
+    const s = this.state;
+    const tiers = s.tiers.slice().sort((a, b) => a.qty - b.qty);
+    const items = [];
+    P.forEach((p) => { for (let i = 0; i < (s.q[p.id] || 0); i++) items.push(p); });
+    const count = items.length;
+    const pctFor = (c) => { let d = 0; tiers.forEach((t) => { if (c >= t.qty) d = t.pct; }); return d; };
+    const subtotal = items.reduce((a, p) => a + p.price, 0);
+    const next = tiers.find((t) => count < t.qty);
+    const got = tiers.filter((t) => count >= t.qty).pop();
+    const sentence = next ? ((got ? got.pct + '% off unlocked. ' : '') + 'Add ' + (next.qty - count) + ' more to get ' + next.pct + '% off') : (got ? 'You unlocked ' + got.pct + '% off. That’s the max deal.' : '');
+    const setTier = (i, k, v) => this.setState({ tiers: s.tiers.map((t, j) => (j === i ? Object.assign({}, t, { [k]: parseInt(v, 10) || 0 }) : t)) });
+    const setQ = (id, n) => this.setState({ q: Object.assign({}, s.q, { [id]: n }) });
+    return {
+      yes: true,
+      nav: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'Main.dc.html' },
+        { id: 'campaigns', label: 'Campaigns', icon: 'campaign', href: 'Campaigns.dc.html' },
+        { id: 'analytics', label: 'Analytics', icon: 'analytics', href: 'Analytics.dc.html' },
+        { id: 'settings', label: 'Settings', icon: 'settings', href: 'Settings.dc.html' }
+      ],
+      steps: [
+        { label: 'Basics', href: 'WizardBasics.dc.html' },
+        { label: 'Products', href: 'WizardProducts.dc.html' },
+        { label: 'Box rules', href: 'WizardRules.dc.html' },
+        { label: 'Design', href: 'WizardDesign.dc.html' },
+        { label: 'Publish', href: 'WizardPublish.dc.html' }
+      ],
+      discountTypes: ['Percent', 'Fixed $', 'Box price'],
+      n: { step: 2, i16: 16, i18: 18, sw2: 2, twelve: 12, four: 4, ends: 5 * 86400 + 6 * 3600 },
+      isTiered: s.type === 'tiered',
+      isFixed: s.type === 'fixed',
+      isBundle: s.type === 'bundle',
+      pickType: (v) => this.setState({ type: v }),
+      tierRows: s.tiers.map((t, i) => ({
+        num: i + 1,
+        qty: String(t.qty),
+        pct: String(t.pct),
+        label: t.pct + '% off',
+        sticker: 'Save ' + t.pct + '%',
+        isLast: i === s.tiers.length - 1,
+        notLast: i !== s.tiers.length - 1,
+        qtyLabel: 'Tier ' + (i + 1) + ' items',
+        pctLabel: 'Tier ' + (i + 1) + ' discount',
+        removeLabel: 'Remove tier ' + (i + 1),
+        onQty: (e) => setTier(i, 'qty', e.target.value),
+        onPct: (e) => setTier(i, 'pct', e.target.value),
+        remove: () => this.setState({ tiers: s.tiers.filter((_, j) => j !== i) })
+      })),
+      addTier: () => {
+        const last = s.tiers[s.tiers.length - 1] || { qty: 2, pct: 5 };
+        this.setState({ tiers: s.tiers.concat([{ qty: last.qty + 2, pct: last.pct + 5 }]) });
+      },
+      count: count,
+      sentence: '“' + sentence + '”',
+      topPct: tiers.length ? tiers[tiers.length - 1].pct : 0,
+      tiles: P.map((p) => Object.assign({}, p, {
+        qty: s.q[p.id] || 0,
+        add: () => setQ(p.id, 1),
+        change: (n) => setQ(p.id, n)
+      })),
+      full: count >= 12,
+      items: items,
+      tiers: tiers.map((t) => ({ qty: t.qty, label: t.pct + '% off' })),
+      subtotal: subtotal,
+      total: subtotal * (1 - pctFor(count) / 100)
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Order email with a box — Mix and Max</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mixmax-tokens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#eeeeea}
+a:not([class]){color:#c23b0a}a:not([class]):hover{color:#141414}
+</style>
+</helmet>
+<div style="width: 680px; min-height: 1240px; box-sizing: border-box; padding: 32px 40px; background: #eeeeea; color: #141414; font-family: Figtree, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;">
+  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #e2e2dd;">
+    <div style="padding: 24px 32px; border-bottom: 1px solid #e2e2dd;">
+      <span style="font-family: 'Bricolage Grotesque', Figtree, sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.02em;">Northwind Pantry</span>
+    </div>
+    <div style="padding: 32px;">
+      <h1 style="margin: 0 0 8px; font-family: 'Bricolage Grotesque', Figtree, sans-serif; font-size: 28px; line-height: 32px; font-weight: 800; letter-spacing: -0.02em;">Thanks for your order</h1>
+      <p style="margin: 0 0 24px; font-size: 15px; line-height: 22px; color: #5c5c57;">Hi Sam, we've got order #1048 and we're packing your box now.</p>
+
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px; line-height: 20px;">
+        <thead>
+          <tr>
+            <th style="padding: 10px 0; border-bottom: 1px solid #e2e2dd; text-align: left; color: #5c5c57; font-size: 12px; font-weight: 600;">Product</th>
+            <th style="padding: 10px 0; border-bottom: 1px solid #e2e2dd; text-align: center; color: #5c5c57; font-size: 12px; font-weight: 600; width: 48px;">Qty</th>
+            <th style="padding: 10px 0; border-bottom: 1px solid #e2e2dd; text-align: right; color: #5c5c57; font-size: 12px; font-weight: 600; width: 96px;">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding: 16px 0; border-bottom: 1px solid #e2e2dd; vertical-align: top;">
+              <b style="display: block; font-size: 15px; line-height: 22px;">Holiday Treat Box</b>
+              <span style="display: inline-block; margin: 4px 0 10px; padding: 2px 8px; border-radius: 999px; background: #ffe8dc; color: #c23b0a; font-size: 12px; font-weight: 700;">10% box discount · saved $3.00</span>
+              <table style="border-collapse: collapse; font-size: 13px; line-height: 20px; color: #5c5c57;">
+                <tbody>
+                  <tr><td style="padding: 0 12px 0 0;">2 ×</td><td>Brown Butter Chip</td></tr>
+                  <tr><td style="padding: 0 12px 0 0;">1 ×</td><td>Raspberry Macaron Duo</td></tr>
+                  <tr><td style="padding: 0 12px 0 0;">1 ×</td><td>Smoky Earl Grey</td></tr>
+                  <tr><td style="padding: 0 12px 0 0;">1 ×</td><td>Fig &amp; Cedar Candle</td></tr>
+                </tbody>
+              </table>
+              <div style="margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: #f5f5f2; font-size: 13px; line-height: 18px;">
+                <b style="display: block; margin-bottom: 2px;">Gift message</b>
+                <span style="color: #5c5c57;">“Happy holidays, love from us both.”</span>
+              </div>
+            </td>
+            <td style="padding: 16px 0; border-bottom: 1px solid #e2e2dd; text-align: center; vertical-align: top;">1</td>
+            <td style="padding: 16px 0; border-bottom: 1px solid #e2e2dd; text-align: right; vertical-align: top;"><s style="display: block; color: #6b6b66; font-size: 13px;">$30.00</s><b>$27.00</b></td>
+          </tr>
+          <tr>
+            <td style="padding: 16px 0; border-bottom: 1px solid #e2e2dd;"><b style="font-size: 15px; line-height: 22px;">Wildflower Honey</b></td>
+            <td style="padding: 16px 0; border-bottom: 1px solid #e2e2dd; text-align: center;">1</td>
+            <td style="padding: 16px 0; border-bottom: 1px solid #e2e2dd; text-align: right;"><b>$8.00</b></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr><td colspan="2" style="padding: 12px 0 4px; color: #5c5c57;">Subtotal</td><td style="padding: 12px 0 4px; text-align: right;">$35.00</td></tr>
+          <tr><td colspan="2" style="padding: 4px 0; color: #5c5c57;">Shipping</td><td style="padding: 4px 0; text-align: right;">$4.95</td></tr>
+          <tr><td colspan="2" style="padding: 12px 0 0; border-top: 1px solid #e2e2dd; font-size: 16px; font-weight: 700;">Total</td><td style="padding: 12px 0 0; border-top: 1px solid #e2e2dd; text-align: right; font-size: 20px; font-weight: 800;">$39.95</td></tr>
+        </tfoot>
+      </table>
+
+      <div style="display: flex; gap: 24px; margin-top: 32px; font-size: 13px; line-height: 20px;">
+        <div style="flex: 1;"><b style="display: block; margin-bottom: 4px; font-size: 14px;">Shipping to</b><span style="color: #5c5c57;">Sam Taylor<br>12 Harbour Road<br>Port Louis</span></div>
+        <div style="flex: 1;"><b style="display: block; margin-bottom: 4px; font-size: 14px;">Payment</b><span style="color: #5c5c57;">Card ending 4242</span></div>
+      </div>
+    </div>
+    <div style="padding: 20px 32px; border-top: 1px solid #e2e2dd; background: #f5f5f2; color: #5c5c57; font-size: 13px; line-height: 18px;">Questions about your box? Reply to this email and we'll help.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":680,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
