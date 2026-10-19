@@ -9,7 +9,7 @@ Updated by the agent at the end of every phase. Newest entry first under each ph
 | 2 | Design system inside the plugin | done; Docker checks skipped | `Phase 2: Design system inside the plugin` |
 | 3 | Data layer and pricing engine | done; Docker checks skipped | `Phase 3: Data layer and pricing engine` |
 | 4 | REST API for the admin | done; Docker checks skipped | `Phase 4: REST API for the admin` |
-| 5 | Admin app: shell, dashboard, campaigns | not started | |
+| 5 | Admin app: shell, dashboard, campaigns | done; Docker checks skipped | `Phase 5: Admin app: shell, dashboard, campaigns` |
 | 6 | Campaign wizard | not started | |
 | 7 | Cart, orders and stock | not started | |
 | 8 | Storefront: block, shortcode, builder | not started | |
@@ -43,6 +43,115 @@ installable on the minimum supported PHP branch.
 | WordPress / WooCommerce / Plugin Check in wp-env | Not installed here; latest release URLs configured, exact installed versions pending Docker run |
 
 ## Log
+
+### Phase 5 — Admin app: shell, dashboard, campaigns (2026-10-19)
+
+**Done:** `Admin\Menu` (top-level "Mix and Max" at position 56 with Dashboard,
+Campaigns, Analytics, Settings; every callback checks `manage_woocommerce` and prints
+only `<div id="mmbb-admin" class="mmbb-root" data-page="…">`) and `Admin\Admin_Assets`
+(enqueues `mmbb-components`, the `mmbb-admin` style and script only when the hook suffix
+is one of ours; data through `wp_add_inline_script( …, 'before' )` with
+`wp_json_encode()`; `wp_set_script_translations()`). `window.mmbbAdmin` holds `page`,
+`urls`, `templates`, `money`, `adminUrl`, `storeUrl`, `version`, `wcVersion`,
+`timezone` and `locale`. App in `src/admin/`: `App.js` picks the screen from
+`data-page` plus `action`, `id` and `step`; `api.js` wraps `apiFetch`; the `AdminShell`
+nav items are real `admin.php?page=…` links. Screens: Dashboard (first-run and active),
+Campaigns list, template picker, delete dialog, and a "not available yet" screen for
+the editor, Analytics and Settings. New `Modal` component in `src/components/`
+(role `dialog` or `alertdialog`, `aria-modal`, labelled heading, Tab trap, Esc and scrim
+close, initial focus on a chosen control, focus returned to the opener). `DataTable`
+gained a `rowLabel` prop for the checkbox names.
+
+**Decisions:**
+
+- **Active tab.** The design's Active tab includes "Ending soon" rows, but
+  `/campaigns?status=` takes one status. I added a `live` value (active plus ending soon)
+  to the REST `status` enum and a `live` key in `counts`. It is additive, so nothing
+  from Phase 4 changes. A Paused tab only shows when paused campaigns exist.
+- **First-run vs active.** The Dashboard is first-run while the box count for the
+  selected range and the previous range are both zero (stats have no all-time figure).
+  Until Phase 9 fills `/stats`, every site sees first-run. The active layout was
+  verified against mock data only.
+- **Shapes Phase 9 must fill** (the schema only says `object`): `live_campaign` is
+  `{ id, boxes_today, conversion }`; `top_products[]` is `{ name, count, note? }`;
+  `kpis.*.series` are numbers (money in minor units); conversion is a percentage
+  number. The Live now card falls back to the first live campaign when `live_campaign`
+  is null. Top campaigns come from `/campaigns?orderby=revenue&per_page=50` filtered
+  to live ones, because `/stats` has no campaign rows yet.
+- **Create and Edit links.** "Create campaign" and "Start from a template" on the
+  Dashboard go to `admin.php?page=mmbb-campaigns&action=new`, which opens the picker.
+  Choosing a template POSTs `/campaigns` and goes to `edit_url` plus `&step=basics`.
+  Phase 6 owns that screen; until then it shows the "not available yet" page.
+- **Checklist actions.** campaign: Start (picker); products: Add products (editor,
+  `step=products`); placed: Copy shortcode; test order: Mark as done (POST `/setup`);
+  live: Go live (editor, `step=publish`). "Hide checklist" is remembered in
+  `localStorage` under `mmbb:checklist-dismissed` (a per-browser convenience only).
+- **Row menu** (View on store, Duplicate, Pause/Resume, Copy shortcode, Delete) is a
+  small own component: `role="menu"`, arrow keys, Esc, fixed position so the table's
+  scroll area cannot clip it. Pause, Resume, Duplicate and Delete all go through
+  `POST /campaigns/bulk` with one id.
+- **Thumbnails** come from `GET /products?include[]=` for the first three products of
+  each campaign on the page. Campaigns with none show placeholder art, or one neutral
+  tile when no products were picked.
+- **Dates** use `Intl` with the store `timezone` (IANA name or fixed offset) and the
+  user's `locale`; the year is added only when it differs from this year.
+- **Padding fix.** Phase 2's admin CSS targeted `woocommerce_page_*` body classes. The
+  menu is top level, so `Menu` adds `mmbb-admin-page` through `admin_body_class` and
+  the CSS uses that. This closes the Phase 2 open issue.
+- **Dependencies.** Added `@wordpress/api-fetch` 7.30.0 and `@wordpress/url` 4.30.0
+  (the planned `api.js` wrapper needs them). Both are WordPress packages and stay
+  external (`wp-api-fetch` and `wp-url` in `build/admin.asset.php`); nothing is bundled.
+- The admin bundle imports components directly, so only the `mmbb-components` style is
+  enqueued, not its script.
+- The Help link opens the plugin's WordPress.org support forum in a new tab. It is a
+  plain link the user clicks; nothing is requested in the background.
+
+**Deviations from the plan (and why):**
+
+- The delete dialog from the design has an "Also delete their analytics history"
+  checkbox. There is no analytics store to delete from until Phase 9, so I left it out
+  rather than ship a control that does nothing.
+- Sorting by revenue or conversion still sorts by date (Phase 4 limitation).
+- The shell's Help button is a link to the support forum (see above); the design
+  shows a plain button.
+
+**Visual comparison** (headless Edge, 1280 px, mock REST data; not live wp-admin):
+Dashboard (active), Dashboard (first run), Campaigns with a selection, the template
+picker, the delete dialog and the row menu were compared with
+`design/screens/DashboardPage.png`, `CampaignsPage.png` and the prototype files.
+Layout, copy, status badges, the bulk bar and the dialogs match. Remaining gaps:
+"Hide checklist" (needed for the dismiss behaviour) is not in the design; the side
+column is 380 px (the PNG shows about 388); thumbnails are placeholder art unless the
+product has an image; the Dashboard header row sits about 20 px higher than in the PNG
+because the control row is taller than the title block. No JavaScript errors or
+external requests in the harness.
+
+**Checks run:** build ✅ · lint:js ✅ · lint:css ✅ · composer lint ✅ (48 files) ·
+test:js ✅ (132 tests, 9 suites: list reducer; Campaigns page filters, debounced
+search, paging, selection and bulk, delete confirmation with focus on Cancel and
+Pause instead, error with Retry; Dashboard first-run and active, range switch,
+checklist dismiss; Modal focus trap, Esc, scrim, focus return; formatters) ·
+test:unit ✅ (65 tests, 427 assertions) · test:php ⏭ · Plugin Check ⏭ · `php -l` on
+every new PHP file ✅ · source scan: no `<script>`, `<style>`, `__return_true`,
+superglobal or `wp_redirect` in `includes/admin/`.
+
+**Skipped checks (and why):** Docker is not installed, so wp-env, the integration
+suites and Plugin Check did not run. Authored but not executed: `AdminMenuTest`
+(menu and capability, mount point, `wp_die` for a subscriber, assets loaded on our
+screens and absent on Posts, Plugins and the WordPress dashboard, data keys) and the
+new `live` assertions in `CampaignRepositoryTest` and `RestCampaignsTest`. The plan's
+"every screen renders in wp-env against real REST data", "open Posts or Plugins and
+confirm `mmbb-*` handles are absent" and the `WP_DEBUG` checks are therefore
+unverified in a live WordPress.
+
+**Open issues:** Run the integration suites and Plugin Check when Docker is
+available, and look at the screens in a real wp-admin (page-hook suffixes, the
+`mmbb-admin-page` body class, notices from other plugins, the 46 px admin bar on
+phones). Phase 6 builds the editor behind `action=edit&id=…&step=…` (steps `basics`,
+`products` and `publish` are already linked). Phase 9 must fill the shapes listed under
+Decisions, make `orderby=revenue|conversion` real, and decide whether the delete
+dialog gets its analytics checkbox. The Analytics and Settings screens are
+placeholders until Phases 9 and 10.
 
 ### Phase 4 — REST API for the admin (2026-10-19)
 
@@ -493,6 +602,9 @@ phases. This is a tooling scaffold archive, not a submission release.
 
 ## Open issues
 
+- Phase 5: Integration tests (`AdminMenuTest`, the `live` status cases), Plugin Check and a
+  live wp-admin look have not run (no Docker). Phase 6 builds the editor; Phase 9 fills the
+  `/stats` shapes the Dashboard expects (see the Phase 5 log).
 - Phase 4: The REST integration suites (`RestCampaignsTest`, `RestCatalogTest`,
   `RestStoreTest`) and Plugin Check have not run (no Docker). `/publish` answers 501
   until Phase 6, `/preview` has no products until Phase 8, and `/stats` and
@@ -501,8 +613,8 @@ phases. This is a tooling scaffold archive, not a submission release.
   `WP_DEBUG` checks have not run (no Docker). The gift template needs config keys
   for "no prices inside" and "message required".
 - Phase 2: Execute Assets integration tests, Plugin Check, live WordPress
-  translation/enqueue and WP_DEBUG checks once Docker is available. Verify admin
-  padding body classes when Phase 5 introduces actual page hooks.
+  translation/enqueue and WP_DEBUG checks once Docker is available. Admin
+  padding body classes: handled in Phase 5 through `mmbb-admin-page`; verify in live wp-admin.
 - Phase 1: Docker-dependent lifecycle/integration, Plugin Check, multisite,
   browser and WP_DEBUG checks remain unverified. Run the single-site and network
   suites before treating lifecycle runtime behavior as verified.

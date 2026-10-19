@@ -40,7 +40,9 @@
 		"typescript": "5.9.3"
 	},
 	"dependencies": {
+		"@wordpress/api-fetch": "7.30.0",
 		"@wordpress/element": "9.0.0",
-		"@wordpress/i18n": "6.30.0"
+		"@wordpress/i18n": "6.30.0",
+		"@wordpress/url": "4.30.0"
 	}
 }

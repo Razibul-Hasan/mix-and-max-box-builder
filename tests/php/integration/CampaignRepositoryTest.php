@@ -227,9 +227,14 @@ class CampaignRepositoryTest extends \WP_UnitTestCase {
 				'ending_soon' => 0,
 				'ended'       => 0,
 				'paused'      => 1,
+				'live'        => 1,
 			),
 			$all['counts']
 		);
+
+		$live = $this->repo->query( array( 'status' => 'live' ) );
+		$this->assertSame( array( $holiday['id'] ), array_column( $live['items'], 'id' ) );
+		$this->assertSame( 1, $live['total'] );
 
 		$drafts = $this->repo->query( array( 'status' => 'draft' ) );
 		$this->assertSame( array( $snack['id'] ), array_column( $drafts['items'], 'id' ) );

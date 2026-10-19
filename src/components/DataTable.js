@@ -11,6 +11,7 @@ export default function DataTable( {
 	defaultSelected = [],
 	onSelectionChange,
 	onRowClick,
+	rowLabel,
 	bulkActions,
 	empty,
 	dense,
@@ -115,13 +116,17 @@ export default function DataTable( {
 											}
 										>
 											<Checkbox
-												aria-label={ sprintf(
-													/* translators: %s: Row identifier. */ __(
-														'Select row %s',
-														'mix-and-max-box-builder'
-													),
-													k
-												) }
+												aria-label={
+													rowLabel
+														? rowLabel( r )
+														: sprintf(
+																/* translators: %s: Row identifier. */ __(
+																	'Select row %s',
+																	'mix-and-max-box-builder'
+																),
+																k
+														  )
+												}
 												checked={ isSel }
 												onChange={ () =>
 													setSel(

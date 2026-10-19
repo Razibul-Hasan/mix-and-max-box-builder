@@ -198,6 +198,12 @@ class RestCampaignsTest extends \WP_UnitTestCase {
 		$drafts = $this->send( 'GET', '/mmbb/v1/campaigns', array( 'status' => 'draft' ) )->get_data();
 		$this->assertSame( 3, $drafts['total'] );
 
+		// "live" is accepted (active plus ending soon) and nothing is live yet.
+		$live = $this->send( 'GET', '/mmbb/v1/campaigns', array( 'status' => 'live' ) );
+		$this->assertSame( 200, $live->get_status() );
+		$this->assertSame( 0, $live->get_data()['total'] );
+		$this->assertSame( 0, $data['counts']['live'] );
+
 		$fixed = $this->send( 'GET', '/mmbb/v1/campaigns', array( 'type' => 'fixed' ) )->get_data();
 		foreach ( $fixed['items'] as $item ) {
 			$this->assertSame( 'fixed', $item['type'] );

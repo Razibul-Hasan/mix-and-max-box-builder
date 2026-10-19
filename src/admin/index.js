@@ -1,4 +1,8 @@
-// Placeholder entry: keep WordPress libraries external to the build.
-import '@wordpress/element';
-import '@wordpress/i18n';
+import { createRoot } from '@wordpress/element';
+import App from './App';
 import './admin.css';
+
+const mount = document.getElementById( 'mmbb-admin' );
+if ( mount ) {
+	createRoot( mount ).render( <App page={ mount.dataset.page } /> );
+}

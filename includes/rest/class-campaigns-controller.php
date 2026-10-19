@@ -230,9 +230,9 @@ final class Campaigns_Controller extends Base_Controller {
 		return array_merge(
 			array(
 				'status'  => array(
-					'description' => __( 'Computed status to show.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Computed status to show. "live" is active plus ending soon.', 'mix-and-max-box-builder' ),
 					'type'        => 'string',
-					'enum'        => array_merge( array( 'all' ), Status::all() ),
+					'enum'        => array_merge( array( 'all', 'live' ), Status::all() ),
 					'default'     => 'all',
 				),
 				'search'  => array(

@@ -45,6 +45,7 @@ const samples = {
 		description: 'Pick products to start.',
 	},
 	Toast: { children: 'Campaign saved', action: 'Undo', onDismiss: jest.fn() },
+	Modal: { title: 'Delete campaign?', children: 'This cannot be undone.' },
 	AdminShell: { active: 'campaigns', children: 'Campaigns' },
 	StatCard: {
 		label: 'Box revenue',

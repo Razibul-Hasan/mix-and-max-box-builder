@@ -213,6 +213,20 @@ export interface ToastProps {
 }
 export declare function Toast(props: ToastProps): React.ReactElement;
 
+export interface ModalProps {
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  /** Shown in a tinted tile beside the heading. */ icon?: React.ReactNode;
+  /** Use alertdialog for confirmations. Default dialog. */ role?: 'dialog' | 'alertdialog';
+  /** Default md. */ size?: 'md' | 'lg';
+  footer?: React.ReactNode;
+  /** Escape, a click on the scrim and the close button call this. */ onClose?: () => void;
+  /** Control (or a wrapper around one) that gets focus first; default is the first control. Use the safe action. */ initialFocusRef?: React.RefObject<HTMLElement>;
+  /** Default true. */ showClose?: boolean;
+  children?: React.ReactNode;
+}
+export declare function Modal(props: ModalProps): React.ReactElement;
+
 export interface AdminNavItem { id: string; label: React.ReactNode; icon: IconName; count?: number; /** e.g. admin.php?page=mmbb-campaigns; default #/id */ href?: string }
 export interface AdminShellProps {
   active?: string;
@@ -254,6 +268,7 @@ export interface DataTableProps<R extends Record<string, any>> {
   defaultSelected?: Array<R[keyof R]>;
   onSelectionChange?: (keys: Array<R[keyof R]>) => void;
   onRowClick?: (row: R) => void;
+  /** Accessible name of a row's checkbox, for example "Select Holiday Treat Box". */ rowLabel?: (row: R) => string;
   /** Shown in the bulk bar while rows are selected. */ bulkActions?: React.ReactNode;
   empty?: React.ReactNode;
   dense?: boolean;

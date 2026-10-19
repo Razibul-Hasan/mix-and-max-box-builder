@@ -24,6 +24,8 @@ final class Plugin {
 			Campaigns\Post_Type::class,
 			Rest\Rest::class,
 			Assets::class,
+			Admin\Menu::class,
+			Admin\Admin_Assets::class,
 		);
 
 		foreach ( $modules as $module ) {

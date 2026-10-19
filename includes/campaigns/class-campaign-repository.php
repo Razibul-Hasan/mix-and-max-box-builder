@@ -46,7 +46,7 @@ final class Campaign_Repository {
 	 * The computed status and type live outside SQL, so every campaign is loaded
 	 * and filtered here. Stores have a handful of campaigns, not thousands.
 	 *
-	 * @param array $args { status, search, type, orderby, order, page, per_page }.
+	 * @param array $args { status, search, type, orderby, order, page, per_page }. `status` may be `live` (active or ending soon).
 	 * @return array { items, total, pages, counts }. `counts` ignores the status filter.
 	 */
 	public function query( array $args = array() ) {
@@ -94,8 +94,12 @@ final class Campaign_Repository {
 		foreach ( Status::all() as $status ) {
 			$counts[ $status ] = 0;
 		}
+		$counts['live'] = 0;
 		foreach ( $matching as $campaign ) {
 			++$counts[ $campaign['status'] ];
+			if ( Status::is_live( $campaign['status'] ) ) {
+				++$counts['live'];
+			}
 		}
 
 		if ( '' !== (string) $args['status'] && 'all' !== $args['status'] ) {
@@ -103,6 +107,9 @@ final class Campaign_Repository {
 				array_filter(
 					$matching,
 					static function ( $campaign ) use ( $args ) {
+						if ( 'live' === $args['status'] ) {
+							return Status::is_live( $campaign['status'] );
+						}
 						return $campaign['status'] === $args['status'];
 					}
 				)
