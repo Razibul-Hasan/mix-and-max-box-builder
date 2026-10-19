@@ -9,7 +9,7 @@
 			}
 		},
 		{
-			"files": [ "src/admin/admin.css" ],
+			"files": [ "src/admin/admin.css", "src/admin/editor/editor.css" ],
 			"rules": { "selector-class-pattern": null }
 		}
 	]

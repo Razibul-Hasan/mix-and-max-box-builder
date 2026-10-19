@@ -294,7 +294,7 @@ class RestCampaignsTest extends \WP_UnitTestCase {
 		$this->assertStringEndsWith( '(copy)', $data['title'] );
 	}
 
-	/** Publishing validates placement and config, then answers 501 until later phases. */
+	/** Publishing validates placement and config, then goes live. */
 	public function test_publish() {
 		$blank = $this->make_campaign( 'blank' );
 		$route = '/mmbb/v1/campaigns/' . $blank . '/publish';
@@ -334,8 +334,8 @@ class RestCampaignsTest extends \WP_UnitTestCase {
 		$this->assertSame( 200, $patch->get_status() );
 
 		$response = $this->send( 'POST', '/mmbb/v1/campaigns/' . $valid . '/publish', array( 'placement' => 'none' ) );
-		$this->assertSame( 501, $response->get_status() );
-		$this->assertSame( 'mmbb_not_implemented', $response->get_data()['code'] );
+		$this->assertSame( 200, $response->get_status() );
+		$this->assertSame( 'active', $response->get_data()['status'] );
 	}
 
 	/** Preview returns the storefront payload. */

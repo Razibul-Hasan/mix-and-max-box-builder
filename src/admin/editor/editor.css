@@ -1,0 +1,639 @@
+/* ---------- Campaign editor ---------- */
+.mmbb-root .mmbb-editor__bar {
+	position: sticky;
+	top: 32px;
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	gap: var(--space-4);
+	min-height: 56px;
+	padding: 0 var(--space-6);
+	background: var(--surface-strong);
+	color: var(--on-strong);
+}
+
+@media (max-width: 782px) {
+
+	.mmbb-root .mmbb-editor__bar {
+		top: 46px;
+		padding: 0 var(--space-4);
+	}
+}
+
+.mmbb-root .mmbb-editor__bar-text {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-weight: 600;
+}
+
+.mmbb-root .mmbb-editor__bar-text svg {
+	color: var(--pop);
+}
+
+.mmbb-root .mmbb-editor__bar-discard {
+	display: inline-flex;
+	align-items: center;
+	height: 36px;
+	padding: 0 var(--space-3);
+	border: 1px solid var(--on-strong-muted);
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--on-strong);
+	font: inherit;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.mmbb-root .mmbb-editor__bar-discard:hover {
+	border-color: var(--on-strong);
+}
+
+.mmbb-root .mmbb-editor__bar-discard:focus-visible {
+	outline: 2px solid var(--on-strong);
+	outline-offset: 2px;
+}
+
+.mmbb-root .mmbb-editor__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-4);
+}
+
+.mmbb-root .mmbb-editor__head > :first-child {
+	flex: 1 1 320px;
+}
+
+.mmbb-root .mmbb-editor__steps {
+	margin-bottom: var(--space-6);
+	padding: var(--space-4) var(--space-5);
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-lg);
+}
+
+.mmbb-root .mmbb-editor__loading {
+	margin: var(--space-8) 0;
+	color: var(--ink-muted);
+}
+
+.mmbb-root .mmbb-editor__cols {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-6);
+	align-items: flex-start;
+}
+
+.mmbb-root .mmbb-editor__main {
+	flex: 999 1 560px;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-6);
+}
+
+.mmbb-root .mmbb-editor__side {
+	flex: 1 1 340px;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-6);
+}
+
+.mmbb-root .mmbb-editor__side--wide {
+	flex-basis: 420px;
+}
+
+.mmbb-root .mmbb-editor__side--sticky {
+	flex-basis: 400px;
+	position: sticky;
+	top: 88px;
+}
+
+@media (max-width: 782px) {
+
+	.mmbb-root .mmbb-editor__side--wide {
+	flex-basis: 420px;
+}
+
+.mmbb-root .mmbb-editor__side--sticky {
+		position: static;
+	}
+}
+
+.mmbb-root .mmbb-editor__stack {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.mmbb-root .mmbb-editor__stack--tight {
+	gap: var(--space-2);
+}
+
+.mmbb-root .mmbb-editor__rule {
+	padding-top: var(--space-4);
+	border-top: 1px solid var(--line);
+}
+
+.mmbb-root .mmbb-editor__pair {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: var(--space-4);
+}
+
+.mmbb-root .mmbb-editor__duo {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: var(--space-3);
+}
+
+.mmbb-root .mmbb-editor__trio {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: var(--space-3);
+}
+
+.mmbb-root .mmbb-editor__narrow {
+	max-width: 220px;
+}
+
+.mmbb-root .mmbb-editor__label {
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 600;
+}
+
+.mmbb-root .mmbb-editor__note {
+	margin: 0;
+	color: var(--ink-muted);
+	font-size: 13px;
+	line-height: 18px;
+}
+
+.mmbb-root .mmbb-editor__badges {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.mmbb-root .mmbb-editor__foot {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: var(--space-3);
+	margin-top: var(--space-8);
+	padding-top: var(--space-5);
+	border-top: 1px solid var(--line);
+}
+
+/* Product lists */
+.mmbb-root .mmbb-editor__picker-head {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: 0 var(--space-5) var(--space-4);
+}
+
+.mmbb-root .mmbb-editor__pad {
+	padding: 0 var(--space-5) var(--space-4);
+}
+
+.mmbb-root .mmbb-editor__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border-top: 1px solid var(--line);
+}
+
+.mmbb-root .mmbb-editor__list > li {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 10px var(--space-5);
+	border-bottom: 1px solid var(--line);
+	background: var(--surface);
+}
+
+.mmbb-root .mmbb-editor__list > li.is-on {
+	background: var(--surface-hover);
+}
+
+.mmbb-root .mmbb-editor__list-foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	margin: 0;
+	padding: var(--space-3) var(--space-5);
+	color: var(--ink-muted);
+	font-size: 13px;
+}
+
+.mmbb-root .mmbb-editor__thumb {
+	flex: none;
+	display: block;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+	background: var(--surface-sunken);
+}
+
+.mmbb-root .mmbb-editor__thumb img,
+.mmbb-root .mmbb-editor__thumb svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.mmbb-root .mmbb-editor__grow {
+	flex: 1;
+	min-width: 0;
+}
+
+.mmbb-root .mmbb-editor__price {
+	min-width: 72px;
+	text-align: right;
+	font-weight: 650;
+	font-variant-numeric: tabular-nums;
+}
+
+.mmbb-root .mmbb-editor__chosen {
+	margin: 0;
+	padding: 0 0 var(--space-2);
+	list-style: none;
+}
+
+.mmbb-root .mmbb-editor__chosen > li {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+}
+
+.mmbb-root .mmbb-editor__chosen > li.is-dragging {
+	opacity: 0.5;
+}
+
+.mmbb-root .mmbb-editor__grip {
+	display: flex;
+	padding: 0 var(--space-1);
+	color: var(--ink-subtle);
+	cursor: grab;
+}
+
+.mmbb-root .mmbb-editor__move {
+	display: flex;
+}
+
+.mmbb-root .mmbb-editor__name {
+	flex: 1 1 0;
+	min-width: 48px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 600;
+}
+
+/* Tier and size tables */
+.mmbb-root .mmbb-editor__scroll {
+	overflow-x: auto;
+}
+
+.mmbb-root .mmbb-editor__table {
+	min-width: 460px;
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.mmbb-root .mmbb-editor__table th {
+	padding: 0 var(--space-2) var(--space-2) 0;
+	color: var(--ink-muted);
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 600;
+	text-align: left;
+}
+
+.mmbb-root .mmbb-editor__table td {
+	padding: 6px var(--space-2) 6px 0;
+	vertical-align: top;
+}
+
+.mmbb-root .mmbb-editor__num {
+	width: 34px;
+}
+
+.mmbb-root .mmbb-editor__num span {
+	display: grid;
+	place-items: center;
+	width: 26px;
+	height: 26px;
+	margin-top: 9px;
+	border-radius: 50%;
+	background: var(--surface-sunken);
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.mmbb-root .mmbb-editor__act {
+	width: 40px;
+	padding-right: 0;
+}
+
+.mmbb-root .mmbb-editor__read {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-3);
+	border-radius: var(--radius-md);
+	background: var(--surface-sunken);
+	color: var(--ink-muted);
+	font-size: 13px;
+	line-height: 18px;
+}
+
+.mmbb-root .mmbb-editor__read-label {
+	font-weight: 600;
+	color: var(--ink);
+}
+
+.mmbb-root .mmbb-editor__read .mmbb-tier {
+	flex: 1 1 220px;
+}
+
+/* Publish */
+.mmbb-root .mmbb-editor__code {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.mmbb-root .mmbb-editor__code .mmbb-code {
+	flex: 1;
+	padding: var(--space-2) var(--space-3);
+	overflow-wrap: anywhere;
+}
+
+.mmbb-root .mmbb-editor__checks {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.mmbb-root .mmbb-editor__checks > li {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-3);
+	padding: 10px var(--space-2);
+	border-radius: var(--radius-sm);
+}
+
+.mmbb-root .mmbb-editor__checks > li.is-todo {
+	background: var(--max-soft);
+}
+
+.mmbb-root .mmbb-editor__tick {
+	flex: none;
+	display: grid;
+	place-items: center;
+	width: 24px;
+	height: 24px;
+	border: 2px solid var(--line-strong);
+	border-radius: 50%;
+	color: var(--on-ink);
+}
+
+.mmbb-root .mmbb-editor__tick.is-done {
+	border-color: var(--ink);
+	background: var(--ink);
+}
+
+.mmbb-root .mmbb-editor__sub {
+	display: block;
+	color: var(--ink-muted);
+	font-size: 13px;
+	line-height: 18px;
+}
+
+.mmbb-root .mmbb-editor__summary {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin: 0;
+	font-size: 14px;
+	line-height: 20px;
+}
+
+.mmbb-root .mmbb-editor__summary > div {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--space-3);
+}
+
+.mmbb-root .mmbb-editor__summary dt {
+	color: var(--ink-muted);
+}
+
+.mmbb-root .mmbb-editor__summary dd {
+	margin: 0;
+	font-weight: 600;
+	text-align: right;
+}
+
+.mmbb-root .mmbb-editor__problems {
+	margin: 0;
+	padding-left: var(--space-4);
+}
+
+.mmbb-root .mmbb-editor__fine {
+	color: var(--ink-muted);
+	font-size: 12px;
+	line-height: 16px;
+	text-align: center;
+}
+
+/* Published */
+.mmbb-root .mmbb-editor__done {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-6);
+	max-width: 880px;
+	margin: 0 auto;
+}
+
+.mmbb-root .mmbb-editor__done-actions {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-4);
+	padding: 0 var(--space-6) var(--space-12);
+}
+
+.mmbb-root .mmbb-editor__link {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: 6px 6px 6px 14px;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-md);
+	background: var(--surface);
+	font-family: var(--font-mono);
+	font-size: 13px;
+}
+
+.mmbb-root .mmbb-editor__buttons {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--space-2);
+}
+
+.mmbb-root .mmbb-editor__h2 {
+	margin: 0;
+	font-size: 17px;
+	line-height: 24px;
+	font-weight: 650;
+}
+
+.mmbb-root .mmbb-editor__next {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: var(--space-4);
+}
+
+.mmbb-root .mmbb-editor__next > * {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-5);
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-lg);
+	color: var(--ink);
+	text-decoration: none;
+}
+
+.mmbb-root .mmbb-editor__next a:hover {
+	background: var(--surface-hover);
+}
+
+.mmbb-root .mmbb-editor__next b {
+	font-size: 15px;
+	line-height: 22px;
+}
+
+.mmbb-root .mmbb-editor__next span:not(.mmbb-editor__next-icon) {
+	color: var(--ink-muted);
+	font-size: 13px;
+	line-height: 18px;
+}
+
+.mmbb-root .mmbb-editor__next-icon {
+	display: grid;
+	place-items: center;
+	width: 36px;
+	height: 36px;
+	border-radius: var(--radius-sm);
+	background: var(--surface-sunken);
+}
+
+/* Shopper preview: the real storefront components on the canvas. */
+.mmbb-root .mmbb-preview {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 14px;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-lg);
+	background: var(--canvas);
+	color: var(--ink);
+}
+
+/* The theme primary colour wins when it exists. Two elements, so the value is not
+   defined in terms of itself. */
+.mmbb-root .mmbb-preview-accent {
+	--mmbb-accent-base: var(--max);
+}
+
+.mmbb-root .mmbb-preview--theme {
+	--max: var(--wp--preset--color--primary, var(--mmbb-accent-base));
+}
+
+.mmbb-root .mmbb-preview__hero {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: var(--space-4);
+}
+
+.mmbb-root .mmbb-preview__copy {
+	flex: 1 1 240px;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 10px;
+}
+
+.mmbb-root .mmbb-preview__headline {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: 24px;
+	line-height: 28px;
+	font-weight: 800;
+	letter-spacing: -0.02em;
+}
+
+.mmbb-root .mmbb-preview__ladder {
+	flex: none;
+	display: flex;
+	align-items: flex-end;
+	gap: var(--space-1);
+	height: 100px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.mmbb-root .mmbb-preview__ladder li {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	width: 48px;
+	padding: 6px;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+}
+
+.mmbb-root .mmbb-preview__ladder li.is-top {
+	border-color: var(--max);
+	background: var(--max);
+	color: var(--on-max);
+}
+
+.mmbb-root .mmbb-preview__ladder b {
+	font-family: var(--font-display);
+	font-size: 12px;
+	line-height: 14px;
+	font-weight: 800;
+}
+
+.mmbb-root .mmbb-preview__grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+}

@@ -79,9 +79,9 @@ const holiday = {
 		type: 'tiered',
 		box: { capacity: 12 },
 		tiers: [
-			{ qty: 4, type: 'percent', value: 10 },
-			{ qty: 6, type: 'percent', value: 15 },
-			{ qty: 12, type: 'percent', value: 25 },
+			{ qty: 4, discount_type: 'percent', value: 10 },
+			{ qty: 6, discount_type: 'percent', value: 15 },
+			{ qty: 12, discount_type: 'percent', value: 25 },
 		],
 		sizes: [],
 		bundle: { qty: 3, price: 0 },

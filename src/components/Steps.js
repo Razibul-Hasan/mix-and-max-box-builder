@@ -43,7 +43,29 @@ export default function Steps( { steps = [], current = 0, onStep, compact } ) {
 						aria-current={ i === current ? 'step' : undefined }
 					>
 						{ href ? (
-							<a className="mmbb-step__btn" href={ href }>
+							<a
+								className="mmbb-step__btn"
+								href={ href }
+								onClick={
+									onStep
+										? ( event ) => {
+												// Let the browser handle new-tab clicks.
+												if (
+													event.defaultPrevented ||
+													event.button !== 0 ||
+													event.metaKey ||
+													event.ctrlKey ||
+													event.shiftKey ||
+													event.altKey
+												) {
+													return;
+												}
+												event.preventDefault();
+												onStep( i );
+										  }
+										: undefined
+								}
+							>
 								{ inner }
 							</a>
 						) : onStep ? (

@@ -4,6 +4,7 @@ import Campaigns from './campaigns/Campaigns';
 import ComingSoon from './ComingSoon';
 import { AdminContext, readAdminData } from './context';
 import Dashboard from './dashboard/Dashboard';
+import Editor from './editor/Editor';
 import { ToastProvider } from './toast';
 
 /**
@@ -27,20 +28,10 @@ export function pickScreen( page, params ) {
 	return 'dashboard';
 }
 
-function Screen( { name } ) {
+function Screen( { name, id } ) {
 	switch ( name ) {
 		case 'editor':
-			return (
-				<ComingSoon
-					active="campaigns"
-					title={ __( 'Campaign editor', 'mix-and-max-box-builder' ) }
-					headline={ __(
-						'The campaign editor is on its way',
-						'mix-and-max-box-builder'
-					) }
-					back
-				/>
-			);
+			return <Editor id={ id } />;
 		case 'campaigns':
 			return <Campaigns />;
 		case 'campaigns-new':
@@ -79,7 +70,10 @@ export default function App( { page } ) {
 		<AdminContext.Provider value={ data }>
 			<MoneyProvider settings={ data.money }>
 				<ToastProvider>
-					<Screen name={ pickScreen( page || data.page, params ) } />
+					<Screen
+						name={ pickScreen( page || data.page, params ) }
+						id={ Number( params.get( 'id' ) ) }
+					/>
 				</ToastProvider>
 			</MoneyProvider>
 		</AdminContext.Provider>

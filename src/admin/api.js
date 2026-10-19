@@ -65,10 +65,43 @@ export function getSetup() {
 	return apiFetch( { path: BASE + '/setup' } );
 }
 
-export function markTestDone() {
+export function markTestDone( done = true ) {
 	return apiFetch( {
 		path: BASE + '/setup',
 		method: 'POST',
-		data: { test_done: true },
+		data: { test_done: done },
+	} );
+}
+
+export function getCampaign( id ) {
+	return apiFetch( { path: BASE + '/campaigns/' + id } );
+}
+
+// PUT replaces the config (Save campaign); PATCH merges it (autosave).
+export function saveCampaign( id, payload, { autosave = false } = {} ) {
+	return apiFetch( {
+		path: BASE + '/campaigns/' + id,
+		method: autosave ? 'PATCH' : 'PUT',
+		data: payload,
+	} );
+}
+
+export function publishCampaign( id, data ) {
+	return apiFetch( {
+		path: BASE + '/campaigns/' + id + '/publish',
+		method: 'POST',
+		data,
+	} );
+}
+
+export function getTerms( params ) {
+	return apiFetch( {
+		path: addQueryArgs( BASE + '/terms', clean( params ) ),
+	} );
+}
+
+export function getPages( params ) {
+	return apiFetch( {
+		path: addQueryArgs( BASE + '/pages', clean( params ) ),
 	} );
 }

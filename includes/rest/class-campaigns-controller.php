@@ -11,6 +11,7 @@ defined( 'ABSPATH' ) || exit;
 
 use MixMax\BoxBuilder\Campaigns\Campaign_Repository;
 use MixMax\BoxBuilder\Campaigns\Config;
+use MixMax\BoxBuilder\Campaigns\Publisher;
 use MixMax\BoxBuilder\Campaigns\Status;
 use MixMax\BoxBuilder\Campaigns\Templates;
 
@@ -405,8 +406,8 @@ final class Campaigns_Controller extends Base_Controller {
 	}
 
 	/**
-	 * Go live. The contract is fixed here; Phase 6 creates the page and Phase 7 the
-	 * container product. Until then a valid request answers 501.
+	 * Go live: validate, place the builder on a page, create the container product
+	 * (through the `mmbb_ensure_container_product` filter) and publish.
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response|\WP_Error
@@ -437,7 +438,19 @@ final class Campaigns_Controller extends Base_Controller {
 			);
 		}
 
-		return $this->error( 'mmbb_not_implemented', __( 'Publishing is not available yet.', 'mix-and-max-box-builder' ), 501 );
+		$published = ( new Publisher( $this->repo ) )->publish(
+			$campaign['id'],
+			array(
+				'placement'  => $placement,
+				'page_id'    => (int) $request['page_id'],
+				'page_title' => $request['page_title'],
+				'page_slug'  => $request['page_slug'],
+			)
+		);
+		if ( is_wp_error( $published ) ) {
+			return $published;
+		}
+		return rest_ensure_response( $this->prepare_campaign( $published ) );
 	}
 
 	/**

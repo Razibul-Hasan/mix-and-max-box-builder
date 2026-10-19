@@ -10,7 +10,7 @@ Updated by the agent at the end of every phase. Newest entry first under each ph
 | 3 | Data layer and pricing engine | done; Docker checks skipped | `Phase 3: Data layer and pricing engine` |
 | 4 | REST API for the admin | done; Docker checks skipped | `Phase 4: REST API for the admin` |
 | 5 | Admin app: shell, dashboard, campaigns | done; Docker checks skipped | `Phase 5: Admin app: shell, dashboard, campaigns` |
-| 6 | Campaign wizard | not started | |
+| 6 | Campaign wizard | done; Docker checks skipped | `Phase 6: Campaign wizard` |
 | 7 | Cart, orders and stock | not started | |
 | 8 | Storefront: block, shortcode, builder | not started | |
 | 9 | Analytics | not started | |
@@ -43,6 +43,74 @@ installable on the minimum supported PHP branch.
 | WordPress / WooCommerce / Plugin Check in wp-env | Not installed here; latest release URLs configured, exact installed versions pending Docker run |
 
 ## Log
+
+### Phase 6 — Campaign wizard (2026-10-19)
+
+**Done:** `src/admin/editor/`: the 5-step wizard plus the Published screen, behind
+`action=edit&id=…&step=…`. One reducer (`state.js`) holds the saved copy, the draft and the
+dirty flag; the dark unsaved bar shows on the first edit (Discard, Save campaign = PUT);
+autosave PATCHes every 30 s while dirty; `beforeunload` warns. The server's sanitized
+response becomes the saved copy. Steps: Basics (schedule as `datetime-local` in the store
+zone, converted to UTC in `time.js`), Products (manual / category / tag, debounced search,
+category chips, reorder with up/down buttons plus native drag, per-product cap),
+Box rules (type cards, tiers or sizes editor, bundle, extras, inline validation),
+Design (layout, words, toggles, accent, theme), Publish, Published. The shopper preview
+(`Preview.js`) mounts the real storefront components with the draft and `quote()` from
+`src/shared/pricing.js`; "Shoppers read" uses `TierProgress`, so the sentence comes from the
+component strings. PHP: `Campaigns\Publisher` (container product, page, placement, publish),
+`Campaigns\Page_Content` (the only content ever written: block comment or shortcode),
+`/publish` now works. `Steps` accepts `href` and `onStep` together (client-side navigation
+that still works as a link).
+
+**Decisions:**
+
+- **Container product (Phase 7).** An interface file would not autoload (the autoloader maps
+  `class-*.php` only), so Phase 7 hooks the filter `mmbb_ensure_container_product`
+  (return product id, `WP_Error`, or null). With no handler the campaign still goes live.
+  Documented in readme.txt.
+- **Page address and page title** are not part of the campaign config, so they live in
+  `localStorage` (`mmbb:editor:{id}`) until go-live; the slug follows the campaign name
+  until edited. The server stores only `placement.page_id`.
+- Empty existing pages get the block, not the shortcode (the plan only says "otherwise
+  shortcode" for pages with content and no blocks).
+- Steps are all links; going forward past an invalid step sends you to that step with its
+  errors shown. Errors appear after the first blocked Next, then stay live.
+- Validation is stricter than the server in one place: a tier, size or percent value must be
+  above zero (zero would give a free box on "box price").
+- Save campaign turns secondary on the Publish step, so Go live is the only orange button.
+- Fixed a Phase 5 bug: `tierSummary` read `t.type` instead of `discount_type`, so the
+  "10 / 15 / 25% off" badge never showed on real data (its test fixture had the same slip).
+- Dragging is native HTML5; no library added.
+
+**Deviations from the plan (and why):**
+
+- The preview has no Desktop/Mobile toggle and the Rules step has no Placement card (both in
+  the older PNG, not in the plan). Duplicate/overflow buttons on a live campaign are not
+  built; View on store is.
+- Category/tag sources list terms (first 100) rather than products; term names beyond that
+  are not shown.
+
+**Visual comparison** (headless Edge, 1280 px and 390 px, mock REST data, not live
+wp-admin): all five steps, fixed and bundle rules, dark panel design, Published and the
+unsaved bar were compared with `CampaignEditorPage.png` and the Wizard prototypes. Layout,
+copy and states match. Gaps: the sticky bar's 32 px admin-bar offset only shows in real
+wp-admin; phone steps truncate the current label; "Shoppers read" is a stepper plus
+`TierProgress` rather than one sentence. No JS errors, no external requests.
+
+**Checks run:** build ✅ · lint:js ✅ · lint:css ✅ · composer lint ✅ · test:js ✅ (184: reducer,
+every validation rule, time zones, slugs, editor flow with autosave on fake timers, blocked
+Next, go-live new page / existing page / server 422) · test:unit ✅ (68; `Page_Content`) ·
+test:php ⏭ · Plugin Check ⏭
+
+**Skipped checks (and why):** No Docker, so `PublisherTest` (new page, existing block page,
+existing classic page, invalid config refused, no `publish_pages`, container filter) and the
+updated `RestCampaignsTest` are authored and linted but **not executed**; Plugin Check and
+the live wp-env walkthrough (template picker to Go live, reload each step) also did not run.
+
+**Open issues:** Run the integration suites and a live walkthrough when Docker is available.
+Check how `wp_insert_post` kses treats the block comment for a user without
+`unfiltered_html`. Phase 7 must register `mmbb_ensure_container_product`; Phase 8 registers
+the `mmbb/box-builder` block the wizard writes.
 
 ### Phase 5 — Admin app: shell, dashboard, campaigns (2026-10-19)
 
@@ -602,6 +670,7 @@ phases. This is a tooling scaffold archive, not a submission release.
 
 ## Open issues
 
+- Phase 6: `PublisherTest`, the updated `RestCampaignsTest`, Plugin Check and a live wizard walkthrough have not run (no Docker). Phase 7 provides `mmbb_ensure_container_product`.
 - Phase 5: Integration tests (`AdminMenuTest`, the `live` status cases), Plugin Check and a
   live wp-admin look have not run (no Docker). Phase 6 builds the editor; Phase 9 fills the
   `/stats` shapes the Dashboard expects (see the Phase 5 log).

@@ -114,7 +114,10 @@ export function typeSummary( config, formatMoney, decimals ) {
 // "10 / 15 / 25% off" when every tier is a percentage; otherwise empty.
 export function tierSummary( config ) {
 	const tiers = config.tiers || [];
-	if ( tiers.length === 0 || tiers.some( ( t ) => t.type !== 'percent' ) ) {
+	if (
+		tiers.length === 0 ||
+		tiers.some( ( t ) => t.discount_type !== 'percent' )
+	) {
 		return '';
 	}
 	return sprintf(

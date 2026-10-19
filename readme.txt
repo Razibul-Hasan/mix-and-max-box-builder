@@ -50,6 +50,7 @@ All hooks use the mmbb_ prefix.
 * mmbb_templates (filter): the templates in the new campaign picker. Each is an array with id, title, type_label, description, art and a partial config.
 * mmbb_pricing_quote (filter): a box quote after the pricing engine has run. Arguments: the quote, the campaign config, the items and the options. All amounts are integer minor units, for example cents.
 * mmbb_campaign_saved (action): fires after a campaign is saved. Arguments: the campaign ID and the sanitized config.
+* mmbb_ensure_container_product (filter): called when a campaign goes live. Return the hidden container product ID, a WP_Error to stop publishing, or null. Arguments: the current value and the campaign ID.
 
 == Screenshots ==
 
