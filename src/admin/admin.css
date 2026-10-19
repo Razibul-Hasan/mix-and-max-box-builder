@@ -1,0 +1,6 @@
+body.toplevel_page_mmbb #wpcontent,
+body.woocommerce_page_mmbb-campaigns #wpcontent,
+body.woocommerce_page_mmbb-analytics #wpcontent,
+body.woocommerce_page_mmbb-settings #wpcontent {
+	padding-left: 0;
+}

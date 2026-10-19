@@ -6,7 +6,7 @@ Updated by the agent at the end of every phase. Newest entry first under each ph
 | --- | --- | --- | --- |
 | 0 | Tooling and repository | done; Docker checks skipped | `Phase 0: Tooling and repository` |
 | 1 | Plugin skeleton and lifecycle | done; Docker checks skipped | `Phase 1: Plugin skeleton and lifecycle` |
-| 2 | Design system inside the plugin | not started | |
+| 2 | Design system inside the plugin | done; Docker checks skipped | `Phase 2: Design system inside the plugin` |
 | 3 | Data layer and pricing engine | not started | |
 | 4 | REST API for the admin | not started | |
 | 5 | Admin app: shell, dashboard, campaigns | not started | |
@@ -43,6 +43,118 @@ installable on the minimum supported PHP branch.
 | WordPress / WooCommerce / Plugin Check in wp-env | Not installed here; latest release URLs configured, exact installed versions pending Docker run |
 
 ## Log
+
+### Phase 2 — Design system inside the plugin (2026-10-19)
+
+**Done:** Added `tools/build-tokens.mjs` and committed generated light/dark,
+spacing, radius, shadow, family and type tokens under `.mmbb-root`. Copied both
+variable fonts and both OFL licenses, and updated the readme's resource credits.
+Ported the supplied component CSS with every selector scoped to `.mmbb-root`,
+including the reduced-motion rules. Added isolated admin padding fixes.
+Split every design component into its own module, with WordPress element imports,
+local icon/art data, declarations and barrel exports. The handoff says 34
+components but actually exports **35 including Sparkline**; all 35 are retained.
+
+Added translations for default copy, complete tier sentences with reordered rich
+placeholders, counted messages, countdown units, chart abbreviations and accessible
+labels. Added a minor-unit money formatter and MoneyProvider for all price-bearing
+components. Added Assets to the module registry: it registers shared CSS and the
+component library, dependencies, translations and inline WooCommerce money settings
+without enqueueing anything. Currency symbols are decoded in PHP before JSON.
+Admin/storefront applications and their per-screen enqueues remain later work.
+
+**Decisions:** All monetary component values are integer minor units (450 displays
+as 4.50 with two decimals), consistent with the standing money rule and the future
+pricing engine. The original `currency` props remain in the type contract as
+deprecated inputs; MoneyProvider's WooCommerce settings determine formatting.
+Without settings, the formatter assumes no currency symbol. Existing image URL
+props still work; image objects additionally accept `src`, `srcset` and `sizes`.
+Product names provide real-image alt text. Original icons and illustration colors
+are retained. No runtime dependency was added.
+
+Explicit `tokens` and `components` webpack entries emit separate CSS and asset
+manifests. The component library exports through the permitted `window.mmbbComponents`
+name; the prototype's `window.React` and `window.MixMax` are removed. PHP registers
+`window.mmbbMoneySettings` with `wp_add_inline_script()` and `wp_json_encode()`;
+MoneyProvider consumes it by default. Later rendering modules can also import
+components directly and pass explicit settings. Webpack resolves source font URLs
+from `../../assets/fonts/` into local `build/fonts/` files; built URLs were checked
+on disk and in the browser. Release builds consume committed CSS, without design
+files or the token generator.
+
+**Behavior changes from the design (and why):**
+
+- Button: disabled/loading links also suppress callbacks and leave the tab order;
+  loading links expose `aria-busy`. Removing href alone did not disable callbacks.
+- ProductTile, BoxSizePicker, BoxPanel and BoxSummaryBar: prices use minor units
+  and context settings rather than the prototype's major-unit dollar formatter.
+  BoxPanel shows any positive minor-unit saving, with no fractional-dollar epsilon.
+- ProductTile, Chips, BoxSizePicker pills and BoxSlots remove buttons: storefront
+  targets are at least 44px; the smaller handoff controls failed the standing rule.
+- ProductTile, BoxSlots and BoxSummaryBar media: responsive image metadata is
+  supported in addition to the original URL prop.
+- TierProgress, BoxSlots, BoxSizePicker, BoxPanel, BoxSummaryBar, DataTable,
+  Countdown, StatCard, LineChart, ProgressBar, QuantityStepper, Notice, Toast and
+  AdminShell: default text/aria messages are translatable, with plural selection
+  for count-bearing phrases. Tier emphasis and countdown number weight remain.
+- FunnelChart: continuation from a zero-value preceding step displays 0% instead
+  of Infinity/NaN. No other funnel calculation or interaction changed.
+- Button hover: replaced the one raw CSS white value with the existing on-strong
+  token, so the dark theme follows its token palette. Spacing and radius literals
+  in the port use existing tokens or calculations preserving the handoff geometry.
+
+**Tooling deviations:** Scoped ESLint's nested-ternary style exception to the
+component port to preserve the design's rendering branches. Native label checks
+remain enabled with depth 3 to recognize the wrapped inputs. Scoped Stylelint's
+class pattern to allow the design's prefixed BEM/state classes, and disabled its
+descending-specificity heuristic only for the component stylesheet's intentional
+state/variant overrides. Admin body classes use WordPress's underscore names.
+Other lint rules remain active. `lint:js` and `format` now include `tools/`, and
+the Commands entry in AGENTS now describes the working token generator.
+
+**Checks run:**
+
+- `npm run tokens`: pass, reproducible generated CSS; `npm run build`: pass.
+- `npm run lint:js` and `npm run lint:css`: pass, including generator and tests.
+- `npm run test:js`: pass (56 tests, 3 suites): all 35 components render; stepper
+  boundaries, tiers at 2/5/12, complete reordered translations, anchor behavior,
+  responsive image attributes, money context, stock/fullness states, selection
+  and chart keyboard behavior. Money tests cover all four positions, zero/three
+  decimals, separators, negative amounts and an absent currency symbol.
+- `composer run lint`: pass (17 PHP files, PHPCompatibilityWP 7.4-).
+  `composer run test:unit`: pass (3 tests, 6 assertions). Reused the existing
+  verified temporary Composer and Local PHP configuration; no machine changes.
+- Authored/linted integration tests for registration without enqueueing, style
+  dependency/version, script dependencies/translations, and decoded WooCommerce
+  settings. These tests have not executed because Docker is unavailable.
+- Headless Edge preview through a temporary Playwright harness: all 35 components
+  rendered in both themes (70 examples), no JavaScript errors or external requests.
+  Both local font families loaded, product stepper buttons measured 44px,
+  reduced-motion transitions measured 0s, and outside content retained its theme
+  font. Inspected light/dark previews plus product/panel screenshots against the
+  supplied component PNG contact sheet. This was an isolated component preview,
+  not a live wp-admin/storefront verification.
+- Source scans: no prototype React global or quoted dollar default in components;
+  no HTTP URLs in source/built CSS; no raw component CSS hex colors. AST scan found
+  no untranslated JSX text or accessible-label defaults. Built font URLs resolve.
+- `npm run plugin-zip`: pass, extracted/audited 84 files, no dev or hidden files.
+  Both font/license pairs match their design originals byte-for-byte. Rebuilt the
+  extracted package using installed dev dependencies, with no `design/` directory:
+  pass. Webpack module audit found zero bundled React/ReactDOM modules; externals
+  are WordPress element/i18n and ReactJSXRuntime. The components asset manifest
+  lists `react-jsx-runtime`, `wp-element`, `wp-i18n`.
+- `git diff --check`: pass. Existing no-root-entry scanner message remains harmless;
+  all four explicit entries compile. No later phase was started.
+
+**Skipped checks (and why):** Retried `npx wp-env start`, `npm run test:php` and
+`npx wp-env run cli wp plugin check mix-and-max-box-builder`; all report
+`Could not connect to Docker. Is it running?`. Integration execution, Plugin
+Check, live WordPress enqueues/translations and WP_DEBUG logs remain unverified.
+Actual PHP 7.4 and WordPress minimum/current runtime checks remain pending.
+
+**Open issues:** Run the skipped Docker checks when available. Phase 5 must verify
+the admin body-class padding selectors against its actual registered page hooks.
+No admin menu or storefront builder was added in this phase.
 
 ### Phase 1 — Plugin skeleton and lifecycle (2026-10-19)
 
@@ -261,6 +373,9 @@ phases. This is a tooling scaffold archive, not a submission release.
 
 ## Open issues
 
+- Phase 2: Execute Assets integration tests, Plugin Check, live WordPress
+  translation/enqueue and WP_DEBUG checks once Docker is available. Verify admin
+  padding body classes when Phase 5 introduces actual page hooks.
 - Phase 1: Docker-dependent lifecycle/integration, Plugin Check, multisite,
   browser and WP_DEBUG checks remain unverified. Run the single-site and network
   suites before treating lifecycle runtime behavior as verified.

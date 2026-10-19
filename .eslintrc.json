@@ -2,6 +2,13 @@
 	"extends": [ "plugin:@wordpress/eslint-plugin/recommended" ],
 	"overrides": [
 		{
+			"files": [ "src/components/**/*.js" ],
+			"rules": {
+				"no-nested-ternary": "off",
+				"jsx-a11y/label-has-associated-control": [ "error", { "depth": 3 } ]
+			}
+		},
+		{
 			"files": [ "tests/js/**/*.test.js" ],
 			"env": { "jest": true }
 		}

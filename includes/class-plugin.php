@@ -20,6 +20,7 @@ final class Plugin {
 
 		$modules = array(
 			Installer::class,
+			Assets::class,
 		);
 
 		foreach ( $modules as $module ) {

@@ -9,9 +9,9 @@
 	"scripts": {
 		"build": "wp-scripts build",
 		"start": "wp-scripts start",
-		"lint:js": "wp-scripts lint-js src tests/js webpack.config.js jest-unit.config.js",
+		"lint:js": "wp-scripts lint-js src tools tests/js webpack.config.js jest-unit.config.js",
 		"lint:css": "wp-scripts lint-style \"src/**/*.css\"",
-		"format": "wp-scripts format src tests/js webpack.config.js jest-unit.config.js package.json",
+		"format": "wp-scripts format src tools tests/js webpack.config.js jest-unit.config.js package.json",
 		"test:js": "wp-scripts test-unit-js --runInBand",
 		"test:php": "wp-env run tests-cli --env-cwd=wp-content/plugins/mix-and-max-box-builder env MMBB_TEST_SUITE=integration vendor/bin/phpunit --testsuite=integration",
 		"plugin-zip": "wp-scripts plugin-zip",

@@ -66,6 +66,6 @@ Public repository URL: [YOUR PUBLIC SOURCE REPOSITORY URL].
 
 == Third-party resources ==
 
-The design specifies Figtree and Bricolage Grotesque under the SIL Open Font License 1.1. Fonts and their license files will be bundled locally in the design-system phase; this lifecycle draft contains no fonts.
+Figtree and Bricolage Grotesque variable fonts are bundled locally under the SIL Open Font License 1.1. License files: assets/fonts/Figtree-OFL.txt and assets/fonts/BricolageGrotesque-OFL.txt. No external font requests are made.
 
 WordPress and WooCommerce supply their own runtime libraries. No third-party runtime package is bundled in this lifecycle draft.

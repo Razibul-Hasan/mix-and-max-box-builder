@@ -1,3 +1,16 @@
 {
-	"extends": [ "@wordpress/stylelint-config" ]
+	"extends": [ "@wordpress/stylelint-config" ],
+	"overrides": [
+		{
+			"files": [ "src/styles/components.css" ],
+			"rules": {
+				"selector-class-pattern": "^(mmbb-[a-z0-9_-]+|is-[a-z0-9-]+|has-[a-z0-9-]+)$",
+				"no-descending-specificity": null
+			}
+		},
+		{
+			"files": [ "src/admin/admin.css" ],
+			"rules": { "selector-class-pattern": null }
+		}
+	]
 }

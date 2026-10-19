@@ -70,7 +70,7 @@ npm run test:php         # PHPUnit integration tests inside wp-env
 npx wp-env run tests-cli --env-cwd=wp-content/plugins/mix-and-max-box-builder env MMBB_TEST_SUITE=integration vendor/bin/phpunit --testsuite=integration
 npx wp-env run cli wp plugin check mix-and-max-box-builder
 npm run plugin-zip       # release zip
-npm run tokens           # generator arrives in Phase 2
+npm run tokens           # regenerate committed CSS from design/system/tokens.json
 ```
 
 The integration command uses the `tests-cli` container in pinned wp-env 10.30.0
