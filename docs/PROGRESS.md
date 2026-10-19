@@ -11,7 +11,7 @@ Updated by the agent at the end of every phase. Newest entry first under each ph
 | 4 | REST API for the admin | done; Docker checks skipped | `Phase 4: REST API for the admin` |
 | 5 | Admin app: shell, dashboard, campaigns | done; Docker checks skipped | `Phase 5: Admin app: shell, dashboard, campaigns` |
 | 6 | Campaign wizard | done; Docker checks skipped | `Phase 6: Campaign wizard` |
-| 7 | Cart, orders and stock | not started | |
+| 7 | Cart, orders and stock | done; Docker checks skipped | `Phase 7: Cart, orders and stock` |
 | 8 | Storefront: block, shortcode, builder | not started | |
 | 9 | Analytics | not started | |
 | 10 | Settings screen and emails | not started | |
@@ -43,6 +43,35 @@ installable on the minimum supported PHP branch.
 | WordPress / WooCommerce / Plugin Check in wp-env | Not installed here; latest release URLs configured, exact installed versions pending Docker run |
 
 ## Log
+
+### Phase 7 — Cart, orders and stock (2026-10-19)
+
+**Done:** `includes/cart/`. `Container_Products` (hidden, published, unmanaged-stock, price 0 product with `_mmbb_campaign_id`; created on go-live through `mmbb_ensure_container_product`, on the draft-to-publish transition, and on any save of a published campaign without one; title follows the campaign; "Box container — managed by Mix and Max" in the Products list; inline warning on its edit screen; trashed with the campaign by Phase 3's `delete()`). `Box_Rules` (pure: merge rows, capacity, duplicates, caps). `Box_Resolver` (live campaign, membership, purchasable, stock including what is already in the cart, unit prices from WooCommerce, quote through `Quotes`). `Add_To_Cart` (`wc-ajax=mmbb_add_box` and `mmbb_nonce`; order of checks is nonce, campaign, items, quote, edit-key removal, add). `Cart_Lines` (session restore, repricing at priority 20 with a re-entry guard, weight, item data, "Edit box" link, coupons, items mode, Store API extension data). `Order_Boxes` (line meta, order flag, `mmbb_setup_test_done`, per-item stock). `Box_Text` holds the translated messages and strings.
+
+**Decisions:**
+
+- **Purchasable gate.** `woocommerce_is_purchasable` is true for a container only while our own add-to-cart runs, or when the cart (or, while WooCommerce rebuilds the cart, the stored session cart) holds a line carrying `mmbb_box`. WooCommerce checks purchasability before `woocommerce_get_cart_item_from_session`, so reading the session is needed.
+- **Request format.** The endpoint takes form fields: `nonce`, `campaign_id`, `items[i][product_id|variation_id|qty]`, `size`, `gift[enabled|message]`, `edit_key`. Any price field is ignored. Gift wrap and message are kept only when the campaign offers them; the message is capped at 200 characters.
+- **Error codes** (`data.code`): `mmbb_nonce_expired` (403), `campaign_not_found`, `campaign_unavailable`, `empty`, `below_minimum`, `over_capacity`, `duplicate`, `over_cap`, `invalid_size`, `wrong_count`, `foreign_product`, `unavailable_product`, `out_of_stock` (409), `invalid_box`, `cart_unavailable`. Phase 8 can read `Add_To_Cart::endpoints()` for the two URLs.
+- **Repricing** re-resolves the box from product ids and quantities, never from stored prices, then rewrites `mmbb_box.items` and `.quote`. A box that is no longer valid (campaign ended or paused, item gone, sold out, rules changed) is removed with a `wc_add_notice()`.
+- **Line quantity above one** (the same box added twice) multiplies the stock check.
+- **Items mode:** the header line is priced at the gift-wrap fee only. Each item line gets its share of the discounted item total (split by line subtotal, last line takes the rounding remainder). Item lines carry `mmbb_parent`; their quantities are shown as text (classic) or non-editable (Store API filter), and their remove link is hidden. Removing the header removes the items; removing or changing an item line anywhere else makes the next calculation drop the whole box with a notice. Item-mode orders skip our stock step because WooCommerce already reduced those ordinary lines. Order lines of items get hidden `_mmbb_box_part`.
+- **Line display:** Contents, Box discount (`10% (−$3.00)`), Gift wrap, Gift message and a "Next discount" upsell row come from `woocommerce_get_item_data`, so classic cart, mini cart and Cart block share them. The order gets Contents, Box discount and Gift message as visible meta, `_mmbb_box` JSON hidden.
+- **Container gift fee and tax:** the whole line, fee included, uses the container's tax class (documented in the readme FAQ).
+
+**Deviations from the plan (and why):**
+
+- **Cart block "Edit box" link not rendered.** A visible link needs a `registerCheckoutFilters` script loaded in the Cart block, which I could not test without a browser. The edit URL and an `is_box` flag are exposed as Store API extension data (`extensions.mmbb` on each cart item) so it can be added later. The classic cart link is done. Stated in the readme FAQ.
+- **Items mode in the Cart block:** quantities are locked through `woocommerce_store_api_product_quantity_editable`. The remove button on an item line cannot be hidden without JS, but removing one is handled on the next calculation (the box is dropped with a notice). Gaps to confirm in a browser; no Settings notice yet because the Settings screen is Phase 10.
+- **Mixed tax classes** are not split in bundled mode (as the plan accepts).
+- Variations whose attributes are "Any" cannot be added in items mode (WooCommerce needs every attribute); bundled mode has no such limit.
+- The container is created for a draft only when the campaign is published, not on every draft save, so drafts never litter the Products list.
+
+**Checks run:** build ✅ · lint:js ✅ · lint:css ✅ · composer lint ✅ (61 files, WPCS + PHPCompatibilityWP 7.4-) · test:js ✅ (184) · test:unit ✅ (75 tests, 464 assertions; new `BoxRulesTest`) · `php -l` ✅ · source scan of `includes/cart/`: no `<script>`/`<style>`, `__return_true`, `wp_redirect`, `$_REQUEST`, `eval`, `extract` or `$wpdb` · test:php ⏭ · Plugin Check ⏭ · manual wp-env checks ⏭
+
+**Skipped checks (and why):** No Docker, so wp-env, the integration suites and Plugin Check did not run. `CartBoxTest` (container hidden and unpurchasable outside the builder, follows and trashes with the campaign, valid box added, contents and discount rows, expired nonce code, nonce endpoint, over capacity / foreign product / out of stock / empty / wrong size rejected, tampered price ignored, total follows a price change, sold-out item removes the box with a notice, gift wrap and message, coupons off by default and on by setting, order meta and hidden keys, stock reduced then restored, stock reduction setting off, items mode and header removal, edit replaces the line) is authored and linted but **not executed**. The manual checks with HPOS on and off, classic and block cart/checkout, and Cash on delivery did not run either.
+
+**Open issues:** Run the integration suites and the manual matrix when Docker is available (HPOS on/off × classic/blocks × Cash on delivery). Confirm in a live site that Store API checkout copies only what `woocommerce_checkout_create_order_line_item` adds (no duplicate Contents rows) and that `woocommerce_reduce_order_stock` fires for a container line with no managed stock. Phase 8 reads `?mmbb_edit={cart_item_key}`, calls the two endpoints, and may add the Cart block link. Phase 10 adds the Settings notice for items mode in the Cart block. Confirm the nonce works for guests with a cached page (WooCommerce guest sessions).
 
 ### Phase 6 — Campaign wizard (2026-10-19)
 
@@ -670,6 +699,7 @@ phases. This is a tooling scaffold archive, not a submission release.
 
 ## Open issues
 
+- Phase 7: `CartBoxTest`, Plugin Check and the manual cart/checkout/HPOS matrix have not run (no Docker). The Cart block "Edit box" link and items-mode gaps are listed in the Phase 7 log.
 - Phase 6: `PublisherTest`, the updated `RestCampaignsTest`, Plugin Check and a live wizard walkthrough have not run (no Docker). Phase 7 provides `mmbb_ensure_container_product`.
 - Phase 5: Integration tests (`AdminMenuTest`, the `live` status cases), Plugin Check and a
   live wp-admin look have not run (no Docker). Phase 6 builds the editor; Phase 9 fills the

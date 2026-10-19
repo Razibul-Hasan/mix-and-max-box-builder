@@ -26,6 +26,10 @@ final class Plugin {
 			Assets::class,
 			Admin\Menu::class,
 			Admin\Admin_Assets::class,
+			Cart\Container_Products::class,
+			Cart\Add_To_Cart::class,
+			Cart\Cart_Lines::class,
+			Cart\Order_Boxes::class,
 		);
 
 		foreach ( $modules as $module ) {

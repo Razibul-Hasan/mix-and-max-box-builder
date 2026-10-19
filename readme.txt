@@ -42,6 +42,14 @@ Plugin modules stay inactive. Users who can activate plugins see a dismissible e
 
 No. Orders are retained even when plugin-data deletion is enabled. Each site on a multisite network has its own deletion preference, which defaults to off.
 
+= How is a box taxed when its items have different tax classes? =
+
+By default a box is one cart line, and WooCommerce taxes the whole line with the tax class of the hidden box product (Standard unless you change it). Items with different tax classes in one box are therefore taxed at the box's rate. This is a known limitation. If your items need their own tax rates, choose "Box plus each item" under Cart in the plugin settings: each item becomes its own line and is taxed by its own class.
+
+= Do boxes work with the Cart and Checkout blocks? =
+
+Yes. The contents, discount, gift message and next-discount hint appear in both the classic and block carts, and the box and its contents are saved on the order. The "Edit box" link and the locked quantities of "Box plus each item" are fully supported in the classic cart. The Cart block gets the address in its Store API data, but does not yet show the link itself.
+
 = Developers: which hooks and filters are available? =
 
 All hooks use the mmbb_ prefix.
