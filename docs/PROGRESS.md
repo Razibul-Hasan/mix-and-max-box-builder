@@ -8,7 +8,7 @@ Updated by the agent at the end of every phase. Newest entry first under each ph
 | 1 | Plugin skeleton and lifecycle | done; Docker checks skipped | `Phase 1: Plugin skeleton and lifecycle` |
 | 2 | Design system inside the plugin | done; Docker checks skipped | `Phase 2: Design system inside the plugin` |
 | 3 | Data layer and pricing engine | done; Docker checks skipped | `Phase 3: Data layer and pricing engine` |
-| 4 | REST API for the admin | not started | |
+| 4 | REST API for the admin | done; Docker checks skipped | `Phase 4: REST API for the admin` |
 | 5 | Admin app: shell, dashboard, campaigns | not started | |
 | 6 | Campaign wizard | not started | |
 | 7 | Cart, orders and stock | not started | |
@@ -43,6 +43,62 @@ installable on the minimum supported PHP branch.
 | WordPress / WooCommerce / Plugin Check in wp-env | Not installed here; latest release URLs configured, exact installed versions pending Docker run |
 
 ## Log
+
+### Phase 4 — REST API for the admin (2026-10-19)
+
+**Done:** `Rest\Rest` module (boots every controller on `rest_api_init`) and
+`Base_Controller` (namespace `mmbb/v1`; one `permissions_check()` requiring
+`manage_woocommerce`, 401 when logged out and 403 otherwise; paging args and
+`X-WP-Total` headers). Controllers, each with declared `args` and a schema:
+`Campaigns_Controller` (`/campaigns` GET/POST, `/campaigns/{id}` GET/PUT/PATCH/DELETE,
+`/duplicate`, `/publish`, `/preview`, `/bulk`), `Products_Controller`,
+`Terms_Controller`, `Pages_Controller`, `Settings_Controller`, `Setup_Controller`
+(GET plus POST `test_done`), `Stats_Controller`, `Analytics_Controller`.
+`Config_Messages` translates `Config::validate()` codes for inline display.
+
+**Decisions:**
+
+- `GET /campaigns` returns `{ items, total, pages, counts }` (counts per computed
+  status, ignoring the status filter) plus the standard paging headers.
+- PUT replaces the config (sanitized onto the defaults) and PATCH merges a partial
+  config (autosave). Neither accepts `container_product_id` from the client: the new
+  `Campaign_Repository::set_container_product()` is the only writer, for Phase 7.
+- DELETE trashes the campaign and its container product, but only when the
+  product carries this campaign's `_mmbb_campaign_id`.
+- `/publish` validates placement (400) and the whole config (422
+  `mmbb_invalid_config` with `{ path, code, message }` errors), then answers 501
+  `mmbb_not_implemented` until Phase 6. `/preview` returns the public config with
+  `products: []` until Phase 8. `/stats` and `/analytics` return their final shape
+  with zeros until Phase 9. `orderby=revenue|conversion` sorts by date until then.
+- `/products` lists simple products and variations only; a category or tag
+  filter limits it to simple products (variations carry no terms), and an unknown
+  term is 400 `mmbb_invalid_term`. Prices are integer minor units plus WooCommerce's
+  `price_html`.
+- `/settings` POST args have no defaults, so a partial request changes only what
+  it names. `/analytics` validates `from`/`to` as strict `Y-m-d` and limits a custom
+  range to 366 days.
+- WordPress checks argument validity before `permission_callback`, so an
+  unauthenticated request with invalid arguments gets 400, not 401. Tests send valid
+  bodies when asserting 401/403.
+
+**Deviations from the plan (and why):** Phase 3 had committed
+`SettingsSettings::class` and `CampaignsPost_Type::class` in `class-plugin.php`, and
+`SettingsSettings::defaults()` in the installer. A shell-escaping slip dropped the
+namespace backslashes, and the plugin would have fataled on boot. Fixed. Added
+`tests/php/unit/ClassReferencesTest.php`, which resolves every `::class` in the
+module and controller lists to a file, so the unit suite catches this without
+WordPress. The work was split between this session and subagents (cost-router skill).
+
+**Checks run:** build ✅ · lint:js ✅ · lint:css ✅ · composer lint ✅ (whole repo) · `php -l` on every REST file ✅ · test:js ✅ (90) · test:unit ✅ (65 tests, 421 assertions; the new class-reference guard was confirmed to fail on a reintroduced `SettingsSettings::class`) · test:php ⏭ · Plugin Check ⏭. Every route uses `Base_Controller::permissions_check`; there is no `__return_true`, superglobal or raw SQL in `includes/rest/`.
+
+**Skipped checks (and why):** Docker is not installed, so the four new REST
+integration suites (`RestCampaignsTest`, `RestCatalogTest`, `RestStoreTest`; 401,
+403, 400 and happy path per route, schema keys against responses), the Phase 3
+integration tests and Plugin Check have **not run**. They are authored and linted only.
+
+**Open issues:** Run the integration suites when Docker is available.
+The schema-key assertions in `RestStoreTest` read the schema from an OPTIONS
+request; confirm that against a live server.
 
 ### Phase 3 — Data layer and pricing engine (2026-10-19)
 
@@ -437,6 +493,10 @@ phases. This is a tooling scaffold archive, not a submission release.
 
 ## Open issues
 
+- Phase 4: The REST integration suites (`RestCampaignsTest`, `RestCatalogTest`,
+  `RestStoreTest`) and Plugin Check have not run (no Docker). `/publish` answers 501
+  until Phase 6, `/preview` has no products until Phase 8, and `/stats` and
+  `/analytics` return zeros until Phase 9.
 - Phase 3: Integration tests (repository, settings, tables), Plugin Check and
   `WP_DEBUG` checks have not run (no Docker). The gift template needs config keys
   for "no prices inside" and "message required".

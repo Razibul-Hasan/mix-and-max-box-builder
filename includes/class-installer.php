@@ -47,7 +47,7 @@ final class Installer {
 			dbDelta( $statement );
 		}
 
-		add_option( 'mmbb_settings', SettingsSettings::defaults(), '', true );
+		add_option( 'mmbb_settings', Settings\Settings::defaults(), '', true );
 		if ( version_compare( (string) get_option( 'mmbb_version', '0' ), MMBB_VERSION, '<' ) ) {
 			update_option( 'mmbb_version', MMBB_VERSION, false );
 		}

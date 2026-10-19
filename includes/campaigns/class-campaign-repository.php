@@ -156,18 +156,21 @@ final class Campaign_Repository {
 	/**
 	 * Save a (possibly partial) config and optionally the title.
 	 *
-	 * @param int         $id     Campaign id.
-	 * @param array       $input  Raw config, merged onto the saved one.
-	 * @param string|null $title  New title, or null to keep it.
+	 * @param int         $id      Campaign id.
+	 * @param array       $input   Raw config, merged onto the saved one.
+	 * @param string|null $title   New title, or null to keep it.
+	 * @param bool        $replace Replace the config (onto the defaults) instead of merging.
+	 *                             The server-owned container product id is always kept.
 	 * @return array|\WP_Error The saved campaign, with the sanitized config.
 	 */
-	public function save( $id, array $input, $title = null ) {
+	public function save( $id, array $input, $title = null, $replace = false ) {
 		$current = $this->find( $id );
 		if ( ! $current ) {
 			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'mix-and-max-box-builder' ), array( 'status' => 404 ) );
 		}
 
-		$config = Config::sanitize( $input, $current['config'] );
+		$config                         = Config::sanitize( $input, $replace ? self::defaults() : $current['config'] );
+		$config['container_product_id'] = $current['config']['container_product_id'];
 
 		if ( null !== $title ) {
 			$result = wp_update_post(
@@ -190,6 +193,27 @@ final class Campaign_Repository {
 		 * @param int   $id     Campaign id.
 		 * @param array $config The sanitized config that was saved.
 		 */
+		do_action( 'mmbb_campaign_saved', $current['id'], $config );
+		return $this->find( $current['id'] );
+	}
+
+	/**
+	 * Record the campaign's container product. Only server code calls this;
+	 * save() never takes the id from input.
+	 *
+	 * @param int $id         Campaign id.
+	 * @param int $product_id Container product id, or 0 to clear it.
+	 * @return array|\WP_Error
+	 */
+	public function set_container_product( $id, $product_id ) {
+		$current = $this->find( $id );
+		if ( ! $current ) {
+			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'mix-and-max-box-builder' ), array( 'status' => 404 ) );
+		}
+		$config                         = $current['config'];
+		$config['container_product_id'] = max( 0, (int) $product_id );
+		$this->write_config( $current['id'], $config );
+		/** This action is documented in Campaign_Repository::save(). */
 		do_action( 'mmbb_campaign_saved', $current['id'], $config );
 		return $this->find( $current['id'] );
 	}
@@ -270,10 +294,11 @@ final class Campaign_Repository {
 	}
 
 	/**
-	 * Delete a campaign. By default it goes to the trash.
+	 * Delete a campaign. By default it goes to the trash, and so does its
+	 * container product (only a product carrying this campaign's marker).
 	 *
 	 * @param int  $id    Campaign id.
-	 * @param bool $force Delete permanently.
+	 * @param bool $force Delete permanently. The container product is still only trashed.
 	 * @return bool
 	 */
 	public function delete( $id, $force = false ) {
@@ -281,6 +306,13 @@ final class Campaign_Repository {
 		if ( ! $post || Post_Type::NAME !== $post->post_type ) {
 			return false;
 		}
+
+		$config     = Config::sanitize( $this->read_config( $post->ID ), self::defaults() );
+		$product_id = $config['container_product_id'];
+		if ( $product_id > 0 && 'product' === get_post_type( $product_id ) && (int) get_post_meta( $product_id, '_mmbb_campaign_id', true ) === (int) $post->ID ) {
+			wp_trash_post( $product_id );
+		}
+
 		$result = $force ? wp_delete_post( $post->ID, true ) : wp_trash_post( $post->ID );
 		return (bool) $result;
 	}

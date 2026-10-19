@@ -147,10 +147,14 @@ class CampaignRepositoryTest extends \WP_UnitTestCase {
 			$campaign['id'],
 			array(
 				'placement'            => array( 'page_id' => 77 ),
-				'container_product_id' => 88,
+				// Ignored: only set_container_product() may set the id.
+				'container_product_id' => 99,
 			),
 			'Winter box'
 		);
+		$this->assertSame( 0, $this->repo->find( $campaign['id'] )['config']['container_product_id'] );
+		$this->repo->set_container_product( $campaign['id'], 88 );
+		$this->assertSame( 88, $this->repo->find( $campaign['id'] )['config']['container_product_id'] );
 		$this->repo->publish( $campaign['id'] );
 
 		$copy = $this->repo->duplicate( $campaign['id'] );
