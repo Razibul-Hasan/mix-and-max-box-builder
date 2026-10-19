@@ -5,7 +5,7 @@ Updated by the agent at the end of every phase. Newest entry first under each ph
 | Phase | Title | Status | Commit |
 | --- | --- | --- | --- |
 | 0 | Tooling and repository | done; Docker checks skipped | `Phase 0: Tooling and repository` |
-| 1 | Plugin skeleton and lifecycle | not started | |
+| 1 | Plugin skeleton and lifecycle | done; Docker checks skipped | `Phase 1: Plugin skeleton and lifecycle` |
 | 2 | Design system inside the plugin | not started | |
 | 3 | Data layer and pricing engine | not started | |
 | 4 | REST API for the admin | not started | |
@@ -43,6 +43,108 @@ installable on the minimum supported PHP branch.
 | WordPress / WooCommerce / Plugin Check in wp-env | Not installed here; latest release URLs configured, exact installed versions pending Docker run |
 
 ## Log
+
+### Phase 1 — Plugin skeleton and lifecycle (2026-10-19)
+
+**Done:** Replaced the scaffold with the 0.1.0 plugin header, fixed constants,
+own namespace autoloader, lifecycle hooks, and guarded HPOS and Cart/Checkout
+blocks compatibility declarations. Added dependency-gated module registration
+and dismissible WooCommerce requirement notices restricted to authorized users
+on Plugins and plugin screens. Added activation, version-based admin upgrades,
+network activation and new-site initialization, and an empty schema/schedule
+registry for later phases. Added opt-in per-site uninstall, the guarded uninstall
+entry point, a draft WordPress.org readme, and `languages/.gitkeep`.
+
+**Decisions:** Default settings contain only `delete_data => false` in this phase;
+Phase 3 adds the full settings schema and defaults. Existing merchant settings
+are never overwritten by activation or upgrade, and newer stored versions are
+never downgraded. Version options are not autoloaded. Network traversal uses
+batches of 100 sites and restores the original blog context with `finally`.
+New network sites initialize only when this plugin is network-active.
+Deactivation preserves data and does not flush rewrite rules.
+
+Uninstall checks each site's own deletion preference, deletes campaign posts
+and metadata, selects only `product` records with the explicit container marker,
+uses WooCommerce product CRUD when available (WordPress deletion otherwise),
+and removes options, database-backed transients, and tables with escaped literal
+prefixes. SQL values and identifiers use `$wpdb->prepare()` (`%i` is supported by
+the WordPress minimum). Orders and order items are never selected for deletion.
+
+The user supplied contributor `bestwpexpert`, author `bestwebexpert`, and website
+`https://bestwebexpert.com/`; the website serves as both plugin and author URI
+until a dedicated plugin page is available. Verified current release metadata
+from the [WordPress version API](https://api.wordpress.org/core/version-check/1.7/)
+(7.1.3) and [WooCommerce plugin API](https://api.wordpress.org/plugins/info/1.2/?action=plugin_information&request%5Bslug%5D=woocommerce)
+(11.2.1). Draft compatibility headers target WordPress 7.1 and WooCommerce 11.2.1;
+these are metadata targets, not completed runtime compatibility tests.
+
+**Deviations from the plan (and why):** The general prefix rule forbids leading
+underscores, but Phase 1 explicitly requires `_mmbb_campaign_id` for container
+ownership; followed that specific key. Test-only campaign fixtures also use the
+planned `_mmbb_config` key. Added a small shared `Sites` helper and a testable
+`Uninstaller` class to support the required multisite lifecycle and uninstall
+tests. Aligned `package.json` and its lockfile to 0.1.0. The first archive included
+`languages/.gitkeep`; added `!**/.*` to the packaging allowlist and mirrored it in
+`.distignore` so the Phase 0 no-hidden-files guarantee remains intact. No command
+or dependency changed. Fonts and their licenses are accurately described as
+pending Phase 2 rather than claimed as already bundled.
+
+**Checks run:**
+
+- `npm run build`: pass. The existing no-root-entry scanner message remains;
+  both explicit placeholder entries compile successfully.
+- `npm run lint:js` and `npm run lint:css`: pass.
+- `composer run lint`: pass (15 PHP files; WPCS and PHPCompatibilityWP 7.4-).
+- `npm run test:js`: pass (1 test).
+- `composer run test:unit`: pass (3 tests, 6 assertions), including own-autoloader
+  resolution, rejected foreign/invalid class names, and absent-WooCommerce checks.
+- Added integration tests for installed versions/defaults, idempotent upgrades,
+  preserving newer versions and settings, deactivation/reactivation, retained
+  data with five non-opt-in preferences, opt-in removal with unrelated data and
+  WooCommerce orders preserved, network activation, per-site deletion preferences,
+  and new network sites. These tests are authored, linted, and not executed here.
+- Local readme/metadata audit: pass (107-character short description, five tags,
+  required sections present, and plugin/package/lockfile/readme versions agree).
+  This is not an official WordPress.org validator or Plugin Check result.
+- `npm run plugin-zip`: pass. Extracted and audited all 23 files against the
+  allowlist in a unique OS-temp directory; no dev files or dotfiles. Contents:
+  `LICENSE`, main plugin file, `uninstall.php`, `readme.txt`, `package.json`,
+  `webpack.config.js`, six `includes/class-*.php` files, eight `build/` files,
+  and the three existing `src/` files. The empty languages directory is tracked
+  in Git; its placeholder is intentionally excluded from the zip.
+- `git diff --check`: pass.
+
+PHP/Composer were not on PATH in this shell. Used Local's existing PHP 8.2.29
+binary with a temporary PHP configuration enabling its bundled mbstring,
+OpenSSL and cURL extensions. Used Composer 2.10.3 from an OS-temp directory,
+verified against its official SHA-256 checksum. No machine-wide configuration
+or live WordPress database was changed.
+
+**Skipped checks (and why):** Retried `npx wp-env start`, `npm run test:php`,
+and `npx wp-env run cli wp plugin check mix-and-max-box-builder`; each reports
+`Could not connect to Docker. Is it running?`. Therefore activation with
+WooCommerce, deactivation/reactivation without notices, behavior after
+WooCommerce deactivation/downgrade, the integration suites, Plugin Check, browser
+notice behavior, and WP_DEBUG-log checks remain unverified. Actual PHP 7.4 and
+WordPress-minimum/current runtime tests also require the missing environment.
+These are skips, not passes. No later phase was started.
+
+**Open issues:** Run the above Docker checks and compatibility checks when Docker
+is available. Run the network tests as well as the single-site suite; the network
+tests explicitly skip on single-site. With a multisite wp-env, pass the test
+library's `WP_MULTISITE=1` flag:
+
+```sh
+npx wp-env run tests-cli --env-cwd=wp-content/plugins/mix-and-max-box-builder env MMBB_TEST_SUITE=integration WP_MULTISITE=1 vendor/bin/phpunit --testsuite=integration
+```
+
+Configure multisite through the ignored wp-env override (`"multisite": true`)
+and restart with `npx wp-env start --update` before that run. Restore the desired
+single-site configuration afterward. The public source repository URL remains
+a clearly marked draft placeholder; replace it before submission. No plugin
+transients are produced yet; when later phases add them, register their keys for
+uninstall cleanup in persistent object caches (WordPress has no portable API to
+enumerate arbitrary cached transient keys).
 
 ### Phase 0 — Tooling and repository (2026-10-19)
 
@@ -159,6 +261,14 @@ phases. This is a tooling scaffold archive, not a submission release.
 
 ## Open issues
 
+- Phase 1: Docker-dependent lifecycle/integration, Plugin Check, multisite,
+  browser and WP_DEBUG checks remain unverified. Run the single-site and network
+  suites before treating lifecycle runtime behavior as verified.
+- Phase 1: Replace the readme's public source repository placeholder before
+  submission; a dedicated plugin page can replace the supplied website URI.
+- Phase 1: Future transient producers must register their keys so uninstall can
+  also clean persistent object-cache entries, which cannot be enumerated through
+  a portable WordPress API.
 - Phase 0: Docker is unavailable. Verify wp-env startup (WooCommerce and Plugin
   Check active), `npm run test:php`, Plugin Check, and absence of PHP notices with
   `WP_DEBUG` before relying on the integration environment.

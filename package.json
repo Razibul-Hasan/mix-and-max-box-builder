@@ -1,6 +1,6 @@
 {
 	"name": "mix-and-max-box-builder",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"private": true,
 	"license": "GPL-2.0-or-later",
 	"engines": {
@@ -30,7 +30,8 @@
 		"assets/",
 		"languages/",
 		"package.json",
-		"webpack.config.js"
+		"webpack.config.js",
+		"!**/.*"
 	],
 	"devDependencies": {
 		"@testing-library/react": "16.3.3",
