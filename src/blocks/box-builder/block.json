@@ -1,0 +1,38 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "mmbb/box-builder",
+	"title": "Mix and Max Box Builder",
+	"category": "woocommerce",
+	"description": "Shows a box campaign: products, slots, tiers and the add-to-cart bar.",
+	"keywords": [ "box", "bundle", "gift", "mix and match" ],
+	"textdomain": "mix-and-max-box-builder",
+	"attributes": {
+		"campaignId": {
+			"type": "number",
+			"default": 0
+		},
+		"layout": {
+			"type": "string",
+			"enum": [ "default", "panel", "bar", "both" ],
+			"default": "default"
+		},
+		"columns": {
+			"type": "number",
+			"default": 0
+		},
+		"showHero": {
+			"type": "boolean",
+			"default": true
+		}
+	},
+	"supports": {
+		"align": [ "wide", "full" ],
+		"html": false
+	},
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"viewScript": "mmbb-storefront",
+	"style": "mmbb-storefront",
+	"render": "file:./render.php"
+}

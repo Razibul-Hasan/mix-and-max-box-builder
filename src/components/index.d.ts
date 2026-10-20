@@ -387,6 +387,8 @@ export interface BoxPanelProps {
   onRemove?: (index: number, item: BoxItem) => void;
   onCheckout?: () => void;
   /** Makes the CTA a link (cart URL). */ ctaHref?: string;
+  /** Disables the CTA even when the box is complete (editor preview). */ ctaDisabled?: boolean;
+  /** Shows the CTA's busy state while the box is being added. */ ctaLoading?: boolean;
   ctaLabel?: React.ReactNode;
   footnote?: React.ReactNode;
   /** Deprecated: MoneyProvider settings determine the currency. */
@@ -406,6 +408,8 @@ export interface BoxSummaryBarProps {
   /** Makes the summary a link (opens a drawer page). */ openHref?: string;
   onCheckout?: () => void;
   ctaHref?: string;
+  ctaDisabled?: boolean;
+  ctaLoading?: boolean;
   ctaLabel?: React.ReactNode;
   /** Deprecated: MoneyProvider settings determine the currency. */
   currency?: string;

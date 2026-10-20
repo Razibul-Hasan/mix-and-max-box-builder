@@ -12,7 +12,7 @@ Updated by the agent at the end of every phase. Newest entry first under each ph
 | 5 | Admin app: shell, dashboard, campaigns | done; Docker checks skipped | `Phase 5: Admin app: shell, dashboard, campaigns` |
 | 6 | Campaign wizard | done; Docker checks skipped | `Phase 6: Campaign wizard` |
 | 7 | Cart, orders and stock | done; Docker checks skipped | `Phase 7: Cart, orders and stock` |
-| 8 | Storefront: block, shortcode, builder | not started | |
+| 8 | Storefront: block, shortcode, builder | done; Docker and browser checks skipped | `Phase 8: Storefront: block, shortcode, builder` |
 | 9 | Analytics | not started | |
 | 10 | Settings screen and emails | not started | |
 | 11 | Hardening and WordPress.org compliance | not started | |
@@ -43,6 +43,36 @@ installable on the minimum supported PHP branch.
 | WordPress / WooCommerce / Plugin Check in wp-env | Not installed here; latest release URLs configured, exact installed versions pending Docker run |
 
 ## Log
+
+### Phase 8 — Storefront: block, shortcode, builder (2026-10-20)
+
+**Done:** `includes/storefront/`: `Storefront` (registers the `mmbb-storefront` script and style on `init` without enqueueing, the block from `build/blocks/box-builder`, `[mmbb_box]`, and cache invalidation), `Renderer` (shared by `render.php` and the shortcode; escapes everything; payload through `wp_add_inline_script( …, 'before' )` with `wp_json_encode()`; managers see a note with an edit link when a campaign is not live, shoppers see nothing), `Payload` (public config, resolved products cached in a transient, money, nonce and `wc-ajax` URLs, `?mmbb_edit=` preload). `/campaigns/{id}/preview` now returns this payload (without `cart`). Block `src/blocks/box-builder/` (`block.json`, `render.php`, `index.js`, `edit.js`, `api.js`, `editor.css`). Storefront app `src/storefront/`: `Builder` (all three campaign types, category chips, sort, hero, gift options, toast, error `Notice`), `Hero`, `Drawer` (bottom sheet with focus trap, Esc, scrim, focus return), `state.js` (reducer and helpers), `api.js` (add to cart with one nonce refresh and retry), `storage.js` (`mmbb:box:{id}` in `sessionStorage`), `track.js` (no-op stub), `hooks.js` (container width). `src/shared/tiers.js` now holds `tierLabel`, `tierList` and `sizeTag`; the admin wizard imports them from there.
+
+**Decisions:**
+
+- **Layout by container width, not window.** A `ResizeObserver` on the builder sets wide or narrow at 760 px. `layout` means: wide + `panel` or `both` = sticky `BoxPanel` beside the grid; wide + `bar` = sticky `BoxSummaryBar`; narrow + `panel` = panel stacked under the grid; narrow + `bar` or `both` = bar plus bottom-sheet drawer. Only one tier live region exists at a time. Grid columns drop by one next to the panel when the container is under 1100 px. Precedence: block or shortcode, then campaign design, then Settings.
+- **Box = ordered item list** (one id per item), so slot positions stay put. The reducer enforces capacity, caps, duplicates, size trimming and the stock the page knows about; the server re-checks everything.
+- **Products cache.** Transient `mmbb_products_{campaign}_{generation}` (1 hour). `mmbb_catalog_generation` is bumped once per request on campaign save, settings save, product and variation save or delete, and stock or stock-status changes. Uninstall already removes `mmbb_*` options and `_transient_mmbb_*`. Stock counts reach the page only at or below the low-stock threshold (and not at all when low stock is off); sold out is always sent.
+- **Countdown** uses the server's `now` so a wrong device clock or a cached page does not skew it; it shows only when an end date exists and fewer than `countdown_days` days remain.
+- **Edit from cart.** `?mmbb_edit={key}` preloads only a box line of the same campaign and sends `edit_key` back so the old line is replaced. Shown with an info `Notice` and the CTA "Update your box".
+- **Gift wrap fee** is folded into the panel's Subtotal so "Box discount" stays correct (`BoxPanel` computes discount as subtotal minus total).
+- **Block JS packages.** Added `@wordpress/blocks` 15.3.0, `@wordpress/block-editor` 15.3.0 and `@wordpress/components` 30.3.0 (versions published with the pinned `api-fetch` 7.30.0). The block needs `registerBlockType`, `InspectorControls` and the controls; no WordPress package other than these can do it. They stay external (`wp-blocks`, `wp-block-editor`, `wp-components`), nothing is bundled. `ToggleGroupControl` falls back to its experimental export so WordPress 6.6 works.
+- `block.json` `viewScript` and `style` name the registered handle `mmbb-storefront`, so the same bundle serves the block and the shortcode and loads only when a builder renders (or everywhere when "assets only on builder" is off).
+- Components `BoxPanel` and `BoxSummaryBar` gained additive `ctaDisabled` and `ctaLoading` props (editor preview and busy state). `Box_Resolver::is_offerable()` is now public so the payload applies the same purchasable rules.
+
+**Deviations from the plan (and why):**
+
+- No Desktop/Mobile preview toggle in the block editor; the canvas follows the editor's width (the builder reacts to its container).
+- `empty_slot_hint` and the Settings-driven strings are carried in the payload but not applied yet (Phase 10 owns Settings).
+- Analytics `track()` calls (`view`, `item_added`, `tier_unlocked`, `box_added`) are placed; the function is the stub the plan asks for.
+- Sort offers Featured, price both ways and name (no "Bestselling" client sort; the campaign's own product order can be bestselling on the server).
+- `stylelint` class pattern is relaxed for `src/storefront/storefront.css` like the other BEM stylesheets.
+
+**Checks run:** build ✅ · lint:js ✅ · lint:css ✅ · composer lint ✅ · test:js ✅ (203; new: reducer, tier and countdown helpers, add-to-cart retry, Builder flow with unlock toast, failed add, session storage, preview) · test:unit ✅ (80 tests, 478 assertions; new `PayloadViewTest`) · `php -l` ✅ · source scan of `includes/storefront` and `src/blocks`: no `<script>`/`<style>`, `__return_true`, `wp_redirect`, `$_REQUEST`, `eval`, `extract` or `$wpdb` · test:php ⏭ · Plugin Check ⏭
+
+**Skipped checks (and why):** No Docker, so `StorefrontTest` (shortcode and block output, escaping, two builders, not-live behaviour for shoppers and managers, payload products and badges, cache busting, preview without cart, assets only on builder, edit preload) and the updated `test_preview` are authored and linted but **not executed**. No browser pass was done: the plan's wp-env walkthrough (insert block, build, check out, edit from cart), the 390 px comparison with `MobileFill`, `MobileDrawer` and `MobileComplete`, Twenty Twenty-Five and Storefront theme tests, and "page source has no mmbb assets" are unverified.
+
+**Open issues:** Run the integration suites and a live walkthrough when Docker is available. Check in a browser: block editor canvas in the iframed editor (styles through the `style` handle, `ResizeObserver` across the iframe), sticky bar and bottom sheet over real themes, the `MobileComplete` "Box complete" banner (not built; the bar and unlock toast cover that state), and whether a page-caching plugin keeps `?mmbb_edit=` uncached. `Payload::edit_box()` needs the WooCommerce cart loaded, which holds on front-end requests but not in REST. Phase 10 applies the Settings (empty-slot hint, CTA label, columns, summary layout, low stock).
 
 ### Phase 7 — Cart, orders and stock (2026-10-19)
 
@@ -699,6 +729,7 @@ phases. This is a tooling scaffold archive, not a submission release.
 
 ## Open issues
 
+- Phase 8: `StorefrontTest`, Plugin Check, the live wp-env walkthrough, the 390 px phone comparison and theme tests (Twenty Twenty-Five, Storefront) have not run (no Docker, no browser).
 - Phase 7: `CartBoxTest`, Plugin Check and the manual cart/checkout/HPOS matrix have not run (no Docker). The Cart block "Edit box" link and items-mode gaps are listed in the Phase 7 log.
 - Phase 6: `PublisherTest`, the updated `RestCampaignsTest`, Plugin Check and a live wizard walkthrough have not run (no Docker). Phase 7 provides `mmbb_ensure_container_product`.
 - Phase 5: Integration tests (`AdminMenuTest`, the `live` status cases), Plugin Check and a

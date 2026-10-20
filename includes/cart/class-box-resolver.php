@@ -119,7 +119,7 @@ final class Box_Resolver {
 	 * @param array       $row     The pick (product_id, variation_id).
 	 * @return bool
 	 */
-	private static function is_offerable( \WC_Product $product, array $row ) {
+	public static function is_offerable( \WC_Product $product, array $row ) {
 		if ( 'publish' !== $product->get_status() || ! $product->is_purchasable() ) {
 			return false;
 		}

@@ -14,6 +14,7 @@ use MixMax\BoxBuilder\Campaigns\Config;
 use MixMax\BoxBuilder\Campaigns\Publisher;
 use MixMax\BoxBuilder\Campaigns\Status;
 use MixMax\BoxBuilder\Campaigns\Templates;
+use MixMax\BoxBuilder\Storefront\Payload;
 
 /** List, create, edit, duplicate, publish, preview and bulk-edit campaigns. */
 final class Campaigns_Controller extends Base_Controller {
@@ -455,7 +456,6 @@ final class Campaigns_Controller extends Base_Controller {
 
 	/**
 	 * The storefront payload for the wizard preview and the block editor.
-	 * Phase 8 adds the resolved products and storefront settings.
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response|\WP_Error
@@ -465,28 +465,7 @@ final class Campaigns_Controller extends Base_Controller {
 		if ( is_wp_error( $campaign ) ) {
 			return $campaign;
 		}
-		$config = $campaign['config'];
-		return rest_ensure_response(
-			array(
-				'id'       => $campaign['id'],
-				'title'    => $campaign['title'],
-				'status'   => $campaign['status'],
-				'config'   => array(
-					'type'     => $config['type'],
-					'box'      => $config['box'],
-					'tiers'    => $config['tiers'],
-					'sizes'    => $config['sizes'],
-					'bundle'   => $config['bundle'],
-					'extras'   => $config['extras'],
-					'design'   => $config['design'],
-					'schedule' => array(
-						'end'            => $config['schedule']['end'],
-						'countdown_days' => $config['schedule']['countdown_days'],
-					),
-				),
-				'products' => array(),
-			)
-		);
+		return rest_ensure_response( Payload::build( $campaign, array( 'preview' => true ) ) );
 	}
 
 	/**
@@ -603,11 +582,16 @@ final class Campaigns_Controller extends Base_Controller {
 					'type' => 'string',
 					'enum' => Status::all(),
 				),
+				'preview'  => array( 'type' => 'boolean' ),
 				'config'   => array( 'type' => 'object' ),
+				'view'     => array( 'type' => 'object' ),
+				'settings' => array( 'type' => 'object' ),
 				'products' => array(
 					'type'  => 'array',
 					'items' => array( 'type' => 'object' ),
 				),
+				'money'    => array( 'type' => 'object' ),
+				'now'      => array( 'type' => 'string' ),
 			),
 		);
 	}

@@ -15,6 +15,8 @@ export default function BoxPanel( {
 	onRemove,
 	onCheckout,
 	ctaHref,
+	ctaDisabled,
+	ctaLoading,
 	ctaLabel = __( 'Add box to cart', 'mix-and-max-box-builder' ),
 	footnote,
 	children,
@@ -60,7 +62,8 @@ export default function BoxPanel( {
 				variant="max"
 				size="lg"
 				fullWidth
-				disabled={ need > 0 }
+				disabled={ need > 0 || ctaDisabled }
+				loading={ ctaLoading }
 				onClick={ onCheckout }
 				href={ ctaHref }
 				iconRight={ need > 0 ? undefined : 'arrowRight' }

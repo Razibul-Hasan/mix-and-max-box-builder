@@ -343,7 +343,7 @@ class RestCampaignsTest extends \WP_UnitTestCase {
 		$id       = $this->make_campaign();
 		$response = $this->send( 'GET', '/mmbb/v1/campaigns/' . $id . '/preview' );
 		$this->assertSame( 200, $response->get_status() );
-		$this->assertEqualSets( array( 'id', 'title', 'status', 'config', 'products' ), array_keys( $response->get_data() ) );
+		$this->assertEqualSets( array( 'id', 'title', 'status', 'preview', 'config', 'view', 'settings', 'products', 'money', 'now' ), array_keys( $response->get_data() ) );
 	}
 
 	/** Bulk actions report one result per id. */

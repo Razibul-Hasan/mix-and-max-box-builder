@@ -16,6 +16,8 @@ export default function BoxSummaryBar( {
 	openHref,
 	onCheckout,
 	ctaHref,
+	ctaDisabled,
+	ctaLoading,
 	ctaLabel = __( 'Add to cart', 'mix-and-max-box-builder' ),
 } ) {
 	const formatMoney = useMoney();
@@ -105,7 +107,8 @@ export default function BoxSummaryBar( {
 					size="lg"
 					onClick={ onCheckout }
 					href={ ctaHref }
-					disabled={ need > 0 }
+					disabled={ need > 0 || ctaDisabled }
+					loading={ ctaLoading }
 				>
 					{ need > 0
 						? sprintf(

@@ -1,0 +1,4 @@
+/* Block editor only. The builder itself is styled by the storefront stylesheet. */
+.mmbb-root.mmbb-builder {
+	padding: var(--space-2) 0;
+}

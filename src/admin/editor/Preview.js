@@ -10,6 +10,7 @@ import {
 	useMoney,
 } from '../../components';
 import { quote, toMinor } from '../../shared/pricing';
+import { sizeTag } from '../../shared/tiers';
 import { useAdmin } from '../context';
 import { previewTiers, tierLabel } from './fields';
 import { toNumber } from './state';
@@ -37,15 +38,6 @@ function stockFor( product ) {
 	}
 	const left = product.stock_quantity;
 	return typeof left === 'number' && left > 0 && left <= 5 ? left : undefined;
-}
-
-function sizeTag( tag ) {
-	if ( tag === 'popular' ) {
-		return __( 'Most popular', 'mix-and-max-box-builder' );
-	}
-	return tag === 'best_value'
-		? __( 'Best value', 'mix-and-max-box-builder' )
-		: undefined;
 }
 
 /**

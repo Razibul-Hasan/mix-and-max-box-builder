@@ -34,6 +34,10 @@ External services: none. This plugin does not connect to any external service.
 
 No. Version 0.1.0 is the lifecycle foundation; shopping and campaign screens are still in development.
 
+= How do I put a box builder on a page? =
+
+Add the Mix and Max Box Builder block and choose a campaign, or use the shortcode [mmbb_box id="12"]. The shortcode also takes layout (panel, bar or both), columns (3, 4 or 5) and hero (true or false). On wide containers the box panel sits beside the products; below 760 pixels of container width the builder switches to two columns, a sticky summary bar and a bottom sheet. The builder loads its scripts and styles only on pages that show one, unless you turn off "Load assets only on pages with a builder" in Settings.
+
 = What happens if WooCommerce is unavailable? =
 
 Plugin modules stay inactive. Users who can activate plugins see a dismissible explanation on the Plugins screen and plugin screens.

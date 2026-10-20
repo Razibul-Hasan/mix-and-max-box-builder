@@ -30,6 +30,7 @@ final class Plugin {
 			Cart\Add_To_Cart::class,
 			Cart\Cart_Lines::class,
 			Cart\Order_Boxes::class,
+			Storefront\Storefront::class,
 		);
 
 		foreach ( $modules as $module ) {
