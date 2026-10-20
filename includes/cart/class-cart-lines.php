@@ -24,6 +24,29 @@ final class Cart_Lines {
 	 */
 	private static $running = false;
 
+	/**
+	 * A header and its children must be validated together after assembly.
+	 *
+	 * @var bool
+	 */
+	private static $assembling = false;
+
+	/**
+	 * Defer box validation while related lines are being added or removed.
+	 *
+	 * @param callable $callback Cart changes.
+	 * @return mixed
+	 */
+	public static function while_assembling( $callback ) {
+		$previous         = self::$assembling;
+		self::$assembling = true;
+		try {
+			return call_user_func( $callback );
+		} finally {
+			self::$assembling = $previous;
+		}
+	}
+
 	/** Register hooks. */
 	public function register() {
 		add_filter( 'woocommerce_get_cart_item_from_session', array( $this, 'restore_from_session' ), 10, 2 );
@@ -35,7 +58,11 @@ final class Cart_Lines {
 		add_filter( 'woocommerce_store_api_product_quantity_editable', array( $this, 'quantity_editable' ), 10, 3 );
 		add_filter( 'woocommerce_cart_item_remove_link', array( $this, 'hide_child_remove_link' ), 10, 2 );
 		add_action( 'woocommerce_cart_item_removed', array( $this, 'remove_children' ), 10, 2 );
-		add_action( 'woocommerce_blocks_loaded', array( $this, 'register_store_api_data' ) );
+		if ( did_action( 'woocommerce_blocks_loaded' ) ) {
+			$this->register_store_api_data();
+		} else {
+			add_action( 'woocommerce_blocks_loaded', array( $this, 'register_store_api_data' ) );
+		}
 	}
 
 	/**
@@ -100,7 +127,7 @@ final class Cart_Lines {
 	 * @param \WC_Cart $cart Cart.
 	 */
 	public function reprice( $cart ) {
-		if ( self::$running || ( is_admin() && ! wp_doing_ajax() ) || ! $cart instanceof \WC_Cart ) {
+		if ( self::$running || self::$assembling || ( is_admin() && ! wp_doing_ajax() ) || ! $cart instanceof \WC_Cart ) {
 			return;
 		}
 		self::$running = true;
@@ -267,14 +294,17 @@ final class Cart_Lines {
 	 * @param array    $quote      Quote.
 	 */
 	private function price_children( \WC_Cart $cart, $header_key, array $items, array $quote ) {
-		$target    = (int) $quote['subtotal'] - (int) $quote['discount'];
-		$subtotal  = max( 1, (int) $quote['subtotal'] );
-		$remaining = $target;
-		$unit_of   = array();
-		$last      = count( $items ) - 1;
+		$target     = (int) $quote['subtotal'] - (int) $quote['discount'];
+		$subtotal   = max( 1, (int) $quote['subtotal'] );
+		$remaining  = $target;
+		$cumulative = 0;
+		$unit_of    = array();
+		$last       = count( $items ) - 1;
 		foreach ( $items as $index => $item ) {
 			$line_subtotal = $item['unit_price_minor'] * $item['qty'];
-			$share         = $index === $last ? $remaining : (int) floor( $line_subtotal * $target / $subtotal + 0.5 );
+			$cumulative   += $line_subtotal;
+			$allocated     = $target - $remaining;
+			$share         = $index === $last ? $remaining : (int) floor( $cumulative * $target / $subtotal + 0.5 ) - $allocated;
 			$remaining    -= $share;
 			$unit_of[ Box_Rules::key( $item['product_id'], $item['variation_id'] ) ] = $share / max( 1, $item['qty'] );
 		}

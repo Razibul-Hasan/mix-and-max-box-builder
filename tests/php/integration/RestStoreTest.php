@@ -148,6 +148,19 @@ class RestStoreTest extends \WP_UnitTestCase {
 	}
 
 	/** Setup: POST test_done stores the option. */
+	public function test_setup_finds_a_box_order_without_the_test_option() {
+		$this->be_manager();
+		delete_option( 'mmbb_setup_test_done' );
+		$ordinary = wc_create_order();
+		$ordinary->save();
+		$this->assertFalse( $this->request( 'GET', 'setup' )->get_data()['test_order'] );
+		$box = wc_create_order();
+		$box->update_meta_data( '_mmbb_has_box', 1 );
+		$box->save();
+		$this->assertTrue( $this->request( 'GET', 'setup' )->get_data()['test_order'] );
+	}
+
+	/** Setup: POST test_done stores the option. */
 	public function test_setup_post_sets_test_done() {
 		$this->be_manager();
 		$response = $this->request( 'POST', 'setup', array( 'test_done' => true ) );

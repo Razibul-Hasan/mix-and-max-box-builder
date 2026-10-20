@@ -17,6 +17,17 @@ tests_add_filter(
 	'muplugins_loaded',
 	static function () {
 		require WP_PLUGIN_DIR . '/woocommerce/woocommerce.php';
+		// Install WooCommerce before init queries its tables, and before per-test transactions.
+		tests_add_filter(
+			'init',
+			static function () {
+				\WC_Install::install();
+				if ( '1' === getenv( 'MMBB_TEST_HPOS' ) ) {
+					update_option( 'woocommerce_custom_orders_table_enabled', 'yes' );
+				}
+			},
+			-1
+		);
 		require dirname( __DIR__, 3 ) . '/mix-and-max-box-builder.php';
 	}
 );

@@ -20,7 +20,7 @@ import {
 import { formatCompact } from '../../components/utils';
 import { createMoneyFormatter } from '../../utils/money';
 import { getCampaigns, getSetup, getStats, markTestDone } from '../api';
-import { copyText } from '../clipboard';
+import { copyText } from '../copy-text';
 import { RANGES } from '../constants';
 import { useAdmin } from '../context';
 import CampaignThumbs, { useProductImages } from '../CampaignThumbs';

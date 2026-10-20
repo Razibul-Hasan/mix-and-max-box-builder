@@ -51,7 +51,12 @@ export default function Hero( { payload, nowMs, decimals } ) {
 				{ design.intro ? (
 					<p className="mmbb-hero__intro">{ design.intro }</p>
 				) : null }
-				{ ends ? <Countdown endsAt={ ends } /> : null }
+				{ ends ? (
+					<Countdown
+						endsAt={ ends }
+						clockOffset={ nowMs - Date.now() }
+					/>
+				) : null }
 			</div>
 			{ tiers.length ? (
 				<ol

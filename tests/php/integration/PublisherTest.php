@@ -202,7 +202,9 @@ class PublisherTest extends \WP_UnitTestCase {
 		$this->assertSame( 'draft', $this->repo->find( $id )['post_status'] );
 
 		remove_all_filters( 'mmbb_ensure_container_product' );
-		$product_id = self::factory()->post->create( array( 'post_type' => 'product' ) );
+		$product = new \WC_Product_Simple();
+		$product->update_meta_data( '_mmbb_campaign_id', $id );
+		$product_id = $product->save();
 		add_filter(
 			'mmbb_ensure_container_product',
 			static function () use ( $product_id ) {

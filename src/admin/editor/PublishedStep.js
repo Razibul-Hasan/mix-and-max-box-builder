@@ -1,7 +1,7 @@
 import { __, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 import { Button, Card, EmptyState, Icon } from '../../components';
-import { copyText } from '../clipboard';
+import { copyText } from '../copy-text';
 import { useAdmin } from '../context';
 import { formatShortDate } from '../format';
 import { useToast } from '../toast';

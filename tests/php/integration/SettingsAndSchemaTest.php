@@ -91,6 +91,26 @@ class SettingsAndSchemaTest extends \WP_UnitTestCase {
 		$this->assertTrue( $settings['reduce_item_stock'] );
 	}
 
+	/** Changing a nested threshold must preserve the merchant's disabled toggle. */
+	public function test_partial_low_stock_update_preserves_disabled_preference() {
+		Settings::update(
+			array(
+				'low_stock' => array(
+					'enabled'   => false,
+					'threshold' => 3,
+				),
+			)
+		);
+		$settings = Settings::update( array( 'low_stock' => array( 'threshold' => 8 ) ) );
+		$this->assertSame(
+			array(
+				'enabled'   => false,
+				'threshold' => 8,
+			),
+			$settings['low_stock']
+		);
+	}
+
 	/** Installing creates both tables with their keys, and running it twice is safe. */
 	public function test_installer_creates_tables() {
 		global $wpdb;
@@ -100,8 +120,9 @@ class SettingsAndSchemaTest extends \WP_UnitTestCase {
 		Installer::install();
 		Installer::install();
 
-		$this->assertSame( $events, $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $events ) ) );
-		$this->assertSame( $stats, $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $stats ) ) );
+		// WP_UnitTestCase creates temporary tables, which SHOW TABLES does not list.
+		$this->assertSame( $events, $wpdb->get_var( $wpdb->prepare( 'SHOW CREATE TABLE %i', $events ) ) );
+		$this->assertSame( $stats, $wpdb->get_var( $wpdb->prepare( 'SHOW CREATE TABLE %i', $stats ) ) );
 
 		$columns = $wpdb->get_col( $wpdb->prepare( 'SHOW COLUMNS FROM %i', $events ) );
 		$this->assertSame( array( 'id', 'campaign_id', 'event', 'session', 'product_id', 'qty', 'value', 'order_id', 'created_at' ), $columns );

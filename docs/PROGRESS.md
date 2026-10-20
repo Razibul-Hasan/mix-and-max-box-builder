@@ -4,15 +4,15 @@ Updated by the agent at the end of every phase. Newest entry first under each ph
 
 | Phase | Title | Status | Commit |
 | --- | --- | --- | --- |
-| 0 | Tooling and repository | done; Docker checks skipped | `Phase 0: Tooling and repository` |
-| 1 | Plugin skeleton and lifecycle | done; Docker checks skipped | `Phase 1: Plugin skeleton and lifecycle` |
-| 2 | Design system inside the plugin | done; Docker checks skipped | `Phase 2: Design system inside the plugin` |
-| 3 | Data layer and pricing engine | done; Docker checks skipped | `Phase 3: Data layer and pricing engine` |
-| 4 | REST API for the admin | done; Docker checks skipped | `Phase 4: REST API for the admin` |
-| 5 | Admin app: shell, dashboard, campaigns | done; Docker checks skipped | `Phase 5: Admin app: shell, dashboard, campaigns` |
-| 6 | Campaign wizard | done; Docker checks skipped | `Phase 6: Campaign wizard` |
-| 7 | Cart, orders and stock | done; Docker checks skipped | `Phase 7: Cart, orders and stock` |
-| 8 | Storefront: block, shortcode, builder | done; Docker and browser checks skipped | `Phase 8: Storefront: block, shortcode, builder` |
+| 0 | Tooling and repository | done; native checks passed, wp-env pending | `Phase 0: Tooling and repository` |
+| 1 | Plugin skeleton and lifecycle | done; native lifecycle/network tests passed | `Phase 1: Plugin skeleton and lifecycle` |
+| 2 | Design system inside the plugin | done; native tests passed | `Phase 2: Design system inside the plugin` |
+| 3 | Data layer and pricing engine | done; native tests passed | `Phase 3: Data layer and pricing engine` |
+| 4 | REST API for the admin | done; native tests passed | `Phase 4: REST API for the admin` |
+| 5 | Admin app: shell, dashboard, campaigns | done; native tests and Dashboard smoke passed | `Phase 5: Admin app: shell, dashboard, campaigns` |
+| 6 | Campaign wizard | done; native tests passed, browser walkthrough pending | `Phase 6: Campaign wizard` |
+| 7 | Cart, orders and stock | done; HPOS/legacy tests and classic checkout passed; UI gaps remain | `Phase 7: Cart, orders and stock` |
+| 8 | Storefront: block, shortcode, builder | done; native tests and browser smoke passed | `Phase 8: Storefront: block, shortcode, builder` |
 | 9 | Analytics | not started | |
 | 10 | Settings screen and emails | not started | |
 | 11 | Hardening and WordPress.org compliance | not started | |
@@ -43,6 +43,95 @@ installable on the minimum supported PHP branch.
 | WordPress / WooCommerce / Plugin Check in wp-env | Not installed here; latest release URLs configured, exact installed versions pending Docker run |
 
 ## Log
+
+### Phases 0–8 — Review and regression fixes (2026-10-20)
+
+**Scope:** Reviewed the completed phases; no Phase 9–12 features were started.
+This entry supersedes the original logs' integration-test skips. Docker is still
+unavailable, but Local's PHP/MySQL services made isolated native tests possible.
+The test database and temporary browser site were separate from the merchant's
+database. Local reported WordPress 7.1.3, WooCommerce 11.2.1 and PHP 8.2.29.
+
+**Fixed:**
+
+- Campaign capabilities used `map_meta_cap=true` while assigning all meta
+  capabilities the primitive `manage_woocommerce`. WordPress consequently mapped
+  that capability to `delete_post`, denying manager access throughout the plugin.
+  Primitive capabilities now remain primitive; manager/subscriber tests cover it.
+- WooCommerce recalculated after adding an items-mode header, before its children
+  existed, and removed the incomplete box. Assembly now defers box validation,
+  identical items-mode boxes get separate groups, and a failed replacement restores
+  the original cart. Edit keys must belong to the requested campaign and respect
+  the edit-from-cart setting.
+- Rounding each discounted child independently could leave the final child with
+  a negative price. Cumulative allocation preserves a nonnegative distribution and
+  the exact quoted total.
+- Sibling variations sharing parent-managed stock could each claim all available
+  stock. Validation now aggregates picks and existing cart quantities by stock owner.
+- A nested low-stock settings update reset an existing disabled preference.
+  Merge nested input before sanitizing and return keys in stable default order.
+- Once-per-request cache invalidation left product lists stale after subsequent
+  saves in the same request. Every invalidation now changes the generation.
+- Setup's order lookup used HPOS-only `meta_query` arguments with the legacy order
+  datastore. It now uses WooCommerce's datastore query hook for legacy orders and
+  its native meta query for HPOS; both find box orders without the setup flag.
+- Store API metadata registration handles WooCommerce Blocks having already loaded.
+  Tests inspect the real cart endpoint, including its quantity-editability response.
+  Changing campaigns remounts the block preview. Countdown rendering applies the
+  server clock offset. At 390 px, long summary actions wrap without overlapping prices.
+- Renamed our Clipboard API wrapper to `copy-text.js`: Plugin Check mistook the
+  filename `clipboard.js` for a bundled copy of WordPress's clipboard library.
+  Added `languages/README.txt` so the declared Domain Path exists in the archive.
+
+**Test infrastructure:** Install WooCommerce before `init` queries its tables and
+before test transactions. `MMBB_TEST_HPOS=1` enables HPOS for the integration suite;
+the smoke test verifies it really is enabled. Updated old fixtures to coexist with
+later phases: real owned container products, draft lifecycle fixtures, registered
+option defaults, asset queue cleanup, and temporary-table-aware schema assertions.
+The initial native run had 3 errors and 77 failures; fixes and regression coverage
+produce the passing results below.
+
+**Checks run:**
+
+- Production build, JS lint, CSS lint, PHPCS/WPCS/PHPCompatibilityWP: pass.
+- JavaScript: 204 tests across 15 suites pass, including the clock-offset regression.
+- Pure PHP: 80 tests, 481 assertions pass without WordPress loaded.
+- Integration, legacy orders: 144 pass, 607 assertions; two network tests skipped.
+- Integration, HPOS: 144 pass, 608 assertions; two network tests skipped.
+- Separate multisite run: both network tests pass, 11 assertions.
+- PHP syntax: all 67 PHP source/test files pass. Token regeneration is unchanged.
+- Release archive: 174 files; required source, build assets, local fonts/licences
+  and language directory present; no tests, vendor, node_modules, design, docs,
+  agent instructions or dotfiles. Plugin Check static and runtime scans (runtime
+  enabled with Plugin Check's `--require=.../cli.php`): **0 errors, 11 warnings**.
+  All warnings are the five prepared, uncached data-discovery/deletion queries and
+  the owned-table DROP in `Uninstaller`. They execute only after per-site opt-in;
+  fresh discovery and schema removal are necessary to delete owned data completely.
+- Chrome with Twenty Twenty-Five: live Dashboard renders; builder selects products
+  and shows the 10% discount; classic cart shows $18.00; edit preloads the original
+  picks and successfully replaces the line. At 390 px the two-column grid, summary
+  and drawer render; Escape closes the drawer and returns focus to its opener.
+  The summary's price and wrapped update action have separate bounds. An unrelated
+  page has no plugin script/style URLs.
+- Storefront 4.6.2 in the temporary site: the builder mounts within the theme's
+  content area, and an unrelated page has no plugin script/style URLs. This is
+  a rendering/asset smoke check, not the entire theme/checkout compatibility matrix.
+- Disposable classic checkout: Cash on delivery order #20 reaches the receipt,
+  status `processing`, total 18.00, hidden box metadata and order box flag present;
+  Cookie and Chocolate stocks decrease from 20 to 19. Outgoing mail was disabled
+  on this test site. Evidence: OS-temp `mmbb-review-20261020/order-confirmation.png`.
+
+**Cleanup:** Stopped the temporary web server and removed both audit databases.
+Logs, the receipt screenshot and the extracted package remain in OS-temp for review.
+The user's existing `.claude/` directory was left untouched and is not committed.
+
+**Remaining limits:** PHP 7.4 / WordPress 6.6 / WooCommerce 9.0 runtime runs and
+the full browser matrix remain pending. The Cart block's visible Edit box link,
+items-mode remove-button limitations, wildcard-variation limitation and future
+Settings/email/Analytics work are unchanged from their phase logs. No full
+block-editor publishing walkthrough or full accessibility audit is claimed.
+Full-page caches must still refresh their embedded server timestamp for a fresh
+countdown; the clock-offset fix cannot make an indefinitely cached timestamp current.
 
 ### Phase 8 — Storefront: block, shortcode, builder (2026-10-20)
 
@@ -729,33 +818,31 @@ phases. This is a tooling scaffold archive, not a submission release.
 
 ## Open issues
 
-- Phase 8: `StorefrontTest`, Plugin Check, the live wp-env walkthrough, the 390 px phone comparison and theme tests (Twenty Twenty-Five, Storefront) have not run (no Docker, no browser).
-- Phase 7: `CartBoxTest`, Plugin Check and the manual cart/checkout/HPOS matrix have not run (no Docker). The Cart block "Edit box" link and items-mode gaps are listed in the Phase 7 log.
-- Phase 6: `PublisherTest`, the updated `RestCampaignsTest`, Plugin Check and a live wizard walkthrough have not run (no Docker). Phase 7 provides `mmbb_ensure_container_product`.
-- Phase 5: Integration tests (`AdminMenuTest`, the `live` status cases), Plugin Check and a
-  live wp-admin look have not run (no Docker). Phase 6 builds the editor; Phase 9 fills the
-  `/stats` shapes the Dashboard expects (see the Phase 5 log).
-- Phase 4: The REST integration suites (`RestCampaignsTest`, `RestCatalogTest`,
-  `RestStoreTest`) and Plugin Check have not run (no Docker). `/publish` answers 501
-  until Phase 6, `/preview` has no products until Phase 8, and `/stats` and
-  `/analytics` return zeros until Phase 9.
-- Phase 3: Integration tests (repository, settings, tables), Plugin Check and
-  `WP_DEBUG` checks have not run (no Docker). The gift template needs config keys
-  for "no prices inside" and "message required".
-- Phase 2: Execute Assets integration tests, Plugin Check, live WordPress
-  translation/enqueue and WP_DEBUG checks once Docker is available. Admin
-  padding body classes: handled in Phase 5 through `mmbb-admin-page`; verify in live wp-admin.
-- Phase 1: Docker-dependent lifecycle/integration, Plugin Check, multisite,
-  browser and WP_DEBUG checks remain unverified. Run the single-site and network
-  suites before treating lifecycle runtime behavior as verified.
+The cross-phase review above replaces the historical "not executed" notes for
+the PHP integration suites, network lifecycle tests and packaged Plugin Check.
+
+- Runtime compatibility remains to be tested on PHP 7.4, WordPress 6.6 and
+  WooCommerce 9.0. PHPCompatibilityWP checks pass; they do not replace those runs.
+- The full browser matrix remains pending: Cart/Checkout blocks end to end with
+  HPOS on/off, every campaign type, dark mode, both themes, and block-editor/wizard
+  publishing. The completed browser smoke and classic COD order are listed above.
+- Phase 7: the Cart block has no visible Edit box link yet. Items-mode child remove
+  controls and wildcard-attribute variations retain the limitations in that phase's
+  log. Store API metadata and quantity editability are covered by executed tests.
+- Phase 3: the gift template still lacks config keys for "no prices inside" and
+  "message required".
+- Phase 9 supplies Analytics and the live `/stats` data. Phase 10 supplies the
+  Settings UI, remaining display defaults and email filtering. These are planned
+  future features, not completed by this review.
+- A cached page's countdown depends on refreshing its embedded server timestamp;
+  the device-clock offset does not fix indefinitely stale full-page HTML.
 - Phase 1: Replace the readme's public source repository placeholder before
   submission; a dedicated plugin page can replace the supplied website URI.
 - Phase 1: Future transient producers must register their keys so uninstall can
   also clean persistent object-cache entries, which cannot be enumerated through
   a portable WordPress API.
-- Phase 0: Docker is unavailable. Verify wp-env startup (WooCommerce and Plugin
-  Check active), `npm run test:php`, Plugin Check, and absence of PHP notices with
-  `WP_DEBUG` before relying on the integration environment.
+- Phase 0: Docker is unavailable. The pinned wp-env startup and container commands
+  remain unverified; native tests used isolated databases with Local's services.
 - Phase 0: npm reports 111 development-dependency advisories. Runtime dependencies
   have zero reported advisories; review compatible dev-tool updates in hardening.
 

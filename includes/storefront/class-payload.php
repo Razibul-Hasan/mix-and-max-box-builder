@@ -31,20 +31,9 @@ final class Payload {
 	const MAX_PRODUCTS = 200;
 
 	/**
-	 * Whether the generation was already bumped during this request.
-	 *
-	 * @var bool
-	 */
-	private static $bumped = false;
-
-	/**
-	 * Drop every cached product list. Cheap to call many times in one request.
+	 * Drop every cached product list, including lists rebuilt earlier in this request.
 	 */
 	public static function bust() {
-		if ( self::$bumped ) {
-			return;
-		}
-		self::$bumped = true;
 		update_option( self::GENERATION_OPTION, (int) get_option( self::GENERATION_OPTION, 0 ) + 1, false );
 	}
 

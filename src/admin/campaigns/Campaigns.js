@@ -15,7 +15,7 @@ import {
 	useMoney,
 } from '../../components';
 import { bulkCampaigns, getCampaigns } from '../api';
-import { copyText } from '../clipboard';
+import { copyText } from '../copy-text';
 import { useAdmin } from '../context';
 import DeleteDialog from '../DeleteDialog';
 import {

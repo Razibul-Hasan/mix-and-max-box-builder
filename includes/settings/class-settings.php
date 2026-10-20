@@ -167,11 +167,10 @@ final class Settings {
 	 * @return array
 	 */
 	private static function merge( array $base, array $changes ) {
-		$changes = self::sanitize( $changes );
-		if ( isset( $changes['low_stock'] ) && isset( $base['low_stock'] ) && is_array( $base['low_stock'] ) ) {
+		if ( isset( $changes['low_stock'] ) && is_array( $changes['low_stock'] ) && isset( $base['low_stock'] ) && is_array( $base['low_stock'] ) ) {
 			$changes['low_stock'] += $base['low_stock'];
 		}
-		return $changes + $base;
+		return array_replace( $base, self::sanitize( $changes ) );
 	}
 
 	/**

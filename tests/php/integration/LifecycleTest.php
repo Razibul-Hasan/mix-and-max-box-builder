@@ -21,18 +21,6 @@ class LifecycleTest extends \WP_UnitTestCase {
 		\WC_Install::install();
 	}
 
-	/** Register the future campaign type only as a fixture for lifecycle tests. */
-	public function set_up() {
-		parent::set_up();
-		register_post_type( 'mmbb_campaign', array( 'public' => false ) );
-	}
-
-	/** Remove the test-only type registration. */
-	public function tear_down() {
-		unregister_post_type( 'mmbb_campaign' );
-		parent::tear_down();
-	}
-
 	/** Activation installs versions and safe defaults with no rewrite flush. */
 	public function test_activation_seeds_versions_and_settings() {
 		delete_option( 'mmbb_version' );
@@ -105,7 +93,12 @@ class LifecycleTest extends \WP_UnitTestCase {
 		}
 		update_option( 'mmbb_test', 'keep' );
 		set_transient( 'mmbb_test', 'keep', HOUR_IN_SECONDS );
-		$campaign = self::factory()->post->create( array( 'post_type' => 'mmbb_campaign' ) );
+		$campaign = self::factory()->post->create(
+			array(
+				'post_type'   => 'mmbb_campaign',
+				'post_status' => 'draft',
+			)
+		);
 		add_post_meta( $campaign, '_mmbb_config', 'keep' );
 		$product = new \WC_Product_Simple();
 		$product->update_meta_data( '_mmbb_campaign_id', $campaign );
@@ -158,7 +151,7 @@ class LifecycleTest extends \WP_UnitTestCase {
 
 		Uninstaller::uninstall();
 
-		$this->assertFalse( get_option( 'mmbb_settings' ) );
+		$this->assertFalse( get_option( 'mmbb_settings', false ) );
 		$this->assertFalse( get_option( 'mmbb_test' ) );
 		$this->assertFalse( get_transient( 'mmbb_test' ) );
 		$this->assertSame( 'keep', get_option( 'mmbbXtest' ) );

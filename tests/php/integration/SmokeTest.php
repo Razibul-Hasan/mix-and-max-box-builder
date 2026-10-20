@@ -16,5 +16,8 @@ class SmokeTest extends \WP_UnitTestCase {
 		$this->assertTrue( function_exists( 'add_action' ) );
 		$this->assertInstanceOf( \WooCommerce::class, WC() );
 		$this->assertTrue( version_compare( WC_VERSION, '9.0', '>=' ) );
+		if ( '1' === getenv( 'MMBB_TEST_HPOS' ) ) {
+			$this->assertTrue( \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled() );
+		}
 	}
 }

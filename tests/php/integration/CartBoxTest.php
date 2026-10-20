@@ -484,6 +484,126 @@ class CartBoxTest extends \WP_UnitTestCase {
 		$this->assertCount( 0, WC()->cart->get_cart() );
 	}
 
+	/** Adding the same items-mode box twice creates two complete groups. */
+	public function test_identical_items_mode_boxes_stay_complete() {
+		Settings::update( array( 'cart_display' => 'items' ) );
+		$this->assertTrue( $this->add()['success'] );
+		$this->assertTrue( $this->add()['success'] );
+		$this->assertCount( 4, WC()->cart->get_cart() );
+		$this->assertEqualsWithDelta( 36.0, (float) WC()->cart->get_cart_contents_total(), 0.001 );
+	}
+
+	/** Failed edits preserve the original box and total. */
+	public function test_failed_edit_preserves_the_original_box() {
+		$this->add();
+		$first            = $this->box_line();
+		$reject_container = static function ( $purchasable, $product ) {
+			return $product->get_meta( '_mmbb_campaign_id' ) ? false : $purchasable;
+		};
+		add_filter( 'woocommerce_is_purchasable', $reject_container, 100, 2 );
+		try {
+			$result = $this->add( array( 'edit_key' => $first['key'] ) );
+		} finally {
+			remove_filter( 'woocommerce_is_purchasable', $reject_container, 100 );
+		}
+		$this->assertFalse( $result['success'] );
+		$this->assertCount( 1, WC()->cart->get_cart() );
+		$this->assertSame( $first['key'], $this->box_line()['key'] );
+	}
+
+	/** An edit key cannot replace a box belonging to another campaign. */
+	public function test_edit_key_must_belong_to_the_campaign() {
+		$this->add();
+		$first  = $this->box_line();
+		$other  = $this->repo->create_from_template( 'blank' );
+		$result = $this->add(
+			array(
+				'campaign_id' => $other['id'],
+				'edit_key'    => $first['key'],
+			)
+		);
+		$this->assertFalse( $result['success'] );
+		$this->assertSame( $first['key'], $this->box_line()['key'] );
+	}
+
+	/** Proportional rounding must never give the final child a negative price. */
+	public function test_items_mode_rounding_keeps_prices_nonnegative() {
+		Settings::update( array( 'cart_display' => 'items' ) );
+		$fourth = new \WC_Product_Simple();
+		$fourth->set_name( 'Fourth cookie' );
+		$this->products[4] = $fourth;
+		$picks             = array();
+		foreach ( $this->products as $product ) {
+			$product->set_regular_price( '0.01' );
+			$product->save();
+			$picks[] = array(
+				'product_id' => $product->get_id(),
+				'qty'        => 1,
+			);
+		}
+		$this->repo->save(
+			$this->campaign['id'],
+			array(
+				'type'     => 'bundle',
+				'bundle'   => array(
+					'qty'   => 4,
+					'price' => 0.02,
+				),
+				'products' => array( 'ids' => array_column( $picks, 'product_id' ) ),
+			)
+		);
+		$this->assertTrue( $this->add( array( 'items' => $picks ) )['success'] );
+		$this->assertCount( 5, WC()->cart->get_cart() );
+		foreach ( WC()->cart->get_cart() as $line ) {
+			$this->assertGreaterThanOrEqual( 0, (float) $line['data']->get_price() );
+		}
+		$this->assertEqualsWithDelta( 0.02, (float) WC()->cart->get_cart_contents_total(), 0.0001 );
+	}
+
+	/** Sibling variations must not each claim all of their parent's shared stock. */
+	public function test_variations_share_their_parents_stock_limit() {
+		$parent = new \WC_Product_Variable();
+		$parent->set_name( 'Shared stock' );
+		$parent->set_manage_stock( true );
+		$parent->set_stock_quantity( 3 );
+		$parent->save();
+		$picks = array();
+		$ids   = array();
+		for ( $i = 0; $i < 2; $i++ ) {
+			$variation = new \WC_Product_Variation();
+			$variation->set_parent_id( $parent->get_id() );
+			$variation->set_regular_price( '10' );
+			$variation->save();
+			$ids[]   = $variation->get_id();
+			$picks[] = array(
+				'product_id'   => $parent->get_id(),
+				'variation_id' => $variation->get_id(),
+				'qty'          => 2,
+			);
+		}
+		$this->repo->save( $this->campaign['id'], array( 'products' => array( 'ids' => $ids ) ) );
+		$result = $this->add( array( 'items' => $picks ) );
+		$this->assertFalse( $result['success'] );
+		$this->assertSame( 'out_of_stock', $result['data']['code'] );
+		$this->assertCount( 0, WC()->cart->get_cart() );
+	}
+
+	/** The actual Store API carries our metadata and marks items-mode lines read-only. */
+	public function test_store_api_exposes_box_data_and_locks_items_mode_quantities() {
+		Settings::update( array( 'cart_display' => 'items' ) );
+		$this->add();
+		do_action( 'rest_api_init' );
+		$response = rest_get_server()->dispatch( new \WP_REST_Request( 'GET', '/wc/store/v1/cart' ) );
+		$this->assertSame( 200, $response->get_status() );
+		$data  = json_decode( wp_json_encode( $response->get_data() ), true );
+		$items = $data['items'];
+		$this->assertCount( 2, $items );
+		foreach ( $items as $item ) {
+			$this->assertArrayHasKey( 'mmbb', (array) $item['extensions'] );
+			$this->assertFalse( $item['quantity_limits']['editable'] );
+		}
+	}
+
 	/** Editing replaces the old line. */
 	public function test_editing_a_box_replaces_the_line() {
 		$this->add();

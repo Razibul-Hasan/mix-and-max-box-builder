@@ -72,10 +72,25 @@ final class Box_Resolver {
 			return $fail( $rule_error );
 		}
 
+		// Variations may share their parent's stock. Count all picks and cart lines against that owner.
+		$stock_needed = array();
+		foreach ( $in_cart as $id => $qty ) {
+			$product = wc_get_product( $id );
+			if ( $product instanceof \WC_Product ) {
+				$stock_id                  = (int) $product->get_stock_managed_by_id();
+				$stock_needed[ $stock_id ] = ( isset( $stock_needed[ $stock_id ] ) ? $stock_needed[ $stock_id ] : 0 ) + $qty;
+			}
+		}
+		foreach ( $items as $item ) {
+			$key                       = Box_Rules::key( $item['product_id'], $item['variation_id'] );
+			$product                   = wc_get_product( $key );
+			$stock_id                  = (int) $product->get_stock_managed_by_id();
+			$stock_needed[ $stock_id ] = ( isset( $stock_needed[ $stock_id ] ) ? $stock_needed[ $stock_id ] : 0 ) + $item['qty'] * max( 1, (int) $multiplier );
+		}
 		foreach ( $items as $item ) {
 			$key     = Box_Rules::key( $item['product_id'], $item['variation_id'] );
 			$product = wc_get_product( $key );
-			$wanted  = $item['qty'] * max( 1, (int) $multiplier ) + ( isset( $in_cart[ $key ] ) ? $in_cart[ $key ] : 0 );
+			$wanted  = $stock_needed[ (int) $product->get_stock_managed_by_id() ];
 			if ( ! $product->is_in_stock() || ! $product->has_enough_stock( $wanted ) ) {
 				return $fail( 'out_of_stock' );
 			}

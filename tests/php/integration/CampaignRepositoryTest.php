@@ -41,6 +41,9 @@ class CampaignRepositoryTest extends \WP_UnitTestCase {
 		$this->assertSame( array( 'title' ), array_keys( get_all_post_type_supports( Post_Type::NAME ) ) );
 		$this->assertSame( 'manage_woocommerce', $type->cap->edit_posts );
 		$this->assertSame( 'manage_woocommerce', $type->cap->publish_posts );
+		$this->assertFalse( $type->map_meta_cap );
+		$manager = self::factory()->user->create( array( 'role' => 'shop_manager' ) );
+		$this->assertTrue( user_can( $manager, 'manage_woocommerce' ) ); // phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce registers this primitive capability.
 
 		$subscriber = self::factory()->user->create( array( 'role' => 'subscriber' ) );
 		$this->assertFalse( user_can( $subscriber, $type->cap->edit_posts ) );
@@ -153,9 +156,9 @@ class CampaignRepositoryTest extends \WP_UnitTestCase {
 			'Winter box'
 		);
 		$this->assertSame( 0, $this->repo->find( $campaign['id'] )['config']['container_product_id'] );
-		$this->repo->set_container_product( $campaign['id'], 88 );
-		$this->assertSame( 88, $this->repo->find( $campaign['id'] )['config']['container_product_id'] );
 		$this->repo->publish( $campaign['id'] );
+		$product_id = $this->repo->find( $campaign['id'] )['config']['container_product_id'];
+		$this->assertGreaterThan( 0, $product_id );
 
 		$copy = $this->repo->duplicate( $campaign['id'] );
 
@@ -166,6 +169,7 @@ class CampaignRepositoryTest extends \WP_UnitTestCase {
 		$this->assertSame( 0, $copy['config']['container_product_id'] );
 		$this->assertSame( $campaign['config']['tiers'], $copy['config']['tiers'] );
 		$this->assertSame( 77, $this->repo->find( $campaign['id'] )['config']['placement']['page_id'] );
+		$this->assertSame( $product_id, $this->repo->find( $campaign['id'] )['config']['container_product_id'] );
 	}
 
 	/** Pause and resume use meta; publish and status follow the schedule. */

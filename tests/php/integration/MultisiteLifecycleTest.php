@@ -50,7 +50,7 @@ class MultisiteLifecycleTest extends \WP_UnitTestCase {
 		$this->assertSame( 'keep', get_option( 'mmbb_test' ) );
 		switch_to_blog( $other );
 		try {
-			$this->assertFalse( get_option( 'mmbb_settings' ) );
+			$this->assertFalse( get_option( 'mmbb_settings', false ) );
 			$this->assertFalse( get_option( 'mmbb_test' ) );
 		} finally {
 			restore_current_blog();

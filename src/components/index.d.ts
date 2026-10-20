@@ -419,6 +419,7 @@ export declare function BoxSummaryBar(props: BoxSummaryBarProps): React.ReactEle
 export interface CountdownProps {
   /** Seconds from mount. */ seconds?: number;
   /** ISO date; wins over seconds. */ endsAt?: string;
+    /** Server time minus device time, in milliseconds. */ clockOffset?: number;
   label?: React.ReactNode;
   tone?: 'pop' | 'ink' | 'soft';
 }

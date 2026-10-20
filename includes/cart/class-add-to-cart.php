@@ -68,6 +68,10 @@ final class Add_To_Cart {
 		}
 
 		// 3 and 4. Picks, rules, stock, and the quote from WooCommerce prices.
+		$edit_key = $this->edit_key( $campaign_id );
+		if ( false === $edit_key ) {
+			$this->fail( 'invalid_box' );
+		}
 		$gift     = $this->read_gift( $campaign['config'] );
 		$resolved = Box_Resolver::resolve(
 			$campaign,
@@ -76,7 +80,7 @@ final class Add_To_Cart {
 				'size'      => isset( $_POST['size'] ) ? absint( wp_unslash( $_POST['size'] ) ) : 0, // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
 				'gift_wrap' => $gift['enabled'],
 			),
-			$this->edit_key()
+			$edit_key
 		);
 		if ( null !== $resolved['error'] ) {
 			$this->fail( $resolved['error'] );
@@ -90,23 +94,32 @@ final class Add_To_Cart {
 			$this->fail( 'cart_unavailable' );
 		}
 
-		// 5. Editing replaces the old line (and, in items mode, its children).
-		$edit_key = $this->edit_key();
-		if ( '' !== $edit_key ) {
-			Cart_Lines::remove_box( $edit_key );
-		}
-
-		// 6. Add.
-		$added = Container_Products::while_allowed(
-			static function () use ( $container_id, $box ) {
-				return WC()->cart->add_to_cart( (int) $container_id, 1, 0, array(), array( 'mmbb_box' => $box ) );
+		// WooCommerce recalculates after every add/remove. Assemble all related lines first.
+		$previous = WC()->cart->cart_contents;
+		$removed  = WC()->cart->removed_cart_contents;
+		$added    = Cart_Lines::while_assembling(
+			static function () use ( $container_id, $box, $edit_key ) {
+				if ( '' !== $edit_key ) {
+					Cart_Lines::remove_box( $edit_key );
+				}
+				$data = array( 'mmbb_box' => $box );
+				if ( 'items' === $box['mode'] ) {
+					// Each items-mode header owns one complete set of child lines.
+					$data['mmbb_instance'] = wp_generate_uuid4();
+				}
+				$key = Container_Products::while_allowed(
+					static function () use ( $container_id, $data ) {
+						return WC()->cart->add_to_cart( (int) $container_id, 1, 0, array(), $data );
+					}
+				);
+				return $key && ( 'items' !== $box['mode'] || Cart_Lines::add_children( $key, $box ) ) ? $key : false;
 			}
 		);
 		if ( ! $added ) {
-			$this->fail( 'invalid_box' );
-		}
-		if ( 'items' === $box['mode'] && ! Cart_Lines::add_children( $added, $box ) ) {
-			Cart_Lines::remove_box( $added );
+			// A failed update must preserve the shopper's original box.
+			WC()->cart->cart_contents         = $previous;
+			WC()->cart->removed_cart_contents = $removed;
+			WC()->cart->calculate_totals();
 			$this->fail( 'invalid_box' );
 		}
 
@@ -196,15 +209,16 @@ final class Add_To_Cart {
 	/**
 	 * The cart item key being edited, when it is a box line of this cart.
 	 *
-	 * @return string
+	 * @param int $campaign_id Campaign being edited.
+	 * @return string|false False for an invalid edit; empty for a new box.
 	 */
-	private function edit_key() {
+	private function edit_key( $campaign_id ) {
 		$key = isset( $_POST['edit_key'] ) ? sanitize_key( wp_unslash( $_POST['edit_key'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
 		if ( '' === $key || ! WC()->cart instanceof \WC_Cart ) {
 			return '';
 		}
 		$line = WC()->cart->get_cart_item( $key );
-		return ! empty( $line['mmbb_box'] ) ? $key : '';
+		return Settings::get( 'edit_from_cart' ) && ! empty( $line['mmbb_box'] ) && (int) $line['mmbb_box']['campaign_id'] === (int) $campaign_id ? $key : false;
 	}
 
 	/**

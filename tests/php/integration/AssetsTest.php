@@ -15,6 +15,11 @@ use MixMax\BoxBuilder\Assets;
 class AssetsTest extends \WP_UnitTestCase {
 	/** Register dependencies, translations and money data without enqueueing. */
 	public function test_assets_are_registered_without_enqueueing() {
+		// Another test may have rendered an admin page; registration must not enqueue anew.
+		foreach ( array( 'mmbb-admin', 'mmbb-storefront', 'mmbb-components', 'mmbb-tokens' ) as $handle ) {
+			wp_dequeue_style( $handle );
+			wp_dequeue_script( $handle );
+		}
 		$assets = new Assets();
 		$assets->register_assets();
 		$this->assertTrue( wp_style_is( 'mmbb-tokens', 'registered' ) );

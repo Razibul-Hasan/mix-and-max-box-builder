@@ -190,19 +190,38 @@ class Setup_Controller extends Base_Controller {
 		if ( ! function_exists( 'wc_get_orders' ) ) {
 			return false;
 		}
-		$orders = wc_get_orders(
-			array(
-				'limit'      => 1,
-				'return'     => 'ids',
-				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-					array(
-						'key'     => '_mmbb_has_box',
-						'compare' => 'EXISTS',
-					),
-				),
-			)
+		$args = array(
+			'limit'        => 1,
+			'return'       => 'ids',
+			'mmbb_has_box' => true,
 		);
+		if ( \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled() ) {
+			$args['meta_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- One indexed existence check through WooCommerce's datastore.
+				array(
+					'key'     => '_mmbb_has_box',
+					'compare' => 'EXISTS',
+				),
+			);
+		}
+		$orders = wc_get_orders( $args );
 		return ! empty( $orders );
+	}
+
+	/**
+	 * Translate our order query through WooCommerce's legacy datastore API.
+	 *
+	 * @param array $query      WordPress query arguments from WooCommerce.
+	 * @param array $variables Order query variables.
+	 * @return array
+	 */
+	public static function legacy_order_query( $query, $variables ) {
+		if ( ! empty( $variables['mmbb_has_box'] ) ) {
+			$query['meta_query'][] = array(
+				'key'     => '_mmbb_has_box',
+				'compare' => 'EXISTS',
+			);
+		}
+		return $query;
 	}
 
 	/**

@@ -14,6 +14,7 @@ final class Rest {
 	/** Register hooks. */
 	public function register() {
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
+		add_filter( 'woocommerce_order_data_store_cpt_get_orders_query', array( Setup_Controller::class, 'legacy_order_query' ), 10, 2 );
 	}
 
 	/**

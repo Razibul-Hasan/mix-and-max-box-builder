@@ -12,7 +12,7 @@ import {
 	useMoney,
 } from '../../components';
 import { getPages, getSetup, markTestDone } from '../api';
-import { copyText } from '../clipboard';
+import { copyText } from '../copy-text';
 import { useAdmin } from '../context';
 import { scheduleLabel, typeSummary } from '../format';
 import { useRequest } from '../hooks';

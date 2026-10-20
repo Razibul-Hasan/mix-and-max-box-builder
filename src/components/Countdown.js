@@ -11,6 +11,7 @@ import { cx } from './utils';
 export default function Countdown( {
 	seconds,
 	endsAt,
+	clockOffset = 0,
 	label = __( 'Deal ends in', 'mix-and-max-box-builder' ),
 	tone = 'pop',
 } ) {
@@ -26,7 +27,10 @@ export default function Countdown( {
 		const t = setInterval( () => setNow( Date.now() ), 1000 );
 		return () => clearInterval( t );
 	}, [] );
-	let s = Math.max( 0, Math.floor( ( target - now ) / 1000 ) );
+	let s = Math.max(
+		0,
+		Math.floor( ( target - now - ( endsAt ? clockOffset : 0 ) ) / 1000 )
+	);
 	const d = Math.floor( s / 86400 );
 	s %= 86400;
 	const h = Math.floor( s / 3600 );

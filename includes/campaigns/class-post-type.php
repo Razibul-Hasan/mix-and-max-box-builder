@@ -49,7 +49,8 @@ final class Post_Type {
 				'can_export'          => false,
 				'delete_with_user'    => false,
 				'supports'            => array( 'title' ),
-				'map_meta_cap'        => true,
+				// These are primitive WooCommerce capabilities, not post-specific meta capabilities.
+				'map_meta_cap'        => false,
 				'capabilities'        => array(
 					'edit_post'              => $cap,
 					'read_post'              => $cap,

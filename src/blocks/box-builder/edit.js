@@ -268,7 +268,9 @@ export default function Edit( { attributes, setAttributes } ) {
 						) }
 					</Notice>
 				) : null }
-				{ view ? <Builder payload={ view } preview /> : null }
+				{ view ? (
+					<Builder key={ campaignId } payload={ view } preview />
+				) : null }
 			</div>
 		</>
 	);
