@@ -105,3 +105,26 @@ export function getPages( params ) {
 		path: addQueryArgs( BASE + '/pages', clean( params ) ),
 	} );
 }
+
+export function getAnalytics( params ) {
+	return apiFetch( {
+		path: addQueryArgs( BASE + '/analytics', clean( params ) ),
+	} );
+}
+
+export async function exportAnalytics( params ) {
+	const response = await apiFetch( {
+		path: addQueryArgs( BASE + '/analytics/export', clean( params ) ),
+		parse: false,
+	} );
+	const blob = await response.blob();
+	const url = window.URL.createObjectURL( blob );
+	const link = document.createElement( 'a' );
+	link.href = url;
+	link.download =
+		( response.headers.get( 'Content-Disposition' ) || '' ).match(
+			/filename="([^"]+)"/
+		)?.[ 1 ] || 'mmbb-analytics.csv';
+	link.click();
+	window.setTimeout( () => window.URL.revokeObjectURL( url ), 1000 );
+}

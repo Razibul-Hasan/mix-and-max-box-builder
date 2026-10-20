@@ -31,6 +31,9 @@ final class Plugin {
 			Cart\Cart_Lines::class,
 			Cart\Order_Boxes::class,
 			Storefront\Storefront::class,
+			Analytics\Collector::class,
+			Analytics\Rollup::class,
+			Analytics\Privacy::class,
 		);
 
 		foreach ( $modules as $module ) {

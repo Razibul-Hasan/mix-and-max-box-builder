@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
 /** Manage activation, upgrades, new network sites and deactivation. */
 final class Installer {
 	/** Database schema version; bump when the schema registry changes. */
-	const DB_VERSION = '0.3.0';
+	const DB_VERSION = '0.9.0';
 
 	/** Register upgrade and network-site hooks. */
 	public function register() {
@@ -91,7 +91,23 @@ final class Installer {
   items int(10) unsigned NOT NULL DEFAULT 0,
   revenue decimal(19,4) NOT NULL DEFAULT 0,
   discount decimal(19,4) NOT NULL DEFAULT 0,
+  products longtext DEFAULT NULL,
   PRIMARY KEY  (day,campaign_id)
+) {$collate};",
+			"CREATE TABLE {$wpdb->prefix}mmbb_purchases (
+  order_id bigint(20) unsigned NOT NULL,
+  line_id bigint(20) unsigned NOT NULL,
+  campaign_id bigint(20) unsigned NOT NULL,
+  day date NOT NULL,
+  boxes int(10) unsigned NOT NULL DEFAULT 1,
+  items int(10) unsigned NOT NULL DEFAULT 0,
+  tier smallint(5) unsigned NOT NULL DEFAULT 0,
+  tier_data longtext DEFAULT NULL,
+  value decimal(19,4) NOT NULL DEFAULT 0,
+  discount decimal(19,4) NOT NULL DEFAULT 0,
+  refunded tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY  (order_id,line_id),
+  KEY campaign_day (campaign_id,day)
 ) {$collate};",
 		);
 	}
@@ -129,7 +145,7 @@ final class Installer {
 
 	/** Clear the schedule registry, populated when analytics ships in Phase 9. */
 	public static function clear_schedules() {
-		$hooks = array();
+		$hooks = array( 'mmbb_rollup_daily' );
 		foreach ( $hooks as $hook ) {
 			wp_clear_scheduled_hook( $hook );
 			if ( function_exists( 'as_unschedule_all_actions' ) ) {

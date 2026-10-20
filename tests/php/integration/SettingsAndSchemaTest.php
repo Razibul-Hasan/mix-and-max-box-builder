@@ -131,7 +131,7 @@ class SettingsAndSchemaTest extends \WP_UnitTestCase {
 		$this->assertEqualSets( array( 'PRIMARY', 'campaign_event_created', 'order_id' ), $keys );
 
 		$columns = $wpdb->get_col( $wpdb->prepare( 'SHOW COLUMNS FROM %i', $stats ) );
-		$this->assertSame( array( 'day', 'campaign_id', 'views', 'started', 'tier_reached', 'carts', 'orders', 'items', 'revenue', 'discount' ), $columns );
+		$this->assertSame( array( 'day', 'campaign_id', 'views', 'started', 'tier_reached', 'carts', 'orders', 'items', 'revenue', 'discount', 'products' ), $columns );
 
 		$primary = $wpdb->get_col( $wpdb->prepare( 'SHOW INDEX FROM %i WHERE Key_name = %s', $stats, 'PRIMARY' ), 4 );
 		$this->assertSame( array( 'day', 'campaign_id' ), $primary );

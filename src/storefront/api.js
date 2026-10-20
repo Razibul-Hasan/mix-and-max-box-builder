@@ -27,10 +27,21 @@ async function post( url, body, fetchImpl ) {
 	return json;
 }
 
-function form( { nonce, campaignId, rows, size, gift, editKey } ) {
+function form( {
+	nonce,
+	campaignId,
+	rows,
+	size,
+	gift,
+	editKey,
+	analyticsSession,
+} ) {
 	const body = new URLSearchParams();
 	body.append( 'nonce', nonce );
 	body.append( 'campaign_id', String( campaignId ) );
+	if ( analyticsSession ) {
+		body.append( 'analytics_session', analyticsSession );
+	}
 	rows.forEach( ( row, index ) => {
 		body.append(
 			`items[${ index }][product_id]`,
@@ -64,13 +75,14 @@ function form( { nonce, campaignId, rows, size, gift, editKey } ) {
  * `mmbb_nonce_expired`; this asks for a fresh nonce once and retries once.
  *
  * @param {Object}   options
- * @param {Object}   options.cart       Payload `cart`: { nonce, addUrl, nonceUrl, cartUrl }.
- * @param {number}   options.campaignId Campaign id.
- * @param {Array}    options.rows       List of { product_id, variation_id, qty }.
- * @param {number}   options.size       Chosen size (Fixed box), or 0.
- * @param {Object}   options.gift       { enabled, message }.
- * @param {string}   options.editKey    Cart item key being edited, or ''.
- * @param {Function} options.fetchImpl  `fetch`, replaceable in tests.
+ * @param {Object}   options.cart             Payload `cart`: { nonce, addUrl, nonceUrl, cartUrl }.
+ * @param {number}   options.campaignId       Campaign id.
+ * @param {Array}    options.rows             List of { product_id, variation_id, qty }.
+ * @param {number}   options.size             Chosen size (Fixed box), or 0.
+ * @param {Object}   options.gift             { enabled, message }.
+ * @param {string}   options.editKey          Cart item key being edited, or ''.
+ * @param {string}   options.analyticsSession Anonymous browser session, when enabled.
+ * @param {Function} options.fetchImpl        `fetch`, replaceable in tests.
  * @return {Promise<Object>} { ok: true, cartUrl, nonce } or { ok: false, code, message }.
  */
 export async function addBoxToCart( {
@@ -80,6 +92,7 @@ export async function addBoxToCart( {
 	size,
 	gift,
 	editKey = '',
+	analyticsSession = '',
 	fetchImpl = ( ...args ) => window.fetch( ...args ),
 } ) {
 	let nonce = cart.nonce;
@@ -88,7 +101,15 @@ export async function addBoxToCart( {
 		for ( let attempt = 0; attempt < 2; attempt++ ) {
 			const json = await post(
 				cart.addUrl,
-				form( { nonce, campaignId, rows, size, gift, editKey } ),
+				form( {
+					nonce,
+					campaignId,
+					rows,
+					size,
+					gift,
+					editKey,
+					analyticsSession,
+				} ),
 				fetchImpl
 			);
 			if ( json && json.success ) {
@@ -121,4 +142,27 @@ export async function addBoxToCart( {
 		return failure( 'network', genericMessage() );
 	}
 	return failure( 'error', genericMessage() );
+}
+
+// Tracking deliberately drops failures and stale cached nonces without a retry.
+export function postEvents( url, data, beacon = false ) {
+	const body = JSON.stringify( data );
+	if ( beacon && window.navigator.sendBeacon ) {
+		const sent = window.navigator.sendBeacon(
+			url,
+			new Blob( [ body ], { type: 'application/json' } )
+		);
+		if ( sent ) {
+			return;
+		}
+	}
+	window
+		.fetch( url, {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: { 'Content-Type': 'application/json' },
+			body,
+			keepalive: true,
+		} )
+		.catch( () => {} );
 }

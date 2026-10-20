@@ -26,6 +26,8 @@ final class Uninstaller {
 		}
 
 		Installer::clear_schedules();
+		foreach ( array_keys( (array) get_option( 'mmbb_analytics_transients', array() ) ) as $key ) {
+			delete_transient( $key ); }
 
 		// Direct IDs avoid relying on the CPT or WooCommerce being registered at uninstall.
 		$campaigns = $wpdb->get_col(

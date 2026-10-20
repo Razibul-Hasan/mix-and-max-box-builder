@@ -47,51 +47,52 @@ class Stats_Controller extends Base_Controller {
 	/**
 	 * Return the stats.
 	 *
-	 * Phase 9 fills this from the `mmbb_stats_daily` table. Until then every
-	 * number is zero, but the shape is final.
+	 * Combines stored daily summaries and live local events.
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
 	public function get_item( $request ) {
-		$range = (string) $request['range'];
-		$count = (int) $range; // "7d" becomes 7.
-		$to    = new \DateTimeImmutable( 'today', wp_timezone() );
-		$from  = $to->modify( '-' . ( $count - 1 ) . ' days' );
-		$days  = $this->days( $from->format( 'Y-m-d' ), $to->format( 'Y-m-d' ) );
-
-		$zeros = array_fill( 0, count( $days ), 0 );
-		$kpi   = array(
-			'value'    => 0,
-			'previous' => 0,
-			'delta'    => null,
-			'series'   => $zeros,
-		);
-
-		$revenue_series = array();
-		foreach ( $days as $day ) {
-			$revenue_series[] = array(
-				'date'     => $day,
-				'current'  => 0,
-				'previous' => 0,
+		$range  = (string) $request['range'];
+		$to     = wp_date( 'Y-m-d' );
+		$from   = ( new \DateTimeImmutable( $to, wp_timezone() ) )->modify( '-' . ( (int) $range - 1 ) . ' days' )->format( 'Y-m-d' );
+		$query  = new \MixMax\BoxBuilder\Analytics\Query();
+		$report = $query->report( $from, $to );
+		$series = array();
+		foreach ( $report['series'] as $row ) {
+			$series[] = array(
+				'date'     => $row['date'],
+				'current'  => $row['revenue'],
+				'previous' => $row['previous'],
 			);
 		}
-
+		$live       = ( new \MixMax\BoxBuilder\Campaigns\Campaign_Repository() )->query(
+			array(
+				'status'   => 'live',
+				'per_page' => 1,
+			)
+		);
+		$live_stats = null;
+		if ( $live['items'] ) {
+			$id         = $live['items'][0]['id'];
+			$today      = $query->report( $to, $to, $id, false );
+			$period     = $query->report( $from, $to, $id, false );
+			$live_stats = array(
+				'id'          => $id,
+				'boxes_today' => $today['kpis']['boxes']['value'],
+				'conversion'  => $period['kpis']['conversion']['value'],
+			);
+		}
 		return rest_ensure_response(
 			array(
 				'range'          => $range,
-				'from'           => $from->format( 'Y-m-d' ),
-				'to'             => $to->format( 'Y-m-d' ),
-				'kpis'           => array(
-					'revenue'       => $kpi,
-					'boxes'         => $kpi,
-					'avg_box_value' => $kpi,
-					'conversion'    => array_merge( $kpi, array( 'value' => 0.0, 'previous' => 0.0 ) ), // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
-				),
-				'revenue_series' => $revenue_series,
-				'top_campaigns'  => array(),
-				'live_campaign'  => null,
-				'top_products'   => array(),
+				'from'           => $from,
+				'to'             => $to,
+				'kpis'           => $report['kpis'],
+				'revenue_series' => $series,
+				'top_campaigns'  => $report['campaigns'],
+				'live_campaign'  => $live_stats,
+				'top_products'   => $report['top_products'],
 			)
 		);
 	}

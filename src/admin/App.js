@@ -1,6 +1,7 @@
 import { __ } from '@wordpress/i18n';
 import { MoneyProvider } from '../components';
 import Campaigns from './campaigns/Campaigns';
+import Analytics from './analytics/Analytics';
 import ComingSoon from './ComingSoon';
 import { AdminContext, readAdminData } from './context';
 import Dashboard from './dashboard/Dashboard';
@@ -37,16 +38,7 @@ function Screen( { name, id } ) {
 		case 'campaigns-new':
 			return <Campaigns openPicker />;
 		case 'analytics':
-			return (
-				<ComingSoon
-					active="analytics"
-					title={ __( 'Analytics', 'mix-and-max-box-builder' ) }
-					headline={ __(
-						'Analytics is on its way',
-						'mix-and-max-box-builder'
-					) }
-				/>
-			);
+			return <Analytics />;
 		case 'settings':
 			return (
 				<ComingSoon

@@ -77,6 +77,12 @@ final class Payload {
 				'cartUrl'  => wc_get_cart_url(),
 			);
 			$payload['edit'] = self::edit_box( $campaign );
+			if ( \MixMax\BoxBuilder\Analytics\Collector::enabled() ) {
+				$payload['tracking'] = array(
+					'url'   => add_query_arg( '_wpnonce', wp_create_nonce( 'wp_rest' ), rest_url( 'mmbb/v1/events' ) ),
+					'nonce' => wp_create_nonce( 'mmbb_track' ),
+				);
+			}
 		}
 
 		return $payload;

@@ -76,7 +76,24 @@ export default function Dashboard() {
 	);
 	const items = campaigns.data ? campaigns.data.items : [];
 	const live = items.filter( ( c ) => isLive( c.status ) );
-	const top = live.slice( 0, 3 );
+	const performance = stats.data?.top_campaigns || [];
+	const top = performance.length
+		? performance
+				.map( ( row ) => {
+					const found = items.find( ( item ) => item.id === row.id );
+					return found
+						? {
+								...found,
+								stats: {
+									boxes_sold: row.boxes,
+									revenue: row.revenue,
+								},
+						  }
+						: null;
+				} )
+				.filter( Boolean )
+				.slice( 0, 3 )
+		: live.slice( 0, 3 );
 	const images = useProductImages( top );
 
 	const failed = stats.error || setup.error || campaigns.error;

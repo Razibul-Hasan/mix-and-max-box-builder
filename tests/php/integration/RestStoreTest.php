@@ -17,6 +17,7 @@ class RestStoreTest extends \WP_UnitTestCase {
 	/** Make sure the routes exist. */
 	public function set_up() {
 		parent::set_up();
+		\MixMax\BoxBuilder\Installer::install();
 		do_action( 'rest_api_init' );
 	}
 

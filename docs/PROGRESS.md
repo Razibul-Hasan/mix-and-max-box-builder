@@ -13,7 +13,7 @@ Updated by the agent at the end of every phase. Newest entry first under each ph
 | 6 | Campaign wizard | done; native tests passed, browser walkthrough pending | `Phase 6: Campaign wizard` |
 | 7 | Cart, orders and stock | done; HPOS/legacy tests and classic checkout passed; UI gaps remain | `Phase 7: Cart, orders and stock` |
 | 8 | Storefront: block, shortcode, builder | done; native tests and browser smoke passed | `Phase 8: Storefront: block, shortcode, builder` |
-| 9 | Analytics | not started | |
+| 9 | Analytics | done; native legacy/HPOS tests, browser and Plugin Check passed | `Phase 9: Analytics` |
 | 10 | Settings screen and emails | not started | |
 | 11 | Hardening and WordPress.org compliance | not started | |
 | 12 | Release and submission | not started | |
@@ -43,6 +43,124 @@ installable on the minimum supported PHP branch.
 | WordPress / WooCommerce / Plugin Check in wp-env | Not installed here; latest release URLs configured, exact installed versions pending Docker run |
 
 ## Log
+
+### Phase 9 — Analytics (2026-10-20)
+
+**Done:** Added `includes/analytics/` Collector, Query, Rollup and Privacy modules.
+The storefront batches `view`, `add_item` and `tier_reached` events (20 events,
+five seconds, or a pagehide beacon). Views are once per browser session per
+campaign. The random ID lives in sessionStorage; the server stores only an MD5
+with a daily rotating random salt. The REST write checks `mmbb_track`, the
+merchant setting, `mmbb_track_events`, a live campaign, product membership and the
+current campaign type's actual tier quantities. Batches are bounded and limited
+to 120 events per session hash per UTC clock hour. Expired cached nonces drop
+silently. Add-to-cart is recorded inside the successful WooCommerce AJAX handler,
+never accepted as a browser event. Previews have no tracking payload.
+
+Paid-order hooks record one purchase per `(order_id, line_id)` with net line
+revenue excluding tax, box plus coupon discount, box/item counts and the purchased
+tier snapshot. Items-mode revenue includes the header and its own child lines;
+new hidden cart-key associations preserve this relationship on orders. Earlier
+items-mode snapshots fall back to their contiguous marked child lines. Full
+refunds and cancellations exclude those purchases without deleting the unique
+identity. Collection stops entirely when disabled; existing refund corrections
+and retention continue.
+
+The unique daily `mmbb_rollup_daily` Action Scheduler action runs around 02:00
+store time in group `mmbb`; deactivation clears it. Rollup catches up missed days,
+replaces daily aggregates idempotently, preserves product pick counts and removes
+expired raw events only after aggregation. Daily sales totals are refreshed from
+the purchase ledger, so late refunds can correct old periods after raw cleanup.
+Queries use prepared SQL, store-date/UTC boundaries, ten-minute transient caches
+and mutation invalidation. `/stats` and `/analytics` now return six real KPIs,
+equal-length comparisons, daily series, funnel, products, tier shares and campaign
+performance. Conversion deltas use percentage points; other deltas are relative
+percent changes. Sessions are daily and campaign scoped; no cross-day person
+tracking or purchase-to-browser identity linkage is attempted.
+
+The Analytics page matches the supplied layout: shared range/campaign/compare
+filters, custom dates, four StatCards, comparison chart with the existing keyboard
+crosshair and hidden data table, funnel, two BarLists and performance table.
+Discount uses `upIsGood={false}`. Product and tier lists fold beyond seven rows
+into Other. Dashboard uses the live stats, including its top-campaign values.
+Manager-only CSV exports every section for the current filters, including prior
+values when compared; money is explicitly identified as minor units. Formula
+prefixes, including whitespace-prefixed `= + - @`, are apostrophe-escaped.
+The raw CSV response has the required MIME type and dated filename.
+
+Added suggested privacy-policy content, gift-message exporter and eraser, and
+readme disclosure. The eraser runs before WooCommerce removes billing emails,
+respects its order-data removal setting, and removes both visible message meta
+and the hidden JSON copy through WooCommerce CRUD. Tracking/report transient
+names are registered for persistent-cache cleanup on opt-in uninstall. Schema
+upgrades also run before storefront/REST traffic at init, so an automatic update
+does not depend on an admin visit. Internal order associations use the `mmbb`
+prefix and are hidden from both admin and customer-facing formatted metadata.
+
+**Decisions / deviations:** Bumped the database schema to 0.9.0. The Phase 3
+schema cannot represent unique order-line purchases or retain them independently
+of anonymous browsing events, so added `mmbb_purchases` and a `products` JSON
+column on `mmbb_stats_daily`. Purchase rows live in that separate ledger rather
+than in the expiring events table; this preserves idempotence and late refund
+corrections without retaining session hashes. The ledger and aggregate statistics
+remain until opt-in uninstall. Scheduling uses a 24-hour recurring interval from
+02:00 store time (so a DST transition may move it by an hour). No runtime dependency
+was added. Settings UI and email-display work remain Phase 10.
+
+**Checks run:**
+
+- Production build, JS lint, CSS lint, WPCS/WordPress-Docs/PHPCompatibilityWP 7.4-:
+  pass. PHP syntax passes across 71 source/test PHP files.
+- JavaScript: 210 tests, 17 suites pass. New tests cover batching, pagehide beacon,
+  session/view deduplication, disabled/blocked storage, real report rendering,
+  custom dates, comparison and matching CSV filters.
+- Pure PHP: 80 tests, 490 assertions pass.
+- Native integration, legacy orders: 152 pass, 667 assertions; two multisite-only
+  tests skipped. HPOS: 152 pass, 668 assertions; the same two tests skipped.
+  Separate multisite run: both network tests pass, 11 assertions. No database
+  errors, warnings or notices appear in the final integration output.
+- New integration coverage verifies exact revenue/discount/count/average/
+  conversion/funnel/series values, equal-length previous periods, campaign
+  filtering, store-midnight UTC boundaries, daily salt rotation, nonce/settings/
+  filter/membership/rate guards, unique paid lines, items-mode sales, full refunds,
+  retention, rollup idempotence, scheduling/deactivation, server cart events,
+  manager-only CSV/formula escaping, and both gift-message copies in privacy tools.
+- CLI Action Scheduler ran the rollup twice on the disposable site. Both produced
+  60 daily rows with identical hash `9184817635b05432c5ddb19806ed7566`.
+- Release archive audit: 179 files; required source/build/fonts/licences present,
+  no dev folders or dotfiles. Extracted PHP matches the working tree. Packaged
+  Plugin Check with runtime checks enabled: **0 errors, 11 warnings**. All warnings
+  are the existing prepared discovery/deletion queries and owned-table DROP in
+  Uninstaller. These require fresh reads and schema removal after per-site opt-in;
+  no new analytics file reports a Plugin Check warning.
+- Chrome on a disposable Twenty Twenty-Five site: Analytics and Dashboard both
+  show the fixture's $940.50 / 30 boxes for 30 days, comparison series, product
+  picks, tier share and campaign totals. Dashboard shows one box today. CSV
+  downloads with a dated filename. Real builder use adds one view, two product
+  picks, a tier event and a server-owned cart event to the database. The browser run uses a separate site
+  and database, with outgoing mail disabled; no merchant data is modified.
+- `git diff --check`: pass. No later phase was started.
+
+**Cleanup:** Stopped the disposable PHP web server and removed both databases
+created for this phase's native tests and browser checks. Both test CSV downloads
+were inspected successfully; they were already absent from Downloads at cleanup
+time. Logs and the extracted release remain in the OS-temp audit directory. The user's existing `.claude/` directory remains untouched
+and excluded from the commit.
+
+**Skipped checks / environment:** `npx wp-env start`, `npm run test:php` and
+container Plugin Check each report `Could not connect to Docker. Is it running?`.
+The equivalent integration, scheduler, browser and packaged Plugin Check checks
+above ran natively using Local's existing PHP/MySQL services and isolated test
+and browser databases. PHP 7.4 / minimum WordPress/WooCommerce runtime checks
+remain part of the existing compatibility open issue. During fixture setup an
+incomplete hand-built snapshot omitted `variation_id`, causing stock-hook warnings;
+the fixture was repaired. Subsequent browser/runtime activity produced no new
+WP_DEBUG messages. An initial CSV download-event waiter timed out in the browser
+extension, but the actual dated CSV was downloaded and inspected successfully.
+
+**Open issues:** Docker-specific verification and the existing minimum-version
+runtime matrix remain pending. Partial-refund allocation is outside this phase's
+full-refund/cancellation scope. No other Phase 9 implementation issue is known.
 
 ### Phases 0–8 — Review and regression fixes (2026-10-20)
 
@@ -831,9 +949,8 @@ the PHP integration suites, network lifecycle tests and packaged Plugin Check.
   log. Store API metadata and quantity editability are covered by executed tests.
 - Phase 3: the gift template still lacks config keys for "no prices inside" and
   "message required".
-- Phase 9 supplies Analytics and the live `/stats` data. Phase 10 supplies the
-  Settings UI, remaining display defaults and email filtering. These are planned
-  future features, not completed by this review.
+- Phase 9 now supplies Analytics and live `/stats` data. Phase 10 still supplies
+  the Settings UI, remaining display defaults and email filtering.
 - A cached page's countdown depends on refreshing its embedded server timestamp;
   the device-clock offset does not fix indefinitely stale full-page HTML.
 - Phase 1: Replace the readme's public source repository placeholder before

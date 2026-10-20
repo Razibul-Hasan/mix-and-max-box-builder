@@ -39,6 +39,7 @@ class CartBoxTest extends \WP_UnitTestCase {
 	/** A live tiered campaign with three stocked products, and an empty cart. */
 	public function set_up() {
 		parent::set_up();
+		\MixMax\BoxBuilder\Installer::install();
 		if ( ! WC()->cart instanceof \WC_Cart ) {
 			wc_load_cart();
 		}
@@ -624,5 +625,15 @@ class CartBoxTest extends \WP_UnitTestCase {
 		$this->assertCount( 1, WC()->cart->get_cart() );
 		$line = $this->box_line();
 		$this->assertSame( 3, $line['mmbb_box']['items'][0]['qty'] );
+	}
+	/** Successful AJAX additions are recorded server-side using only a salted session. */
+	public function test_add_to_cart_event_is_server_owned() {
+		global $wpdb;
+		$session = str_repeat( 'd', 32 );
+		$result  = $this->add( array( 'analytics_session' => $session ) );
+		$this->assertTrue( $result['success'] );
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE campaign_id = %d AND event = %s', $wpdb->prefix . 'mmbb_events', $this->campaign['id'], 'add_to_cart' ), ARRAY_A );
+		$this->assertSame( \MixMax\BoxBuilder\Analytics\Collector::session_hash( $session ), $row['session'] );
+		$this->assertNotSame( $session, $row['session'] );
 	}
 }

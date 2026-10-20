@@ -71,6 +71,11 @@ class Analytics_Controller extends Base_Controller {
 				'schema' => array( $this, 'get_public_item_schema' ),
 			)
 		);
+		$route             = rest_get_server()->get_routes()['/mmbb/v1/analytics'][0];
+		$route['callback'] = array( $this, 'export' );
+		$route['methods']  = \WP_REST_Server::READABLE;
+		register_rest_route( $this->namespace, '/analytics/export', $route );
+		add_filter( 'rest_pre_serve_request', array( $this, 'serve_csv' ), 10, 4 );
 	}
 
 	/**
@@ -100,8 +105,7 @@ class Analytics_Controller extends Base_Controller {
 	/**
 	 * Return the analytics.
 	 *
-	 * Phase 9 fills this from the analytics tables. Until then every number is
-	 * zero, but the shape is final.
+	 * Reads live and rolled-up local analytics.
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response|\WP_Error
@@ -131,53 +135,125 @@ class Analytics_Controller extends Base_Controller {
 			$start = $today->modify( '-' . ( $count - 1 ) . ' days' );
 		}
 
-		$from     = $start->format( 'Y-m-d' );
-		$to       = $end->format( 'Y-m-d' );
-		$previous = $compare ? 0 : null;
+		$from            = $start->format( 'Y-m-d' );
+		$to              = $end->format( 'Y-m-d' );
+		$report          = ( new \MixMax\BoxBuilder\Analytics\Query() )->report( $from, $to, (int) $request['campaign'], $compare );
+		$report['range'] = $range;
+		return rest_ensure_response( $report );
+	}
 
-		$kpi = array(
-			'value'    => 0,
-			'previous' => $previous,
-			'delta'    => null,
-		);
-
-		$series = array();
-		foreach ( $this->days( $from, $to ) as $day ) {
-			$series[] = array(
-				'date'     => $day,
-				'revenue'  => 0,
-				'previous' => $previous,
-			);
-		}
-
-		$funnel = array();
-		foreach ( array( 'view', 'started', 'tier_reached', 'add_to_cart', 'purchased' ) as $step ) {
-			$funnel[] = array(
-				'step'  => $step,
-				'count' => 0,
-			);
-		}
-
-		return rest_ensure_response(
+	/** Export all sections for the current filters as CSV.
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function export( $request ) {
+		$response = $this->get_item( $request );
+		if ( is_wp_error( $response ) ) {
+			return $response; }
+		$data    = $response->get_data();
+		$rows    = array(
 			array(
-				'range'             => $range,
-				'from'              => $from,
-				'to'                => $to,
-				'campaign'          => (int) $request['campaign'],
-				'compare'           => $compare,
-				'kpis'              => array(
-					'revenue'       => $kpi,
-					'boxes'         => $kpi,
-					'items_per_box' => $kpi,
-					'discount'      => $kpi,
-				),
-				'series'            => $series,
-				'funnel'            => $funnel,
-				'top_products'      => array(),
-				'tier_distribution' => array(),
-				'campaigns'         => array(),
+				__( 'Section', 'mix-and-max-box-builder' ),
+				__( 'From', 'mix-and-max-box-builder' ),
+				__( 'To', 'mix-and-max-box-builder' ),
+				__( 'Campaign', 'mix-and-max-box-builder' ),
+				__( 'Date', 'mix-and-max-box-builder' ),
+				__( 'Metric', 'mix-and-max-box-builder' ),
+				__( 'Value', 'mix-and-max-box-builder' ),
+				__( 'Previous', 'mix-and-max-box-builder' ),
+				__( 'Unit', 'mix-and-max-box-builder' ),
+			),
+		);
+		$names   = array(
+			'revenue'       => __( 'Revenue', 'mix-and-max-box-builder' ),
+			'boxes'         => __( 'Boxes sold', 'mix-and-max-box-builder' ),
+			'avg_box_value' => __( 'Average box value', 'mix-and-max-box-builder' ),
+			'items_per_box' => __( 'Average items per box', 'mix-and-max-box-builder' ),
+			'discount'      => __( 'Discount given', 'mix-and-max-box-builder' ),
+			'conversion'    => __( 'Conversion', 'mix-and-max-box-builder' ),
+			'views'         => __( 'Builder views', 'mix-and-max-box-builder' ),
+			'started'       => __( 'Started a box', 'mix-and-max-box-builder' ),
+		);
+		$minor   = __( 'Currency minor units', 'mix-and-max-box-builder' );
+		$number  = __( 'Number', 'mix-and-max-box-builder' );
+		$percent = __( 'Percent', 'mix-and-max-box-builder' );
+		$filter  = $data['campaign'] ? get_the_title( $data['campaign'] ) : __( 'All campaigns', 'mix-and-max-box-builder' );
+		foreach ( $data['kpis'] as $name => $metric ) {
+			$unit = in_array( $name, array( 'revenue', 'discount', 'avg_box_value' ), true ) ? $minor : $number;
+			if ( 'conversion' === $name ) {
+				$unit = $percent; }
+			$rows[] = array( __( 'Summary', 'mix-and-max-box-builder' ), $data['from'], $data['to'], $filter, '', $names[ $name ], $metric['value'], $metric['previous'], $unit );
+		}
+		foreach ( $data['series'] as $row ) {
+			$rows[] = array( __( 'Daily revenue', 'mix-and-max-box-builder' ), $data['from'], $data['to'], $filter, $row['date'], $names['revenue'], $row['revenue'], $row['previous'], $minor );
+		}
+		$steps = array(
+			'view'         => __( 'Viewed builder', 'mix-and-max-box-builder' ),
+			'started'      => __( 'Added first item', 'mix-and-max-box-builder' ),
+			'tier_reached' => __( 'Reached a tier', 'mix-and-max-box-builder' ),
+			'add_to_cart'  => __( 'Added box to cart', 'mix-and-max-box-builder' ),
+			'purchased'    => __( 'Purchased', 'mix-and-max-box-builder' ),
+		);
+		foreach ( $data['funnel'] as $row ) {
+			$rows[] = array( __( 'Funnel', 'mix-and-max-box-builder' ), $data['from'], $data['to'], $filter, '', $steps[ $row['step'] ], $row['count'], '', $number );
+		}
+		foreach ( $data['top_products'] as $row ) {
+			$rows[] = array( __( 'Product picks', 'mix-and-max-box-builder' ), $data['from'], $data['to'], $filter, '', $row['name'], $row['count'], '', $number );
+		}
+		foreach ( $data['tier_distribution'] as $row ) {
+			$rows[] = array( __( 'Tier share', 'mix-and-max-box-builder' ), $data['from'], $data['to'], $filter, '', ! empty( $row['other'] ) ? __( 'Other', 'mix-and-max-box-builder' ) : wp_json_encode( $row['tier'] ), $row['share'], '', $percent );
+		}
+		foreach ( $data['campaigns'] as $row ) {
+			foreach ( array( 'views', 'started', 'boxes', 'conversion', 'avg_box_value', 'revenue', 'discount' ) as $name ) {
+				$unit = in_array( $name, array( 'revenue', 'discount', 'avg_box_value' ), true ) ? $minor : $number;
+				if ( 'conversion' === $name ) {
+					$unit = $percent; }
+				$rows[] = array( __( 'Campaign performance', 'mix-and-max-box-builder' ), $data['from'], $data['to'], $row['name'], '', $names[ $name ], $row[ $name ], '', $unit );
+			}
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Memory stream, not a filesystem operation.
+		$stream = fopen( 'php://temp', 'r+' );
+		foreach ( $rows as $row ) {
+			fputcsv( $stream, array_map( array( self::class, 'csv_cell' ), $row ), ',', '"', '' ); }
+		rewind( $stream );
+		$csv = stream_get_contents( $stream );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the memory stream.
+		fclose( $stream );
+		return new \WP_REST_Response(
+			$csv,
+			200,
+			array(
+				'Content-Type'        => 'text/csv; charset=UTF-8',
+				'Content-Disposition' => 'attachment; filename="mmbb-analytics-' . wp_date( 'Y-m-d' ) . '.csv"',
+				'Cache-Control'       => 'no-store',
 			)
 		);
+	}
+	/** Guard spreadsheet formulas, including whitespace-prefixed formulas.
+	 *
+	 * @param mixed $value Cell value.
+	 * @return string
+	 */
+	public static function csv_cell( $value ) {
+		$value = (string) $value;
+		return preg_match( '/^[\s]*[=+@-]/', $value ) ? "'" . $value : $value;
+	}
+	/** Serve CSV without REST JSON encoding.
+	 *
+	 * @param bool              $served Already served.
+	 * @param \WP_HTTP_Response $result Response.
+	 * @param \WP_REST_Request  $request Request.
+	 * @param \WP_REST_Server   $server Server.
+	 * @return bool
+	 */
+	public function serve_csv( $served, $result, $request, $server ) {
+		if ( '/mmbb/v1/analytics/export' !== $request->get_route() || 200 !== $result->get_status() || $served ) {
+			return $served; }
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CSV bytes are formula-escaped by export(); HTML escaping would corrupt the file.
+		echo $result->get_data();
+		return true;
 	}
 
 	/**
@@ -242,6 +318,8 @@ class Analytics_Controller extends Base_Controller {
 						'boxes'         => $kpi,
 						'items_per_box' => $kpi,
 						'discount'      => $kpi,
+						'avg_box_value' => $kpi,
+						'conversion'    => $kpi,
 					),
 				),
 				'series'            => array(

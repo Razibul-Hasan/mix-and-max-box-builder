@@ -91,3 +91,17 @@ Public repository URL: [YOUR PUBLIC SOURCE REPOSITORY URL].
 Figtree and Bricolage Grotesque variable fonts are bundled locally under the SIL Open Font License 1.1. License files: assets/fonts/Figtree-OFL.txt and assets/fonts/BricolageGrotesque-OFL.txt. No external font requests are made.
 
 WordPress and WooCommerce supply their own runtime libraries. No third-party runtime package is bundled in this lifecycle draft.
+
+== Privacy ==
+
+Optional builder analytics stay in this site's database. They collect builder
+views, product picks, tier milestones, cart additions and box purchases. A random
+session ID is stored in browser sessionStorage, with no tracking cookie. Only a
+daily salted hash reaches the database; no IP address or user agent is recorded.
+The analytics_enabled setting and mmbb_track_events filter stop all collection,
+including new purchases. Raw browsing events expire after analytics_retention_days
+(default 90); daily aggregates and order-line sales records remain for reports
+and late refunds. Refund and cancellation corrections continue when tracking is off.
+Session counts are daily and campaign scoped; they cannot identify returning people.
+Gift messages are stored with WooCommerce order items. WordPress privacy tools
+export them and erase them when WooCommerce's order data removal setting allows it.

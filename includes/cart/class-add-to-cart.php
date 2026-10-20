@@ -124,6 +124,20 @@ final class Add_To_Cart {
 		}
 
 		WC()->cart->calculate_totals();
+		if ( \MixMax\BoxBuilder\Analytics\Collector::enabled() ) {
+			$session = isset( $_POST['analytics_session'] ) ? sanitize_key( wp_unslash( $_POST['analytics_session'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+			if ( ! preg_match( '/^[a-f0-9]{32}$/', $session ) ) {
+				$session = md5( wp_generate_password( 64, true, true ) ); }
+				\MixMax\BoxBuilder\Analytics\Collector::insert(
+					array(
+						'campaign_id' => $campaign_id,
+						'event'       => 'add_to_cart',
+					),
+					\MixMax\BoxBuilder\Analytics\Collector::session_hash( $session )
+				);
+				\MixMax\BoxBuilder\Analytics\Query::bust();
+		}
+
 		wp_send_json_success(
 			array(
 				'cart_url'  => wc_get_cart_url(),

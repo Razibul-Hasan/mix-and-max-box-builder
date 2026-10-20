@@ -1,0 +1,23 @@
+.mmbb-root .mmbb-analytics-filters {
+ display: flex;
+ flex-wrap: wrap;
+ align-items: center;
+ gap: var(--space-3);
+ margin-bottom: var(--space-6);
+}
+
+.mmbb-root .mmbb-analytics-split {
+ display: grid;
+ grid-template-columns: repeat(2, minmax(0, 1fr));
+ align-items: start;
+ gap: var(--space-6);
+}
+
+@media (max-width: 900px) {
+
+ .mmbb-root .mmbb-analytics-split { grid-template-columns: minmax(0, 1fr); }
+}
+
+.mmbb-root .mmbb-analytics-filters > .mmbb-field {
+ flex: 0 1 220px;
+}

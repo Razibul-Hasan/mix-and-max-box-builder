@@ -41,7 +41,7 @@ import {
 	tierReached,
 } from './state';
 import { loadBox, saveBox } from './storage';
-import { track } from './track';
+import { track, analyticsSession } from './track';
 
 const TOAST_MS = 2600;
 
@@ -119,15 +119,19 @@ function BuilderView( { payload, preview, navigate } ) {
 	}, [ state, preview, busy, payload.id ] );
 
 	useEffect( () => {
-		track( 'view', { campaignId: payload.id } );
-	}, [ payload.id ] );
+		track( 'view', { campaignId: payload.id, tracking: payload.tracking } );
+	}, [ payload.id, payload.tracking ] );
 
 	// One toast for each newly unlocked tier. Restoring a box does not count.
 	const reached = tierReached( config, count );
 	const lastTier = useRef( reached );
 	useEffect( () => {
 		if ( reached > lastTier.current ) {
-			track( 'tier_unlocked', { campaignId: payload.id, qty: reached } );
+			track( 'tier_reached', {
+				campaignId: payload.id,
+				qty: reached,
+				tracking: payload.tracking,
+			} );
 			const tier = config.tiers.find( ( row ) => row.qty === reached );
 			if ( settings.unlockToast && tier && ! preview ) {
 				setToast(
@@ -234,13 +238,13 @@ function BuilderView( { payload, preview, navigate } ) {
 		const outcome = await addBoxToCart( {
 			cart: payload.cart,
 			campaignId: payload.id,
+			analyticsSession: payload.tracking ? analyticsSession() : '',
 			rows: cartRows( env, state ),
 			size: config.type === 'fixed' ? state.size : 0,
 			gift: state.gift,
 			editKey: payload.edit ? payload.edit.key : '',
 		} );
 		if ( outcome.ok ) {
-			track( 'box_added', { campaignId: payload.id, items: count } );
 			saveBox( payload.id, { ...state, items: [] } );
 			navigate( outcome.cartUrl );
 			return;
@@ -526,18 +530,30 @@ function BuilderView( { payload, preview, navigate } ) {
 												type: 'add',
 												id: product.id,
 											} );
-											track( 'item_added', {
+											track( 'add_item', {
+												tracking: payload.tracking,
 												campaignId: payload.id,
 												productId: product.id,
 											} );
 										} }
-										onChange={ ( next ) =>
+										onChange={ ( next ) => {
 											dispatch( {
 												type: 'setQty',
 												id: product.id,
 												qty: next,
-											} )
-										}
+											} );
+											if (
+												next > qty &&
+												! full &&
+												! atLimit
+											) {
+												track( 'add_item', {
+													tracking: payload.tracking,
+													campaignId: payload.id,
+													productId: product.id,
+												} );
+											}
+										} }
 									/>
 								);
 							} ) }

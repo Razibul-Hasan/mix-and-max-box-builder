@@ -29,6 +29,7 @@ final class Order_Boxes {
 	public function register() {
 		add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'copy_to_line_item' ), 10, 4 );
 		add_filter( 'woocommerce_hidden_order_itemmeta', array( $this, 'hide_meta' ) );
+		add_filter( 'woocommerce_order_item_get_formatted_meta_data', array( $this, 'hide_analytics_links' ) );
 		add_action( 'woocommerce_reduce_order_stock', array( $this, 'reduce_stock' ) );
 		add_action( 'woocommerce_restore_order_stock', array( $this, 'restore_stock' ) );
 	}
@@ -44,12 +45,14 @@ final class Order_Boxes {
 	public function copy_to_line_item( $item, $cart_item_key, $values, $order ) {
 		if ( isset( $values['mmbb_parent'] ) && ! isset( $values['mmbb_box'] ) ) {
 			$item->add_meta_data( self::META_PART, 1, true );
+			$item->add_meta_data( 'mmbb_box_parent', $values['mmbb_parent'], true );
 			return;
 		}
 		if ( empty( $values['mmbb_box'] ) || ! is_array( $values['mmbb_box'] ) ) {
 			return;
 		}
 
+		$item->add_meta_data( 'mmbb_box_key', $cart_item_key, true );
 		$box   = $values['mmbb_box'];
 		$quote = isset( $box['quote'] ) && is_array( $box['quote'] ) ? $box['quote'] : array();
 		$item->add_meta_data( self::META_BOX, wp_json_encode( $box ), true );
@@ -80,7 +83,20 @@ final class Order_Boxes {
 	 * @return string[]
 	 */
 	public function hide_meta( $keys ) {
-		return array_merge( (array) $keys, array( self::META_BOX, self::META_STOCK, self::META_PART ) );
+		return array_merge( (array) $keys, array( self::META_BOX, self::META_STOCK, self::META_PART, 'mmbb_box_key', 'mmbb_box_parent' ) );
+	}
+
+	/** Keep internal analytics associations out of customer-facing formatted metadata.
+	 *
+	 * @param array $metadata Formatted order item metadata.
+	 * @return array
+	 */
+	public function hide_analytics_links( $metadata ) {
+		foreach ( $metadata as $id => $meta ) {
+			if ( in_array( $meta->key, array( 'mmbb_box_key', 'mmbb_box_parent' ), true ) ) {
+				unset( $metadata[ $id ] ); }
+		}
+		return $metadata;
 	}
 
 	/**
@@ -109,7 +125,7 @@ final class Order_Boxes {
 				$new = wc_update_product_stock( $product, $qty, 'decrease' );
 				if ( false !== $new && null !== $new ) {
 					/* translators: 1: product name, 2: old stock, 3: new stock */
-					$notes[] = sprintf( __( '%1$s %2$d→%3$d', 'mix-and-max-box-builder' ), $product->get_name(), (int) $new + $qty, (int) $new );
+					$notes[] = sprintf( __( '%1$s %2$dÃ¢â€ â€™%3$d', 'mix-and-max-box-builder' ), $product->get_name(), (int) $new + $qty, (int) $new );
 				}
 			}
 			$item->update_meta_data( self::META_STOCK, 1 );
@@ -151,7 +167,7 @@ final class Order_Boxes {
 				$new = wc_update_product_stock( $product, $qty, 'increase' );
 				if ( false !== $new && null !== $new ) {
 					/* translators: 1: product name, 2: old stock, 3: new stock */
-					$notes[] = sprintf( __( '%1$s %2$d→%3$d', 'mix-and-max-box-builder' ), $product->get_name(), (int) $new - $qty, (int) $new );
+					$notes[] = sprintf( __( '%1$s %2$dÃ¢â€ â€™%3$d', 'mix-and-max-box-builder' ), $product->get_name(), (int) $new - $qty, (int) $new );
 				}
 			}
 			$item->delete_meta_data( self::META_STOCK );
