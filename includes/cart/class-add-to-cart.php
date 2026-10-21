@@ -49,6 +49,9 @@ final class Add_To_Cart {
 		if ( ! check_ajax_referer( self::NONCE_ACTION, 'nonce', false ) ) {
 			$this->fail( 'mmbb_nonce_expired' );
 		}
+		if ( ! Settings::get( 'enabled' ) ) {
+			$this->fail( 'campaign_unavailable' );
+		}
 
 		if ( ! function_exists( 'WC' ) || ! function_exists( 'wc_load_cart' ) ) {
 			$this->fail( 'cart_unavailable' );

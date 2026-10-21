@@ -111,6 +111,43 @@ class RestStoreTest extends \WP_UnitTestCase {
 		$this->assertSame( 400, $this->request( 'POST', 'settings', array( 'columns' => 7 ) )->get_status() );
 	}
 
+	/** Settings: every constrained field is validated by the REST schema. */
+	public function test_settings_post_rejects_invalid_values() {
+		$this->be_manager();
+		$invalid = array(
+			array( 'default_page_id' => -1 ),
+			array( 'summary_layout' => 'drawer' ),
+			array( 'cart_display' => 'separate' ),
+			array( 'cta_label' => str_repeat( 'x', 33 ) ),
+			array( 'empty_slot_hint' => str_repeat( 'x', 61 ) ),
+			array( 'analytics_retention_days' => 6 ),
+			array( 'analytics_retention_days' => 731 ),
+			array( 'low_stock' => array( 'threshold' => 0 ) ),
+			array( 'low_stock' => array( 'threshold' => 101 ) ),
+			array( 'low_stock' => array( 'extra' => true ) ),
+			array( 'enabled' => 'sometimes' ),
+		);
+		foreach ( $invalid as $params ) {
+			$this->assertSame( 400, $this->request( 'POST', 'settings', $params )->get_status(), wp_json_encode( $params ) );
+		}
+	}
+
+	/** Settings: text is sanitized before it reaches the option. */
+	public function test_settings_post_sanitizes_text() {
+		$this->be_manager();
+		$response = $this->request(
+			'POST',
+			'settings',
+			array(
+				'cta_label'       => '<b>Add my box</b>',
+				'empty_slot_hint' => "Pick\n<script>bad()</script> an item",
+			)
+		);
+		$this->assertSame( 200, $response->get_status() );
+		$this->assertSame( 'Add my box', $response->get_data()['cta_label'] );
+		$this->assertSame( 'Pick an item', $response->get_data()['empty_slot_hint'] );
+	}
+
 	/** Settings: a partial POST changes only what it names. */
 	public function test_settings_post_keeps_other_settings() {
 		$this->be_manager();

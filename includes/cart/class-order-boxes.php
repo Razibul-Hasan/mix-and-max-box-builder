@@ -58,11 +58,11 @@ final class Order_Boxes {
 		$item->add_meta_data( self::META_BOX, wp_json_encode( $box ), true );
 
 		// What the shopper and the merchant read on the order and in the emails.
-		$item->add_meta_data( __( 'Contents', 'mix-and-max-box-builder' ), Box_Text::contents( $box['items'] ), true );
 		$discount = $quote ? Box_Text::discount( $quote ) : '';
 		if ( '' !== $discount ) {
 			$item->add_meta_data( __( 'Box discount', 'mix-and-max-box-builder' ), $discount, true );
 		}
+		$item->add_meta_data( __( 'Contents', 'mix-and-max-box-builder' ), Box_Text::contents( $box['items'] ), true );
 		if ( ! empty( $box['gift']['message'] ) ) {
 			$item->add_meta_data( __( 'Gift message', 'mix-and-max-box-builder' ), $box['gift']['message'], true );
 		}

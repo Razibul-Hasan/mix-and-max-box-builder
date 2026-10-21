@@ -9,6 +9,7 @@ namespace MixMax\BoxBuilder\Storefront;
 
 use MixMax\BoxBuilder\Campaigns\Campaign_Repository;
 use MixMax\BoxBuilder\Campaigns\Status;
+use MixMax\BoxBuilder\Settings\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -30,6 +31,9 @@ final class Renderer {
 	 * @return string HTML that is already escaped.
 	 */
 	public static function render( $campaign_id, array $view = array(), $block_wrapper = false ) {
+		if ( ! Settings::get( 'enabled' ) ) {
+			return self::notice_for_managers( $campaign_id, __( 'Box builders are disabled in the plugin settings.', 'mix-and-max-box-builder' ), false );
+		}
 		$campaign = ( new Campaign_Repository() )->find( absint( $campaign_id ) );
 		if ( ! $campaign ) {
 			return self::notice_for_managers( $campaign_id, __( 'This box builder points to a campaign that no longer exists.', 'mix-and-max-box-builder' ), false );

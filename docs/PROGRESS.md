@@ -14,7 +14,7 @@ Updated by the agent at the end of every phase. Newest entry first under each ph
 | 7 | Cart, orders and stock | done; HPOS/legacy tests and classic checkout passed; UI gaps remain | `Phase 7: Cart, orders and stock` |
 | 8 | Storefront: block, shortcode, builder | done; native tests and browser smoke passed | `Phase 8: Storefront: block, shortcode, builder` |
 | 9 | Analytics | done; native legacy/HPOS tests, browser and Plugin Check passed | `Phase 9: Analytics` |
-| 10 | Settings screen and emails | not started | |
+| 10 | Settings screen and emails | done; native legacy/HPOS tests, browser and Plugin Check passed | `Phase 10: Settings screen and emails` |
 | 11 | Hardening and WordPress.org compliance | not started | |
 | 12 | Release and submission | not started | |
 
@@ -43,6 +43,75 @@ installable on the minimum supported PHP branch.
 | WordPress / WooCommerce / Plugin Check in wp-env | Not installed here; latest release URLs configured, exact installed versions pending Docker run |
 
 ## Log
+
+### Phase 10 — Settings screen and emails (2026-10-21)
+
+**Done:** Replaced the Settings placeholder with the complete five-section screen:
+General, Storefront display, Cart & checkout, Emails and Advanced. It loads and
+saves the existing typed `/mmbb/v1/settings` resource, lists builder pages, tracks
+the active anchor while scrolling, warns before leaving with changes, validates
+numeric/text limits inline, supports discard, and shows the shared success toast.
+Every stored setting is editable, including analytics collection/retention and
+opt-in uninstall deletion. The screen uses the supplied shell, cards, choice
+cards, segmented controls, toggles and tokens, with responsive section navigation.
+
+Applied the global enabled switch to rendered builders, eager asset loading and
+the add-to-cart endpoint, so a stale cached builder cannot bypass it. The existing
+storefront payload/cart/analytics/uninstall consumers now have UI coverage for all
+their settings; campaign layout, columns and CTA continue to override store-wide
+defaults only when explicitly set.
+
+Added an order-display module that keeps Box discount, Contents and Gift message
+in a stable order, renders each picked product on its own readable line, and uses
+the hidden server-owned snapshot rather than browser-supplied display text. Order
+screens retain the contents and gift message. Emails honor both email settings;
+customer and non-new-order admin emails never receive gift text, while the merchant
+new-order email can include it. HTML values are escaped and line-broken; plain-text
+emails use clean newlines. Tests render WooCommerce's actual HTML and plain email
+order-detail templates from a persisted test order.
+
+**Decisions / deviations:** The handoff's price-format selector includes a
+"No decimals" choice, but the fixed WooCommerce rule requires money to follow the
+store's currency settings. Settings therefore shows the active WooCommerce format
+as a read-only preview and does not add a conflicting option. The prototype's
+License section was omitted because the phase specifies five sections and the
+plugin cannot ship locked/trial features. The Settings prototype specifically
+uses switches in a saved form, so it takes precedence over the generic Toggle
+guideline's checkbox preference. No runtime dependency was added.
+
+**Checks run:**
+
+- Production build, JS lint, CSS lint, WPCS/WordPress-Docs/PHPCompatibilityWP
+  7.4-, PHP syntax across 74 PHP files and `git diff --check`: pass.
+- JavaScript: 213 tests across 18 suites pass. New Settings tests cover all five
+  sections, a complete typed save, the unsaved bar/toast, inline validation and
+  discard restoration.
+- Pure PHP: 80 tests, 493 assertions pass.
+- Native integration, legacy orders: 165 tests pass with 711 assertions. HPOS:
+  165 tests pass with 712 assertions. Two multisite-only tests are intentionally
+  skipped in each single-site run; the separate multisite run passes both with
+  11 assertions. Final runs produced no WP_DEBUG messages.
+- Integration coverage includes every REST constraint and text sanitization,
+  master-switch rendering/assets/add-to-cart behavior, visible order metadata,
+  HTML/plain email formatting, email preferences, admin new-order versus customer
+  and other admin emails, gift versus non-gift boxes, legacy storage and HPOS.
+- Chrome on the local development site: the Settings screen matches the supplied
+  layout, every section/control is present, the active anchor follows the viewport,
+  and the sticky unsaved bar/discard flow works. The temporary coupon toggle was
+  discarded; no merchant setting was saved. Console errors came only from browser
+  extensions, not the plugin.
+- Final release archive: 181 files, required build/source/font/licence files
+  present, zero dev/hidden/forbidden files. Packaged Plugin Check with runtime
+  checks enabled: **0 errors, 11 warnings**. The warnings are the pre-existing
+  prepared discovery/deletion queries and owned-table DROP in `Uninstaller`, which
+  require fresh reads and schema removal after per-site opt-in.
+
+**Skipped checks / environment:** Docker remains unavailable, so `npx wp-env`
+could not run. Equivalent isolated native legacy, HPOS, multisite, email-template
+and packaged Plugin Check runs used Local's PHP/MySQL services. The minimum PHP
+7.4 / WordPress 6.6 / WooCommerce 9.0 runtime matrix remains for Phase 11.
+
+**Open issues:** No new Phase 10 issue is known.
 
 ### Phase 9 — Analytics (2026-10-20)
 
@@ -949,8 +1018,6 @@ the PHP integration suites, network lifecycle tests and packaged Plugin Check.
   log. Store API metadata and quantity editability are covered by executed tests.
 - Phase 3: the gift template still lacks config keys for "no prices inside" and
   "message required".
-- Phase 9 now supplies Analytics and live `/stats` data. Phase 10 still supplies
-  the Settings UI, remaining display defaults and email filtering.
 - A cached page's countdown depends on refreshing its embedded server timestamp;
   the device-clock offset does not fix indefinitely stale full-page HTML.
 - Phase 1: Replace the readme's public source repository placeholder before

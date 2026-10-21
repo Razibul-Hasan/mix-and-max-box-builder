@@ -40,6 +40,7 @@ class CartBoxTest extends \WP_UnitTestCase {
 	public function set_up() {
 		parent::set_up();
 		\MixMax\BoxBuilder\Installer::install();
+		update_option( Settings::OPTION, Settings::defaults() );
 		if ( ! WC()->cart instanceof \WC_Cart ) {
 			wc_load_cart();
 		}
@@ -256,6 +257,16 @@ class CartBoxTest extends \WP_UnitTestCase {
 
 		$this->assertFalse( $result['success'] );
 		$this->assertSame( 'mmbb_nonce_expired', $result['data']['code'] );
+		$this->assertCount( 0, WC()->cart->get_cart() );
+	}
+
+	/** A cached builder cannot add a box while the store-wide switch is off. */
+	public function test_disabled_setting_rejects_add_to_cart() {
+		Settings::update( array( 'enabled' => false ) );
+		$result = $this->add();
+
+		$this->assertFalse( $result['success'] );
+		$this->assertSame( 'campaign_unavailable', $result['data']['code'] );
 		$this->assertCount( 0, WC()->cart->get_cart() );
 	}
 

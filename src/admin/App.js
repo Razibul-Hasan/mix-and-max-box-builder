@@ -1,11 +1,10 @@
-import { __ } from '@wordpress/i18n';
 import { MoneyProvider } from '../components';
 import Campaigns from './campaigns/Campaigns';
 import Analytics from './analytics/Analytics';
-import ComingSoon from './ComingSoon';
 import { AdminContext, readAdminData } from './context';
 import Dashboard from './dashboard/Dashboard';
 import Editor from './editor/Editor';
+import Settings from './settings/Settings';
 import { ToastProvider } from './toast';
 
 /**
@@ -40,16 +39,7 @@ function Screen( { name, id } ) {
 		case 'analytics':
 			return <Analytics />;
 		case 'settings':
-			return (
-				<ComingSoon
-					active="settings"
-					title={ __( 'Settings', 'mix-and-max-box-builder' ) }
-					headline={ __(
-						'Settings are on their way',
-						'mix-and-max-box-builder'
-					) }
-				/>
-			);
+			return <Settings />;
 		default:
 			return <Dashboard />;
 	}

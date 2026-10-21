@@ -111,7 +111,7 @@ final class Storefront {
 
 	/** With "Load assets only on pages with a builder" turned off, load them on every page. */
 	public function maybe_enqueue_everywhere() {
-		if ( ! Settings::get( 'assets_only_on_builder' ) ) {
+		if ( Settings::get( 'enabled' ) && ! Settings::get( 'assets_only_on_builder' ) ) {
 			self::enqueue();
 		}
 	}

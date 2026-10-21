@@ -106,6 +106,18 @@ export function getPages( params ) {
 	} );
 }
 
+export function getSettings() {
+	return apiFetch( { path: BASE + '/settings' } );
+}
+
+export function saveSettings( settings ) {
+	return apiFetch( {
+		path: BASE + '/settings',
+		method: 'POST',
+		data: settings,
+	} );
+}
+
 export function getAnalytics( params ) {
 	return apiFetch( {
 		path: addQueryArgs( BASE + '/analytics', clean( params ) ),

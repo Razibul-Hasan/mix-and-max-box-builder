@@ -1,0 +1,196 @@
+.mmbb-root .mmbb-settings__bar {
+	position: sticky;
+	top: 32px;
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	gap: var(--space-4);
+	min-height: 56px;
+	padding: 0 var(--space-6);
+	background: var(--surface-strong);
+	color: var(--on-strong);
+}
+
+.mmbb-root .mmbb-settings__bar-text {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-weight: 600;
+}
+
+.mmbb-root .mmbb-settings__bar-text svg {
+	color: var(--pop);
+}
+
+.mmbb-root .mmbb-settings__discard {
+	display: inline-flex;
+	align-items: center;
+	height: 36px;
+	padding: 0 var(--space-3);
+	border: 1px solid var(--on-strong-muted);
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--on-strong);
+	font: inherit;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.mmbb-root .mmbb-settings__discard:hover {
+	border-color: var(--on-strong);
+}
+
+.mmbb-root .mmbb-settings__discard:focus-visible {
+	outline: 2px solid var(--on-strong);
+	outline-offset: 2px;
+}
+
+.mmbb-root .mmbb-settings__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-4);
+}
+
+.mmbb-root .mmbb-settings__head > :first-child {
+	flex: 1 1 320px;
+}
+
+.mmbb-root .mmbb-settings__layout {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-8);
+}
+
+.mmbb-root .mmbb-settings__nav {
+	position: sticky;
+	top: 92px;
+	flex: 0 0 220px;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.mmbb-root .mmbb-settings__nav a {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: 9px var(--space-3);
+	border-radius: var(--radius-sm);
+	color: var(--ink-muted);
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.mmbb-root .mmbb-settings__nav a:hover {
+	background: var(--surface-hover);
+	color: var(--ink);
+}
+
+.mmbb-root .mmbb-settings__nav a:focus-visible {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+}
+
+.mmbb-root .mmbb-settings__nav a.is-active {
+	border: 1px solid var(--line);
+	background: var(--surface);
+	box-shadow: var(--shadow-card);
+	color: var(--ink);
+}
+
+.mmbb-root .mmbb-settings__content {
+	flex: 1 1 560px;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-6);
+}
+
+.mmbb-root .mmbb-settings__section {
+	scroll-margin-top: 96px;
+}
+
+.mmbb-root .mmbb-settings__stack,
+.mmbb-root .mmbb-settings__control {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.mmbb-root .mmbb-settings__pair,
+.mmbb-root .mmbb-settings__choices {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--space-4);
+}
+
+.mmbb-root .mmbb-settings__rule {
+	padding-top: var(--space-4);
+	border-top: 1px solid var(--line);
+}
+
+.mmbb-root .mmbb-settings__label {
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 600;
+}
+
+.mmbb-root .mmbb-settings__help {
+	color: var(--ink-muted);
+	font-size: 13px;
+	line-height: 18px;
+}
+
+.mmbb-root .mmbb-settings__narrow {
+	max-width: 220px;
+}
+
+.mmbb-root .mmbb-settings__loading {
+	margin: var(--space-8) 0;
+	color: var(--ink-muted);
+}
+
+.mmbb-root .mmbb-settings__content code {
+	padding: 1px var(--space-1);
+	border-radius: var(--radius-xs);
+	background: var(--surface-sunken);
+	font-family: var(--font-mono);
+}
+
+@media (max-width: 900px) {
+
+	.mmbb-root .mmbb-settings__layout {
+		flex-direction: column;
+	}
+
+	.mmbb-root .mmbb-settings__nav {
+		position: static;
+		flex: none;
+		width: 100%;
+		flex-direction: row;
+		overflow-x: auto;
+	}
+
+	.mmbb-root .mmbb-settings__nav a {
+		flex: none;
+	}
+}
+
+@media (max-width: 782px) {
+
+	.mmbb-root .mmbb-settings__bar {
+		top: 46px;
+		padding: 0 var(--space-4);
+	}
+
+	.mmbb-root .mmbb-settings__pair,
+	.mmbb-root .mmbb-settings__choices {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

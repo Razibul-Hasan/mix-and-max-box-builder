@@ -116,6 +116,16 @@ final class Box_Text {
 	 * @return string
 	 */
 	public static function contents( array $items ) {
+		return implode( ', ', self::content_lines( $items ) );
+	}
+
+	/**
+	 * One plain-text line per picked product, suitable for emails and order screens.
+	 *
+	 * @param array[] $items List of { product_id, variation_id, qty }.
+	 * @return string[]
+	 */
+	public static function content_lines( array $items ) {
 		$parts = array();
 		foreach ( $items as $item ) {
 			$product = wc_get_product( Box_Rules::key( (int) $item['product_id'], (int) $item['variation_id'] ) );
@@ -125,7 +135,7 @@ final class Box_Text {
 			/* translators: 1: quantity, 2: product name */
 			$parts[] = sprintf( _x( '%1$d × %2$s', 'box item line', 'mix-and-max-box-builder' ), (int) $item['qty'], $name );
 		}
-		return implode( ', ', $parts );
+		return $parts;
 	}
 
 	/**

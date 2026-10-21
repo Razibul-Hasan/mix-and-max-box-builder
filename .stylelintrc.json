@@ -9,7 +9,7 @@
 			}
 		},
 		{
-			"files": [ "src/admin/admin.css", "src/admin/editor/editor.css", "src/storefront/storefront.css" ],
+			"files": [ "src/admin/admin.css", "src/admin/editor/editor.css", "src/admin/settings/settings.css", "src/storefront/storefront.css" ],
 			"rules": { "selector-class-pattern": null }
 		}
 	]

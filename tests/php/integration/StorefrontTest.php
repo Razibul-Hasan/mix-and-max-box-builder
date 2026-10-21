@@ -40,6 +40,7 @@ class StorefrontTest extends \WP_UnitTestCase {
 	/** A live campaign with a sold-out product, a sale product and a plain one. */
 	public function set_up() {
 		parent::set_up();
+		update_option( Settings::OPTION, Settings::defaults() );
 		$this->repo = new Campaign_Repository();
 
 		for ( $i = 1; $i <= 3; $i++ ) {
@@ -170,6 +171,24 @@ class StorefrontTest extends \WP_UnitTestCase {
 		Settings::update( array( 'assets_only_on_builder' => false ) );
 		( new Storefront() )->maybe_enqueue_everywhere();
 		$this->assertTrue( wp_script_is( Storefront::HANDLE, 'enqueued' ) );
+	}
+
+	/** The master switch hides builders and prevents eager asset loading. */
+	public function test_disabled_setting_hides_every_builder() {
+		Settings::update( array( 'enabled' => false ) );
+		wp_dequeue_script( Storefront::HANDLE );
+		wp_dequeue_style( Storefront::HANDLE );
+		wp_set_current_user( 0 );
+		$this->assertSame( '', do_shortcode( '[mmbb_box id="' . $this->campaign['id'] . '"]' ) );
+
+		Settings::update( array( 'assets_only_on_builder' => false ) );
+		( new Storefront() )->maybe_enqueue_everywhere();
+		$this->assertFalse( wp_script_is( Storefront::HANDLE, 'enqueued' ) );
+
+		$user = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		get_user_by( 'id', $user )->add_cap( 'manage_woocommerce' );
+		wp_set_current_user( $user );
+		$this->assertStringContainsString( 'Box builders are disabled', do_shortcode( '[mmbb_box id="' . $this->campaign['id'] . '"]' ) );
 	}
 
 	/** Only a box from the same campaign preloads from `?mmbb_edit=`. */
