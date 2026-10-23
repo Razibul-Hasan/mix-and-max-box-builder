@@ -183,6 +183,7 @@ final class Payload {
 		$ids     = Box_Resolver::allowed_ids( $config );
 		$ranked  = array();
 		$decimal = wc_get_price_decimals();
+		self::prime_caches( $ids );
 
 		foreach ( $ids as $position => $id ) {
 			if ( count( $ranked ) >= self::MAX_PRODUCTS ) {
@@ -216,6 +217,41 @@ final class Payload {
 			$products[] = $entry['row'];
 		}
 		return $products;
+	}
+
+	/**
+	 * Load posts, meta, terms, parents and thumbnails in bulk so the loop below makes no per-product queries.
+	 *
+	 * @param int[] $ids Product and variation ids, in campaign order.
+	 */
+	private static function prime_caches( array $ids ) {
+		$ids = array_slice( $ids, 0, self::MAX_PRODUCTS );
+		if ( empty( $ids ) ) {
+			return;
+		}
+		_prime_post_caches( $ids, true, true );
+
+		$related = array();
+		foreach ( $ids as $id ) {
+			$post = get_post( $id );
+			if ( $post instanceof WP_Post && $post->post_parent ) {
+				$related[] = (int) $post->post_parent;
+			}
+		}
+		if ( $related ) {
+			_prime_post_caches( array_unique( $related ), true, true );
+		}
+
+		$thumbs = array();
+		foreach ( array_merge( $ids, $related ) as $id ) {
+			$thumb = (int) get_post_meta( $id, '_thumbnail_id', true );
+			if ( $thumb ) {
+				$thumbs[] = $thumb;
+			}
+		}
+		if ( $thumbs ) {
+			_prime_post_caches( array_unique( $thumbs ), false, true );
+		}
 	}
 
 	/**

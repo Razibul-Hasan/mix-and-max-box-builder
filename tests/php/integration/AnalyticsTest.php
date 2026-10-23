@@ -322,6 +322,49 @@ class AnalyticsTest extends \WP_UnitTestCase {
 		do_action( 'woocommerce_order_fully_refunded', $order->get_id(), $refund->get_id() );
 		$this->assertSame( 0, ( new Query() )->report( $day, $day )['kpis']['revenue']['value'] );
 	}
+	/** The Campaigns list shows real all-time totals and can sort by them. */
+	public function test_campaign_list_has_real_totals_and_ranks_by_them() {
+		global $wpdb;
+		$repo   = new Campaign_Repository();
+		$second = $repo->create_from_template( 'blank', 'Second campaign' )['id'];
+		$day    = wp_date( 'Y-m-d' );
+		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Fixture rows in an owned table.
+			$wpdb->prefix . 'mmbb_purchases',
+			array(
+				'order_id'    => 1,
+				'line_id'     => 1,
+				'campaign_id' => $second,
+				'day'         => $day,
+				'boxes'       => 3,
+				'items'       => 9,
+				'value'       => '45.00',
+				'discount'    => '5.00',
+			)
+		);
+		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Fixture rows in an owned table.
+			$wpdb->prefix . 'mmbb_stats_daily',
+			array(
+				'day'         => $day,
+				'campaign_id' => $second,
+				'views'       => 12,
+			)
+		);
+		Query::bust();
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+
+		$request = new \WP_REST_Request( 'GET', '/mmbb/v1/campaigns' );
+		$request->set_param( 'orderby', 'revenue' );
+		$items = rest_get_server()->dispatch( $request )->get_data()['items'];
+		$this->assertSame( $second, $items[0]['id'], 'Highest revenue first.' );
+		$this->assertSame( 3, $items[0]['stats']['boxes_sold'] );
+		$this->assertSame( 4500, $items[0]['stats']['revenue'] );
+		$this->assertEqualsWithDelta( 25.0, $items[0]['stats']['conversion'], 0.001 );
+		$this->assertSame( 0, $items[1]['stats']['revenue'] );
+
+		$request->set_param( 'order', 'asc' );
+		$items = rest_get_server()->dispatch( $request )->get_data()['items'];
+		$this->assertSame( $second, $items[ count( $items ) - 1 ]['id'] );
+	}
 	/** Recurring action is unique and deactivation clears it. */
 	public function test_schedule_is_unique_and_cleared() {
 		Installer::clear_schedules();

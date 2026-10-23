@@ -18,7 +18,7 @@ final class Rest {
 	}
 
 	/**
-	 * Controllers, one per resource. Later phases add one line here.
+	 * Controllers, one per resource.
 	 *
 	 * @return string[]
 	 */

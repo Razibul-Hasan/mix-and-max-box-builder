@@ -46,7 +46,7 @@ final class Campaign_Repository {
 	 * The computed status and type live outside SQL, so every campaign is loaded
 	 * and filtered here. Stores have a handful of campaigns, not thousands.
 	 *
-	 * @param array $args { status, search, type, orderby, order, page, per_page }. `status` may be `live` (active or ending soon).
+	 * @param array $args { status, search, type, orderby, order, page, per_page, metrics }. `status` may be `live` (active or ending soon). `orderby` may also be `revenue` or `conversion`, ranked by `metrics` (campaign id => { revenue, conversion }).
 	 * @return array { items, total, pages, counts }. `counts` ignores the status filter.
 	 */
 	public function query( array $args = array() ) {
@@ -57,12 +57,14 @@ final class Campaign_Repository {
 				'search'   => '',
 				'type'     => '',
 				'orderby'  => 'date',
+				'metrics'  => array(),
 				'order'    => 'DESC',
 				'page'     => 1,
 				'per_page' => 20,
 			)
 		);
 
+		$ranked   = in_array( $args['orderby'], array( 'revenue', 'conversion' ), true );
 		$orderby  = in_array( $args['orderby'], array( 'date', 'title', 'modified' ), true ) ? $args['orderby'] : 'date';
 		$order    = 'ASC' === strtoupper( (string) $args['order'] ) ? 'ASC' : 'DESC';
 		$per_page = max( 1, min( 50, absint( $args['per_page'] ) ) );
@@ -113,6 +115,23 @@ final class Campaign_Repository {
 						return $campaign['status'] === $args['status'];
 					}
 				)
+			);
+		}
+
+		if ( $ranked ) {
+			$metric  = $args['orderby'];
+			$metrics = (array) $args['metrics'];
+			$sign    = 'ASC' === $order ? 1 : -1;
+			$index   = array_flip( array_column( $matching, 'id' ) );
+			usort(
+				$matching,
+				static function ( $a, $b ) use ( $metric, $metrics, $sign, $index ) {
+					$left  = isset( $metrics[ $a['id'] ][ $metric ] ) ? $metrics[ $a['id'] ][ $metric ] : 0;
+					$right = isset( $metrics[ $b['id'] ][ $metric ] ) ? $metrics[ $b['id'] ][ $metric ] : 0;
+					$cmp   = $sign * ( $left <=> $right );
+					// PHP 7.4's sort is not stable: ties keep the date order they arrived in.
+					return 0 !== $cmp ? $cmp : $index[ $a['id'] ] <=> $index[ $b['id'] ];
+				}
 			);
 		}
 

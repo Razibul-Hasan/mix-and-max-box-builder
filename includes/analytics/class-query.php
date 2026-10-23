@@ -291,6 +291,42 @@ final class Query {
 			'funnel'    => $funnel,
 		);
 	}
+	/**
+	 * All-time totals for each campaign, for the Campaigns list: boxes sold, revenue in minor units and conversion.
+	 *
+	 * @return array<int, array{boxes_sold:int, revenue:int, conversion:float}>
+	 */
+	public static function campaign_totals() {
+		global $wpdb;
+		$key    = 'mmbb_campaign_totals_' . md5( (string) get_option( 'mmbb_analytics_generation' ) . wc_get_price_decimals() );
+		$cached = get_transient( $key );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+
+		$views = array();
+		foreach ( self::rows( '1970-01-01', wp_date( 'Y-m-d' ), 0 ) as $row ) {
+			$id           = (int) $row['campaign_id'];
+			$views[ $id ] = ( isset( $views[ $id ] ) ? $views[ $id ] : 0 ) + (int) $row['views'];
+		}
+
+		$totals = array();
+		$sales  = $wpdb->get_results( $wpdb->prepare( 'SELECT campaign_id, SUM(boxes) AS boxes, SUM(value) AS value FROM %i WHERE refunded = 0 GROUP BY campaign_id', $wpdb->prefix . 'mmbb_purchases' ), ARRAY_A );
+		foreach ( $sales as $sale ) {
+			$id            = (int) $sale['campaign_id'];
+			$boxes         = (int) $sale['boxes'];
+			$totals[ $id ] = array(
+				'boxes_sold' => $boxes,
+				'revenue'    => \MixMax\BoxBuilder\Pricing::to_minor( $sale['value'], wc_get_price_decimals() ),
+				'conversion' => ! empty( $views[ $id ] ) ? min( 100, 100 * $boxes / $views[ $id ] ) : 0,
+			);
+		}
+
+		set_transient( $key, $totals, 10 * MINUTE_IN_SECONDS );
+		Collector::remember( $key );
+		return $totals;
+	}
+
 	/** Initial counters.
 	 *
 	 * @return array

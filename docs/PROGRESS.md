@@ -15,7 +15,7 @@ Updated by the agent at the end of every phase. Newest entry first under each ph
 | 8 | Storefront: block, shortcode, builder | done; native tests and browser smoke passed | `Phase 8: Storefront: block, shortcode, builder` |
 | 9 | Analytics | done; native legacy/HPOS tests, browser and Plugin Check passed | `Phase 9: Analytics` |
 | 10 | Settings screen and emails | done; native legacy/HPOS tests, browser and Plugin Check passed | `Phase 10: Settings screen and emails` |
-| 11 | Hardening and WordPress.org compliance | not started | |
+| 11 | Hardening and WordPress.org compliance | done; native tests and Plugin Check passed; axe, keyboard and min-version matrix pending | `Phase 11: Hardening and WordPress.org compliance` |
 | 12 | Release and submission | not started | |
 
 ## Pinned versions
@@ -43,6 +43,53 @@ installable on the minimum supported PHP branch.
 | WordPress / WooCommerce / Plugin Check in wp-env | Not installed here; latest release URLs configured, exact installed versions pending Docker run |
 
 ## Log
+
+### Phase 11 — Hardening and WordPress.org compliance (2026-10-23)
+
+**Done / fixed:**
+
+- **Campaigns list stats were hard-coded zeros** (a Phase 9 gap): Boxes sold, Revenue and Conversion on Campaigns, the Dashboard's top-campaign table and the delete dialog all showed 0, and `orderby=revenue|conversion` sorted by date. Added `Analytics\Query::campaign_totals()` (all-time, refunds excluded, cached with the analytics generation) and real revenue/conversion sorting in `Campaign_Repository::query()`. New integration test.
+- **N+1 on the storefront payload:** 810 queries for 200 products. `Payload::prime_caches()` now primes posts, meta, terms, parents and thumbnails in bulk: 213 queries. The remainder is one WooCommerce extra-meta read per product, inside WooCommerce's data store; the result is cached in a transient for an hour (a rebuilt payload costs under 20 queries).
+- **Multisite uninstall DB error:** `Installer::clear_schedules()` queried Action Scheduler tables on subsites that never ran WooCommerce. It now checks the table exists first.
+- **Mojibake** in the stock-reduction order note (`%2$dÃ¢â€ â€™%3$d`) replaced by a real arrow. Misformatted block in the CSV serve filter fixed. Stale "Phase N" comments removed.
+- **Readme rewritten:** real description and campaign types, FAQ (themes, blocks, tax, container product, build), "External services: none", source/build section with the GitHub URL, third-party resources, six screenshot captions matching the Phase 12 plan, `Requires Plugins`, new `mmbb_track_events` hook. Version stays 0.1.0 (Phase 12 sets 1.0.0).
+- New `PerformanceTest`: only `mmbb_settings` autoloads (and stays under 2 KB), 200-product payload under 150 KB, no plugin queries or assets on a normal page.
+
+**Checks run:**
+
+| Check | Result |
+| --- | --- |
+| Security grep sweep (superglobals, echo/printf, `$wpdb`, routes, `wp_redirect`/`eval`/`base64_`/`extract`, `error_log`/`var_dump`/`console.log`/TODO) | pass; every superglobal read has `wp_unslash` plus sanitizing and a nonce where it changes state; every `phpcs:ignore` has a written reason; every REST route has a real `permission_callback` |
+| Prefix sweep (hooks, options, handles, classes, functions) | pass |
+| PHPCS (WordPress-Extra, WordPress-Docs, PHPCompatibilityWP 7.4-) | 0 errors, 0 warnings |
+| i18n | PHPCS i18n and translators-comment rules pass; `wp_set_script_translations` for all four script handles; `block.json` has `textdomain`. `wp i18n make-pot` not run (no Docker) |
+| Build, `lint:js`, `lint:css`, `test:js` | pass (213 tests) |
+| `test:unit` | 80 tests, 493 assertions |
+| Integration, HPOS on | 169 tests, 727 assertions, 2 multisite-only skipped, no WP_DEBUG output |
+| Integration, legacy orders | 168 tests passed before the final edits (1 new test then added and passed in its own run); the final full legacy rerun hit my 280 s tool timeout, not a failure |
+| Multisite | both network tests pass, no DB error |
+| WooCommerce deactivated, WP_DEBUG on | ad-hoc bootstrap: plugin is inert, no routes, notice shown on Plugins, no fatals |
+| Plugin Check (packaged zip, WP-CLI, runtime checks) | 0 errors, 11 warnings (all in `Uninstaller`: prepared discovery/deletion queries and owned-table DROP, run only after per-site opt-in) |
+| Uninstall with `delete_data` off/on | covered by `LifecycleTest` (passes) |
+
+**Compatibility matrix:**
+
+| Item | Result |
+| --- | --- |
+| WordPress current (7.1.3) / WooCommerce current (11.2.1) / PHP 8.2.29 | pass |
+| HPOS on and off | pass |
+| Multisite subsite | pass |
+| WooCommerce deactivated | pass |
+| `WP_DEBUG` | no notices |
+| Classic checkout, Twenty Twenty-Five | pass in earlier phases' browser runs |
+| WordPress 6.6, WooCommerce 9.0, PHP 7.4 / 8.3+ runtime | **not run** (single local stack; PHPCompatibilityWP 7.4- passes statically) |
+| Cart/Checkout blocks end-to-end, Storefront theme | not re-run this phase |
+
+**Skipped (and why):** No Docker, so wp-env, `wp i18n make-pot` and container Plugin Check did not run; native equivalents above were used with isolated databases (`mmbb_test*`, `mmbb_check`) and an isolated plugin directory. **Keyboard walkthrough and axe (Dashboard, Campaigns, wizard, Settings, builder) were not run**: they need a served site and browser automation I did not set up; the earlier phases' component tests cover roles, focus traps and labels only. Payload size on a real 200-product catalogue with images was measured on text-only products.
+
+**Test-infra note:** on a brand-new test database the first integration run fails 6 capability tests (shop_manager caps absent); every later run passes. Reproduced twice (legacy and HPOS). Cause not yet found; wp-env's first run may show it.
+
+**Open issues:** run the missing matrix rows, axe and keyboard pass, and `make-pot` where Docker is available; the readme Contributors field (`bestwpexpert`) must be the real WordPress.org username (the plugin header author is `bestwebexpert`); screenshots are Phase 12.
 
 ### Phase 10 — Settings screen and emails (2026-10-21)
 

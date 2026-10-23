@@ -71,8 +71,8 @@ final class Publisher {
 	}
 
 	/**
-	 * Ask Phase 7's container service for the product. Without one the campaign
-	 * still goes live, and the cart work adds the product when it arrives.
+	 * Ask the container-product service for the product. Without one the campaign
+	 * still goes live; the hidden product is then created on the next save.
 	 *
 	 * @param int $campaign_id Campaign id.
 	 * @return int|\WP_Error Product id, or 0 when no service is installed.

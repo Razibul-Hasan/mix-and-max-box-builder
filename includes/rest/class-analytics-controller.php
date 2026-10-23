@@ -250,8 +250,9 @@ class Analytics_Controller extends Base_Controller {
 	 */
 	public function serve_csv( $served, $result, $request, $server ) {
 		if ( '/mmbb/v1/analytics/export' !== $request->get_route() || 200 !== $result->get_status() || $served ) {
-			return $served; }
-        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CSV bytes are formula-escaped by export(); HTML escaping would corrupt the file.
+			return $served;
+		}
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CSV bytes are formula-escaped by export(); HTML escaping would corrupt the file.
 		echo $result->get_data();
 		return true;
 	}

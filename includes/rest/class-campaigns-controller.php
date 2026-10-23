@@ -9,6 +9,7 @@ namespace MixMax\BoxBuilder\Rest;
 
 defined( 'ABSPATH' ) || exit;
 
+use MixMax\BoxBuilder\Analytics\Query;
 use MixMax\BoxBuilder\Campaigns\Campaign_Repository;
 use MixMax\BoxBuilder\Campaigns\Config;
 use MixMax\BoxBuilder\Campaigns\Publisher;
@@ -275,10 +276,7 @@ final class Campaigns_Controller extends Base_Controller {
 	 */
 	public function get_items( $request ) {
 		$orderby = $request['orderby'];
-		// Revenue and conversion come from analytics (Phase 9); until then they sort by date.
-		if ( in_array( $orderby, array( 'revenue', 'conversion' ), true ) ) {
-			$orderby = 'date';
-		}
+		$totals  = Query::campaign_totals();
 
 		$result = $this->repo->query(
 			array(
@@ -286,6 +284,7 @@ final class Campaigns_Controller extends Base_Controller {
 				'search'   => $request['search'],
 				'type'     => $request['type'],
 				'orderby'  => $orderby,
+				'metrics'  => $totals,
 				'order'    => $request['order'],
 				'page'     => $request['page'],
 				'per_page' => $request['per_page'],
@@ -718,6 +717,7 @@ final class Campaigns_Controller extends Base_Controller {
 	 * @return array
 	 */
 	private function prepare_campaign( array $campaign ) {
+		$totals = Query::campaign_totals();
 		return array(
 			'id'          => $campaign['id'],
 			'title'       => $campaign['title'],
@@ -727,11 +727,13 @@ final class Campaigns_Controller extends Base_Controller {
 			'type'        => $campaign['config']['type'],
 			'config'      => $campaign['config'],
 			'placement'   => $this->placement( $campaign ),
-			// Phase 9 fills these from the daily stats table.
-			'stats'       => array(
-				'boxes_sold' => 0,
-				'revenue'    => 0,
-				'conversion' => 0,
+			'stats'       => array_merge(
+				array(
+					'boxes_sold' => 0,
+					'revenue'    => 0,
+					'conversion' => 0,
+				),
+				isset( $totals[ $campaign['id'] ] ) ? $totals[ $campaign['id'] ] : array()
 			),
 			'edit_url'    => admin_url( 'admin.php?page=mmbb-campaigns&action=edit&id=' . $campaign['id'] ),
 			'created'     => $campaign['created'],

@@ -143,14 +143,28 @@ final class Installer {
 		self::clear_schedules();
 	}
 
-	/** Clear the schedule registry, populated when analytics ships in Phase 9. */
+	/** Clear the plugin's recurring schedules. */
 	public static function clear_schedules() {
 		$hooks = array( 'mmbb_rollup_daily' );
 		foreach ( $hooks as $hook ) {
 			wp_clear_scheduled_hook( $hook );
-			if ( function_exists( 'as_unschedule_all_actions' ) ) {
+			if ( function_exists( 'as_unschedule_all_actions' ) && self::has_action_scheduler_tables() ) {
 				as_unschedule_all_actions( $hook );
 			}
 		}
+	}
+
+	/**
+	 * Whether Action Scheduler has its tables on the current site.
+	 *
+	 * A multisite subsite that never ran WooCommerce has none, and querying them would raise a database error.
+	 *
+	 * @return bool
+	 */
+	private static function has_action_scheduler_tables() {
+		global $wpdb;
+		$table = $wpdb->prefix . 'actionscheduler_actions';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Existence check of another plugin's table; it must read the live schema.
+		return $table === $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) );
 	}
 }

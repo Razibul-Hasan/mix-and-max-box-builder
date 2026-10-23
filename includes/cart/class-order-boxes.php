@@ -125,7 +125,7 @@ final class Order_Boxes {
 				$new = wc_update_product_stock( $product, $qty, 'decrease' );
 				if ( false !== $new && null !== $new ) {
 					/* translators: 1: product name, 2: old stock, 3: new stock */
-					$notes[] = sprintf( __( '%1$s %2$dÃ¢â€ â€™%3$d', 'mix-and-max-box-builder' ), $product->get_name(), (int) $new + $qty, (int) $new );
+					$notes[] = sprintf( __( '%1$s %2$d → %3$d', 'mix-and-max-box-builder' ), $product->get_name(), (int) $new + $qty, (int) $new );
 				}
 			}
 			$item->update_meta_data( self::META_STOCK, 1 );
@@ -167,7 +167,7 @@ final class Order_Boxes {
 				$new = wc_update_product_stock( $product, $qty, 'increase' );
 				if ( false !== $new && null !== $new ) {
 					/* translators: 1: product name, 2: old stock, 3: new stock */
-					$notes[] = sprintf( __( '%1$s %2$dÃ¢â€ â€™%3$d', 'mix-and-max-box-builder' ), $product->get_name(), (int) $new - $qty, (int) $new );
+					$notes[] = sprintf( __( '%1$s %2$d → %3$d', 'mix-and-max-box-builder' ), $product->get_name(), (int) $new - $qty, (int) $new );
 				}
 			}
 			$item->delete_meta_data( self::META_STOCK );
