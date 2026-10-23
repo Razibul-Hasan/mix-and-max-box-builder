@@ -29,6 +29,9 @@ final class Uninstaller {
 		foreach ( array_keys( (array) get_option( 'mmbb_analytics_transients', array() ) ) as $key ) {
 			delete_transient( $key ); }
 
+		// Uninstall-only cleanup: caching is meaningless and the tables are plugin-owned.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+
 		// Direct IDs avoid relying on the CPT or WooCommerce being registered at uninstall.
 		$campaigns = $wpdb->get_col(
 			$wpdb->prepare( 'SELECT ID FROM %i WHERE post_type = %s', $wpdb->posts, 'mmbb_campaign' )
@@ -84,5 +87,6 @@ final class Uninstaller {
 			}
 			delete_option( $option );
 		}
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 	}
 }

@@ -51,7 +51,7 @@ class CartBoxTest extends \WP_UnitTestCase {
 			'wp_die_ajax_handler',
 			static function () {
 				return static function ( $message = '' ) {
-					throw new \WPDieException( (string) $message );
+					throw new \WPDieException( esc_html( (string) $message ) );
 				};
 			}
 		);
