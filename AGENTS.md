@@ -69,6 +69,8 @@ npx wp-env start         # WordPress + WooCommerce + Plugin Check at http://loca
 npm run test:php         # PHPUnit integration tests inside wp-env
 npx wp-env run tests-cli --env-cwd=wp-content/plugins/mix-and-max-box-builder env MMBB_TEST_SUITE=integration vendor/bin/phpunit --testsuite=integration
 npx wp-env run cli wp plugin check mix-and-max-box-builder
+# In-place check (e.g. from wp-admin on a Local site): copy tools/plugin-check-dev-ignores.php
+# into wp-content/mu-plugins/ so Plugin Check skips the dev files .distignore excludes.
 npm run plugin-zip       # release zip
 npm run tokens           # regenerate committed CSS from design/system/tokens.json
 ```
