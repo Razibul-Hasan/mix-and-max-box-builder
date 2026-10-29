@@ -761,7 +761,8 @@
 
 .mmbb-root .mmbb-sizes--pills .mmbb-size.is-selected .mmbb-size__qty, .mmbb-root .mmbb-sizes--pills .mmbb-size.is-selected .mmbb-size__unit { color: var(--on-ink); }
 
-.mmbb-root .mmbb-sizes--pills .mmbb-size__tag { top: -12px; right: -4px; }
+/* Centred: a sticker wider than a compact pill would hang off one side and be clipped by the scroller. */
+.mmbb-root .mmbb-sizes--pills .mmbb-size__tag { top: -12px; right: auto; left: 50%; transform: translateX(-50%); white-space: nowrap; }
 
 /* ---------- BoxPanel ---------- */
 .mmbb-root .mmbb-panel { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-xl); box-shadow: var(--shadow-card); }
@@ -828,6 +829,9 @@
   .mmbb-root .mmbb-bar__tier { grid-column: 1 / -1; order: -1; padding: calc(var(--space-1) * 1) calc(var(--space-1) * 1) calc(var(--space-1) * 0.5); }
 
   .mmbb-root .mmbb-bar__thumbs { display: none; }
+
+  /* Holds the tier column on wide bars; here it would push the button to a new row. */
+  .mmbb-root .mmbb-bar__spacer { display: none; }
 }
 
 @container (max-width: 420px) {

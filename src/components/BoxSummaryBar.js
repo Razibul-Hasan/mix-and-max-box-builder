@@ -100,7 +100,7 @@ export default function BoxSummaryBar( {
 						/>
 					</div>
 				) : (
-					<span />
+					<span className="mmbb-bar__spacer" />
 				) }
 				<div className="mmbb-bar__total">
 					{ compareAt && compareAt > total ? (
