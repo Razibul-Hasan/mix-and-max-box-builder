@@ -1,8 +1,11 @@
 /* Storefront builder. Every rule is scoped to .mmbb-root so the theme is left alone. */
 
+/* The builder paints its own canvas inside the theme, so it needs room inside that colour. */
 .mmbb-root.mmbb-builder {
 	box-sizing: border-box;
 	max-width: 100%;
+	padding: clamp(var(--space-4), 3vw, var(--space-8));
+	border-radius: var(--radius-xl);
 	color: var(--ink);
 	font-family: var(--font-sans);
 }
