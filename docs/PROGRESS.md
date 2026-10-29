@@ -1080,6 +1080,18 @@ phases. This is a tooling scaffold archive, not a submission release.
 **Skipped checks (and why):** test:php and Plugin Check, because Docker/wp-env is unavailable.
 **Open issues:** The cart page logs a 404 for `cart/undefinedwc/store/v1/cart` from the ProductReels plugin, not this one.
 
+### Review follow-up: Cart block edit link, campaign types, dark mode (2026-10-29)
+**Done:**
+- Cart block "Edit box": Store API responses add an item-data row holding the link, which the Cart block renders as sanitised HTML. Live requests are detected around the REST dispatch. Preloaded Cart block pages skip the dispatch, so `woocommerce_store_api_cart_item_images` (WooCommerce 9.6+) marks the line being shaped. The classic cart keeps its own link and never sees the row. The edit address is now built in one place without `wp_nonce_url()`'s HTML escaping, so `extensions.mmbb.edit_url` is usable.
+- `Campaigns\Placement::page()` is shared by the REST placement and the cart link. Before this, a deleted saved page also hid the classic cart's Edit box link.
+- New validation `not_enough_products` (path `box.allow_duplicates`, PHP and JS): a hand-picked list that can never fill the largest size, the tiered minimum or the bundle. The spa template with five products and no repeats could be published but never completed.
+- Storefront builder: padding inside its painted canvas, since template campaigns showed a grey or dark block with the headline on its edge. On phones the bottom bar spends that padding, and the empty column spacer is hidden so the button stays on one row in Fixed and Bundle. Size-pill stickers are centred so the scroller does not clip them.
+- Design step layout cards are stacked one per row (owner's call; the prototype puts three across).
+**Tested in the browser:** temporary Fixed box, Bundle and dark-theme Fixed campaigns, desktop and phone, through to the Cart block. Fixed 6: 215.00 − 15% = 182.75. Bundle 6 for 20.00: discount 195.00. Builder and cart agree. The test campaigns, pages and container products were deleted afterwards.
+**Checks run:** build ✅ · lint:js ✅ · lint:css ✅ · phpcs ✅ · test:js ✅ (232) · test:unit ✅ (105)
+**Skipped checks (and why):** test:php and Plugin Check, because Docker/wp-env is unavailable. The Edit box row on WooCommerce 9.0–9.5 preloaded pages relies on those versions dispatching the preload through REST; not run here (WooCommerce 11.2 only).
+**Open issues:** The Bundle builder shows its price only once the box is full; the template's intro line is empty. The same empty bar spacer exists in `design/system/components/index.jsx`.
+
 <!-- Copy this block for each phase:
 
 ### Phase N — Title (YYYY-MM-DD)

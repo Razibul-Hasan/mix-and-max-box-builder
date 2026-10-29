@@ -462,7 +462,7 @@ class ConfigTest extends TestCase {
 		$input['box']['max_per_product']  = 2;
 		$this->assertSame( array(), Config::validate( Config::sanitize( $input ) ) );
 
-		$input['products'] = array(
+		$input['products']                = array(
 			'source'   => 'category',
 			'term_ids' => array( 3 ),
 		);
