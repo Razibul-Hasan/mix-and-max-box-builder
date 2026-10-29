@@ -1078,7 +1078,7 @@ phases. This is a tooling scaffold archive, not a submission release.
 **Decisions:** The Design step's three layout cards stay in the prototype's `minmax(180px, 1fr)` grid even though titles wrap at this width; changing it would depart from `design/`.
 **Checks run:** build ✅ · lint:js ✅ · lint:css ✅ · phpcs ✅ · test:js ✅ (231) · test:unit ✅ (104) · browser walk-through ✅ (no console errors from this plugin)
 **Skipped checks (and why):** test:php and Plugin Check, because Docker/wp-env is unavailable.
-**Open issues:** The cart page logs a 404 for `cart/undefinedwc/store/v1/cart` from the ProductReels plugin, not this one. The Cart block still has no Edit box link (Phase 7 open issue).
+**Open issues:** The cart page logs a 404 for `cart/undefinedwc/store/v1/cart` from the ProductReels plugin, not this one.
 
 <!-- Copy this block for each phase:
 
@@ -1101,7 +1101,7 @@ the PHP integration suites, network lifecycle tests and packaged Plugin Check.
 - The full browser matrix remains pending: Cart/Checkout blocks end to end with
   HPOS on/off, every campaign type, dark mode, both themes, and block-editor/wizard
   publishing. The completed browser smoke and classic COD order are listed above.
-- Phase 7: the Cart block has no visible Edit box link yet. Items-mode child remove
+- Phase 7: items-mode child remove
   controls and wildcard-attribute variations retain the limitations in that phase's
   log. Store API metadata and quantity editability are covered by executed tests.
 - Phase 3: the gift template still lacks config keys for "no prices inside" and

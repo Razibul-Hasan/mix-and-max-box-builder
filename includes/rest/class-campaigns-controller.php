@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
 use MixMax\BoxBuilder\Analytics\Query;
 use MixMax\BoxBuilder\Campaigns\Campaign_Repository;
 use MixMax\BoxBuilder\Campaigns\Config;
-use MixMax\BoxBuilder\Campaigns\Page_Content;
+use MixMax\BoxBuilder\Campaigns\Placement;
 use MixMax\BoxBuilder\Campaigns\Publisher;
 use MixMax\BoxBuilder\Campaigns\Status;
 use MixMax\BoxBuilder\Campaigns\Templates;
@@ -744,52 +744,22 @@ final class Campaigns_Controller extends Base_Controller {
 	}
 
 	/**
-	 * A published page or post that shows this campaign's block or shortcode.
-	 *
-	 * @param int $campaign_id Campaign id.
-	 * @return \WP_Post|null
-	 */
-	private function find_placed_page( $campaign_id ) {
-		foreach ( array( 'mmbb/box-builder', 'mmbb_box' ) as $needle ) {
-			$posts = get_posts(
-				array(
-					'post_type'      => array( 'page', 'post' ),
-					'post_status'    => 'publish',
-					'posts_per_page' => 20,
-					's'              => $needle,
-					'no_found_rows'  => true,
-				)
-			);
-			foreach ( $posts as $post ) {
-				if ( Page_Content::contains( $post->post_content, $campaign_id ) ) {
-					return $post;
-				}
-			}
-		}
-		return null;
-	}
-
-	/**
 	 * Describe where the builder is placed.
 	 *
 	 * @param array $campaign Campaign.
 	 * @return array
 	 */
 	private function placement( array $campaign ) {
-		$out  = array(
+		$out = array(
 			'page_id'    => 0,
 			'page_title' => '',
 			'page_url'   => '',
 			'method'     => 'none',
 			'shortcode'  => sprintf( '[mmbb_box id="%d"]', $campaign['id'] ),
 		);
-		$page = get_post( $campaign['config']['placement']['page_id'] );
-		if ( ! $page || 'trash' === $page->post_status || ! Page_Content::contains( $page->post_content, $campaign['id'] ) ) {
-			// The saved page was deleted or edited; the merchant may have placed the builder elsewhere by hand.
-			$found = $this->find_placed_page( $campaign['id'] );
-			$page  = $found ? $found : $page;
-		}
-		if ( ! $page || 'trash' === $page->post_status ) {
+		// The saved page may be deleted or edited; the merchant may have placed the builder elsewhere by hand.
+		$page = Placement::page( $campaign );
+		if ( ! $page ) {
 			return $out;
 		}
 

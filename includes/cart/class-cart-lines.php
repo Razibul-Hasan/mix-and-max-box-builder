@@ -8,6 +8,7 @@
 namespace MixMax\BoxBuilder\Cart;
 
 use MixMax\BoxBuilder\Campaigns\Campaign_Repository;
+use MixMax\BoxBuilder\Campaigns\Placement;
 use MixMax\BoxBuilder\Settings\Settings;
 
 defined( 'ABSPATH' ) || exit;
@@ -32,6 +33,21 @@ final class Cart_Lines {
 	private static $assembling = false;
 
 	/**
+	 * How many Store API requests are running; their item data carries the Edit box link.
+	 *
+	 * @var int
+	 */
+	private $store_api = 0;
+
+	/**
+	 * The cart line the Store API is shaping right now, seen through its images filter.
+	 * Cart block pages preload the cart without a REST dispatch, so this is their signal.
+	 *
+	 * @var string
+	 */
+	private $store_api_item = '';
+
+	/**
 	 * Defer box validation while related lines are being added or removed.
 	 *
 	 * @param callable $callback Cart changes.
@@ -53,6 +69,9 @@ final class Cart_Lines {
 		add_action( 'woocommerce_before_calculate_totals', array( $this, 'reprice' ), 20 );
 		add_filter( 'woocommerce_get_item_data', array( $this, 'item_data' ), 10, 2 );
 		add_action( 'woocommerce_after_cart_item_name', array( $this, 'edit_link' ), 10, 2 );
+		add_filter( 'rest_request_before_callbacks', array( $this, 'enter_store_api' ), 10, 3 );
+		add_filter( 'rest_request_after_callbacks', array( $this, 'leave_store_api' ), 10, 3 );
+		add_filter( 'woocommerce_store_api_cart_item_images', array( $this, 'mark_store_api_item' ), 10, 3 );
 		add_filter( 'woocommerce_coupon_is_valid_for_product', array( $this, 'coupon_valid_for_product' ), 10, 4 );
 		add_filter( 'woocommerce_cart_item_quantity', array( $this, 'lock_quantity' ), 10, 3 );
 		add_filter( 'woocommerce_store_api_product_quantity_editable', array( $this, 'quantity_editable' ), 10, 3 );
@@ -434,7 +453,77 @@ final class Cart_Lines {
 				);
 			}
 		}
+
+		// The Cart and Checkout blocks have no slot for links, but they render item data as sanitised HTML.
+		$key       = isset( $cart_item['key'] ) ? (string) $cart_item['key'] : '';
+		$store_api = $this->store_api > 0 || ( '' !== $key && $key === $this->store_api_item );
+		// One use only, so a classic cart later in the same request does not get a second link.
+		$this->store_api_item = '';
+		$edit_url             = $store_api ? $this->edit_url( $cart_item, $key ) : '';
+		if ( '' !== $edit_url ) {
+			$item_data[] = array(
+				'key'   => '',
+				'value' => sprintf(
+					'<a class="mmbb-edit-box" href="%1$s">%2$s</a>',
+					esc_url( $edit_url ),
+					esc_html__( 'Edit box', 'productboxes-mix-and-match-box-builder' )
+				),
+			);
+		}
 		return $item_data;
+	}
+
+	/**
+	 * Note that a Store API request (live, or preloaded into a Cart block page) is running.
+	 *
+	 * @param mixed            $response Response so far, passed through.
+	 * @param array            $handler  Route handler.
+	 * @param \WP_REST_Request $request  Request.
+	 * @return mixed
+	 */
+	public function enter_store_api( $response, $handler, $request ) {
+		if ( self::is_store_api_route( $request ) ) {
+			++$this->store_api;
+		}
+		return $response;
+	}
+
+	/**
+	 * The Store API request has finished.
+	 *
+	 * @param mixed            $response Response, passed through.
+	 * @param array            $handler  Route handler.
+	 * @param \WP_REST_Request $request  Request.
+	 * @return mixed
+	 */
+	public function leave_store_api( $response, $handler, $request ) {
+		if ( self::is_store_api_route( $request ) && $this->store_api > 0 ) {
+			--$this->store_api;
+		}
+		return $response;
+	}
+
+	/**
+	 * Remember which line the Store API is shaping; its item data follows its images.
+	 *
+	 * @param array  $images        Images, passed through.
+	 * @param array  $cart_item     Cart item.
+	 * @param string $cart_item_key Cart item key.
+	 * @return array
+	 */
+	public function mark_store_api_item( $images, $cart_item, $cart_item_key ) {
+		$this->store_api_item = (string) $cart_item_key;
+		return $images;
+	}
+
+	/**
+	 * Whether a REST request targets the Store API.
+	 *
+	 * @param mixed $request Request.
+	 * @return bool
+	 */
+	private static function is_store_api_route( $request ) {
+		return $request instanceof \WP_REST_Request && 0 === strpos( $request->get_route(), '/wc/store/' );
 	}
 
 	/**
@@ -445,7 +534,8 @@ final class Cart_Lines {
 	 */
 	private function builder_url( array $box ) {
 		$campaign = ( new Campaign_Repository() )->find( isset( $box['campaign_id'] ) ? (int) $box['campaign_id'] : 0 );
-		$page_id  = $campaign ? (int) $campaign['config']['placement']['page_id'] : 0;
+		$page     = $campaign ? Placement::page( $campaign ) : null;
+		$page_id  = $page ? (int) $page->ID : 0;
 		if ( $page_id < 1 || 'publish' !== get_post_status( $page_id ) ) {
 			$page_id = (int) Settings::get( 'default_page_id' );
 		}
@@ -462,17 +552,39 @@ final class Cart_Lines {
 	 * @param string $cart_item_key Cart item key.
 	 */
 	public function edit_link( $cart_item, $cart_item_key ) {
-		if ( ! Settings::get( 'edit_from_cart' ) || empty( $cart_item['mmbb_box'] ) || ! is_array( $cart_item['mmbb_box'] ) ) {
-			return;
-		}
-		$url = $this->builder_url( $cart_item['mmbb_box'] );
+		$url = $this->edit_url( $cart_item, (string) $cart_item_key );
 		if ( '' === $url ) {
 			return;
 		}
 		printf(
 			' <a class="mmbb-edit-box" href="%1$s">%2$s</a>',
-			esc_url( wp_nonce_url( add_query_arg( 'mmbb_edit', rawurlencode( (string) $cart_item_key ), $url ), Add_To_Cart::EDIT_NONCE_ACTION, 'mmbb_edit_nonce' ) ),
+			esc_url( $url ),
 			esc_html__( 'Edit box', 'productboxes-mix-and-match-box-builder' )
+		);
+	}
+
+	/**
+	 * The builder address that reopens a box line, with the nonce the builder checks, or ''.
+	 *
+	 * @param array  $cart_item     Cart item.
+	 * @param string $cart_item_key Cart item key.
+	 * @return string
+	 */
+	private function edit_url( array $cart_item, $cart_item_key ) {
+		if ( ! Settings::get( 'edit_from_cart' ) || empty( $cart_item['mmbb_box'] ) || ! is_array( $cart_item['mmbb_box'] ) || '' === $cart_item_key ) {
+			return '';
+		}
+		$url = $this->builder_url( $cart_item['mmbb_box'] );
+		if ( '' === $url ) {
+			return '';
+		}
+		// Not wp_nonce_url(): it HTML-escapes, and the Store API needs the raw address.
+		return add_query_arg(
+			array(
+				'mmbb_edit'       => rawurlencode( $cart_item_key ),
+				'mmbb_edit_nonce' => wp_create_nonce( Add_To_Cart::EDIT_NONCE_ACTION ),
+			),
+			$url
 		);
 	}
 
@@ -588,7 +700,7 @@ final class Cart_Lines {
 		$box = isset( $cart_item['mmbb_box'] ) && is_array( $cart_item['mmbb_box'] ) ? $cart_item['mmbb_box'] : null;
 		return array(
 			'is_box'   => null !== $box,
-			'edit_url' => null !== $box && Settings::get( 'edit_from_cart' ) ? $this->builder_url( $box ) : '',
+			'edit_url' => null !== $box && isset( $cart_item['key'] ) ? $this->edit_url( $cart_item, (string) $cart_item['key'] ) : '',
 		);
 	}
 

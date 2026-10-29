@@ -81,7 +81,7 @@ It renders inside your theme's content area and uses its own scoped styles, so i
 
 = Does it work with the Cart and Checkout blocks? =
 
-Yes. The contents, discount, gift message and next-discount hint appear in both the classic and block carts, and the box and its contents are saved on the order. The "Edit box" link and the locked quantities of "Box plus each item" are fully supported in the classic cart. The Cart block gets the address in its Store API data, but does not yet show the link itself.
+Yes. The contents, discount, gift message and next-discount hint appear in both the classic and block carts, and the box and its contents are saved on the order. The "Edit box" link appears in both carts. The locked quantities of "Box plus each item" are fully supported in the classic cart.
 
 = How is a box taxed when its items have different tax classes? =
 
