@@ -50,7 +50,7 @@ export default function DesignStep( { draft, dispatch, previewProducts } ) {
 					) }
 				>
 					<div className="mmbb-editor__stack">
-						<div className="mmbb-editor__trio">
+						<div className="mmbb-editor__choices">
 							<ChoiceCard
 								name="layout"
 								value="panel"

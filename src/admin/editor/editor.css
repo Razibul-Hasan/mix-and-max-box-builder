@@ -140,9 +140,10 @@
 	gap: var(--space-3);
 }
 
-.mmbb-root .mmbb-editor__trio {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+/* One card per row: side by side, the titles and descriptions wrap word by word. */
+.mmbb-root .mmbb-editor__choices {
+	display: flex;
+	flex-direction: column;
 	gap: var(--space-3);
 }
 
