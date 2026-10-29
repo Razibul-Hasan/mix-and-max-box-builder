@@ -99,6 +99,22 @@ final class Cart_Lines {
 				return false;
 			}
 		}
+		if ( ! empty( $box['free_gift'] ) && is_array( $box['free_gift'] ) ) {
+			// The gift is its own line: it is priced at zero and never counts as a pick.
+			$added = WC()->cart->add_to_cart(
+				$box['free_gift']['product_id'],
+				1,
+				0,
+				array(),
+				array(
+					'mmbb_parent'    => $header_key,
+					'mmbb_free_gift' => true,
+				)
+			);
+			if ( ! $added ) {
+				return false;
+			}
+		}
 		return true;
 	}
 
@@ -115,6 +131,9 @@ final class Cart_Lines {
 		}
 		if ( isset( $values['mmbb_parent'] ) && is_string( $values['mmbb_parent'] ) ) {
 			$data['mmbb_parent'] = $values['mmbb_parent'];
+		}
+		if ( ! empty( $values['mmbb_free_gift'] ) ) {
+			$data['mmbb_free_gift'] = true;
 		}
 		return $data;
 	}
@@ -198,11 +217,39 @@ final class Cart_Lines {
 		if ( $items_mode ) {
 			$cart->cart_contents[ $key ]['data']->set_price( Box_Resolver::to_decimal( $quote['fee'] ) );
 			$this->price_children( $cart, $key, $resolved['items'], $quote );
+			$kept = $this->price_gift_line( $cart, $key, $resolved['free_gift'] );
+			$cart->cart_contents[ $key ]['mmbb_box']['free_gift'] = $kept ? $resolved['free_gift'] : null;
 			return;
 		}
 
+		$cart->cart_contents[ $key ]['mmbb_box']['free_gift'] = $resolved['free_gift'];
+
 		$cart->cart_contents[ $key ]['data']->set_price( Box_Resolver::to_decimal( $quote['total'] ) );
 		$cart->cart_contents[ $key ]['data']->set_weight( (string) $this->weight( $resolved['items'] ) );
+	}
+
+	/**
+	 * Keep an items-mode gift line at zero, or remove it once the box no longer earns it.
+	 *
+	 * @param \WC_Cart   $cart       Cart.
+	 * @param string     $header_key Header key.
+	 * @param array|null $gift       The gift the box earns now.
+	 * @return bool Whether a gift line is still in the cart.
+	 */
+	private function price_gift_line( \WC_Cart $cart, $header_key, $gift ) {
+		$kept = false;
+		foreach ( $cart->cart_contents as $child_key => $line ) {
+			if ( empty( $line['mmbb_free_gift'] ) || ! isset( $line['mmbb_parent'] ) || $line['mmbb_parent'] !== $header_key ) {
+				continue;
+			}
+			if ( ! is_array( $gift ) || $kept || (int) $line['product_id'] !== (int) $gift['product_id'] ) {
+				$cart->remove_cart_item( $child_key );
+				continue;
+			}
+			$cart->cart_contents[ $child_key ]['data']->set_price( 0 );
+			$kept = true;
+		}
+		return $kept;
 	}
 
 	/**
@@ -229,11 +276,11 @@ final class Cart_Lines {
 	 */
 	private function drop( \WC_Cart $cart, $key, array $line, $code ) {
 		$error = Box_Text::error( $code );
-		$name  = isset( $line['data'] ) && $line['data'] instanceof \WC_Product ? $line['data']->get_name() : __( 'Your box', 'mix-and-max-box-builder' );
+		$name  = isset( $line['data'] ) && $line['data'] instanceof \WC_Product ? $line['data']->get_name() : __( 'Your box', 'productboxes-mix-and-match-box-builder' );
 		wc_add_notice(
 			sprintf(
 				/* translators: 1: box name, 2: the reason, a sentence */
-				__( '%1$s was removed from your cart. %2$s', 'mix-and-max-box-builder' ),
+				__( '%1$s was removed from your cart. %2$s', 'productboxes-mix-and-match-box-builder' ),
 				$name,
 				$error['message']
 			),
@@ -252,7 +299,7 @@ final class Cart_Lines {
 	private function picks_from_children( \WC_Cart $cart, $header_key ) {
 		$picks = array();
 		foreach ( $cart->cart_contents as $line ) {
-			if ( isset( $line['mmbb_parent'] ) && $line['mmbb_parent'] === $header_key ) {
+			if ( isset( $line['mmbb_parent'] ) && $line['mmbb_parent'] === $header_key && empty( $line['mmbb_free_gift'] ) ) {
 				$picks[] = array(
 					'product_id'   => (int) $line['product_id'],
 					'variation_id' => (int) $line['variation_id'],
@@ -311,7 +358,7 @@ final class Cart_Lines {
 
 		$decimals = wc_get_price_decimals();
 		foreach ( $cart->cart_contents as $child_key => $line ) {
-			if ( ! isset( $line['mmbb_parent'] ) || $line['mmbb_parent'] !== $header_key ) {
+			if ( ! isset( $line['mmbb_parent'] ) || $line['mmbb_parent'] !== $header_key || ! empty( $line['mmbb_free_gift'] ) ) {
 				continue;
 			}
 			$id = Box_Rules::key( (int) $line['product_id'], (int) $line['variation_id'] );
@@ -350,7 +397,7 @@ final class Cart_Lines {
 			$parent = function_exists( 'WC' ) && WC()->cart instanceof \WC_Cart ? WC()->cart->get_cart_item( $cart_item['mmbb_parent'] ) : array();
 			if ( ! empty( $parent['data'] ) ) {
 				$item_data[] = array(
-					'key'   => __( 'Part of', 'mix-and-max-box-builder' ),
+					'key'   => ! empty( $cart_item['mmbb_free_gift'] ) ? __( 'Free gift with', 'productboxes-mix-and-match-box-builder' ) : __( 'Part of', 'productboxes-mix-and-match-box-builder' ),
 					'value' => $parent['data']->get_name(),
 				);
 			}
@@ -363,17 +410,20 @@ final class Cart_Lines {
 		$box   = $cart_item['mmbb_box'];
 		$quote = isset( $box['quote'] ) && is_array( $box['quote'] ) ? $box['quote'] : array();
 		$rows  = array(
-			__( 'Contents', 'mix-and-max-box-builder' ) => Box_Text::contents( $box['items'] ),
-			__( 'Box discount', 'mix-and-max-box-builder' ) => $quote ? Box_Text::discount( $quote ) : '',
+			__( 'Contents', 'productboxes-mix-and-match-box-builder' ) => Box_Text::contents( $box['items'] ),
+			__( 'Box discount', 'productboxes-mix-and-match-box-builder' ) => $quote ? Box_Text::discount( $quote ) : '',
 		);
 		if ( ! empty( $box['gift']['enabled'] ) && ! empty( $quote['fee'] ) ) {
-			$rows[ __( 'Gift wrap', 'mix-and-max-box-builder' ) ] = Box_Text::money( $quote['fee'] );
+			$rows[ __( 'Gift wrap', 'productboxes-mix-and-match-box-builder' ) ] = Box_Text::money( $quote['fee'] );
 		}
 		if ( ! empty( $box['gift']['message'] ) ) {
-			$rows[ __( 'Gift message', 'mix-and-max-box-builder' ) ] = $box['gift']['message'];
+			$rows[ __( 'Gift message', 'productboxes-mix-and-match-box-builder' ) ] = $box['gift']['message'];
+		}
+		if ( ! empty( $box['free_gift']['name'] ) ) {
+			$rows[ __( 'Free gift', 'productboxes-mix-and-match-box-builder' ) ] = $box['free_gift']['name'];
 		}
 		if ( $quote ) {
-			$rows[ __( 'Next discount', 'mix-and-max-box-builder' ) ] = Box_Text::nudge( $quote );
+			$rows[ __( 'Next discount', 'productboxes-mix-and-match-box-builder' ) ] = Box_Text::nudge( $quote );
 		}
 
 		foreach ( $rows as $label => $value ) {
@@ -406,7 +456,7 @@ final class Cart_Lines {
 	}
 
 	/**
-	 * "Edit box" link in the classic cart. It only preloads the builder, so it needs no nonce.
+	 * "Edit box" link in the classic cart, carrying a nonce that the builder checks before preloading.
 	 *
 	 * @param array  $cart_item     Cart item.
 	 * @param string $cart_item_key Cart item key.
@@ -421,8 +471,8 @@ final class Cart_Lines {
 		}
 		printf(
 			' <a class="mmbb-edit-box" href="%1$s">%2$s</a>',
-			esc_url( add_query_arg( 'mmbb_edit', rawurlencode( (string) $cart_item_key ), $url ) ),
-			esc_html__( 'Edit box', 'mix-and-max-box-builder' )
+			esc_url( wp_nonce_url( add_query_arg( 'mmbb_edit', rawurlencode( (string) $cart_item_key ), $url ), Add_To_Cart::EDIT_NONCE_ACTION, 'mmbb_edit_nonce' ) ),
+			esc_html__( 'Edit box', 'productboxes-mix-and-match-box-builder' )
 		);
 	}
 
@@ -550,13 +600,13 @@ final class Cart_Lines {
 	public function store_api_schema() {
 		return array(
 			'is_box'   => array(
-				'description' => __( 'Whether this line is a Mix and Max box.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Whether this line is a ProductBoxes box.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'boolean',
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => true,
 			),
 			'edit_url' => array(
-				'description' => __( 'Builder page address for editing the box.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Builder page address for editing the box.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'string',
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => true,

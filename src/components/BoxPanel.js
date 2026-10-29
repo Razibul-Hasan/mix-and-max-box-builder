@@ -5,7 +5,7 @@ import TierProgress from './TierProgress';
 import { useMoney } from './MoneyContext';
 
 export default function BoxPanel( {
-	title = __( 'Your box', 'mix-and-max-box-builder' ),
+	title = __( 'Your box', 'productboxes-mix-and-match-box-builder' ),
 	size = 6,
 	items = [],
 	tiers = [],
@@ -17,7 +17,10 @@ export default function BoxPanel( {
 	ctaHref,
 	ctaDisabled,
 	ctaLoading,
-	ctaLabel = __( 'Add box to cart', 'mix-and-max-box-builder' ),
+	ctaLabel = __(
+		'Add box to cart',
+		'productboxes-mix-and-match-box-builder'
+	),
 	footnote,
 	children,
 } ) {
@@ -42,19 +45,32 @@ export default function BoxPanel( {
 			{ children }
 			<dl className="mmbb-panel__sum">
 				<div>
-					<dt>{ __( 'Subtotal', 'mix-and-max-box-builder' ) }</dt>
+					<dt>
+						{ __(
+							'Subtotal',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					</dt>
 					<dd>{ formatMoney( subtotal ) }</dd>
 				</div>
 				{ savings > 0 ? (
 					<div className="is-save">
 						<dt>
-							{ __( 'Box discount', 'mix-and-max-box-builder' ) }
+							{ __(
+								'Box discount',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						</dt>
 						<dd>&minus;{ formatMoney( savings ) }</dd>
 					</div>
 				) : null }
 				<div className="is-total">
-					<dt>{ __( 'Total', 'mix-and-max-box-builder' ) }</dt>
+					<dt>
+						{ __(
+							'Total',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					</dt>
 					<dd>{ formatMoney( total ) }</dd>
 				</div>
 			</dl>
@@ -74,7 +90,7 @@ export default function BoxPanel( {
 								'Add %d more to continue',
 								'Add %d more to continue',
 								need,
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 							need
 					  )

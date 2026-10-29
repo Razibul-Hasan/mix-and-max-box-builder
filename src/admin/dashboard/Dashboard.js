@@ -49,7 +49,7 @@ const rangeLabel = ( range ) => {
 	const days = parseInt( range, 10 );
 	return sprintf(
 		/* translators: %d: Number of days. */
-		__( '%d days', 'mix-and-max-box-builder' ),
+		__( '%d days', 'productboxes-mix-and-match-box-builder' ),
 		days
 	);
 };
@@ -108,10 +108,13 @@ export default function Dashboard() {
 		copyText( campaign.placement.shortcode ).then( ( ok ) =>
 			toast(
 				ok
-					? __( 'Shortcode copied', 'mix-and-max-box-builder' )
+					? __(
+							'Shortcode copied',
+							'productboxes-mix-and-match-box-builder'
+					  )
 					: __(
 							'Could not copy. Select the shortcode and copy it.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 					  )
 			)
 		);
@@ -125,7 +128,10 @@ export default function Dashboard() {
 				toast(
 					errorMessage(
 						e,
-						__( 'That did not save.', 'mix-and-max-box-builder' )
+						__(
+							'That did not save.',
+							'productboxes-mix-and-match-box-builder'
+						)
 					)
 				)
 			)
@@ -156,11 +162,14 @@ export default function Dashboard() {
 					tone="critical"
 					title={ __(
 						'The dashboard could not load',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 					action={
 						<Button size="sm" onClick={ reloadAll }>
-							{ __( 'Retry', 'mix-and-max-box-builder' ) }
+							{ __(
+								'Retry',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						</Button>
 					}
 				>
@@ -177,7 +186,10 @@ export default function Dashboard() {
 		return (
 			<Shell active="dashboard" viewStore>
 				<PageHeader
-					title={ __( 'Dashboard', 'mix-and-max-box-builder' ) }
+					title={ __(
+						'Dashboard',
+						'productboxes-mix-and-match-box-builder'
+					) }
 				/>
 				{ common }
 				{ ! failed ? (
@@ -185,7 +197,7 @@ export default function Dashboard() {
 						<p role="status" className="mmbb-muted">
 							{ __(
 								'Loading your dashboard…',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						</p>
 					</Card>
@@ -203,12 +215,12 @@ export default function Dashboard() {
 			<Shell active="dashboard" viewStore>
 				<PageHeader
 					title={ __(
-						'Welcome to Mix and Max',
-						'mix-and-max-box-builder'
+						'Welcome to ProductBoxes',
+						'productboxes-mix-and-match-box-builder'
 					) }
 					subtitle={ __(
 						'Let shoppers build their own box. Most stores go live in under 5 minutes.',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				/>
 				{ common }
@@ -219,11 +231,11 @@ export default function Dashboard() {
 								icon="box"
 								title={ __(
 									'Launch your first box',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 								description={ __(
 									'Pick the products, set the discount tiers, drop the builder on a page. Start blank or from a ready-made template.',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 								action={
 									<Button
@@ -233,7 +245,7 @@ export default function Dashboard() {
 									>
 										{ __(
 											'Create campaign',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</Button>
 								}
@@ -244,7 +256,7 @@ export default function Dashboard() {
 									>
 										{ __(
 											'Start from a template',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</Button>
 								}
@@ -254,7 +266,7 @@ export default function Dashboard() {
 							<h2 className="mmbb-howto__title">
 								{ __(
 									'How a box campaign works',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							</h2>
 							<div className="mmbb-howto__grid">
@@ -265,13 +277,13 @@ export default function Dashboard() {
 									<b>
 										{ __(
 											'1. Pick products',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</b>
 									<span>
 										{ __(
 											'Choose products, a category or a tag. Sold-out items hide themselves.',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</span>
 								</div>
@@ -282,13 +294,13 @@ export default function Dashboard() {
 									<b>
 										{ __(
 											'2. Set discount tiers',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</b>
 									<span>
 										{ __(
 											'4 items 10% off, 6 items 15%, 12 items 25%. Shoppers see what the next item unlocks.',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</span>
 								</div>
@@ -299,13 +311,13 @@ export default function Dashboard() {
 									<b>
 										{ __(
 											'3. Place it on a page',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</b>
 									<span>
 										{ __(
 											'Add the Box Builder block or paste a shortcode. The box goes to the cart as one line.',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</span>
 								</div>
@@ -316,24 +328,24 @@ export default function Dashboard() {
 						<Card
 							title={ __(
 								'Get set up',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 							subtitle={ __(
 								'Your progress is saved as you go.',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						>
 							<div className="mmbb-dash__stack">
 								<ProgressBar
 									label={ __(
 										'Setup',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 									valueLabel={ sprintf(
 										/* translators: 1: Steps done, 2: Total steps. */
 										__(
 											'%1$d of %2$d done',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 										steps.done,
 										steps.total
@@ -349,12 +361,12 @@ export default function Dashboard() {
 							tone="info"
 							title={ __(
 								'Your numbers show up here',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						>
 							{ __(
 								'Once your first box sells, this page shows revenue, boxes sold and what shoppers pick most.',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						</Notice>
 					</div>
@@ -371,6 +383,7 @@ export default function Dashboard() {
 			? whole( Math.round( toMajor( minor, decimals ) ) )
 			: formatMoney( minor );
 	const symbol = money.symbol || '';
+	const symbolAfter = String( money.position || '' ).startsWith( 'right' );
 	const delta = ( kpi ) =>
 		kpi.delta === null || kpi.delta === undefined
 			? null
@@ -386,14 +399,20 @@ export default function Dashboard() {
 				stats.data.live_campaign && c.id === stats.data.live_campaign.id
 		) || live[ 0 ];
 	const liveStats = stats.data.live_campaign || {};
-	const end = liveCampaign && liveCampaign.config.schedule.end;
+	// Without an end date, an evergreen countdown still shows its own deadline on the store.
+	const endTarget =
+		liveCampaign &&
+		( liveCampaign.config.schedule.end ||
+			liveCampaign.config.schedule.countdown_end );
+	const end =
+		endTarget && Date.parse( endTarget ) > Date.now() ? endTarget : null;
 	const tiers = liveCampaign ? tierSummary( liveCampaign.config ) : '';
 
 	const topRows = top.map( ( c ) => ( { ...c, id: c.id } ) );
 	const topColumns = [
 		{
 			key: 'title',
-			label: __( 'Campaign', 'mix-and-max-box-builder' ),
+			label: __( 'Campaign', 'productboxes-mix-and-match-box-builder' ),
 			render: ( c ) => (
 				<div className="mmbb-campaign-cell">
 					<CampaignThumbs campaign={ c } images={ images } />
@@ -408,7 +427,7 @@ export default function Dashboard() {
 		},
 		{
 			key: 'status',
-			label: __( 'Status', 'mix-and-max-box-builder' ),
+			label: __( 'Status', 'productboxes-mix-and-match-box-builder' ),
 			render: ( c ) => {
 				const info = statusInfo( c.status );
 				return (
@@ -420,13 +439,13 @@ export default function Dashboard() {
 		},
 		{
 			key: 'boxes',
-			label: __( 'Boxes', 'mix-and-max-box-builder' ),
+			label: __( 'Boxes', 'productboxes-mix-and-match-box-builder' ),
 			numeric: true,
 			render: ( c ) => formatCount( c.stats.boxes_sold, locale ),
 		},
 		{
 			key: 'revenue',
-			label: __( 'Revenue', 'mix-and-max-box-builder' ),
+			label: __( 'Revenue', 'productboxes-mix-and-match-box-builder' ),
 			numeric: true,
 			render: ( c ) => formatMoney( c.stats.revenue ),
 		},
@@ -442,19 +461,25 @@ export default function Dashboard() {
 		<Shell active="dashboard" viewStore>
 			<div className="mmbb-dash__bar">
 				<PageHeader
-					title={ __( 'Dashboard', 'mix-and-max-box-builder' ) }
+					title={ __(
+						'Dashboard',
+						'productboxes-mix-and-match-box-builder'
+					) }
 					subtitle={ sprintf(
 						/* translators: %d: Number of days. */
 						__(
 							'All campaigns · last %d days',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						),
 						parseInt( range, 10 )
 					) }
 				/>
 				<div className="mmbb-dash__controls">
 					<SegmentedControl
-						label={ __( 'Date range', 'mix-and-max-box-builder' ) }
+						label={ __(
+							'Date range',
+							'productboxes-mix-and-match-box-builder'
+						) }
 						options={ RANGES.map( ( value ) => ( {
 							value,
 							label: rangeLabel( value ),
@@ -467,7 +492,10 @@ export default function Dashboard() {
 						icon="plus"
 						href={ urls.newCampaign }
 					>
-						{ __( 'Create campaign', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Create campaign',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</Button>
 				</div>
 			</div>
@@ -489,13 +517,13 @@ export default function Dashboard() {
 								<ProgressBar
 									label={ __(
 										'Setup',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 									valueLabel={ sprintf(
 										/* translators: 1: Steps done, 2: Total steps. */
 										__(
 											'%1$d of %2$d done',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 										steps.done,
 										steps.total
@@ -511,7 +539,7 @@ export default function Dashboard() {
 								>
 									{ __(
 										'Hide checklist',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 								</Button>
 							</div>
@@ -522,13 +550,19 @@ export default function Dashboard() {
 
 				<div className="mmbb-dash__kpis">
 					<StatCard
-						label={ __( 'Box revenue', 'mix-and-max-box-builder' ) }
+						label={ __(
+							'Box revenue',
+							'productboxes-mix-and-match-box-builder'
+						) }
 						value={ bigMoney( kpis.revenue.value ) }
 						delta={ delta( kpis.revenue ) }
 						trend={ kpis.revenue.series }
 					/>
 					<StatCard
-						label={ __( 'Boxes sold', 'mix-and-max-box-builder' ) }
+						label={ __(
+							'Boxes sold',
+							'productboxes-mix-and-match-box-builder'
+						) }
 						value={ formatCount( kpis.boxes.value, locale ) }
 						delta={ delta( kpis.boxes ) }
 						trend={ kpis.boxes.series }
@@ -536,7 +570,7 @@ export default function Dashboard() {
 					<StatCard
 						label={ __(
 							'Avg. box value',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 						value={ formatMoney( kpis.avg_box_value.value ) }
 						delta={ delta( kpis.avg_box_value ) }
@@ -545,7 +579,7 @@ export default function Dashboard() {
 					<StatCard
 						label={ __(
 							'Builder conversion',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 						value={ formatPercent( kpis.conversion.value, locale ) }
 						delta={ delta( kpis.conversion ) }
@@ -561,13 +595,13 @@ export default function Dashboard() {
 									<h3 className="mmbb-dash__card-title">
 										{ __(
 											'Revenue from boxes',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</h3>
 									<p className="mmbb-dash__card-sub">
 										{ __(
 											'Daily, this period vs previous',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</p>
 								</div>
@@ -579,7 +613,7 @@ export default function Dashboard() {
 								>
 									{ __(
 										'Analytics',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 								</Button>
 							</div>
@@ -588,13 +622,13 @@ export default function Dashboard() {
 								height={ 250 }
 								ariaLabel={ __(
 									'Revenue from boxes, daily',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 								series={ [
 									{
 										name: __(
 											'This period',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 										color: 'chart-1',
 										area: true,
@@ -606,7 +640,7 @@ export default function Dashboard() {
 									{
 										name: __(
 											'Previous period',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 										color: 'chart-muted',
 										data: series.map( ( d ) =>
@@ -622,7 +656,9 @@ export default function Dashboard() {
 									)
 								}
 								formatTick={ ( v ) =>
-									formatCompact( v, symbol )
+									symbolAfter
+										? formatCompact( v ) + symbol
+										: formatCompact( v, symbol )
 								}
 							/>
 						</Card>
@@ -632,7 +668,7 @@ export default function Dashboard() {
 								<h3 className="mmbb-dash__card-title">
 									{ __(
 										'Top campaigns',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 								</h3>
 								<Button
@@ -643,7 +679,7 @@ export default function Dashboard() {
 								>
 									{ __(
 										'All campaigns',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 								</Button>
 							</div>
@@ -652,7 +688,7 @@ export default function Dashboard() {
 								rows={ topRows }
 								empty={ __(
 									'No campaign is live right now.',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							/>
 						</Card>
@@ -666,7 +702,7 @@ export default function Dashboard() {
 										<Badge tone="success" dot>
 											{ __(
 												'Live now',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										</Badge>
 										{ end ? (
@@ -675,7 +711,7 @@ export default function Dashboard() {
 												tone="soft"
 												label={ __(
 													'Ends in',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												) }
 											/>
 										) : null }
@@ -700,7 +736,7 @@ export default function Dashboard() {
 											<span>
 												{ __(
 													'Boxes today',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												) }
 											</span>
 											<b>
@@ -714,7 +750,7 @@ export default function Dashboard() {
 											<span>
 												{ __(
 													'Conversion',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												) }
 											</span>
 											<b>
@@ -733,7 +769,7 @@ export default function Dashboard() {
 										>
 											{ __(
 												'Edit',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										</Button>
 										{ liveCampaign.placement.page_url ? (
@@ -748,7 +784,7 @@ export default function Dashboard() {
 											>
 												{ __(
 													'View on store',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												) }
 											</Button>
 										) : null }
@@ -759,20 +795,20 @@ export default function Dashboard() {
 									<p className="mmbb-dash__live-title">
 										{ __(
 											'Nothing is live right now',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</p>
 									<p className="mmbb-muted">
 										{ __(
 											'Go live with a campaign to see its countdown and today’s boxes here.',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</p>
 									<div className="mmbb-dash__live-actions">
 										<Button href={ urls.campaigns }>
 											{ __(
 												'View campaigns',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										</Button>
 									</div>
@@ -782,11 +818,11 @@ export default function Dashboard() {
 						<Card
 							title={ __(
 								'Most-picked products',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 							subtitle={ __(
 								'Times added to a box',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						>
 							{ picks.length > 0 ? (
@@ -795,7 +831,7 @@ export default function Dashboard() {
 								<p className="mmbb-muted">
 									{ __(
 										'Products show up here once shoppers start building boxes.',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 								</p>
 							) }

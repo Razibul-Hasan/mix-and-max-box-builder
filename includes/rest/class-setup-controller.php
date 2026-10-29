@@ -38,7 +38,7 @@ class Setup_Controller extends Base_Controller {
 					'permission_callback' => array( $this, 'permissions_check' ),
 					'args'                => array(
 						'test_done' => array(
-							'description'       => __( 'Whether the test order step is done.', 'mix-and-max-box-builder' ),
+							'description'       => __( 'Whether the test order step is done.', 'productboxes-mix-and-match-box-builder' ),
 							'type'              => 'boolean',
 							'required'          => true,
 							'sanitize_callback' => 'rest_sanitize_request_arg',

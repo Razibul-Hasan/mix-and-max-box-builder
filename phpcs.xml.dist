@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<ruleset name="Mix and Max Box Builder">
+<ruleset name="ProductBoxes Box Builder">
 	<description>WordPress standards and PHP 7.4 compatibility.</description>
 	<file>.</file>
 	<arg name="extensions" value="php"/>
@@ -16,7 +16,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="mix-and-max-box-builder"/>
+				<element value="productboxes-mix-and-match-box-builder"/>
 			</property>
 		</properties>
 	</rule>

@@ -1,4 +1,4 @@
-# Mix and Max Box Builder — agent instructions
+# ProductBoxes - Mix & Match Box Builder for WooCommerce — agent instructions
 
 A WooCommerce plugin, headed for the WordPress.org Plugin Directory, that lets shoppers build their own box of products (pick items into slots, unlock bigger discounts as the box fills). Admin app in wp-admin (Dashboard, Campaigns, campaign wizard, Analytics, Settings) plus a storefront builder (block + shortcode) inside the merchant's theme. React UI through `@wordpress/element`.
 
@@ -15,9 +15,9 @@ A WooCommerce plugin, headed for the WordPress.org Plugin Directory, that lets s
 
 | Thing | Value |
 | --- | --- |
-| Plugin name | Mix and Max Box Builder |
-| Slug, folder, text domain | `mix-and-max-box-builder` |
-| Main file | `mix-and-max-box-builder.php` |
+| Plugin name | ProductBoxes - Mix & Match Box Builder for WooCommerce (renamed from "Mix and Max Box Builder" after the WordPress.org review; PHP namespace and `mmbb` prefix kept) |
+| Slug, folder, text domain | `productboxes-mix-and-match-box-builder` |
+| Main file | `productboxes-mix-and-match-box-builder.php` |
 | PHP namespace | `MixMax\BoxBuilder` (WordPress file naming: `includes/rest/class-campaigns-controller.php` holds `MixMax\BoxBuilder\Rest\Campaigns_Controller`) |
 | Prefix for everything global | `mmbb` — options, post meta, order meta, transients, hooks, nonces, REST namespace `mmbb/v1`, Action Scheduler hooks, table names `{$wpdb->prefix}mmbb_*`, script/style handles `mmbb-*`, CSS classes `mmbb-*`, JS globals `window.mmbb*`, browser storage keys `mmbb:*` |
 | Constants | `MMBB_VERSION`, `MMBB_FILE`, `MMBB_PATH`, `MMBB_URL`, `MMBB_BASENAME` |
@@ -39,7 +39,7 @@ Never prefix with `wp_`, `_` or `__`. Never use a 2–3 letter prefix.
 ## Layout
 
 ```
-mix-and-max-box-builder.php   uninstall.php   readme.txt   LICENSE
+productboxes-mix-and-match-box-builder.php   uninstall.php   readme.txt   LICENSE
 includes/            PHP classes (own autoloader, no Composer at runtime)
 src/                 JS + CSS source (ships in the zip: WordPress.org requires source)
   components/        design-system components (ported from design/system/components)
@@ -67,8 +67,8 @@ npm run test:js          # Jest
 composer run test:unit   # pure-PHP unit tests (no WordPress)
 npx wp-env start         # WordPress + WooCommerce + Plugin Check at http://localhost:8888 (admin / password)
 npm run test:php         # PHPUnit integration tests inside wp-env
-npx wp-env run tests-cli --env-cwd=wp-content/plugins/mix-and-max-box-builder env MMBB_TEST_SUITE=integration vendor/bin/phpunit --testsuite=integration
-npx wp-env run cli wp plugin check mix-and-max-box-builder
+npx wp-env run tests-cli --env-cwd=wp-content/plugins/productboxes-mix-and-match-box-builder env MMBB_TEST_SUITE=integration vendor/bin/phpunit --testsuite=integration
+npx wp-env run cli wp plugin check productboxes-mix-and-match-box-builder
 # In-place check (e.g. from wp-admin on a Local site): copy tools/plugin-check-dev-ignores.php
 # into wp-content/mu-plugins/ so Plugin Check skips the dev files .distignore excludes.
 npm run plugin-zip       # release zip
@@ -94,7 +94,7 @@ For a PHP 7.4 compatibility run, create the ignored `.wp-env.override.json` with
 6. Source for everything in `build/` ships in `src/` along with `package.json` and the webpack config. readme.txt explains how to build.
 7. Security on every request that changes state: capability check, nonce (REST `permission_callback` plus the REST nonce from `apiFetch`; `wc-ajax` handlers `check_ajax_referer`), input via `wp_unslash()` then a `sanitize_*`/`absint`/schema check, output escaped late (`esc_html`, `esc_attr`, `esc_url`, `wp_kses_post`). Every SQL statement with a variable uses `$wpdb->prepare()`. Never use `eval`, `extract`, `base64_*` for code, HEREDOC/NOWDOC, `$_REQUEST`, or `wp_redirect` with user URLs (`wp_safe_redirect`).
 8. Scripts and styles only through `wp_register_*`/`wp_enqueue_*`, data only through `wp_add_inline_script()` with `wp_json_encode()`. Never echo `<script>` or `<style>`. Admin assets load only on our pages, storefront assets only where the block or shortcode renders.
-9. i18n: every user-facing string uses the text domain `mix-and-max-box-builder` (PHP `__`, `esc_html__`, `_n`, `_x`, `sprintf` with `/* translators: */` comments; JS `@wordpress/i18n` plus `wp_set_script_translations()`). Never build a sentence by concatenation.
+9. i18n: every user-facing string uses the text domain `productboxes-mix-and-match-box-builder` (PHP `__`, `esc_html__`, `_n`, `_x`, `sprintf` with `/* translators: */` comments; JS `@wordpress/i18n` plus `wp_set_script_translations()`). Never build a sentence by concatenation.
 10. REST routes always have a real `permission_callback`. `__return_true` is allowed only for public read-only routes. Public write routes (analytics events) verify a nonce and rate-limit.
 11. Tables are created with `dbDelta()` on activation and on version upgrades. Data is deleted on uninstall only when the merchant has turned on "Delete all plugin data".
 

@@ -67,9 +67,9 @@ final class Order_Display {
 		}
 
 		$labels  = array(
-			'discount' => __( 'Box discount', 'mix-and-max-box-builder' ),
-			'contents' => __( 'Contents', 'mix-and-max-box-builder' ),
-			'gift'     => __( 'Gift message', 'mix-and-max-box-builder' ),
+			'discount' => __( 'Box discount', 'productboxes-mix-and-match-box-builder' ),
+			'contents' => __( 'Contents', 'productboxes-mix-and-match-box-builder' ),
+			'gift'     => __( 'Gift message', 'productboxes-mix-and-match-box-builder' ),
 		);
 		$ordered = array();
 		$other   = array();

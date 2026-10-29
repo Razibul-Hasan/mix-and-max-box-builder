@@ -63,11 +63,11 @@ class OrderDisplayTest extends \WP_UnitTestCase {
 			'gift'  => array( 'message' => $with_gift ? "Keep <b>this</b> secret\nSecond line" : '' ),
 		);
 		$item->add_meta_data( Order_Boxes::META_BOX, wp_json_encode( $box ), true );
-		$item->add_meta_data( __( 'Contents', 'mix-and-max-box-builder' ), 'old one-line contents', true );
+		$item->add_meta_data( __( 'Contents', 'productboxes-mix-and-match-box-builder' ), 'old one-line contents', true );
 		if ( $with_gift ) {
-			$item->add_meta_data( __( 'Gift message', 'mix-and-max-box-builder' ), 'old gift', true );
+			$item->add_meta_data( __( 'Gift message', 'productboxes-mix-and-match-box-builder' ), 'old gift', true );
 		}
-		$item->add_meta_data( __( 'Box discount', 'mix-and-max-box-builder' ), '10% (-$1.00)', true );
+		$item->add_meta_data( __( 'Box discount', 'productboxes-mix-and-match-box-builder' ), '10% (-$1.00)', true );
 		$item->save();
 		return $item;
 	}

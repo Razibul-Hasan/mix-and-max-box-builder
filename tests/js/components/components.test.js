@@ -93,7 +93,7 @@ const samples = {
 
 describe( 'Design component contract', () => {
 	it( 'translates and reorders a complete tier sentence', () => {
-		const domain = 'mix-and-max-box-builder';
+		const domain = 'productboxes-mix-and-match-box-builder';
 		setLocaleData(
 			{
 				'': {

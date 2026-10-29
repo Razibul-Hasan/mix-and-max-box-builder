@@ -10,7 +10,7 @@ export default function QuantityStepper( {
 	onChange,
 	size = 'md',
 	fullWidth,
-	label = __( 'Quantity', 'mix-and-max-box-builder' ),
+	label = __( 'Quantity', 'productboxes-mix-and-match-box-builder' ),
 	className,
 } ) {
 	const [ v, set ] = useControlled( value, defaultValue, onChange );
@@ -32,8 +32,14 @@ export default function QuantityStepper( {
 				disabled={ v <= min }
 				aria-label={
 					v === 1 && min === 0
-						? __( 'Remove', 'mix-and-max-box-builder' )
-						: __( 'Decrease', 'mix-and-max-box-builder' )
+						? __(
+								'Remove',
+								'productboxes-mix-and-match-box-builder'
+						  )
+						: __(
+								'Decrease',
+								'productboxes-mix-and-match-box-builder'
+						  )
 				}
 			>
 				<Icon
@@ -47,7 +53,10 @@ export default function QuantityStepper( {
 				type="button"
 				onClick={ () => clamp( v + 1 ) }
 				disabled={ v >= max }
-				aria-label={ __( 'Increase', 'mix-and-max-box-builder' ) }
+				aria-label={ __(
+					'Increase',
+					'productboxes-mix-and-match-box-builder'
+				) }
 			>
 				<Icon name="plus" size={ 16 } strokeWidth={ 2 } />
 			</button>

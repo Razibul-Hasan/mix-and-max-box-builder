@@ -38,7 +38,7 @@ export default function DataTable( {
 								'%d selected',
 								'%d selected',
 								sel.length,
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 							sel.length
 						) }
@@ -56,7 +56,7 @@ export default function DataTable( {
 								<Checkbox
 									aria-label={ __(
 										'Select all',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 									checked={ all }
 									indeterminate={ some }
@@ -87,7 +87,7 @@ export default function DataTable( {
 								{ empty ||
 									__(
 										'Nothing here yet.',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 							</td>
 						</tr>
@@ -122,7 +122,7 @@ export default function DataTable( {
 														: sprintf(
 																/* translators: %s: Row identifier. */ __(
 																	'Select row %s',
-																	'mix-and-max-box-builder'
+																	'productboxes-mix-and-match-box-builder'
 																),
 																k
 														  )

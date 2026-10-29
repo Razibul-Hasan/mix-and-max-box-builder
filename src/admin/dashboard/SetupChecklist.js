@@ -4,12 +4,27 @@ import { Button, Icon } from '../../components';
 
 export function stepLabel( id ) {
 	const labels = {
-		woocommerce: __( 'Install WooCommerce', 'mix-and-max-box-builder' ),
-		campaign: __( 'Create a campaign', 'mix-and-max-box-builder' ),
-		products: __( 'Add products to the box', 'mix-and-max-box-builder' ),
-		placed: __( 'Place the builder on a page', 'mix-and-max-box-builder' ),
-		test_order: __( 'Run a test order', 'mix-and-max-box-builder' ),
-		live: __( 'Go live', 'mix-and-max-box-builder' ),
+		woocommerce: __(
+			'Install WooCommerce',
+			'productboxes-mix-and-match-box-builder'
+		),
+		campaign: __(
+			'Create a campaign',
+			'productboxes-mix-and-match-box-builder'
+		),
+		products: __(
+			'Add products to the box',
+			'productboxes-mix-and-match-box-builder'
+		),
+		placed: __(
+			'Place the builder on a page',
+			'productboxes-mix-and-match-box-builder'
+		),
+		test_order: __(
+			'Run a test order',
+			'productboxes-mix-and-match-box-builder'
+		),
+		live: __( 'Go live', 'productboxes-mix-and-match-box-builder' ),
 	};
 	return labels[ id ] || id;
 }
@@ -19,27 +34,27 @@ export function nextHint( next ) {
 	const hints = {
 		woocommerce: __(
 			'Install and activate WooCommerce to continue.',
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		),
 		campaign: __(
 			'Create your first box campaign to get started.',
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		),
 		products: __(
 			'Add the products shoppers can pick from.',
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		),
 		placed: __(
 			'Put the builder on a page so shoppers can find it.',
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		),
 		test_order: __(
 			'Run one test order to check the cart and checkout.',
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		),
 		live: __(
 			'Go live to start selling boxes.',
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		),
 	};
 	return hints[ next ] || '';
@@ -52,7 +67,7 @@ export function remainingTitle( remaining ) {
 			'%d step to your first box sale',
 			'%d steps to your first box sale',
 			remaining,
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		),
 		remaining
 	);
@@ -95,7 +110,7 @@ export default function SetupChecklist( {
 		if ( id === 'campaign' ) {
 			return (
 				<Button size="sm" variant="primary" onClick={ onCreate }>
-					{ __( 'Start', 'mix-and-max-box-builder' ) }
+					{ __( 'Start', 'productboxes-mix-and-match-box-builder' ) }
 				</Button>
 			);
 		}
@@ -109,7 +124,10 @@ export default function SetupChecklist( {
 					variant="primary"
 					href={ editUrl( 'products' ) }
 				>
-					{ __( 'Add products', 'mix-and-max-box-builder' ) }
+					{ __(
+						'Add products',
+						'productboxes-mix-and-match-box-builder'
+					) }
 				</Button>
 			);
 		}
@@ -121,7 +139,10 @@ export default function SetupChecklist( {
 					icon="copy"
 					onClick={ () => onCopy( campaign ) }
 				>
-					{ __( 'Copy shortcode', 'mix-and-max-box-builder' ) }
+					{ __(
+						'Copy shortcode',
+						'productboxes-mix-and-match-box-builder'
+					) }
 				</Button>
 			);
 		}
@@ -133,7 +154,10 @@ export default function SetupChecklist( {
 					loading={ busy }
 					onClick={ onTestDone }
 				>
-					{ __( 'Mark as done', 'mix-and-max-box-builder' ) }
+					{ __(
+						'Mark as done',
+						'productboxes-mix-and-match-box-builder'
+					) }
 				</Button>
 			);
 		}
@@ -144,7 +168,10 @@ export default function SetupChecklist( {
 					variant="primary"
 					href={ editUrl( 'publish' ) }
 				>
-					{ __( 'Go live', 'mix-and-max-box-builder' ) }
+					{ __(
+						'Go live',
+						'productboxes-mix-and-match-box-builder'
+					) }
 				</Button>
 			);
 		}
@@ -186,7 +213,7 @@ export default function SetupChecklist( {
 									{ ' ' }
 									{ __(
 										'(done)',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 								</span>
 							) : null }

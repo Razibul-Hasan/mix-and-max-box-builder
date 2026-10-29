@@ -270,17 +270,9 @@ class CartBoxTest extends \WP_UnitTestCase {
 		$this->assertCount( 0, WC()->cart->get_cart() );
 	}
 
-	/** The nonce endpoint hands out a nonce that the add endpoint accepts. */
-	public function test_the_nonce_endpoint_returns_a_working_nonce() {
-		ob_start();
-		try {
-			do_action( 'wc_ajax_mmbb_nonce' );
-		} catch ( \WPDieException $e ) {
-			unset( $e );
-		}
-		$result = json_decode( (string) ob_get_clean(), true );
-		$this->assertTrue( $result['success'] );
-		$this->assertNotFalse( wp_verify_nonce( $result['data']['nonce'], 'mmbb_add_box' ) );
+	/** No endpoint hands out add-to-cart nonces. */
+	public function test_there_is_no_nonce_endpoint() {
+		$this->assertFalse( has_action( 'wc_ajax_mmbb_nonce' ) );
 	}
 
 	/** Each rule refuses with its own code and leaves the cart empty. */

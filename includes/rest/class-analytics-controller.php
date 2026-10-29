@@ -30,7 +30,7 @@ class Analytics_Controller extends Base_Controller {
 					'permission_callback' => array( $this, 'permissions_check' ),
 					'args'                => array(
 						'range'    => array(
-							'description'       => __( 'Range of days to report on.', 'mix-and-max-box-builder' ),
+							'description'       => __( 'Range of days to report on.', 'productboxes-mix-and-match-box-builder' ),
 							'type'              => 'string',
 							'enum'              => array( 'today', '7d', '30d', '90d', 'custom' ),
 							'default'           => '30d',
@@ -38,21 +38,21 @@ class Analytics_Controller extends Base_Controller {
 							'validate_callback' => 'rest_validate_request_arg',
 						),
 						'from'     => array(
-							'description'       => __( 'First day of a custom range, Y-m-d.', 'mix-and-max-box-builder' ),
+							'description'       => __( 'First day of a custom range, Y-m-d.', 'productboxes-mix-and-match-box-builder' ),
 							'type'              => 'string',
 							'format'            => 'date',
 							'sanitize_callback' => 'sanitize_text_field',
 							'validate_callback' => array( $this, 'validate_date' ),
 						),
 						'to'       => array(
-							'description'       => __( 'Last day of a custom range, Y-m-d.', 'mix-and-max-box-builder' ),
+							'description'       => __( 'Last day of a custom range, Y-m-d.', 'productboxes-mix-and-match-box-builder' ),
 							'type'              => 'string',
 							'format'            => 'date',
 							'sanitize_callback' => 'sanitize_text_field',
 							'validate_callback' => array( $this, 'validate_date' ),
 						),
 						'campaign' => array(
-							'description'       => __( 'Campaign id, or 0 for all campaigns.', 'mix-and-max-box-builder' ),
+							'description'       => __( 'Campaign id, or 0 for all campaigns.', 'productboxes-mix-and-match-box-builder' ),
 							'type'              => 'integer',
 							'minimum'           => 0,
 							'default'           => 0,
@@ -60,7 +60,7 @@ class Analytics_Controller extends Base_Controller {
 							'validate_callback' => 'rest_validate_request_arg',
 						),
 						'compare'  => array(
-							'description'       => __( 'Include the previous period.', 'mix-and-max-box-builder' ),
+							'description'       => __( 'Include the previous period.', 'productboxes-mix-and-match-box-builder' ),
 							'type'              => 'boolean',
 							'default'           => false,
 							'sanitize_callback' => 'rest_sanitize_boolean',
@@ -96,7 +96,7 @@ class Analytics_Controller extends Base_Controller {
 			return new \WP_Error(
 				'rest_invalid_param',
 				/* translators: %s: parameter name. */
-				sprintf( __( '%s must be a date in the format Y-m-d.', 'mix-and-max-box-builder' ), $param )
+				sprintf( __( '%s must be a date in the format Y-m-d.', 'productboxes-mix-and-match-box-builder' ), $param )
 			);
 		}
 		return true;
@@ -119,15 +119,15 @@ class Analytics_Controller extends Base_Controller {
 			$from = (string) $request['from'];
 			$to   = (string) $request['to'];
 			if ( '' === $from || '' === $to ) {
-				return $this->error( 'mmbb_invalid_range', __( 'A custom range needs a start and an end date.', 'mix-and-max-box-builder' ), 400 );
+				return $this->error( 'mmbb_invalid_range', __( 'A custom range needs a start and an end date.', 'productboxes-mix-and-match-box-builder' ), 400 );
 			}
 			$start = new \DateTimeImmutable( $from, wp_timezone() );
 			$end   = new \DateTimeImmutable( $to, wp_timezone() );
 			if ( $end < $start ) {
-				return $this->error( 'mmbb_invalid_range', __( 'The end date must not be before the start date.', 'mix-and-max-box-builder' ), 400 );
+				return $this->error( 'mmbb_invalid_range', __( 'The end date must not be before the start date.', 'productboxes-mix-and-match-box-builder' ), 400 );
 			}
 			if ( $start->diff( $end )->days + 1 > 366 ) {
-				return $this->error( 'mmbb_invalid_range', __( 'A custom range can span at most 366 days.', 'mix-and-max-box-builder' ), 400 );
+				return $this->error( 'mmbb_invalid_range', __( 'A custom range can span at most 366 days.', 'productboxes-mix-and-match-box-builder' ), 400 );
 			}
 		} else {
 			$count = 'today' === $range ? 1 : (int) $range;
@@ -154,62 +154,62 @@ class Analytics_Controller extends Base_Controller {
 		$data    = $response->get_data();
 		$rows    = array(
 			array(
-				__( 'Section', 'mix-and-max-box-builder' ),
-				__( 'From', 'mix-and-max-box-builder' ),
-				__( 'To', 'mix-and-max-box-builder' ),
-				__( 'Campaign', 'mix-and-max-box-builder' ),
-				__( 'Date', 'mix-and-max-box-builder' ),
-				__( 'Metric', 'mix-and-max-box-builder' ),
-				__( 'Value', 'mix-and-max-box-builder' ),
-				__( 'Previous', 'mix-and-max-box-builder' ),
-				__( 'Unit', 'mix-and-max-box-builder' ),
+				__( 'Section', 'productboxes-mix-and-match-box-builder' ),
+				__( 'From', 'productboxes-mix-and-match-box-builder' ),
+				__( 'To', 'productboxes-mix-and-match-box-builder' ),
+				__( 'Campaign', 'productboxes-mix-and-match-box-builder' ),
+				__( 'Date', 'productboxes-mix-and-match-box-builder' ),
+				__( 'Metric', 'productboxes-mix-and-match-box-builder' ),
+				__( 'Value', 'productboxes-mix-and-match-box-builder' ),
+				__( 'Previous', 'productboxes-mix-and-match-box-builder' ),
+				__( 'Unit', 'productboxes-mix-and-match-box-builder' ),
 			),
 		);
 		$names   = array(
-			'revenue'       => __( 'Revenue', 'mix-and-max-box-builder' ),
-			'boxes'         => __( 'Boxes sold', 'mix-and-max-box-builder' ),
-			'avg_box_value' => __( 'Average box value', 'mix-and-max-box-builder' ),
-			'items_per_box' => __( 'Average items per box', 'mix-and-max-box-builder' ),
-			'discount'      => __( 'Discount given', 'mix-and-max-box-builder' ),
-			'conversion'    => __( 'Conversion', 'mix-and-max-box-builder' ),
-			'views'         => __( 'Builder views', 'mix-and-max-box-builder' ),
-			'started'       => __( 'Started a box', 'mix-and-max-box-builder' ),
+			'revenue'       => __( 'Revenue', 'productboxes-mix-and-match-box-builder' ),
+			'boxes'         => __( 'Boxes sold', 'productboxes-mix-and-match-box-builder' ),
+			'avg_box_value' => __( 'Average box value', 'productboxes-mix-and-match-box-builder' ),
+			'items_per_box' => __( 'Average items per box', 'productboxes-mix-and-match-box-builder' ),
+			'discount'      => __( 'Discount given', 'productboxes-mix-and-match-box-builder' ),
+			'conversion'    => __( 'Conversion', 'productboxes-mix-and-match-box-builder' ),
+			'views'         => __( 'Builder views', 'productboxes-mix-and-match-box-builder' ),
+			'started'       => __( 'Started a box', 'productboxes-mix-and-match-box-builder' ),
 		);
-		$minor   = __( 'Currency minor units', 'mix-and-max-box-builder' );
-		$number  = __( 'Number', 'mix-and-max-box-builder' );
-		$percent = __( 'Percent', 'mix-and-max-box-builder' );
-		$filter  = $data['campaign'] ? get_the_title( $data['campaign'] ) : __( 'All campaigns', 'mix-and-max-box-builder' );
+		$minor   = __( 'Currency minor units', 'productboxes-mix-and-match-box-builder' );
+		$number  = __( 'Number', 'productboxes-mix-and-match-box-builder' );
+		$percent = __( 'Percent', 'productboxes-mix-and-match-box-builder' );
+		$filter  = $data['campaign'] ? get_the_title( $data['campaign'] ) : __( 'All campaigns', 'productboxes-mix-and-match-box-builder' );
 		foreach ( $data['kpis'] as $name => $metric ) {
 			$unit = in_array( $name, array( 'revenue', 'discount', 'avg_box_value' ), true ) ? $minor : $number;
 			if ( 'conversion' === $name ) {
 				$unit = $percent; }
-			$rows[] = array( __( 'Summary', 'mix-and-max-box-builder' ), $data['from'], $data['to'], $filter, '', $names[ $name ], $metric['value'], $metric['previous'], $unit );
+			$rows[] = array( __( 'Summary', 'productboxes-mix-and-match-box-builder' ), $data['from'], $data['to'], $filter, '', $names[ $name ], $metric['value'], $metric['previous'], $unit );
 		}
 		foreach ( $data['series'] as $row ) {
-			$rows[] = array( __( 'Daily revenue', 'mix-and-max-box-builder' ), $data['from'], $data['to'], $filter, $row['date'], $names['revenue'], $row['revenue'], $row['previous'], $minor );
+			$rows[] = array( __( 'Daily revenue', 'productboxes-mix-and-match-box-builder' ), $data['from'], $data['to'], $filter, $row['date'], $names['revenue'], $row['revenue'], $row['previous'], $minor );
 		}
 		$steps = array(
-			'view'         => __( 'Viewed builder', 'mix-and-max-box-builder' ),
-			'started'      => __( 'Added first item', 'mix-and-max-box-builder' ),
-			'tier_reached' => __( 'Reached a tier', 'mix-and-max-box-builder' ),
-			'add_to_cart'  => __( 'Added box to cart', 'mix-and-max-box-builder' ),
-			'purchased'    => __( 'Purchased', 'mix-and-max-box-builder' ),
+			'view'         => __( 'Viewed builder', 'productboxes-mix-and-match-box-builder' ),
+			'started'      => __( 'Added first item', 'productboxes-mix-and-match-box-builder' ),
+			'tier_reached' => __( 'Reached a tier', 'productboxes-mix-and-match-box-builder' ),
+			'add_to_cart'  => __( 'Added box to cart', 'productboxes-mix-and-match-box-builder' ),
+			'purchased'    => __( 'Purchased', 'productboxes-mix-and-match-box-builder' ),
 		);
 		foreach ( $data['funnel'] as $row ) {
-			$rows[] = array( __( 'Funnel', 'mix-and-max-box-builder' ), $data['from'], $data['to'], $filter, '', $steps[ $row['step'] ], $row['count'], '', $number );
+			$rows[] = array( __( 'Funnel', 'productboxes-mix-and-match-box-builder' ), $data['from'], $data['to'], $filter, '', $steps[ $row['step'] ], $row['count'], '', $number );
 		}
 		foreach ( $data['top_products'] as $row ) {
-			$rows[] = array( __( 'Product picks', 'mix-and-max-box-builder' ), $data['from'], $data['to'], $filter, '', $row['name'], $row['count'], '', $number );
+			$rows[] = array( __( 'Product picks', 'productboxes-mix-and-match-box-builder' ), $data['from'], $data['to'], $filter, '', $row['name'], $row['count'], '', $number );
 		}
 		foreach ( $data['tier_distribution'] as $row ) {
-			$rows[] = array( __( 'Tier share', 'mix-and-max-box-builder' ), $data['from'], $data['to'], $filter, '', ! empty( $row['other'] ) ? __( 'Other', 'mix-and-max-box-builder' ) : wp_json_encode( $row['tier'] ), $row['share'], '', $percent );
+			$rows[] = array( __( 'Tier share', 'productboxes-mix-and-match-box-builder' ), $data['from'], $data['to'], $filter, '', ! empty( $row['other'] ) ? __( 'Other', 'productboxes-mix-and-match-box-builder' ) : wp_json_encode( $row['tier'] ), $row['share'], '', $percent );
 		}
 		foreach ( $data['campaigns'] as $row ) {
 			foreach ( array( 'views', 'started', 'boxes', 'conversion', 'avg_box_value', 'revenue', 'discount' ) as $name ) {
 				$unit = in_array( $name, array( 'revenue', 'discount', 'avg_box_value' ), true ) ? $minor : $number;
 				if ( 'conversion' === $name ) {
 					$unit = $percent; }
-				$rows[] = array( __( 'Campaign performance', 'mix-and-max-box-builder' ), $data['from'], $data['to'], $row['name'], '', $names[ $name ], $row[ $name ], '', $unit );
+				$rows[] = array( __( 'Campaign performance', 'productboxes-mix-and-match-box-builder' ), $data['from'], $data['to'], $row['name'], '', $names[ $name ], $row[ $name ], '', $unit );
 			}
 		}
 

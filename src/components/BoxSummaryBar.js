@@ -18,7 +18,7 @@ export default function BoxSummaryBar( {
 	ctaHref,
 	ctaDisabled,
 	ctaLoading,
-	ctaLabel = __( 'Add to cart', 'mix-and-max-box-builder' ),
+	ctaLabel = __( 'Add to cart', 'productboxes-mix-and-match-box-builder' ),
 } ) {
 	const formatMoney = useMoney();
 	const count = items.length;
@@ -43,7 +43,10 @@ export default function BoxSummaryBar( {
 				<b>
 					{ count }/{ size }
 				</b>
-				{ __( 'in your box', 'mix-and-max-box-builder' ) }
+				{ __(
+					'in your box',
+					'productboxes-mix-and-match-box-builder'
+				) }
 			</span>
 			<Icon name="chevronUp" size={ 18 } className="mmbb-bar__chev" />
 		</>
@@ -53,7 +56,7 @@ export default function BoxSummaryBar( {
 			'Your box, %1$d of %2$d. Open details',
 			'Your box, %1$d of %2$d. Open details',
 			count,
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		),
 		count,
 		size
@@ -62,7 +65,10 @@ export default function BoxSummaryBar( {
 		<div
 			className="mmbb-bar"
 			role="region"
-			aria-label={ __( 'Your box', 'mix-and-max-box-builder' ) }
+			aria-label={ __(
+				'Your box',
+				'productboxes-mix-and-match-box-builder'
+			) }
 		>
 			<div className="mmbb-bar__inner">
 				{ openHref ? (
@@ -116,7 +122,7 @@ export default function BoxSummaryBar( {
 									'%d to go',
 									'%d to go',
 									need,
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								),
 								need
 						  )

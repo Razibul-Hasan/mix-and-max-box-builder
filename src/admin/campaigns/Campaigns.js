@@ -50,27 +50,27 @@ function useTabs( counts, status ) {
 	const tabs = [
 		{
 			id: 'all',
-			label: __( 'All', 'mix-and-max-box-builder' ),
+			label: __( 'All', 'productboxes-mix-and-match-box-builder' ),
 			count: count( 'all' ),
 		},
 		{
 			id: 'live',
-			label: __( 'Active', 'mix-and-max-box-builder' ),
+			label: __( 'Active', 'productboxes-mix-and-match-box-builder' ),
 			count: count( 'live' ),
 		},
 		{
 			id: 'scheduled',
-			label: __( 'Scheduled', 'mix-and-max-box-builder' ),
+			label: __( 'Scheduled', 'productboxes-mix-and-match-box-builder' ),
 			count: count( 'scheduled' ),
 		},
 		{
 			id: 'draft',
-			label: __( 'Drafts', 'mix-and-max-box-builder' ),
+			label: __( 'Drafts', 'productboxes-mix-and-match-box-builder' ),
 			count: count( 'draft' ),
 		},
 		{
 			id: 'ended',
-			label: __( 'Ended', 'mix-and-max-box-builder' ),
+			label: __( 'Ended', 'productboxes-mix-and-match-box-builder' ),
 			count: count( 'ended' ),
 		},
 	];
@@ -78,7 +78,7 @@ function useTabs( counts, status ) {
 	if ( count( 'paused' ) > 0 || status === 'paused' ) {
 		tabs.push( {
 			id: 'paused',
-			label: __( 'Paused', 'mix-and-max-box-builder' ),
+			label: __( 'Paused', 'productboxes-mix-and-match-box-builder' ),
 			count: count( 'paused' ),
 		} );
 	}
@@ -93,7 +93,7 @@ const message = {
 				'Paused %d campaign',
 				'Paused %d campaigns',
 				n,
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			),
 			n
 		),
@@ -104,7 +104,7 @@ const message = {
 				'Resumed %d campaign',
 				'Resumed %d campaigns',
 				n,
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			),
 			n
 		),
@@ -115,7 +115,7 @@ const message = {
 				'Duplicated %d campaign',
 				'Duplicated %d campaigns',
 				n,
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			),
 			n
 		),
@@ -126,7 +126,7 @@ const message = {
 				'Deleted %d campaign',
 				'Deleted %d campaigns',
 				n,
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			),
 			n
 		),
@@ -198,7 +198,7 @@ export default function Campaigns( { openPicker = false } ) {
 									/* translators: %s: Name of the new campaign. */
 									__(
 										'Duplicated as “%s”',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 									copy.title
 							  )
@@ -213,7 +213,7 @@ export default function Campaigns( { openPicker = false } ) {
 								'%1$d campaign could not be changed. %2$s',
 								'%1$d campaigns could not be changed. %2$s',
 								outcome.failed,
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 							outcome.failed,
 							outcome.message
@@ -229,7 +229,7 @@ export default function Campaigns( { openPicker = false } ) {
 						e,
 						__(
 							'That did not work. Try again.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						)
 					)
 				);
@@ -244,10 +244,13 @@ export default function Campaigns( { openPicker = false } ) {
 		copyText( campaign.placement.shortcode ).then( ( ok ) => {
 			toast(
 				ok
-					? __( 'Shortcode copied', 'mix-and-max-box-builder' )
+					? __(
+							'Shortcode copied',
+							'productboxes-mix-and-match-box-builder'
+					  )
 					: __(
 							'Could not copy. Select the shortcode and copy it.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 					  )
 			);
 		} );
@@ -258,7 +261,10 @@ export default function Campaigns( { openPicker = false } ) {
 		if ( campaign.placement.page_url && isLive( campaign.status ) ) {
 			menu.push( {
 				id: 'view',
-				label: __( 'View on store', 'mix-and-max-box-builder' ),
+				label: __(
+					'View on store',
+					'productboxes-mix-and-match-box-builder'
+				),
 				icon: 'eye',
 				href: campaign.placement.page_url,
 				external: true,
@@ -266,21 +272,21 @@ export default function Campaigns( { openPicker = false } ) {
 		}
 		menu.push( {
 			id: 'duplicate',
-			label: __( 'Duplicate', 'mix-and-max-box-builder' ),
+			label: __( 'Duplicate', 'productboxes-mix-and-match-box-builder' ),
 			icon: 'copy',
 			onSelect: () => run( 'duplicate', [ campaign ] ),
 		} );
 		if ( campaign.status === 'paused' ) {
 			menu.push( {
 				id: 'resume',
-				label: __( 'Resume', 'mix-and-max-box-builder' ),
+				label: __( 'Resume', 'productboxes-mix-and-match-box-builder' ),
 				icon: 'refresh',
 				onSelect: () => run( 'resume', [ campaign ] ),
 			} );
 		} else if ( canPause( campaign.status ) ) {
 			menu.push( {
 				id: 'pause',
-				label: __( 'Pause', 'mix-and-max-box-builder' ),
+				label: __( 'Pause', 'productboxes-mix-and-match-box-builder' ),
 				icon: 'clock',
 				onSelect: () => run( 'pause', [ campaign ] ),
 			} );
@@ -288,13 +294,16 @@ export default function Campaigns( { openPicker = false } ) {
 		menu.push(
 			{
 				id: 'shortcode',
-				label: __( 'Copy shortcode', 'mix-and-max-box-builder' ),
+				label: __(
+					'Copy shortcode',
+					'productboxes-mix-and-match-box-builder'
+				),
 				icon: 'code',
 				onSelect: () => copyShortcode( campaign ),
 			},
 			{
 				id: 'delete',
-				label: __( 'Delete', 'mix-and-max-box-builder' ),
+				label: __( 'Delete', 'productboxes-mix-and-match-box-builder' ),
 				icon: 'trash',
 				danger: true,
 				onSelect: () => setPendingDelete( [ campaign ] ),
@@ -307,7 +316,7 @@ export default function Campaigns( { openPicker = false } ) {
 	const columns = [
 		{
 			key: 'title',
-			label: __( 'Campaign', 'mix-and-max-box-builder' ),
+			label: __( 'Campaign', 'productboxes-mix-and-match-box-builder' ),
 			render: ( c ) => (
 				<div className="mmbb-campaign-cell">
 					<CampaignThumbs campaign={ c } images={ images } />
@@ -331,7 +340,7 @@ export default function Campaigns( { openPicker = false } ) {
 		},
 		{
 			key: 'status',
-			label: __( 'Status', 'mix-and-max-box-builder' ),
+			label: __( 'Status', 'productboxes-mix-and-match-box-builder' ),
 			render: ( c ) => {
 				const info = statusInfo( c.status );
 				return (
@@ -343,7 +352,7 @@ export default function Campaigns( { openPicker = false } ) {
 		},
 		{
 			key: 'schedule',
-			label: __( 'Schedule', 'mix-and-max-box-builder' ),
+			label: __( 'Schedule', 'productboxes-mix-and-match-box-builder' ),
 			render: ( c ) => (
 				<span className="mmbb-muted">
 					{ scheduleLabel( c, dates ) }
@@ -352,7 +361,7 @@ export default function Campaigns( { openPicker = false } ) {
 		},
 		{
 			key: 'placement',
-			label: __( 'Placement', 'mix-and-max-box-builder' ),
+			label: __( 'Placement', 'productboxes-mix-and-match-box-builder' ),
 			render: ( c ) => {
 				const info = placementInfo( c.placement );
 				if ( info.kind === 'code' ) {
@@ -376,19 +385,19 @@ export default function Campaigns( { openPicker = false } ) {
 		},
 		{
 			key: 'boxes',
-			label: __( 'Boxes sold', 'mix-and-max-box-builder' ),
+			label: __( 'Boxes sold', 'productboxes-mix-and-match-box-builder' ),
 			numeric: true,
 			render: ( c ) => formatCount( c.stats.boxes_sold, locale ),
 		},
 		{
 			key: 'revenue',
-			label: __( 'Revenue', 'mix-and-max-box-builder' ),
+			label: __( 'Revenue', 'productboxes-mix-and-match-box-builder' ),
 			numeric: true,
 			render: ( c ) => formatMoney( c.stats.revenue ),
 		},
 		{
 			key: 'conversion',
-			label: __( 'Conversion', 'mix-and-max-box-builder' ),
+			label: __( 'Conversion', 'productboxes-mix-and-match-box-builder' ),
 			numeric: true,
 			render: ( c ) => formatPercent( c.stats.conversion, locale ),
 		},
@@ -397,7 +406,10 @@ export default function Campaigns( { openPicker = false } ) {
 			width: 88,
 			label: (
 				<span className="mmbb-sr">
-					{ __( 'Actions', 'mix-and-max-box-builder' ) }
+					{ __(
+						'Actions',
+						'productboxes-mix-and-match-box-builder'
+					) }
 				</span>
 			),
 			render: ( c ) => (
@@ -409,7 +421,10 @@ export default function Campaigns( { openPicker = false } ) {
 						href={ c.edit_url }
 						aria-label={ sprintf(
 							/* translators: %s: Campaign name. */
-							__( 'Edit %s', 'mix-and-max-box-builder' ),
+							__(
+								'Edit %s',
+								'productboxes-mix-and-match-box-builder'
+							),
 							c.title
 						) }
 					/>
@@ -418,7 +433,7 @@ export default function Campaigns( { openPicker = false } ) {
 							/* translators: %s: Campaign name. */
 							__(
 								'More actions for %s',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 							c.title
 						) }
@@ -436,10 +451,13 @@ export default function Campaigns( { openPicker = false } ) {
 	return (
 		<Shell active="campaigns">
 			<PageHeader
-				title={ __( 'Campaigns', 'mix-and-max-box-builder' ) }
+				title={ __(
+					'Campaigns',
+					'productboxes-mix-and-match-box-builder'
+				) }
 				subtitle={ __(
 					'Every box builder on your store, with what it sold.',
-					'mix-and-max-box-builder'
+					'productboxes-mix-and-match-box-builder'
 				) }
 				actions={
 					<>
@@ -447,7 +465,10 @@ export default function Campaigns( { openPicker = false } ) {
 							icon="layers"
 							onClick={ () => setPicker( true ) }
 						>
-							{ __( 'Templates', 'mix-and-max-box-builder' ) }
+							{ __(
+								'Templates',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						</Button>
 						<Button
 							variant="primary"
@@ -456,7 +477,7 @@ export default function Campaigns( { openPicker = false } ) {
 						>
 							{ __(
 								'Create campaign',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						</Button>
 					</>
@@ -468,11 +489,14 @@ export default function Campaigns( { openPicker = false } ) {
 					tone="critical"
 					title={ __(
 						'Campaigns could not load',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 					action={
 						<Button size="sm" onClick={ reload }>
-							{ __( 'Retry', 'mix-and-max-box-builder' ) }
+							{ __(
+								'Retry',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						</Button>
 					}
 				>
@@ -491,11 +515,11 @@ export default function Campaigns( { openPicker = false } ) {
 						icon="box"
 						title={ __(
 							'Launch your first box',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 						description={ __(
 							'Pick the products, set the discount tiers, drop the builder on a page. Start blank or from a ready-made template.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 						action={
 							<Button
@@ -505,7 +529,7 @@ export default function Campaigns( { openPicker = false } ) {
 							>
 								{ __(
 									'Create campaign',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							</Button>
 						}
@@ -517,7 +541,7 @@ export default function Campaigns( { openPicker = false } ) {
 						<Tabs
 							label={ __(
 								'Campaign status',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 							tabs={ tabs }
 							value={ state.status }
@@ -530,13 +554,13 @@ export default function Campaigns( { openPicker = false } ) {
 						<TextField
 							aria-label={ __(
 								'Search campaigns',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 							prefix="search"
 							type="search"
 							placeholder={ __(
 								'Search campaigns',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 							className="mmbb-list__search"
 							value={ searchText }
@@ -547,7 +571,7 @@ export default function Campaigns( { openPicker = false } ) {
 						<SelectField
 							aria-label={ __(
 								'Campaign type',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 							className="mmbb-list__select"
 							value={ state.type }
@@ -556,28 +580,28 @@ export default function Campaigns( { openPicker = false } ) {
 									value: '',
 									label: __(
 										'All types',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 								},
 								{
 									value: 'tiered',
 									label: __(
 										'Tiered mix',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 								},
 								{
 									value: 'fixed',
 									label: __(
 										'Fixed box',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 								},
 								{
 									value: 'bundle',
 									label: __(
 										'Bundle price',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 								},
 							] }
@@ -591,7 +615,7 @@ export default function Campaigns( { openPicker = false } ) {
 						<SelectField
 							aria-label={ __(
 								'Sort',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 							className="mmbb-list__select"
 							value={ state.orderby }
@@ -600,21 +624,21 @@ export default function Campaigns( { openPicker = false } ) {
 									value: 'date',
 									label: __(
 										'Sort: Newest',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 								},
 								{
 									value: 'revenue',
 									label: __(
 										'Sort: Revenue',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 								},
 								{
 									value: 'conversion',
 									label: __(
 										'Sort: Conversion',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 								},
 							] }
@@ -645,7 +669,7 @@ export default function Campaigns( { openPicker = false } ) {
 									/* translators: %s: Campaign name. */
 									__(
 										'Select %s',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 									c.title
 								)
@@ -662,7 +686,7 @@ export default function Campaigns( { openPicker = false } ) {
 									>
 										{ __(
 											'Duplicate',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</Button>
 									<Button
@@ -676,7 +700,7 @@ export default function Campaigns( { openPicker = false } ) {
 									>
 										{ __(
 											'Pause',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</Button>
 									<Button
@@ -690,7 +714,7 @@ export default function Campaigns( { openPicker = false } ) {
 									>
 										{ __(
 											'Delete',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									</Button>
 								</>
@@ -699,11 +723,11 @@ export default function Campaigns( { openPicker = false } ) {
 								data
 									? __(
 											'No campaigns match these filters.',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 									  )
 									: __(
 											'Loading campaigns…',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 									  )
 							}
 						/>
@@ -715,7 +739,7 @@ export default function Campaigns( { openPicker = false } ) {
 									/* translators: 1: First row number, 2: Last row number, 3: Total rows. */
 									__(
 										'Showing %1$d–%2$d of %3$d',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 									range.from,
 									range.to,
@@ -728,7 +752,7 @@ export default function Campaigns( { openPicker = false } ) {
 									icon="chevronLeft"
 									aria-label={ __(
 										'Previous page',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 									disabled={ state.page <= 1 }
 									onClick={ () =>
@@ -743,7 +767,7 @@ export default function Campaigns( { openPicker = false } ) {
 									icon="chevronRight"
 									aria-label={ __(
 										'Next page',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 									disabled={
 										! data || state.page >= data.pages

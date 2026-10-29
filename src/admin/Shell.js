@@ -9,22 +9,22 @@ export default function Shell( { active, viewStore, children } ) {
 	const nav = [
 		{
 			id: 'dashboard',
-			label: __( 'Dashboard', 'mix-and-max-box-builder' ),
+			label: __( 'Dashboard', 'productboxes-mix-and-match-box-builder' ),
 			icon: 'dashboard',
 		},
 		{
 			id: 'campaigns',
-			label: __( 'Campaigns', 'mix-and-max-box-builder' ),
+			label: __( 'Campaigns', 'productboxes-mix-and-match-box-builder' ),
 			icon: 'campaign',
 		},
 		{
 			id: 'analytics',
-			label: __( 'Analytics', 'mix-and-max-box-builder' ),
+			label: __( 'Analytics', 'productboxes-mix-and-match-box-builder' ),
 			icon: 'analytics',
 		},
 		{
 			id: 'settings',
-			label: __( 'Settings', 'mix-and-max-box-builder' ),
+			label: __( 'Settings', 'productboxes-mix-and-match-box-builder' ),
 			icon: 'settings',
 		},
 	].map( ( item ) => ( { ...item, href: urls[ item.id ] } ) );
@@ -44,7 +44,10 @@ export default function Shell( { active, viewStore, children } ) {
 							target="_blank"
 							rel="noopener noreferrer"
 						>
-							{ __( 'View store', 'mix-and-max-box-builder' ) }
+							{ __(
+								'View store',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						</Button>
 					) : null }
 					<Button
@@ -55,7 +58,10 @@ export default function Shell( { active, viewStore, children } ) {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						{ __( 'Help', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Help',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</Button>
 				</>
 			}

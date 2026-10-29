@@ -28,7 +28,7 @@ tests_add_filter(
 			},
 			-1
 		);
-		require dirname( __DIR__, 3 ) . '/mix-and-max-box-builder.php';
+		require dirname( __DIR__, 3 ) . '/productboxes-mix-and-match-box-builder.php';
 	}
 );
 

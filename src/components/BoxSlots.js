@@ -23,7 +23,7 @@ export default function BoxSlots( {
 					'Box: %1$d of %2$d filled',
 					'Box: %1$d of %2$d filled',
 					Math.min( items.length, size ),
-					'mix-and-max-box-builder'
+					'productboxes-mix-and-match-box-builder'
 				),
 				Math.min( items.length, size ),
 				size
@@ -52,13 +52,13 @@ export default function BoxSlots( {
 											? sprintf(
 													/* translators: %s: Product name. */ __(
 														'Remove %s',
-														'mix-and-max-box-builder'
+														'productboxes-mix-and-match-box-builder'
 													),
 													it.name
 											  )
 											: __(
 													'Remove item',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 											  )
 									}
 									onClick={ () => onRemove( i, it ) }

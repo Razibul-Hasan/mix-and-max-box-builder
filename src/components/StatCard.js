@@ -6,7 +6,10 @@ export default function StatCard( {
 	label,
 	value,
 	delta,
-	deltaLabel = __( 'vs previous period', 'mix-and-max-box-builder' ),
+	deltaLabel = __(
+		'vs previous period',
+		'productboxes-mix-and-match-box-builder'
+	),
 	upIsGood = true,
 	trend,
 	icon,
@@ -46,8 +49,14 @@ export default function StatCard( {
 						/>
 						<span className="mmbb-sr">
 							{ dir >= 0
-								? __( 'Up', 'mix-and-max-box-builder' )
-								: __( 'Down', 'mix-and-max-box-builder' ) }
+								? __(
+										'Up',
+										'productboxes-mix-and-match-box-builder'
+								  )
+								: __(
+										'Down',
+										'productboxes-mix-and-match-box-builder'
+								  ) }
 						</span>
 						{ Math.abs( delta ) }%
 					</span>

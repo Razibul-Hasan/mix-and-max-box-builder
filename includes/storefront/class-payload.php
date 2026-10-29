@@ -49,6 +49,9 @@ final class Payload {
 		$view     = isset( $args['view'] ) && is_array( $args['view'] ) ? $args['view'] : array();
 		$config   = $campaign['config'];
 		$settings = Settings::all();
+		$colors   = Colors::resolve( $config['design'], Colors::theme_accent() );
+		// An object, so JSON gets {} rather than [] when nothing is overridden.
+		$colors['vars'] = (object) $colors['vars'];
 
 		$payload = array(
 			'id'       => (int) $campaign['id'],
@@ -57,6 +60,7 @@ final class Payload {
 			'preview'  => $preview,
 			'config'   => self::public_config( $config ),
 			'view'     => self::view( $config, $settings, $view ),
+			'colors'   => $colors,
 			'settings' => array(
 				'unlockToast' => ! empty( $settings['unlock_toast'] ),
 				'stickers'    => ! empty( $settings['stickers'] ),
@@ -64,6 +68,7 @@ final class Payload {
 				'emptyHint'   => (string) $settings['empty_slot_hint'],
 			),
 			'products' => self::products( $campaign, $settings ),
+			'freeGift' => self::free_gift( $config ),
 			'money'    => Assets::get_money_settings(),
 			'now'      => gmdate( 'Y-m-d\TH:i:s\Z' ),
 		);
@@ -71,10 +76,9 @@ final class Payload {
 		if ( ! $preview ) {
 			$endpoints       = Add_To_Cart::endpoints();
 			$payload['cart'] = array(
-				'nonce'    => wp_create_nonce( Add_To_Cart::NONCE_ACTION ),
-				'addUrl'   => $endpoints['add_box'],
-				'nonceUrl' => $endpoints['nonce'],
-				'cartUrl'  => wc_get_cart_url(),
+				'nonce'   => wp_create_nonce( Add_To_Cart::NONCE_ACTION ),
+				'addUrl'  => $endpoints['add_box'],
+				'cartUrl' => wc_get_cart_url(),
 			);
 			$payload['edit'] = self::edit_box( $campaign );
 			if ( \MixMax\BoxBuilder\Analytics\Collector::enabled() ) {
@@ -107,7 +111,35 @@ final class Payload {
 			'schedule' => array(
 				'end'            => $config['schedule']['end'],
 				'countdown_days' => $config['schedule']['countdown_days'],
+				'countdown_end'  => $config['schedule']['countdown_end'],
 			),
+		);
+	}
+
+	/**
+	 * The free gift shoppers can earn, or null when it is off, gone or sold out.
+	 *
+	 * @param array $config Campaign config.
+	 * @return array|null { name, image, minItems }.
+	 */
+	public static function free_gift( array $config ) {
+		$gift = $config['extras']['free_gift'];
+		if ( empty( $gift['enabled'] ) || $gift['product_id'] < 1 ) {
+			return null;
+		}
+		$product = wc_get_product( (int) $gift['product_id'] );
+		$row     = array(
+			'product_id'   => (int) $gift['product_id'],
+			'variation_id' => 0,
+		);
+		if ( ! $product instanceof \WC_Product || ! Box_Resolver::is_offerable( $product, $row ) || ! $product->is_in_stock() ) {
+			return null;
+		}
+		$shaped = self::product_row( $product, $row, 0, wc_get_price_decimals() );
+		return array(
+			'name'     => $shaped['name'],
+			'image'    => $shaped['image'],
+			'minItems' => (int) $gift['min_items'],
 		);
 	}
 
@@ -340,7 +372,7 @@ final class Payload {
 		if ( $compare_at > 0 ) {
 			$badge = sprintf(
 				/* translators: %d: Percentage taken off the regular price. */
-				__( '-%d%%', 'mix-and-max-box-builder' ),
+				__( '-%d%%', 'productboxes-mix-and-match-box-builder' ),
 				(int) round( ( $compare_at - $price ) / $compare_at * 100 )
 			);
 		}
@@ -388,7 +420,10 @@ final class Payload {
 	 * @return array|null { key, items, size, gift } or null.
 	 */
 	public static function edit_box( array $campaign ) {
-		$key = isset( $_GET['mmbb_edit'] ) ? sanitize_key( wp_unslash( $_GET['mmbb_edit'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read only: it preloads the shopper's own cart box and changes nothing.
+		if ( ! isset( $_GET['mmbb_edit'], $_GET['mmbb_edit_nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_GET['mmbb_edit_nonce'] ) ), Add_To_Cart::EDIT_NONCE_ACTION ) ) {
+			return null;
+		}
+		$key = sanitize_key( wp_unslash( $_GET['mmbb_edit'] ) );
 		if ( '' === $key || ! function_exists( 'WC' ) || ! WC()->cart instanceof \WC_Cart ) {
 			return null;
 		}

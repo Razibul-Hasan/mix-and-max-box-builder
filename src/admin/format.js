@@ -89,7 +89,10 @@ export function formatPercent( value, locale ) {
 export function typeSummary( config, formatMoney, decimals ) {
 	if ( config.type === 'fixed' ) {
 		const sizes = ( config.sizes || [] ).map( ( size ) => size.qty );
-		const label = __( 'Fixed box', 'mix-and-max-box-builder' );
+		const label = __(
+			'Fixed box',
+			'productboxes-mix-and-match-box-builder'
+		);
 		return sizes.length ? label + ' \u00b7 ' + sizes.join( ' / ' ) : label;
 	}
 	if ( config.type === 'bundle' ) {
@@ -98,7 +101,7 @@ export function typeSummary( config, formatMoney, decimals ) {
 			/* translators: 1: Number of items in the bundle, 2: Bundle price. */
 			__(
 				'Bundle price \u00b7 any %1$d for %2$s',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			),
 			bundle.qty || 0,
 			formatMoney( toMinor( bundle.price || 0, decimals ) )
@@ -106,7 +109,10 @@ export function typeSummary( config, formatMoney, decimals ) {
 	}
 	return sprintf(
 		/* translators: %d: Largest number of items in the box. */
-		__( 'Tiered mix \u00b7 up to %d', 'mix-and-max-box-builder' ),
+		__(
+			'Tiered mix \u00b7 up to %d',
+			'productboxes-mix-and-match-box-builder'
+		),
 		( config.box && config.box.capacity ) || 0
 	);
 }
@@ -122,16 +128,16 @@ export function tierSummary( config ) {
 	}
 	return sprintf(
 		/* translators: %s: Percentages joined with slashes, such as 10 / 15 / 25. */
-		__( '%s%% off', 'mix-and-max-box-builder' ),
+		__( '%s%% off', 'productboxes-mix-and-match-box-builder' ),
 		tiers.map( ( t ) => t.value ).join( ' / ' )
 	);
 }
 
 export function typeLabel( type ) {
 	const labels = {
-		tiered: __( 'Tiered mix', 'mix-and-max-box-builder' ),
-		fixed: __( 'Fixed box', 'mix-and-max-box-builder' ),
-		bundle: __( 'Bundle price', 'mix-and-max-box-builder' ),
+		tiered: __( 'Tiered mix', 'productboxes-mix-and-match-box-builder' ),
+		fixed: __( 'Fixed box', 'productboxes-mix-and-match-box-builder' ),
+		bundle: __( 'Bundle price', 'productboxes-mix-and-match-box-builder' ),
 	};
 	return labels[ type ] || type;
 }
@@ -148,7 +154,7 @@ export function scheduleLabel( campaign, options ) {
 			_x(
 				'%1$s \u2013 %2$s',
 				'schedule range',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			),
 			start,
 			end
@@ -157,20 +163,20 @@ export function scheduleLabel( campaign, options ) {
 	if ( start ) {
 		return sprintf(
 			/* translators: %s: Start date. */
-			__( 'Starts %s', 'mix-and-max-box-builder' ),
+			__( 'Starts %s', 'productboxes-mix-and-match-box-builder' ),
 			start
 		);
 	}
 	if ( end ) {
 		return sprintf(
 			/* translators: %s: End date. */
-			__( 'Until %s', 'mix-and-max-box-builder' ),
+			__( 'Until %s', 'productboxes-mix-and-match-box-builder' ),
 			end
 		);
 	}
 	return campaign.status === 'draft'
-		? __( 'Not scheduled', 'mix-and-max-box-builder' )
-		: __( 'Always on', 'mix-and-max-box-builder' );
+		? __( 'Not scheduled', 'productboxes-mix-and-match-box-builder' )
+		: __( 'Always on', 'productboxes-mix-and-match-box-builder' );
 }
 
 // Every status pairs a word with its colour.
@@ -178,27 +184,30 @@ export function statusInfo( status ) {
 	const info = {
 		draft: {
 			tone: 'neutral',
-			label: __( 'Draft', 'mix-and-max-box-builder' ),
+			label: __( 'Draft', 'productboxes-mix-and-match-box-builder' ),
 		},
 		scheduled: {
 			tone: 'info',
-			label: __( 'Scheduled', 'mix-and-max-box-builder' ),
+			label: __( 'Scheduled', 'productboxes-mix-and-match-box-builder' ),
 		},
 		active: {
 			tone: 'success',
-			label: __( 'Active', 'mix-and-max-box-builder' ),
+			label: __( 'Active', 'productboxes-mix-and-match-box-builder' ),
 		},
 		ending_soon: {
 			tone: 'warning',
-			label: __( 'Ending soon', 'mix-and-max-box-builder' ),
+			label: __(
+				'Ending soon',
+				'productboxes-mix-and-match-box-builder'
+			),
 		},
 		ended: {
 			tone: 'neutral',
-			label: __( 'Ended', 'mix-and-max-box-builder' ),
+			label: __( 'Ended', 'productboxes-mix-and-match-box-builder' ),
 		},
 		paused: {
 			tone: 'neutral',
-			label: __( 'Paused', 'mix-and-max-box-builder' ),
+			label: __( 'Paused', 'productboxes-mix-and-match-box-builder' ),
 		},
 	};
 	return info[ status ] || info.draft;
@@ -221,7 +230,7 @@ export function placementInfo( placement ) {
 	if ( ! placement || placement.method === 'none' ) {
 		return {
 			kind: 'none',
-			text: __( 'Not placed', 'mix-and-max-box-builder' ),
+			text: __( 'Not placed', 'productboxes-mix-and-match-box-builder' ),
 		};
 	}
 	if ( placement.method === 'shortcode' ) {

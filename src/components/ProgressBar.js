@@ -33,7 +33,10 @@ export default function ProgressBar( {
 				aria-label={
 					typeof label === 'string'
 						? label
-						: __( 'Progress', 'mix-and-max-box-builder' )
+						: __(
+								'Progress',
+								'productboxes-mix-and-match-box-builder'
+						  )
 				}
 			>
 				<div

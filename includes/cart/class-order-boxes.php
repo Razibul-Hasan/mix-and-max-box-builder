@@ -60,11 +60,14 @@ final class Order_Boxes {
 		// What the shopper and the merchant read on the order and in the emails.
 		$discount = $quote ? Box_Text::discount( $quote ) : '';
 		if ( '' !== $discount ) {
-			$item->add_meta_data( __( 'Box discount', 'mix-and-max-box-builder' ), $discount, true );
+			$item->add_meta_data( __( 'Box discount', 'productboxes-mix-and-match-box-builder' ), $discount, true );
 		}
-		$item->add_meta_data( __( 'Contents', 'mix-and-max-box-builder' ), Box_Text::contents( $box['items'] ), true );
+		$item->add_meta_data( __( 'Contents', 'productboxes-mix-and-match-box-builder' ), Box_Text::contents( $box['items'] ), true );
 		if ( ! empty( $box['gift']['message'] ) ) {
-			$item->add_meta_data( __( 'Gift message', 'mix-and-max-box-builder' ), $box['gift']['message'], true );
+			$item->add_meta_data( __( 'Gift message', 'productboxes-mix-and-match-box-builder' ), $box['gift']['message'], true );
+		}
+		if ( ! empty( $box['free_gift']['name'] ) ) {
+			$item->add_meta_data( __( 'Free gift', 'productboxes-mix-and-match-box-builder' ), $box['free_gift']['name'], true );
 		}
 
 		if ( $order instanceof \WC_Order ) {
@@ -116,7 +119,7 @@ final class Order_Boxes {
 				continue;
 			}
 			$notes = array();
-			foreach ( $box['items'] as $row ) {
+			foreach ( $this->stock_rows( $box ) as $row ) {
 				$product = wc_get_product( Box_Rules::key( (int) $row['product_id'], (int) $row['variation_id'] ) );
 				if ( ! $product instanceof \WC_Product || ! $product->managing_stock() ) {
 					continue;
@@ -125,7 +128,7 @@ final class Order_Boxes {
 				$new = wc_update_product_stock( $product, $qty, 'decrease' );
 				if ( false !== $new && null !== $new ) {
 					/* translators: 1: product name, 2: old stock, 3: new stock */
-					$notes[] = sprintf( __( '%1$s %2$d → %3$d', 'mix-and-max-box-builder' ), $product->get_name(), (int) $new + $qty, (int) $new );
+					$notes[] = sprintf( __( '%1$s %2$d → %3$d', 'productboxes-mix-and-match-box-builder' ), $product->get_name(), (int) $new + $qty, (int) $new );
 				}
 			}
 			$item->update_meta_data( self::META_STOCK, 1 );
@@ -134,7 +137,7 @@ final class Order_Boxes {
 				$order->add_order_note(
 					sprintf(
 						/* translators: 1: box name, 2: list of items with stock changes */
-						__( 'Stock reduced for the items in %1$s: %2$s', 'mix-and-max-box-builder' ),
+						__( 'Stock reduced for the items in %1$s: %2$s', 'productboxes-mix-and-match-box-builder' ),
 						$item->get_name(),
 						implode( ', ', $notes )
 					)
@@ -158,7 +161,7 @@ final class Order_Boxes {
 				continue;
 			}
 			$notes = array();
-			foreach ( $box['items'] as $row ) {
+			foreach ( $this->stock_rows( $box ) as $row ) {
 				$product = wc_get_product( Box_Rules::key( (int) $row['product_id'], (int) $row['variation_id'] ) );
 				if ( ! $product instanceof \WC_Product || ! $product->managing_stock() ) {
 					continue;
@@ -167,7 +170,7 @@ final class Order_Boxes {
 				$new = wc_update_product_stock( $product, $qty, 'increase' );
 				if ( false !== $new && null !== $new ) {
 					/* translators: 1: product name, 2: old stock, 3: new stock */
-					$notes[] = sprintf( __( '%1$s %2$d → %3$d', 'mix-and-max-box-builder' ), $product->get_name(), (int) $new - $qty, (int) $new );
+					$notes[] = sprintf( __( '%1$s %2$d → %3$d', 'productboxes-mix-and-match-box-builder' ), $product->get_name(), (int) $new - $qty, (int) $new );
 				}
 			}
 			$item->delete_meta_data( self::META_STOCK );
@@ -176,7 +179,7 @@ final class Order_Boxes {
 				$order->add_order_note(
 					sprintf(
 						/* translators: 1: box name, 2: list of items with stock changes */
-						__( 'Stock restored for the items in %1$s: %2$s', 'mix-and-max-box-builder' ),
+						__( 'Stock restored for the items in %1$s: %2$s', 'productboxes-mix-and-match-box-builder' ),
 						$item->get_name(),
 						implode( ', ', $notes )
 					)
@@ -198,6 +201,20 @@ final class Order_Boxes {
 		$json = $item->get_meta( self::META_BOX );
 		$box  = is_string( $json ) && '' !== $json ? json_decode( $json, true ) : null;
 		return is_array( $box ) && ! empty( $box['items'] ) && is_array( $box['items'] ) ? $box : null;
+	}
+
+	/**
+	 * The rows whose stock a bundled box moves: its items and its free gift.
+	 *
+	 * @param array $box Box data.
+	 * @return array[]
+	 */
+	private function stock_rows( array $box ) {
+		$rows = $box['items'];
+		if ( ! empty( $box['free_gift'] ) && is_array( $box['free_gift'] ) ) {
+			$rows[] = $box['free_gift'];
+		}
+		return $rows;
 	}
 
 	/**

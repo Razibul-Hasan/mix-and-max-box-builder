@@ -1,21 +1,25 @@
-=== Mix and Max Box Builder ===
+=== ProductBoxes - Mix & Match Box Builder for WooCommerce ===
 Contributors: bestwpexpert
-Tags: mix and match, product bundles, gift box, box builder, discounts
+Tags: custom box, product bundles, build your own box, gift box, quantity discount
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
 Requires Plugins: woocommerce
-Stable tag: 0.1.0
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Let shoppers build their own box of products and unlock bigger discounts as the box fills. For WooCommerce.
+Custom box builder for WooCommerce: shoppers build their own bundle or gift box and unlock tiered discounts as the box fills.
 
 == Description ==
 
-Mix and Max Box Builder lets shoppers pick products into the slots of a box. The fuller the box, the bigger the discount, and the shopper sees the next discount while they build.
+**ProductBoxes - Mix & Match Box Builder for WooCommerce** adds a build-your-own-box experience to your WooCommerce store. Shoppers pick products into the slots of a box, see their savings grow with every item, and add the whole box to the cart in one click. The fuller the box, the bigger the discount, and the next discount is always one step away on screen.
+
+Use it for gift boxes, snack and treat boxes, sampler packs, bakery boxes, tea and coffee samplers, beauty and spa kits, holiday bundles, or any "pick any 6" offer.
 
 You create a campaign in a step-by-step editor, choose which products can go in the box, set the discount rules, and publish it on a page with a block or a shortcode. The server works out every price, so the discount a shopper sees is the discount they pay.
+
+Every feature is included. There is no paid version, no locked features and no account to create.
 
 **What you can build**
 
@@ -49,19 +53,27 @@ This plugin does not connect to any external service. It makes no requests to ot
 == Installation ==
 
 1. Install and activate WooCommerce 9.0 or later.
-2. Upload the mix-and-max-box-builder folder to /wp-content/plugins/, or install the plugin from the Plugins screen.
-3. Activate Mix and Max Box Builder. On a multisite network each site gets its own defaults.
-4. Open Mix and Max in the admin menu and choose Create campaign.
+2. Upload the productboxes-mix-and-match-box-builder folder to /wp-content/plugins/, or install the plugin from the Plugins screen.
+3. Activate ProductBoxes Box Builder. On a multisite network each site gets its own defaults.
+4. Open ProductBoxes in the admin menu and choose Create campaign.
 
 == Frequently Asked Questions ==
 
 = How do I put a box builder on a page? =
 
-Publish the campaign and choose a page, or add the Mix and Max Box Builder block to any page and choose a campaign. You can also use the shortcode [mmbb_box id="12"]. The shortcode also takes layout (panel, bar or both), columns (3, 4 or 5) and hero (true or false). On wide containers the box panel sits beside the products; below 760 pixels of container width the builder switches to two columns, a sticky summary bar and a bottom sheet. The builder loads its scripts and styles only on pages that show one, unless you turn off "Load assets only on pages with a builder" in Settings.
+Publish the campaign and choose a page, or add the ProductBoxes Box Builder block to any page and choose a campaign. You can also use the shortcode [mmbb_box id="12"]. The shortcode also takes layout (panel, bar or both), columns (3, 4 or 5) and hero (true or false). On wide containers the box panel sits beside the products; below 760 pixels of container width the builder switches to two columns, a sticky summary bar and a bottom sheet. The builder loads its scripts and styles only on pages that show one, unless you turn off "Load assets only on pages with a builder" in Settings.
 
 = Which campaign types are there? =
 
 Tiered discount (more items, bigger discount), fixed box size (the shopper picks a size) and bundle price (one price for a set number of items). Each campaign can also offer a gift wrap fee and a gift message.
+
+= Can I sell a custom box at a fixed price, like any 3 for $18? =
+
+Yes. Choose the bundle price campaign type, set the number of items and the box price. Shoppers can pick any of the products you allow.
+
+= Can shoppers choose product variations? =
+
+Yes. Simple products and individual variations can go in a box. Sold-out items are shown as sold out and cannot be picked, or you can hide them.
 
 = Does it work with my theme? =
 
@@ -77,7 +89,7 @@ By default a box is one cart line, and WooCommerce taxes the whole line with the
 
 = What is the hidden "Box container" product? =
 
-Each published campaign has one hidden WooCommerce product that carries the box through the cart. Mix and Max sets its name and price, so edit the campaign, not the product. It is trashed with the campaign.
+Each published campaign has one hidden WooCommerce product that carries the box through the cart. ProductBoxes sets its name and price, so edit the campaign, not the product. It is trashed with the campaign.
 
 = What happens if WooCommerce is unavailable? =
 
@@ -108,17 +120,19 @@ All hooks use the mmbb_ prefix.
 
 == Screenshots ==
 
-1. The Dashboard with live campaign totals and the setup checklist.
-2. The Campaigns list with status, discount and revenue.
-3. The campaign editor: box rules and discount tiers with a shopper preview.
-4. The storefront builder on a wide screen, with the box panel beside the products.
-5. The storefront builder on a phone, with the sticky summary bar.
-6. The Mix and Max Box Builder block in the block editor.
+1. The storefront box builder: shoppers pick products, watch the discount tiers unlock and add the box to the cart.
+2. The campaign editor: choose a campaign type, set box rules and discount tiers, and see a live shopper preview.
+3. The Dashboard with box revenue, boxes sold, conversion, top campaigns and most-picked products.
 
 == Changelog ==
 
-= 0.1.0 =
-* Development version: campaigns, storefront builder, cart and order handling, analytics, settings and emails.
+= 1.0.0 =
+* Initial release: tiered, fixed-size and bundle-price box campaigns, storefront builder block and shortcode, classic and block cart and checkout support, order and email details, analytics, and settings.
+
+== Upgrade Notice ==
+
+= 1.0.0 =
+Initial release.
 
 == Source code and build ==
 
@@ -131,7 +145,7 @@ With Node.js 20.19 or later and npm installed, run:
 
 The build writes production files to build/. Composer is used only for development tools (coding standards and PHPUnit); vendor/ is not part of the plugin distribution.
 
-Public repository: https://github.com/Razibul-Hasan/mix-and-max-box-builder
+Public repository: https://github.com/Razibul-Hasan/productboxes-mix-and-match-box-builder
 
 == Third-party resources ==
 

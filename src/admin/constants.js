@@ -1,5 +1,5 @@
 export const HELP_URL =
-	'https://wordpress.org/support/plugin/mix-and-max-box-builder/';
+	'https://wordpress.org/support/plugin/productboxes-mix-and-match-box-builder/';
 
 export const RANGES = [ '7d', '30d', '90d' ];
 

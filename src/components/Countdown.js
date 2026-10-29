@@ -12,7 +12,7 @@ export default function Countdown( {
 	seconds,
 	endsAt,
 	clockOffset = 0,
-	label = __( 'Deal ends in', 'mix-and-max-box-builder' ),
+	label = __( 'Deal ends in', 'productboxes-mix-and-match-box-builder' ),
 	tone = 'pop',
 } ) {
 	const target = useMemo(
@@ -55,7 +55,7 @@ export default function Countdown( {
 									'<time>%d</time>d',
 									'<time>%d</time>d',
 									d,
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								),
 								d
 							),
@@ -70,7 +70,7 @@ export default function Countdown( {
 								'<time>%s</time>h',
 								'<time>%s</time>h',
 								h,
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 							p( h )
 						),
@@ -84,7 +84,7 @@ export default function Countdown( {
 								'<time>%s</time>m',
 								'<time>%s</time>m',
 								m,
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 							p( m )
 						),
@@ -98,7 +98,7 @@ export default function Countdown( {
 								'<time>%s</time>s',
 								'<time>%s</time>s',
 								sec,
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 							p( sec )
 						),

@@ -7,6 +7,7 @@
 
 namespace MixMax\BoxBuilder\Rest;
 
+use MixMax\BoxBuilder\Cart\Container_Products;
 use MixMax\BoxBuilder\Pricing;
 
 defined( 'ABSPATH' ) || exit;
@@ -46,27 +47,27 @@ class Products_Controller extends Base_Controller {
 		return array_merge(
 			array(
 				'search'   => array(
-					'description'       => __( 'Limit results to products matching a search term.', 'mix-and-max-box-builder' ),
+					'description'       => __( 'Limit results to products matching a search term.', 'productboxes-mix-and-match-box-builder' ),
 					'type'              => 'string',
 					'sanitize_callback' => 'sanitize_text_field',
 					'validate_callback' => 'rest_validate_request_arg',
 				),
 				'category' => array(
-					'description'       => __( 'Limit results to a product category ID.', 'mix-and-max-box-builder' ),
+					'description'       => __( 'Limit results to a product category ID.', 'productboxes-mix-and-match-box-builder' ),
 					'type'              => 'integer',
 					'minimum'           => 1,
 					'sanitize_callback' => 'absint',
 					'validate_callback' => 'rest_validate_request_arg',
 				),
 				'tag'      => array(
-					'description'       => __( 'Limit results to a product tag ID.', 'mix-and-max-box-builder' ),
+					'description'       => __( 'Limit results to a product tag ID.', 'productboxes-mix-and-match-box-builder' ),
 					'type'              => 'integer',
 					'minimum'           => 1,
 					'sanitize_callback' => 'absint',
 					'validate_callback' => 'rest_validate_request_arg',
 				),
 				'include'  => array(
-					'description'       => __( 'Limit results to these product IDs.', 'mix-and-max-box-builder' ),
+					'description'       => __( 'Limit results to these product IDs.', 'productboxes-mix-and-match-box-builder' ),
 					'type'              => 'array',
 					'items'             => array( 'type' => 'integer' ),
 					'default'           => array(),
@@ -104,6 +105,8 @@ class Products_Controller extends Base_Controller {
 			'paginate' => true,
 			'orderby'  => 'title',
 			'order'    => 'ASC',
+			// A box's own container product must never be offered as an item.
+			'exclude'  => $this->container_ids(),
 		);
 
 		if ( '' !== (string) $request['search'] ) {
@@ -122,7 +125,7 @@ class Products_Controller extends Base_Controller {
 			if ( ! $term instanceof \WP_Term ) {
 				return $this->error(
 					'mmbb_invalid_term',
-					__( 'That category or tag does not exist.', 'mix-and-max-box-builder' ),
+					__( 'That category or tag does not exist.', 'productboxes-mix-and-match-box-builder' ),
 					400
 				);
 			}
@@ -142,6 +145,27 @@ class Products_Controller extends Base_Controller {
 		}
 
 		return $this->with_paging( rest_ensure_response( $items ), $result->total, $result->max_num_pages );
+	}
+
+	/**
+	 * Ids of the hidden products that carry boxes into the cart.
+	 *
+	 * @return int[]
+	 */
+	private function container_ids() {
+		return array_map(
+			'intval',
+			get_posts(
+				array(
+					'post_type'      => 'product',
+					'post_status'    => 'any',
+					'posts_per_page' => -1,
+					'fields'         => 'ids',
+					'no_found_rows'  => true,
+					'meta_key'       => Container_Products::META, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- One product per campaign, read only on admin product lists.
+				)
+			)
+		);
 	}
 
 	/**
@@ -213,63 +237,63 @@ class Products_Controller extends Base_Controller {
 			'type'       => 'object',
 			'properties' => array(
 				'id'             => array(
-					'description' => __( 'Product or variation ID.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Product or variation ID.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'integer',
 					'context'     => array( 'view' ),
 				),
 				'parent'         => array(
-					'description' => __( 'Parent product ID, 0 for simple products.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Parent product ID, 0 for simple products.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'integer',
 					'context'     => array( 'view' ),
 				),
 				'name'           => array(
-					'description' => __( 'Product name.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Product name.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'context'     => array( 'view' ),
 				),
 				'sku'            => array(
-					'description' => __( 'SKU.', 'mix-and-max-box-builder' ),
+					'description' => __( 'SKU.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'context'     => array( 'view' ),
 				),
 				'type'           => array(
-					'description' => __( 'Product type.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Product type.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'enum'        => array( 'simple', 'variation' ),
 					'context'     => array( 'view' ),
 				),
 				'price'          => array(
-					'description' => __( 'Current price in minor currency units.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Current price in minor currency units.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'integer',
 					'context'     => array( 'view' ),
 				),
 				'price_html'     => array(
-					'description' => __( 'Formatted price markup.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Formatted price markup.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'context'     => array( 'view' ),
 				),
 				'regular_price'  => array(
-					'description' => __( 'Regular price in minor currency units.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Regular price in minor currency units.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'integer',
 					'context'     => array( 'view' ),
 				),
 				'stock_status'   => array(
-					'description' => __( 'Stock status.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Stock status.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'context'     => array( 'view' ),
 				),
 				'stock_quantity' => array(
-					'description' => __( 'Units in stock, null when stock is not managed.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Units in stock, null when stock is not managed.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => array( 'integer', 'null' ),
 					'context'     => array( 'view' ),
 				),
 				'purchasable'    => array(
-					'description' => __( 'Whether the product can be bought.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Whether the product can be bought.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'boolean',
 					'context'     => array( 'view' ),
 				),
 				'image'          => array(
-					'description' => __( 'Product image, null when there is none.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Product image, null when there is none.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => array( 'object', 'null' ),
 					'context'     => array( 'view' ),
 					'properties'  => array(
@@ -279,7 +303,7 @@ class Products_Controller extends Base_Controller {
 					),
 				),
 				'categories'     => array(
-					'description' => __( 'Category names.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Category names.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'array',
 					'items'       => array( 'type' => 'string' ),
 					'context'     => array( 'view' ),

@@ -32,8 +32,8 @@ final class Post_Type {
 			self::NAME,
 			array(
 				'labels'              => array(
-					'name'          => __( 'Campaigns', 'mix-and-max-box-builder' ),
-					'singular_name' => __( 'Campaign', 'mix-and-max-box-builder' ),
+					'name'          => __( 'Campaigns', 'productboxes-mix-and-match-box-builder' ),
+					'singular_name' => __( 'Campaign', 'productboxes-mix-and-match-box-builder' ),
 				),
 				'public'              => false,
 				'show_ui'             => false,

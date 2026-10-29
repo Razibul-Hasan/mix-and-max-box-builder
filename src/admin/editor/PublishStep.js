@@ -4,7 +4,6 @@ import {
 	Button,
 	Card,
 	Checkbox,
-	ChoiceCard,
 	Icon,
 	Notice,
 	SelectField,
@@ -17,14 +16,14 @@ import { useAdmin } from '../context';
 import { scheduleLabel, typeSummary } from '../format';
 import { useRequest } from '../hooks';
 import { useToast } from '../toast';
-import { slugInput } from './state';
+import PreviewCard from './PreviewCard';
 
 const STEP_LABELS = () => ( {
-	basics: __( 'Basics', 'mix-and-max-box-builder' ),
-	products: __( 'Products', 'mix-and-max-box-builder' ),
-	rules: __( 'Box rules', 'mix-and-max-box-builder' ),
-	design: __( 'Design', 'mix-and-max-box-builder' ),
-	publish: __( 'Publish', 'mix-and-max-box-builder' ),
+	basics: __( 'Basics', 'productboxes-mix-and-match-box-builder' ),
+	products: __( 'Products', 'productboxes-mix-and-match-box-builder' ),
+	rules: __( 'Box rules', 'productboxes-mix-and-match-box-builder' ),
+	design: __( 'Design', 'productboxes-mix-and-match-box-builder' ),
+	publish: __( 'Publish', 'productboxes-mix-and-match-box-builder' ),
 } );
 
 function Check( { done } ) {
@@ -39,10 +38,7 @@ function Check( { done } ) {
 
 // Where the checklist, summary and Go live button read the chosen placement.
 export function placementReady( page ) {
-	if ( page.mode === 'existing' ) {
-		return page.pageId > 0;
-	}
-	return page.title.trim() !== '' && page.slug.trim() !== '';
+	return page.pageId > 0;
 }
 
 export default function PublishStep( {
@@ -54,6 +50,7 @@ export default function PublishStep( {
 	busy,
 	onGoLive,
 	onOpenStep,
+	previewProducts,
 } ) {
 	const { locale, timezone, money, storeUrl } = useAdmin();
 	const formatMoney = useMoney();
@@ -78,17 +75,21 @@ export default function PublishStep( {
 	const shortcode = campaign.placement.shortcode;
 	const pageList = pages.data || [];
 	const chosen = pageList.find( ( p ) => p.id === page.pageId );
-	const slug = page.slug;
 	const ready = placementReady( page );
+	// Already on the store: the button saves instead of launching.
+	const published = campaign.post_status !== 'draft';
 
 	const copyShortcode = () =>
 		copyText( shortcode ).then( ( ok ) =>
 			toast(
 				ok
-					? __( 'Shortcode copied', 'mix-and-max-box-builder' )
+					? __(
+							'Shortcode copied',
+							'productboxes-mix-and-match-box-builder'
+					  )
 					: __(
 							'Copy didn’t work. Select it and copy by hand.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 					  )
 			)
 		);
@@ -98,25 +99,18 @@ export default function PublishStep( {
 		markTestDone( on ).catch( () => {
 			setTestDone( ! on );
 			toast(
-				__( 'That could not be saved.', 'mix-and-max-box-builder' )
+				__(
+					'That could not be saved.',
+					'productboxes-mix-and-match-box-builder'
+				)
 			);
 		} );
 	};
 
-	const placeLine =
-		page.mode === 'existing'
-			? __(
-					'The block is added to the top of the page you picked.',
-					'mix-and-max-box-builder'
-			  )
-			: sprintf(
-					/* translators: %s: Page address such as /holiday-box. */
-					__(
-						'A new page at %s is created when you go live.',
-						'mix-and-max-box-builder'
-					),
-					'/' + slug
-			  );
+	const placeLine = __(
+		'The block is added to the top of the page you picked.',
+		'productboxes-mix-and-match-box-builder'
+	);
 	const scheduleText = scheduleLabel(
 		{ config, status: 'active' },
 		{ locale, timezone }
@@ -132,139 +126,66 @@ export default function PublishStep( {
 				<Card
 					title={ __(
 						'Where shoppers find it',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				>
 					<div className="mmbb-editor__stack">
-						<div className="mmbb-editor__duo">
-							<ChoiceCard
-								name="place"
-								value="new"
-								selected={ page.mode === 'new' }
-								onSelect={ () => page.setMode( 'new' ) }
-								icon="plus"
-								title={ __(
-									'Create a new page',
-									'mix-and-max-box-builder'
-								) }
-								description={ sprintf(
-									/* translators: %s: Page address such as /holiday-box. */
-									__(
-										'We add a page with the Box Builder block at %s.',
-										'mix-and-max-box-builder'
+						<TextField
+							aria-label={ __(
+								'Search pages',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							prefix="search"
+							placeholder={ __(
+								'Search pages',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={ pageSearch }
+							onChange={ ( event ) =>
+								setPageSearch( event.target.value )
+							}
+						/>
+						<SelectField
+							label={ __(
+								'Page',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={ page.pageId ? String( page.pageId ) : '' }
+							options={ [
+								{
+									value: '',
+									label: __(
+										'Choose a page',
+										'productboxes-mix-and-match-box-builder'
 									),
-									'/' + slug
-								) }
-								tag={ __(
-									'Fastest',
-									'mix-and-max-box-builder'
-								) }
-							/>
-							<ChoiceCard
-								name="place"
-								value="existing"
-								selected={ page.mode === 'existing' }
-								onSelect={ () => page.setMode( 'existing' ) }
-								icon="layers"
-								title={ __(
-									'Add to a page I have',
-									'mix-and-max-box-builder'
-								) }
-								description={ __(
-									'Insert the builder at the top of a page you pick.',
-									'mix-and-max-box-builder'
-								) }
-							/>
-						</div>
-						{ page.mode === 'new' ? (
-							<div className="mmbb-editor__pair">
-								<TextField
-									label={ __(
-										'Page title',
-										'mix-and-max-box-builder'
-									) }
-									value={ page.title }
-									maxLength={ 200 }
-									onChange={ ( event ) =>
-										page.setTitle( event.target.value )
-									}
-								/>
-								<TextField
-									label={ __(
-										'Address',
-										'mix-and-max-box-builder'
-									) }
-									prefix="/"
-									value={ slug }
-									onChange={ ( event ) =>
-										page.setSlug(
-											slugInput( event.target.value )
-										)
-									}
-								/>
-							</div>
-						) : (
-							<>
-								<TextField
-									aria-label={ __(
-										'Search pages',
-										'mix-and-max-box-builder'
-									) }
-									prefix="search"
-									placeholder={ __(
-										'Search pages',
-										'mix-and-max-box-builder'
-									) }
-									value={ pageSearch }
-									onChange={ ( event ) =>
-										setPageSearch( event.target.value )
-									}
-								/>
-								<SelectField
-									label={ __(
-										'Page',
-										'mix-and-max-box-builder'
-									) }
-									value={
-										page.pageId ? String( page.pageId ) : ''
-									}
-									options={ [
-										{
-											value: '',
-											label: __(
-												'Choose a page',
-												'mix-and-max-box-builder'
-											),
-										},
-										...pageList.map( ( p ) => ( {
-											value: String( p.id ),
-											label: p.title,
-										} ) ),
-									] }
-									help={
-										chosen && chosen.has_builder
-											? __(
-													'This page already has a builder. Going live adds this campaign’s builder at the top.',
-													'mix-and-max-box-builder'
-											  )
-											: __(
-													'The block goes in as the first block. Move it in the editor any time.',
-													'mix-and-max-box-builder'
-											  )
-									}
-									onChange={ ( event ) =>
-										page.setPageId(
-											Number( event.target.value ) || 0
-										)
-									}
-								/>
-							</>
-						) }
+								},
+								...pageList.map( ( p ) => ( {
+									value: String( p.id ),
+									label: p.title,
+								} ) ),
+							] }
+							help={
+								chosen && chosen.has_builder
+									? __(
+											'This page already has a builder. Going live adds this campaign’s builder at the top.',
+											'productboxes-mix-and-match-box-builder'
+									  )
+									: __(
+											'The block goes in as the first block. Move it in the editor any time.',
+											'productboxes-mix-and-match-box-builder'
+									  )
+							}
+							onChange={ ( event ) =>
+								page.setPageId(
+									Number( event.target.value ) || 0
+								)
+							}
+						/>
 						<div className="mmbb-editor__stack mmbb-editor__stack--tight mmbb-editor__rule">
 							<span className="mmbb-editor__label">
 								{ __(
 									'Or paste the shortcode anywhere',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							</span>
 							<div className="mmbb-editor__code">
@@ -274,7 +195,10 @@ export default function PublishStep( {
 									icon="copy"
 									onClick={ copyShortcode }
 								>
-									{ __( 'Copy', 'mix-and-max-box-builder' ) }
+									{ __(
+										'Copy',
+										'productboxes-mix-and-match-box-builder'
+									) }
 								</Button>
 							</div>
 						</div>
@@ -284,11 +208,11 @@ export default function PublishStep( {
 				<Card
 					title={ __(
 						'Before you go live',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 					subtitle={ __(
 						'Two minutes now saves a refund later.',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				>
 					<ul className="mmbb-editor__checks">
@@ -298,7 +222,7 @@ export default function PublishStep( {
 								<b>
 									{ __(
 										'Builder placed',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 								</b>
 								<span className="mmbb-editor__sub">
@@ -306,7 +230,7 @@ export default function PublishStep( {
 										? placeLine
 										: __(
 												'Choose where the builder goes.',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 										  ) }
 								</span>
 							</span>
@@ -317,7 +241,7 @@ export default function PublishStep( {
 								<b>
 									{ __(
 										'Schedule set',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 								</b>
 								<span className="mmbb-editor__sub">
@@ -329,7 +253,7 @@ export default function PublishStep( {
 							<Checkbox
 								aria-label={ __(
 									'Test order placed',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 								checked={ testDone }
 								onChange={ changeTested }
@@ -338,13 +262,13 @@ export default function PublishStep( {
 								<b>
 									{ __(
 										'Run a test order',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 								</b>
 								<span className="mmbb-editor__sub">
 									{ __(
 										'Build a box, check the price and the cart line, then cancel the order.',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 								</span>
 							</span>
@@ -357,7 +281,7 @@ export default function PublishStep( {
 							>
 								{ __(
 									'Open builder',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							</Button>
 						</li>
@@ -366,12 +290,20 @@ export default function PublishStep( {
 			</div>
 
 			<div className="mmbb-editor__side">
-				<Card title={ __( 'Summary', 'mix-and-max-box-builder' ) }>
+				<Card
+					title={ __(
+						'Summary',
+						'productboxes-mix-and-match-box-builder'
+					) }
+				>
 					<div className="mmbb-editor__stack">
 						<dl className="mmbb-editor__summary">
 							<div>
 								<dt>
-									{ __( 'Type', 'mix-and-max-box-builder' ) }
+									{ __(
+										'Type',
+										'productboxes-mix-and-match-box-builder'
+									) }
 								</dt>
 								<dd>
 									{ typeSummary(
@@ -385,7 +317,7 @@ export default function PublishStep( {
 								<dt>
 									{ __(
 										'Products',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 								</dt>
 								<dd>
@@ -396,7 +328,7 @@ export default function PublishStep( {
 													'%d product',
 													'%d products',
 													productCount,
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												),
 												productCount
 										  )
@@ -407,7 +339,7 @@ export default function PublishStep( {
 													'%d terms',
 													config.products.term_ids
 														.length,
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												),
 												config.products.term_ids.length
 										  ) }
@@ -417,30 +349,24 @@ export default function PublishStep( {
 								<dt>
 									{ __(
 										'Schedule',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 								</dt>
 								<dd>{ scheduleText }</dd>
 							</div>
 							<div>
 								<dt>
-									{ __( 'Page', 'mix-and-max-box-builder' ) }
+									{ __(
+										'Page',
+										'productboxes-mix-and-match-box-builder'
+									) }
 								</dt>
 								<dd>
-									{ page.mode === 'existing'
-										? ( chosen && chosen.title ) ||
-										  __(
-												'Not chosen yet',
-												'mix-and-max-box-builder'
-										  )
-										: sprintf(
-												/* translators: %s: Page address such as /holiday-box. */
-												__(
-													'%s (new)',
-													'mix-and-max-box-builder'
-												),
-												'/' + slug
-										  ) }
+									{ ( chosen && chosen.title ) ||
+										__(
+											'Not chosen yet',
+											'productboxes-mix-and-match-box-builder'
+										) }
 								</dd>
 							</div>
 						</dl>
@@ -449,7 +375,7 @@ export default function PublishStep( {
 								tone="critical"
 								title={ __(
 									'Fix these before going live',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							>
 								<ul className="mmbb-editor__problems">
@@ -466,7 +392,7 @@ export default function PublishStep( {
 													/* translators: %s: Name of a wizard step. */
 													__(
 														'Open %s',
-														'mix-and-max-box-builder'
+														'productboxes-mix-and-match-box-builder'
 													),
 													labels[ step ]
 												) }
@@ -485,7 +411,7 @@ export default function PublishStep( {
 							<Notice tone="warning">
 								{ __(
 									'No test order yet. You can still go live.',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							</Notice>
 						) : null }
@@ -498,16 +424,30 @@ export default function PublishStep( {
 							disabled={ ! ready }
 							onClick={ onGoLive }
 						>
-							{ __( 'Go live', 'mix-and-max-box-builder' ) }
+							{ published
+								? __(
+										'Save changes',
+										'productboxes-mix-and-match-box-builder'
+								  )
+								: __(
+										'Go live',
+										'productboxes-mix-and-match-box-builder'
+								  ) }
 						</Button>
 						<span className="mmbb-editor__fine">
-							{ __(
-								'Goes live now and switches on at the start date if it’s later.',
-								'mix-and-max-box-builder'
-							) }
+							{ published
+								? __(
+										'Shoppers see the changes as soon as you save.',
+										'productboxes-mix-and-match-box-builder'
+								  )
+								: __(
+										'Goes live now and switches on at the start date if it’s later.',
+										'productboxes-mix-and-match-box-builder'
+								  ) }
 						</span>
 					</div>
 				</Card>
+				<PreviewCard draft={ draft } products={ previewProducts } />
 			</div>
 		</div>
 	);

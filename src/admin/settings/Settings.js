@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import {
 	Button,
 	Card,
@@ -29,25 +29,25 @@ export function validateSettings( settings ) {
 	if ( ! Number.isInteger( threshold ) || threshold < 1 || threshold > 100 ) {
 		errors.low_stock = __(
 			'Enter a whole number from 1 to 100.',
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		);
 	}
 	if ( ! Number.isInteger( retention ) || retention < 7 || retention > 730 ) {
 		errors.analytics_retention_days = __(
 			'Enter a whole number from 7 to 730.',
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		);
 	}
 	if ( settings.cta_label.length > 32 ) {
 		errors.cta_label = __(
 			'Use 32 characters or fewer.',
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		);
 	}
 	if ( settings.empty_slot_hint.length > 60 ) {
 		errors.empty_slot_hint = __(
 			'Use 60 characters or fewer.',
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		);
 	}
 	return errors;
@@ -126,27 +126,39 @@ export default function Settings() {
 			{
 				id: 'general',
 				icon: 'settings',
-				label: __( 'General', 'mix-and-max-box-builder' ),
+				label: __(
+					'General',
+					'productboxes-mix-and-match-box-builder'
+				),
 			},
 			{
 				id: 'display',
 				icon: 'palette',
-				label: __( 'Storefront display', 'mix-and-max-box-builder' ),
+				label: __(
+					'Storefront display',
+					'productboxes-mix-and-match-box-builder'
+				),
 			},
 			{
 				id: 'cart',
 				icon: 'cart',
-				label: __( 'Cart & checkout', 'mix-and-max-box-builder' ),
+				label: __(
+					'Cart & checkout',
+					'productboxes-mix-and-match-box-builder'
+				),
 			},
 			{
 				id: 'emails',
 				icon: 'mail',
-				label: __( 'Emails', 'mix-and-max-box-builder' ),
+				label: __( 'Emails', 'productboxes-mix-and-match-box-builder' ),
 			},
 			{
 				id: 'advanced',
 				icon: 'code',
-				label: __( 'Advanced', 'mix-and-max-box-builder' ),
+				label: __(
+					'Advanced',
+					'productboxes-mix-and-match-box-builder'
+				),
 			},
 		],
 		[]
@@ -197,14 +209,16 @@ export default function Settings() {
 			setSaved( copy( result ) );
 			setDraft( copy( result ) );
 			setErrors( {} );
-			toast( __( 'Settings saved', 'mix-and-max-box-builder' ) );
+			toast(
+				__( 'Settings saved', 'productboxes-mix-and-match-box-builder' )
+			);
 		} catch ( error ) {
 			setSaveError(
 				errorMessage(
 					error,
 					__(
 						'The settings could not be saved.',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					)
 				)
 			);
@@ -217,7 +231,10 @@ export default function Settings() {
 		return (
 			<Shell active="settings">
 				<p className="mmbb-settings__loading" role="status">
-					{ __( 'Loading settings…', 'mix-and-max-box-builder' ) }
+					{ __(
+						'Loading settings…',
+						'productboxes-mix-and-match-box-builder'
+					) }
 				</p>
 			</Shell>
 		);
@@ -229,11 +246,14 @@ export default function Settings() {
 					tone="critical"
 					title={ __(
 						'Could not load settings',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 					action={
 						<Button onClick={ request.reload }>
-							{ __( 'Try again', 'mix-and-max-box-builder' ) }
+							{ __(
+								'Try again',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						</Button>
 					}
 				>
@@ -249,7 +269,10 @@ export default function Settings() {
 	const pageOptions = [
 		{
 			value: 0,
-			label: __( 'No default page', 'mix-and-max-box-builder' ),
+			label: __(
+				'No default page',
+				'productboxes-mix-and-match-box-builder'
+			),
 		},
 		...( pages.data || [] ).map( ( page ) => ( {
 			value: page.id,
@@ -264,19 +287,25 @@ export default function Settings() {
 					role="region"
 					aria-label={ __(
 						'Unsaved changes',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				>
 					<span className="mmbb-settings__bar-text">
 						<Icon name="alert" size={ 18 } strokeWidth={ 2 } />
-						{ __( 'Unsaved changes', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Unsaved changes',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</span>
 					<button
 						type="button"
 						className="mmbb-settings__discard"
 						onClick={ discard }
 					>
-						{ __( 'Discard', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Discard',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</button>
 					<Button
 						size="sm"
@@ -284,17 +313,23 @@ export default function Settings() {
 						loading={ saving }
 						onClick={ save }
 					>
-						{ __( 'Save settings', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Save settings',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</Button>
 				</div>
 			) }
 			<Shell active="settings">
 				<div className="mmbb-settings__head">
 					<PageHeader
-						title={ __( 'Settings', 'mix-and-max-box-builder' ) }
+						title={ __(
+							'Settings',
+							'productboxes-mix-and-match-box-builder'
+						) }
 						subtitle={ __(
 							'Store-wide defaults. Each campaign can override display and cart options.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 					/>
 					<Button
@@ -303,7 +338,10 @@ export default function Settings() {
 						loading={ saving }
 						onClick={ save }
 					>
-						{ __( 'Save settings', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Save settings',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</Button>
 				</div>
 				{ saveError && <Notice tone="critical">{ saveError }</Notice> }
@@ -312,7 +350,7 @@ export default function Settings() {
 						className="mmbb-settings__nav"
 						aria-label={ __(
 							'Settings sections',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 					>
 						{ sections.map( ( section ) => (
@@ -344,7 +382,7 @@ export default function Settings() {
 							<Card
 								title={ __(
 									'General',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							>
 								<div className="mmbb-settings__stack">
@@ -355,22 +393,22 @@ export default function Settings() {
 										}
 										label={ __(
 											'Box builders are live',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 										description={ __(
 											'Turn off to hide every builder at once, for example during a stock count.',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									/>
 									<div className="mmbb-settings__pair mmbb-settings__rule">
 										<SelectField
 											label={ __(
 												'Default builder page',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											help={ __(
 												'Used by the Build a box menu link and cart editing.',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											value={ draft.default_page_id }
 											onChange={ ( event ) =>
@@ -384,25 +422,25 @@ export default function Settings() {
 										<SelectField
 											label={ __(
 												'Prices',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											help={ __(
 												'The builder follows WooCommerce currency settings.',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											value="woocommerce"
 											disabled
 											options={ [
 												{
 													value: 'woocommerce',
-													label:
+													label: sprintf(
+														/* translators: %s: An example price in the store currency. */
 														__(
-															'Follow WooCommerce',
-															'mix-and-max-box-builder'
-														) +
-														' (' +
-														money( 1200 ) +
-														')',
+															'Follow WooCommerce (%s)',
+															'productboxes-mix-and-match-box-builder'
+														),
+														money( 1200 )
+													),
 												},
 											] }
 										/>
@@ -418,11 +456,11 @@ export default function Settings() {
 							<Card
 								title={ __(
 									'Storefront display',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 								subtitle={ __(
 									'How the builder looks inside your theme.',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							>
 								<div className="mmbb-settings__stack">
@@ -431,13 +469,13 @@ export default function Settings() {
 											<span className="mmbb-settings__label">
 												{ __(
 													'Products per row on desktop',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												) }
 											</span>
 											<SegmentedControl
 												label={ __(
 													'Products per row',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												) }
 												options={ [ 3, 4, 5 ] }
 												value={ draft.columns }
@@ -450,34 +488,34 @@ export default function Settings() {
 											<span className="mmbb-settings__label">
 												{ __(
 													'Box summary',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												) }
 											</span>
 											<SegmentedControl
 												label={ __(
 													'Box summary',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												) }
 												options={ [
 													{
 														value: 'panel',
 														label: __(
 															'Sidebar',
-															'mix-and-max-box-builder'
+															'productboxes-mix-and-match-box-builder'
 														),
 													},
 													{
 														value: 'bar',
 														label: __(
 															'Bottom bar',
-															'mix-and-max-box-builder'
+															'productboxes-mix-and-match-box-builder'
 														),
 													},
 													{
 														value: 'both',
 														label: __(
 															'Both',
-															'mix-and-max-box-builder'
+															'productboxes-mix-and-match-box-builder'
 														),
 													},
 												] }
@@ -492,7 +530,7 @@ export default function Settings() {
 											<span className="mmbb-settings__help">
 												{ __(
 													'Phones always get the bottom bar.',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												) }
 											</span>
 										</div>
@@ -505,11 +543,11 @@ export default function Settings() {
 											}
 											label={ __(
 												'Savings stickers',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											description={ __(
 												'Yellow Save X% and Best value stickers on sizes and tiles.',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										/>
 									</div>
@@ -524,11 +562,11 @@ export default function Settings() {
 											}
 											label={ __(
 												'Low-stock warnings',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											description={ __(
 												'Shows the remaining quantity under the price.',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										/>
 										<TextField
@@ -539,11 +577,11 @@ export default function Settings() {
 											max="100"
 											label={ __(
 												'Warn at',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											suffix={ __(
 												'or fewer',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											value={ draft.low_stock.threshold }
 											error={ errors.low_stock }
@@ -566,11 +604,11 @@ export default function Settings() {
 											}
 											label={ __(
 												'Celebrate unlocked tiers',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											description={ __(
 												'A short toast when the box reaches a new discount.',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										/>
 									</div>
@@ -579,14 +617,14 @@ export default function Settings() {
 											id="mmbb-setting-cta_label"
 											label={ __(
 												'Add-to-cart button',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											value={ draft.cta_label }
 											maxLength={ 32 }
 											error={ errors.cta_label }
 											placeholder={ __(
 												'Add box to cart',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											onChange={ ( event ) =>
 												change(
@@ -599,14 +637,14 @@ export default function Settings() {
 											id="mmbb-setting-empty_slot_hint"
 											label={ __(
 												'Empty slot hint',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											value={ draft.empty_slot_hint }
 											maxLength={ 60 }
 											error={ errors.empty_slot_hint }
 											placeholder={ __(
 												'Pick an item',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											onChange={ ( event ) =>
 												change(
@@ -624,7 +662,7 @@ export default function Settings() {
 							<Card
 								title={ __(
 									'Cart & checkout',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							>
 								<div className="mmbb-settings__stack">
@@ -632,7 +670,7 @@ export default function Settings() {
 										<span className="mmbb-settings__label">
 											{ __(
 												'Show the box in the cart as',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										</span>
 										<div className="mmbb-settings__choices">
@@ -652,11 +690,11 @@ export default function Settings() {
 												icon="box"
 												title={ __(
 													'One bundled line',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												) }
 												description={ __(
 													'Box name, price, and the items listed underneath.',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												) }
 											/>
 											<ChoiceCard
@@ -675,11 +713,11 @@ export default function Settings() {
 												icon="layers"
 												title={ __(
 													'Box plus each item',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												) }
 												description={ __(
 													'Every item is its own line, grouped under the box.',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												) }
 											/>
 										</div>
@@ -695,11 +733,11 @@ export default function Settings() {
 											}
 											label={ __(
 												'Let shoppers edit the box from the cart',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											description={ __(
 												'Adds an Edit box link that reopens the builder with their picks.',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										/>
 									</div>
@@ -711,11 +749,11 @@ export default function Settings() {
 											}
 											label={ __(
 												'Allow coupons on top of box discounts',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											description={ __(
 												'Off by default so discounts do not stack by accident.',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										/>
 									</div>
@@ -730,11 +768,11 @@ export default function Settings() {
 											}
 											label={ __(
 												'Reduce stock for each item',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											description={ __(
 												'Recommended. Keeps WooCommerce inventory accurate.',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										/>
 									</div>
@@ -746,11 +784,11 @@ export default function Settings() {
 							<Card
 								title={ __(
 									'Emails',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 								subtitle={ __(
 									'What WooCommerce order emails say about a box.',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							>
 								<div className="mmbb-settings__stack">
@@ -761,11 +799,11 @@ export default function Settings() {
 										}
 										label={ __(
 											'List the items in each box',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 										description={ __(
 											'Under the box line in order confirmation and invoice emails.',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									/>
 									<div className="mmbb-settings__rule">
@@ -779,11 +817,11 @@ export default function Settings() {
 											}
 											label={ __(
 												'Include the gift message',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											description={ __(
 												'Shown in the admin new-order email, never in customer emails.',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										/>
 									</div>
@@ -798,7 +836,7 @@ export default function Settings() {
 							<Card
 								title={ __(
 									'Advanced',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							>
 								<div className="mmbb-settings__stack">
@@ -812,11 +850,11 @@ export default function Settings() {
 										}
 										label={ __(
 											'Load scripts only on pages with a builder',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 										description={ __(
 											'Keeps the rest of your store fast.',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										) }
 									/>
 									<div className="mmbb-settings__rule mmbb-settings__stack">
@@ -830,11 +868,11 @@ export default function Settings() {
 											}
 											label={ __(
 												'Collect builder analytics',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											description={ __(
 												'Anonymous builder activity stays on this site.',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										/>
 										<TextField
@@ -845,11 +883,11 @@ export default function Settings() {
 											max="730"
 											label={ __(
 												'Keep raw analytics for',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											suffix={ __(
 												'days',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											value={
 												draft.analytics_retention_days
@@ -876,11 +914,11 @@ export default function Settings() {
 											}
 											label={ __(
 												'Delete all plugin data when uninstalling',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 											description={ __(
 												'Campaigns, settings and analytics are removed. Orders are never touched.',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										/>
 									</div>
@@ -889,17 +927,17 @@ export default function Settings() {
 											tone="info"
 											title={ __(
 												'Developers',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										>
 											{ __(
 												'REST routes live under',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }{ ' ' }
 											<code>/wp-json/mmbb/v1</code>.{ ' ' }
 											{ __(
 												'Filters and actions are prefixed',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }{ ' ' }
 											<code>mmbb_</code>.
 										</Notice>

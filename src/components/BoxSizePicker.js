@@ -26,7 +26,10 @@ export default function BoxSizePicker( {
 		<div
 			className={ cx( 'mmbb-sizes', 'mmbb-sizes--' + layout ) }
 			role="radiogroup"
-			aria-label={ __( 'Box size', 'mix-and-max-box-builder' ) }
+			aria-label={ __(
+				'Box size',
+				'productboxes-mix-and-match-box-builder'
+			) }
 		>
 			{ sizes.map( ( s ) => (
 				<label
@@ -56,7 +59,7 @@ export default function BoxSizePicker( {
 								'item',
 								'items',
 								s.qty,
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 					</span>
 					{ s.price !== null && s.price !== undefined ? (
@@ -65,7 +68,7 @@ export default function BoxSizePicker( {
 								? sprintf(
 										/* translators: %s: Formatted starting price. */ __(
 											'from %s',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 										formatMoney( s.price )
 								  )
@@ -77,7 +80,7 @@ export default function BoxSizePicker( {
 							{ sprintf(
 								/* translators: %s: Savings label. */ __(
 									'Save %s',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								),
 								s.save
 							) }

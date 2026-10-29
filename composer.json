@@ -1,6 +1,6 @@
 {
-  "name": "mixmax/mix-and-max-box-builder",
-  "description": "Development tools for Mix and Max Box Builder.",
+  "name": "mixmax/productboxes-mix-and-match-box-builder",
+  "description": "Development tools for ProductBoxes Box Builder.",
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",
   "require-dev": {

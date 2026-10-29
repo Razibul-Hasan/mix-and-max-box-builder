@@ -44,7 +44,7 @@ class Pages_Controller extends Base_Controller {
 		return array_merge(
 			array(
 				'search' => array(
-					'description'       => __( 'Limit results to pages matching a search term.', 'mix-and-max-box-builder' ),
+					'description'       => __( 'Limit results to pages matching a search term.', 'productboxes-mix-and-match-box-builder' ),
 					'type'              => 'string',
 					'sanitize_callback' => 'sanitize_text_field',
 					'validate_callback' => 'rest_validate_request_arg',
@@ -89,7 +89,7 @@ class Pages_Controller extends Base_Controller {
 	 * @return array
 	 */
 	private function prepare_page( $post ) {
-		$title     = '' !== trim( (string) $post->post_title ) ? $post->post_title : __( '(no title)', 'mix-and-max-box-builder' );
+		$title     = '' !== trim( (string) $post->post_title ) ? $post->post_title : __( '(no title)', 'productboxes-mix-and-match-box-builder' );
 		$edit_link = get_edit_post_link( $post->ID, 'raw' );
 
 		return array(
@@ -118,32 +118,32 @@ class Pages_Controller extends Base_Controller {
 			'type'       => 'object',
 			'properties' => array(
 				'id'          => array(
-					'description' => __( 'Page ID.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Page ID.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'integer',
 					'context'     => array( 'view' ),
 				),
 				'title'       => array(
-					'description' => __( 'Page title.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Page title.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'context'     => array( 'view' ),
 				),
 				'status'      => array(
-					'description' => __( 'Page status.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Page status.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'context'     => array( 'view' ),
 				),
 				'link'        => array(
-					'description' => __( 'Public URL.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Public URL.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'context'     => array( 'view' ),
 				),
 				'edit_link'   => array(
-					'description' => __( 'Editor URL, empty when the user cannot edit the page.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Editor URL, empty when the user cannot edit the page.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'context'     => array( 'view' ),
 				),
 				'has_builder' => array(
-					'description' => __( 'Whether the page already contains a box builder.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Whether the page already contains a box builder.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'boolean',
 					'context'     => array( 'view' ),
 				),

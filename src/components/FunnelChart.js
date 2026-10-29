@@ -23,7 +23,7 @@ export default function FunnelChart( {
 								{ sprintf(
 									/* translators: %s: Percentage continuing to this step. */ __(
 										'%s%% continued',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 									Math.round(
 										prev > 0 ? ( s.value / prev ) * 100 : 0
@@ -58,7 +58,7 @@ export default function FunnelChart( {
 									{ sprintf(
 										/* translators: %s: Percentage of the starting count. */ __(
 											'%s%% of start',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 										pct.toFixed( pct < 10 ? 1 : 0 )
 									) }

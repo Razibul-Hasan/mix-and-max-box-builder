@@ -26,20 +26,20 @@ export function tierLabel( row, formatMoney, toMinor ) {
 	if ( row.discount_type === 'percent' ) {
 		return sprintf(
 			/* translators: %s: Discount percentage. */
-			__( '%s%% off', 'mix-and-max-box-builder' ),
+			__( '%s%% off', 'productboxes-mix-and-match-box-builder' ),
 			String( value )
 		);
 	}
 	if ( row.discount_type === 'fixed_amount' ) {
 		return sprintf(
 			/* translators: %s: Discount amount with currency. */
-			__( '%s off', 'mix-and-max-box-builder' ),
+			__( '%s off', 'productboxes-mix-and-match-box-builder' ),
 			formatMoney( toMinor( value ) )
 		);
 	}
 	return sprintf(
 		/* translators: %s: Price of the whole box with currency. */
-		__( '%s box', 'mix-and-max-box-builder' ),
+		__( '%s box', 'productboxes-mix-and-match-box-builder' ),
 		formatMoney( toMinor( value ) )
 	);
 }
@@ -79,9 +79,9 @@ export function tierList( rows, formatMoney, toMinor ) {
  */
 export function sizeTag( tag ) {
 	if ( tag === 'popular' ) {
-		return __( 'Most popular', 'mix-and-max-box-builder' );
+		return __( 'Most popular', 'productboxes-mix-and-match-box-builder' );
 	}
 	return tag === 'best_value'
-		? __( 'Best value', 'mix-and-max-box-builder' )
+		? __( 'Best value', 'productboxes-mix-and-match-box-builder' )
 		: undefined;
 }

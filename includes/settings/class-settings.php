@@ -29,7 +29,7 @@ final class Settings {
 			self::OPTION,
 			array(
 				'type'              => 'object',
-				'description'       => __( 'Mix and Max Box Builder settings.', 'mix-and-max-box-builder' ),
+				'description'       => __( 'ProductBoxes Box Builder settings.', 'productboxes-mix-and-match-box-builder' ),
 				'sanitize_callback' => array( self::class, 'sanitize' ),
 				'show_in_rest'      => false,
 				'default'           => self::defaults(),

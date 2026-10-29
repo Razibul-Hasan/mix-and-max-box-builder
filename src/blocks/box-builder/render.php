@@ -1,6 +1,6 @@
 <?php
 /**
- * Server render for the Mix and Max Box Builder block.
+ * Server render for the ProductBoxes Box Builder block.
  *
  * @package MixMax\BoxBuilder
  *

@@ -9,7 +9,7 @@ export default function LineChart( {
 	formatValue = ( v ) => v,
 	formatTick,
 	yTicks = 4,
-	ariaLabel = __( 'Line chart', 'mix-and-max-box-builder' ),
+	ariaLabel = __( 'Line chart', 'productboxes-mix-and-match-box-builder' ),
 	legend,
 } ) {
 	const ref = useRef( null );
@@ -262,7 +262,12 @@ export default function LineChart( {
 					<caption>{ ariaLabel }</caption>
 					<thead>
 						<tr>
-							<th>{ __( 'Date', 'mix-and-max-box-builder' ) }</th>
+							<th>
+								{ __(
+									'Date',
+									'productboxes-mix-and-match-box-builder'
+								) }
+							</th>
 							{ series.map( ( s ) => (
 								<th key={ s.name }>{ s.name }</th>
 							) ) }

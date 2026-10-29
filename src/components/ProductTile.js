@@ -53,7 +53,7 @@ export default function ProductTile( {
 								'%d in your box',
 								'%d in your box',
 								qty,
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 							qty
 						) }
@@ -72,7 +72,7 @@ export default function ProductTile( {
 							aria-label={ sprintf(
 								/* translators: %s: Formatted previous price. */ __(
 									'Was %s',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								),
 								formatMoney( compareAt )
 							) }
@@ -92,7 +92,7 @@ export default function ProductTile( {
 								'Only %d left',
 								'Only %d left',
 								stock,
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 							stock
 						) }
@@ -102,7 +102,10 @@ export default function ProductTile( {
 			<div className="mmbb-tile__action">
 				{ out ? (
 					<Button fullWidth disabled>
-						{ __( 'Sold out', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Sold out',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</Button>
 				) : inBox ? (
 					<QuantityStepper
@@ -113,7 +116,7 @@ export default function ProductTile( {
 						label={ sprintf(
 							/* translators: %s: Product name. */ __(
 								'Quantity of %s',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 							name
 						) }
@@ -125,10 +128,27 @@ export default function ProductTile( {
 						icon={ boxFull ? undefined : 'plus' }
 						onClick={ onAdd }
 						disabled={ boxFull }
+						aria-label={
+							boxFull
+								? undefined
+								: sprintf(
+										/* translators: %s: Product name. */ __(
+											'Add %s to box',
+											'productboxes-mix-and-match-box-builder'
+										),
+										name
+								  )
+						}
 					>
 						{ boxFull
-							? __( 'Box is full', 'mix-and-max-box-builder' )
-							: __( 'Add to box', 'mix-and-max-box-builder' ) }
+							? __(
+									'Box is full',
+									'productboxes-mix-and-match-box-builder'
+							  )
+							: __(
+									'Add to box',
+									'productboxes-mix-and-match-box-builder'
+							  ) }
 					</Button>
 				) }
 			</div>

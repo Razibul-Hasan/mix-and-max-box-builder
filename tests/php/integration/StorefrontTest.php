@@ -193,8 +193,20 @@ class StorefrontTest extends \WP_UnitTestCase {
 
 	/** Only a box from the same campaign preloads from `?mmbb_edit=`. */
 	public function test_edit_preload_needs_a_matching_box() {
-		$campaign          = $this->repo->find( $this->campaign['id'] );
-		$_GET['mmbb_edit'] = 'nope';
+		$campaign                = $this->repo->find( $this->campaign['id'] );
+		$_GET['mmbb_edit']       = 'nope';
+		$_GET['mmbb_edit_nonce'] = wp_create_nonce( 'mmbb_edit_box' );
+		$this->assertNull( Payload::edit_box( $campaign ) );
+		unset( $_GET['mmbb_edit'], $_GET['mmbb_edit_nonce'] );
+	}
+
+	/** `?mmbb_edit=` is ignored without a valid nonce. */
+	public function test_edit_preload_needs_a_nonce() {
+		$campaign                = $this->repo->find( $this->campaign['id'] );
+		$_GET['mmbb_edit']       = 'abc';
+		$_GET['mmbb_edit_nonce'] = 'bad';
+		$this->assertNull( Payload::edit_box( $campaign ) );
+		unset( $_GET['mmbb_edit_nonce'] );
 		$this->assertNull( Payload::edit_box( $campaign ) );
 		unset( $_GET['mmbb_edit'] );
 	}

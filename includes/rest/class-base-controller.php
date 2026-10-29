@@ -32,7 +32,7 @@ abstract class Base_Controller extends \WP_REST_Controller {
 		}
 		return new \WP_Error(
 			'mmbb_rest_forbidden',
-			__( 'Sorry, you are not allowed to manage box campaigns.', 'mix-and-max-box-builder' ),
+			__( 'Sorry, you are not allowed to manage box campaigns.', 'productboxes-mix-and-match-box-builder' ),
 			array( 'status' => rest_authorization_required_code() )
 		);
 	}
@@ -60,7 +60,7 @@ abstract class Base_Controller extends \WP_REST_Controller {
 	protected function paging_args( $default_per_page = 20, $max_per_page = 50 ) {
 		return array(
 			'page'     => array(
-				'description'       => __( 'Page of results.', 'mix-and-max-box-builder' ),
+				'description'       => __( 'Page of results.', 'productboxes-mix-and-match-box-builder' ),
 				'type'              => 'integer',
 				'default'           => 1,
 				'minimum'           => 1,
@@ -68,7 +68,7 @@ abstract class Base_Controller extends \WP_REST_Controller {
 				'validate_callback' => 'rest_validate_request_arg',
 			),
 			'per_page' => array(
-				'description'       => __( 'Results per page.', 'mix-and-max-box-builder' ),
+				'description'       => __( 'Results per page.', 'productboxes-mix-and-match-box-builder' ),
 				'type'              => 'integer',
 				'default'           => $default_per_page,
 				'minimum'           => 1,

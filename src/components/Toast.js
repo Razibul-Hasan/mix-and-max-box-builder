@@ -27,7 +27,10 @@ export default function Toast( {
 				<button
 					type="button"
 					className="mmbb-toast__close"
-					aria-label={ __( 'Dismiss', 'mix-and-max-box-builder' ) }
+					aria-label={ __(
+						'Dismiss',
+						'productboxes-mix-and-match-box-builder'
+					) }
 					onClick={ onDismiss }
 				>
 					<Icon name="close" size={ 16 } />

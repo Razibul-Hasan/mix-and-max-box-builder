@@ -63,7 +63,7 @@ export default function Hero( { payload, nowMs, decimals } ) {
 					className="mmbb-hero__ladder"
 					aria-label={ __(
 						'Discount tiers',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				>
 					{ tiers.map( ( tier, index ) => {
@@ -92,7 +92,7 @@ export default function Hero( { payload, nowMs, decimals } ) {
 										<Sticker tone="ink" size="sm" tilt>
 											{ __(
 												'Max deal',
-												'mix-and-max-box-builder'
+												'productboxes-mix-and-match-box-builder'
 											) }
 										</Sticker>
 									</span>
@@ -105,7 +105,7 @@ export default function Hero( { payload, nowMs, decimals } ) {
 											'%d item',
 											'%d items',
 											tier.qty,
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 										tier.qty
 									) }

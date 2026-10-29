@@ -86,13 +86,16 @@ export default function Drawer( { label, onClose, children } ) {
 					<span id={ id }>
 						{ __(
 							'Tap a slot to remove an item',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 					</span>
 					<Button
 						variant="ghost"
 						icon="close"
-						aria-label={ __( 'Close', 'mix-and-max-box-builder' ) }
+						aria-label={ __(
+							'Close',
+							'productboxes-mix-and-match-box-builder'
+						) }
 						onClick={ onClose }
 						data-mmbb-drawer-close=""
 					/>

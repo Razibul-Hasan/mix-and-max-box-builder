@@ -138,7 +138,7 @@ export default function Modal( {
 							icon="close"
 							aria-label={ __(
 								'Close',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 							onClick={ onClose }
 						/>

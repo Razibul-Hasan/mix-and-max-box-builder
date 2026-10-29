@@ -2,11 +2,11 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "mmbb/box-builder",
-	"title": "Mix and Max Box Builder",
+	"title": "ProductBoxes Box Builder",
 	"category": "woocommerce",
 	"description": "Shows a box campaign: products, slots, tiers and the add-to-cart bar.",
-	"keywords": [ "box", "bundle", "gift", "mix and match" ],
-	"textdomain": "mix-and-max-box-builder",
+	"keywords": [ "box", "bundle", "gift", "custom box" ],
+	"textdomain": "productboxes-mix-and-match-box-builder",
 	"attributes": {
 		"campaignId": {
 			"type": "number",

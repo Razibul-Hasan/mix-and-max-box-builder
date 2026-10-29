@@ -81,46 +81,34 @@
 	color: var(--ink-muted);
 }
 
+/* Settings on the left (55%), preview on the right (45%). */
 .mmbb-root .mmbb-editor__cols {
-	display: flex;
-	flex-wrap: wrap;
+	display: grid;
+	grid-template-columns: minmax(0, 55fr) minmax(0, 45fr);
 	gap: var(--space-6);
-	align-items: flex-start;
+	align-items: start;
 }
 
-.mmbb-root .mmbb-editor__main {
-	flex: 999 1 560px;
-	min-width: 0;
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-6);
-}
-
+.mmbb-root .mmbb-editor__main,
 .mmbb-root .mmbb-editor__side {
-	flex: 1 1 340px;
 	min-width: 0;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-6);
-}
-
-.mmbb-root .mmbb-editor__side--wide {
-	flex-basis: 420px;
 }
 
 .mmbb-root .mmbb-editor__side--sticky {
-	flex-basis: 400px;
 	position: sticky;
 	top: 88px;
 }
 
-@media (max-width: 782px) {
+@media (max-width: 960px) {
 
-	.mmbb-root .mmbb-editor__side--wide {
-	flex-basis: 420px;
-}
+	.mmbb-root .mmbb-editor__cols {
+		grid-template-columns: minmax(0, 1fr);
+	}
 
-.mmbb-root .mmbb-editor__side--sticky {
+	.mmbb-root .mmbb-editor__side--sticky {
 		position: static;
 	}
 }
@@ -264,8 +252,13 @@
 
 .mmbb-root .mmbb-editor__chosen {
 	margin: 0;
-	padding: 0 0 var(--space-2);
+	padding: var(--space-2) 0;
 	list-style: none;
+	border-top: 1px solid var(--line);
+}
+
+.mmbb-root .mmbb-editor__chosen-empty {
+	border-top: 1px solid var(--line);
 }
 
 .mmbb-root .mmbb-editor__chosen > li {
@@ -550,26 +543,42 @@
 	background: var(--surface-sunken);
 }
 
+/* Colour field: a native picker shown as a swatch inside the hex input. */
+.mmbb-root .mmbb-input .mmbb-color__swatch {
+	flex: none;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-xs);
+	background: none;
+	cursor: pointer;
+}
+
+.mmbb-root .mmbb-color__swatch::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+
+.mmbb-root .mmbb-color__swatch::-webkit-color-swatch {
+	border: 0;
+	border-radius: calc(var(--radius-xs) - 1px);
+}
+
+.mmbb-root .mmbb-color__swatch::-moz-color-swatch {
+	border: 0;
+	border-radius: calc(var(--radius-xs) - 1px);
+}
+
 /* Shopper preview: the real storefront components on the canvas. */
 .mmbb-root .mmbb-preview {
 	display: flex;
 	flex-direction: column;
-	gap: 14px;
-	padding: 14px;
+	gap: 10px;
+	padding: 10px;
 	border: 1px solid var(--line);
 	border-radius: var(--radius-lg);
 	background: var(--canvas);
 	color: var(--ink);
-}
-
-/* The theme primary colour wins when it exists. Two elements, so the value is not
-   defined in terms of itself. */
-.mmbb-root .mmbb-preview-accent {
-	--mmbb-accent-base: var(--max);
-}
-
-.mmbb-root .mmbb-preview--theme {
-	--max: var(--wp--preset--color--primary, var(--mmbb-accent-base));
 }
 
 .mmbb-root .mmbb-preview__hero {
@@ -591,10 +600,23 @@
 .mmbb-root .mmbb-preview__headline {
 	margin: 0;
 	font-family: var(--font-display);
-	font-size: 24px;
-	line-height: 28px;
+	font-size: 19px;
+	line-height: 23px;
 	font-weight: 800;
 	letter-spacing: -0.02em;
+}
+
+.mmbb-root .mmbb-preview__intro {
+	margin: 0;
+	color: var(--ink-muted);
+	font-size: 13px;
+	line-height: 18px;
+}
+
+.mmbb-root .mmbb-preview__extras {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
 }
 
 .mmbb-root .mmbb-preview__ladder {
@@ -602,7 +624,7 @@
 	display: flex;
 	align-items: flex-end;
 	gap: var(--space-1);
-	height: 100px;
+	height: 72px;
 	margin: 0;
 	padding: 0;
 	list-style: none;
@@ -612,17 +634,24 @@
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-end;
-	width: 48px;
-	padding: 6px;
+	width: 40px;
+	padding: 4px;
 	border: 1px solid var(--line-strong);
 	border-radius: var(--radius-sm);
-	background: var(--surface);
+	background: var(--ladder-base, var(--surface));
+	color: var(--on-ladder-base, var(--ink));
+}
+
+.mmbb-root .mmbb-preview__ladder li.is-near {
+	border-color: var(--ladder-near, var(--pop));
+	background: var(--ladder-near, var(--pop));
+	color: var(--on-ladder-near, var(--on-pop));
 }
 
 .mmbb-root .mmbb-preview__ladder li.is-top {
-	border-color: var(--max);
-	background: var(--max);
-	color: var(--on-max);
+	border-color: var(--ladder-top, var(--max));
+	background: var(--ladder-top, var(--max));
+	color: var(--on-ladder-top, var(--on-max));
 }
 
 .mmbb-root .mmbb-preview__ladder b {
@@ -635,5 +664,90 @@
 .mmbb-root .mmbb-preview__grid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 10px;
+	gap: 8px;
+}
+
+/* Compact product cards: the preview is a sketch, not the storefront. */
+.mmbb-root .mmbb-preview .mmbb-tile__media {
+	aspect-ratio: 16 / 9;
+}
+
+.mmbb-root .mmbb-preview .mmbb-tile__badge {
+	top: var(--space-2);
+	left: var(--space-2);
+}
+
+.mmbb-root .mmbb-preview .mmbb-tile__count {
+	top: var(--space-2);
+	right: var(--space-2);
+	min-width: 24px;
+	height: 24px;
+	font-size: 12px;
+	line-height: 24px;
+}
+
+.mmbb-root .mmbb-preview .mmbb-tile__body {
+	padding: var(--space-2) var(--space-3) 0;
+}
+
+.mmbb-root .mmbb-preview .mmbb-tile__name {
+	overflow: hidden;
+	font-size: 13px;
+	line-height: 18px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.mmbb-root .mmbb-preview .mmbb-tile__price {
+	margin-top: 0;
+	font-size: 13px;
+	line-height: 18px;
+}
+
+.mmbb-root .mmbb-preview .mmbb-tile__stock {
+	font-size: 12px;
+	line-height: 16px;
+}
+
+.mmbb-root .mmbb-preview .mmbb-tile__action {
+	padding: var(--space-2) var(--space-3) var(--space-3);
+}
+
+.mmbb-root .mmbb-preview .mmbb-tile .mmbb-btn,
+.mmbb-root .mmbb-preview .mmbb-tile .mmbb-stepper,
+.mmbb-root .mmbb-preview .mmbb-tile .mmbb-stepper button {
+	min-height: 32px;
+	font-size: 13px;
+}
+
+.mmbb-root .mmbb-preview .mmbb-tile .mmbb-stepper button {
+	min-width: 32px;
+}
+
+/* ---------- Free gift picker ---------- */
+.mmbb-root .mmbb-editor__gift-pick {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	min-width: 0;
+}
+
+.mmbb-root .mmbb-editor__gift-row,
+.mmbb-root .mmbb-editor__gift-list > li {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.mmbb-root .mmbb-editor__gift-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.mmbb-root .mmbb-editor__gift-list[aria-busy="true"] {
+	opacity: 0.6;
 }

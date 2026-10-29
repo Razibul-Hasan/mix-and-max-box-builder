@@ -19,63 +19,63 @@ final class Box_Text {
 	public static function errors() {
 		return array(
 			'mmbb_nonce_expired'   => array(
-				'message' => __( 'This page has expired. Reload it and try again.', 'mix-and-max-box-builder' ),
+				'message' => __( 'This page has expired. Reload it and try again.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 403,
 			),
 			'campaign_not_found'   => array(
-				'message' => __( 'That box is not available.', 'mix-and-max-box-builder' ),
+				'message' => __( 'That box is not available.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 404,
 			),
 			'campaign_unavailable' => array(
-				'message' => __( 'This box is not on sale right now.', 'mix-and-max-box-builder' ),
+				'message' => __( 'This box is not on sale right now.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 400,
 			),
 			'empty'                => array(
-				'message' => __( 'Add some items to your box first.', 'mix-and-max-box-builder' ),
+				'message' => __( 'Add some items to your box first.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 400,
 			),
 			'below_minimum'        => array(
-				'message' => __( 'Add a few more items to reach the minimum for this box.', 'mix-and-max-box-builder' ),
+				'message' => __( 'Add a few more items to reach the minimum for this box.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 400,
 			),
 			'over_capacity'        => array(
-				'message' => __( 'That is more items than the box can hold.', 'mix-and-max-box-builder' ),
+				'message' => __( 'That is more items than the box can hold.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 400,
 			),
 			'duplicate'            => array(
-				'message' => __( 'Each item can go in the box only once.', 'mix-and-max-box-builder' ),
+				'message' => __( 'Each item can go in the box only once.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 400,
 			),
 			'over_cap'             => array(
-				'message' => __( 'You have added too many of one item.', 'mix-and-max-box-builder' ),
+				'message' => __( 'You have added too many of one item.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 400,
 			),
 			'invalid_size'         => array(
-				'message' => __( 'Choose one of the box sizes.', 'mix-and-max-box-builder' ),
+				'message' => __( 'Choose one of the box sizes.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 400,
 			),
 			'wrong_count'          => array(
-				'message' => __( 'Fill every slot in the box.', 'mix-and-max-box-builder' ),
+				'message' => __( 'Fill every slot in the box.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 400,
 			),
 			'foreign_product'      => array(
-				'message' => __( 'One of those items is not part of this box.', 'mix-and-max-box-builder' ),
+				'message' => __( 'One of those items is not part of this box.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 400,
 			),
 			'unavailable_product'  => array(
-				'message' => __( 'One of those items is no longer available.', 'mix-and-max-box-builder' ),
+				'message' => __( 'One of those items is no longer available.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 400,
 			),
 			'out_of_stock'         => array(
-				'message' => __( 'One of those items is out of stock.', 'mix-and-max-box-builder' ),
+				'message' => __( 'One of those items is out of stock.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 409,
 			),
 			'invalid_box'          => array(
-				'message' => __( 'That box cannot be added to the cart.', 'mix-and-max-box-builder' ),
+				'message' => __( 'That box cannot be added to the cart.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 400,
 			),
 			'cart_unavailable'     => array(
-				'message' => __( 'The cart is not available right now.', 'mix-and-max-box-builder' ),
+				'message' => __( 'The cart is not available right now.', 'productboxes-mix-and-match-box-builder' ),
 				'status'  => 500,
 			),
 		);
@@ -131,9 +131,9 @@ final class Box_Text {
 			$product = wc_get_product( Box_Rules::key( (int) $item['product_id'], (int) $item['variation_id'] ) );
 			$name    = $product instanceof \WC_Product
 				? html_entity_decode( wp_strip_all_tags( $product->get_name() ), ENT_QUOTES, 'UTF-8' )
-				: __( 'Item no longer sold', 'mix-and-max-box-builder' );
+				: __( 'Item no longer sold', 'productboxes-mix-and-match-box-builder' );
 			/* translators: 1: quantity, 2: product name */
-			$parts[] = sprintf( _x( '%1$d × %2$s', 'box item line', 'mix-and-max-box-builder' ), (int) $item['qty'], $name );
+			$parts[] = sprintf( _x( '%1$d × %2$s', 'box item line', 'productboxes-mix-and-match-box-builder' ), (int) $item['qty'], $name );
 		}
 		return $parts;
 	}
@@ -151,7 +151,7 @@ final class Box_Text {
 		$saved = '−' . self::money( $quote['discount'] );
 		if ( ! empty( $quote['tier'] ) && 'percent' === $quote['tier']['discount_type'] ) {
 			/* translators: 1: percent, such as 10%, 2: amount taken off, such as −$3.00 */
-			return sprintf( __( '%1$s (%2$s)', 'mix-and-max-box-builder' ), self::percent( $quote['tier']['value'] ), $saved );
+			return sprintf( __( '%1$s (%2$s)', 'productboxes-mix-and-match-box-builder' ), self::percent( $quote['tier']['value'] ), $saved );
 		}
 		return $saved;
 	}
@@ -165,7 +165,7 @@ final class Box_Text {
 	public static function percent( $value ) {
 		$decimals = floor( (float) $value ) === (float) $value ? 0 : 2;
 		/* translators: %s: a number, such as 10 or 12.5 */
-		return sprintf( __( '%s%%', 'mix-and-max-box-builder' ), number_format_i18n( (float) $value, $decimals ) );
+		return sprintf( __( '%s%%', 'productboxes-mix-and-match-box-builder' ), number_format_i18n( (float) $value, $decimals ) );
 	}
 
 	/**
@@ -182,17 +182,17 @@ final class Box_Text {
 		$left = (int) $next['needed'];
 		if ( 'percent' === $next['discount_type'] ) {
 			/* translators: %s: a percentage, such as 15% */
-			$reward = sprintf( __( '%s off', 'mix-and-max-box-builder' ), self::percent( $next['value'] ) );
+			$reward = sprintf( __( '%s off', 'productboxes-mix-and-match-box-builder' ), self::percent( $next['value'] ) );
 		} elseif ( 'fixed_amount' === $next['discount_type'] ) {
 			/* translators: %s: an amount of money, such as $5.00 */
-			$reward = sprintf( __( '%s off', 'mix-and-max-box-builder' ), self::money( \MixMax\BoxBuilder\Pricing::to_minor( $next['value'], wc_get_price_decimals() ) ) );
+			$reward = sprintf( __( '%s off', 'productboxes-mix-and-match-box-builder' ), self::money( \MixMax\BoxBuilder\Pricing::to_minor( $next['value'], wc_get_price_decimals() ) ) );
 		} else {
 			/* translators: %s: an amount of money, such as $20.00 */
-			$reward = sprintf( __( 'a box price of %s', 'mix-and-max-box-builder' ), self::money( \MixMax\BoxBuilder\Pricing::to_minor( $next['value'], wc_get_price_decimals() ) ) );
+			$reward = sprintf( __( 'a box price of %s', 'productboxes-mix-and-match-box-builder' ), self::money( \MixMax\BoxBuilder\Pricing::to_minor( $next['value'], wc_get_price_decimals() ) ) );
 		}
 		return sprintf(
 			/* translators: 1: number of items still to add, 2: the reward, such as 15% off */
-			_n( 'Add %1$d more item to get %2$s', 'Add %1$d more items to get %2$s', $left, 'mix-and-max-box-builder' ),
+			_n( 'Add %1$d more item to get %2$s', 'Add %1$d more items to get %2$s', $left, 'productboxes-mix-and-match-box-builder' ),
 			$left,
 			$reward
 		);

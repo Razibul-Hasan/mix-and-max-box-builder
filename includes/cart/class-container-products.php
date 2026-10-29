@@ -77,7 +77,7 @@ final class Container_Products {
 		$repo        = new Campaign_Repository();
 		$campaign    = $repo->find( $campaign_id );
 		if ( ! $campaign ) {
-			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'mix-and-max-box-builder' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 404 ) );
 		}
 		if ( isset( self::$busy[ $campaign_id ] ) ) {
 			return (int) $campaign['config']['container_product_id'];
@@ -102,7 +102,7 @@ final class Container_Products {
 			$product->update_meta_data( self::META, (int) $campaign_id );
 			$product_id = $product->save();
 			if ( ! $product_id ) {
-				return new \WP_Error( 'mmbb_container_failed', __( 'The box product could not be created.', 'mix-and-max-box-builder' ), array( 'status' => 500 ) );
+				return new \WP_Error( 'mmbb_container_failed', __( 'The box product could not be created.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 500 ) );
 			}
 
 			$set = $repo->set_container_product( $campaign_id, (int) $product_id );
@@ -155,7 +155,7 @@ final class Container_Products {
 	 */
 	private static function title( $title ) {
 		$title = trim( (string) $title );
-		return '' === $title ? __( 'Untitled campaign', 'mix-and-max-box-builder' ) : $title;
+		return '' === $title ? __( 'Untitled campaign', 'productboxes-mix-and-match-box-builder' ) : $title;
 	}
 
 	/**
@@ -252,7 +252,7 @@ final class Container_Products {
 	 */
 	public function post_states( $states, $post ) {
 		if ( $post instanceof \WP_Post && 'product' === $post->post_type && (int) get_post_meta( $post->ID, self::META, true ) > 0 ) {
-			$states['mmbb_container'] = __( 'Box container — managed by Mix and Max', 'mix-and-max-box-builder' );
+			$states['mmbb_container'] = __( 'Box container — managed by ProductBoxes', 'productboxes-mix-and-match-box-builder' );
 		}
 		return $states;
 	}
@@ -267,7 +267,7 @@ final class Container_Products {
 			return;
 		}
 		echo '<div class="notice notice-warning inline"><p>';
-		echo esc_html__( 'This product carries a Mix and Max box through the cart. Mix and Max sets its name and price. Edit the campaign instead of this product.', 'mix-and-max-box-builder' );
+		echo esc_html__( 'This product carries a ProductBoxes box through the cart. ProductBoxes sets its name and price. Edit the campaign instead of this product.', 'productboxes-mix-and-match-box-builder' );
 		echo '</p></div>';
 	}
 }

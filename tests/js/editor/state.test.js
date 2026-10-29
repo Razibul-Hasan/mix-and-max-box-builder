@@ -5,8 +5,6 @@ import {
 	moveItem,
 	payloadFor,
 	setIn,
-	slugify,
-	slugInput,
 	stepForPath,
 	toNumber,
 	validateAll,
@@ -40,7 +38,11 @@ const config = ( overrides = {} ) => ( {
 		caps: {},
 	},
 	schedule: { start: null, end: null, countdown_days: 0 },
-	extras: { gift_message: false, gift_wrap: { enabled: false, fee: 0 } },
+	extras: {
+		gift_message: false,
+		gift_wrap: { enabled: false, fee: 0 },
+		free_gift: { enabled: false, product_id: 0, min_items: 12 },
+	},
 	design: { layout: 'both', columns: 0, headline: '' },
 	placement: { page_id: 0 },
 	container_product_id: 0,
@@ -217,6 +219,26 @@ describe( 'basics validation', () => {
 					start: '2026-11-01T00:00:00Z',
 					end: '2026-12-24T00:00:00Z',
 				},
+			} )
+		).toEqual( {} );
+	} );
+
+	it( 'asks for a countdown time when an always-on campaign shows one', () => {
+		const schedule = { start: null, end: null, countdown_days: 7 };
+		expect( errorsFor( 'basics', { schedule } ) ).toHaveProperty( [
+			'schedule.countdown_end',
+		] );
+		expect(
+			errorsFor( 'basics', {
+				schedule: {
+					...schedule,
+					countdown_end: '2026-12-24T00:00:00Z',
+				},
+			} )
+		).toEqual( {} );
+		expect(
+			errorsFor( 'basics', {
+				schedule: { ...schedule, end: '2026-12-24T00:00:00Z' },
 			} )
 		).toEqual( {} );
 	} );
@@ -427,6 +449,26 @@ describe( 'rules validation', () => {
 			{}
 		);
 	} );
+
+	it( 'needs a gift product and an item count when the free gift is on', () => {
+		const extras = ( gift ) => ( {
+			gift_message: false,
+			gift_wrap: { enabled: false, fee: 0 },
+			free_gift: { enabled: true, product_id: 7, min_items: 6, ...gift },
+		} );
+		expect( errorsFor( 'rules', { extras: extras( {} ) } ) ).toEqual( {} );
+		expect(
+			errorsFor( 'rules', { extras: extras( { product_id: 0 } ) } )
+		).toHaveProperty( [ 'extras.free_gift.product_id' ] );
+		expect(
+			errorsFor( 'rules', { extras: extras( { min_items: 13 } ) } )
+		).toHaveProperty( [ 'extras.free_gift.min_items' ] );
+		expect(
+			errorsFor( 'rules', {
+				extras: extras( { enabled: false, product_id: 0 } ),
+			} )
+		).toEqual( {} );
+	} );
 } );
 
 describe( 'whole-draft validation', () => {
@@ -465,20 +507,6 @@ describe( 'whole-draft validation', () => {
 		expect( stepForPath( 'tiers.1.qty' ) ).toBe( 'rules' );
 		expect( stepForPath( 'bundle.price' ) ).toBe( 'rules' );
 		expect( stepForPath( 'design.layout' ) ).toBe( 'design' );
-	} );
-} );
-
-describe( 'slugs', () => {
-	it( 'slugify makes a clean address', () => {
-		expect( slugify( 'Holiday Treat Box!' ) ).toBe( 'holiday-treat-box' );
-		expect( slugify( '  Crème brûlée  ' ) ).toBe( 'creme-brulee' );
-		expect( slugify( '' ) ).toBe( '' );
-	} );
-
-	it( 'slugInput keeps a trailing dash while typing', () => {
-		expect( slugInput( 'Holiday-' ) ).toBe( 'holiday-' );
-		expect( slugInput( 'holiday  box' ) ).toBe( 'holiday-box' );
-		expect( slugInput( '-x' ) ).toBe( 'x' );
 	} );
 } );
 

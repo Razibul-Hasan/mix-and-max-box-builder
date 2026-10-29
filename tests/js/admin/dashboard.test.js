@@ -142,7 +142,7 @@ describe( 'Dashboard', () => {
 		);
 		render( <App page="dashboard" /> );
 
-		await screen.findByText( 'Welcome to Mix and Max' );
+		await screen.findByText( 'Welcome to ProductBoxes' );
 		expect( screen.getByText( 'Launch your first box' ) ).toBeTruthy();
 		expect( screen.getByText( 'How a box campaign works' ) ).toBeTruthy();
 		expect( screen.getByText( '2 of 6 done' ) ).toBeTruthy();

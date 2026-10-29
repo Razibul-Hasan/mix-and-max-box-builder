@@ -217,4 +217,28 @@ describe( 'helpers', () => {
 			countdownEnd( { end, countdown_days: 3 }, Date.parse( end ) + 1 )
 		).toBeNull();
 	} );
+
+	it( 'counts an always-on campaign to its own time until it passes', () => {
+		const now = Date.parse( '2026-01-10T00:00:00Z' );
+		const countTo = '2026-03-01T00:00:00Z';
+		const schedule = {
+			end: null,
+			countdown_days: 7,
+			countdown_end: countTo,
+		};
+		expect( countdownEnd( schedule, now ) ).toBe( countTo );
+		expect(
+			countdownEnd( { ...schedule, countdown_days: 0 }, now )
+		).toBeNull();
+		expect(
+			countdownEnd( schedule, Date.parse( countTo ) + 1 )
+		).toBeNull();
+		// An end date wins over the custom time.
+		expect(
+			countdownEnd(
+				{ ...schedule, end: '2026-01-12T00:00:00Z', countdown_days: 3 },
+				now
+			)
+		).toBe( '2026-01-12T00:00:00Z' );
+	} );
 } );

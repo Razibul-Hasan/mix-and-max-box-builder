@@ -92,22 +92,24 @@
 	flex-direction: column;
 	justify-content: flex-end;
 	padding: var(--space-4);
+
+	/* Always outlined: a custom base colour can match the page and vanish. */
 	border: 1px solid var(--line-strong);
 	border-radius: var(--radius-lg);
-	background: var(--surface);
-	color: var(--ink);
+	background: var(--ladder-base, var(--surface));
+	color: var(--on-ladder-base, var(--ink));
 }
 
 .mmbb-root .mmbb-hero__ladder li.is-near {
-	border-color: var(--pop);
-	background: var(--pop);
-	color: var(--on-pop);
+	border-color: var(--ladder-near, var(--pop));
+	background: var(--ladder-near, var(--pop));
+	color: var(--on-ladder-near, var(--on-pop));
 }
 
 .mmbb-root .mmbb-hero__ladder li.is-top {
-	border-color: var(--max);
-	background: var(--max);
-	color: var(--on-max);
+	border-color: var(--ladder-top, var(--max));
+	background: var(--ladder-top, var(--max));
+	color: var(--on-ladder-top, var(--on-max));
 }
 
 .mmbb-root .mmbb-hero__ladder b {

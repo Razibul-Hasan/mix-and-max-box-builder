@@ -23,14 +23,15 @@ final class Box_Resolver {
 	 * @param array  $options     { size: int, gift_wrap: bool }.
 	 * @param string $exclude_key Cart item key whose own quantities do not count against stock (an edit or a repricing).
 	 * @param int    $multiplier  How many boxes the line holds, for the stock check.
-	 * @return array { error: string|null, items: array[], quote: array|null }. `error` is a code from Messages.
+	 * @return array { error: string|null, items: array[], quote: array|null, free_gift: array|null }. `error` is a code from Messages.
 	 */
 	public static function resolve( array $campaign, array $picks, array $options = array(), $exclude_key = '', $multiplier = 1 ) {
 		$fail = static function ( $code ) {
 			return array(
-				'error' => $code,
-				'items' => array(),
-				'quote' => null,
+				'error'     => $code,
+				'items'     => array(),
+				'quote'     => null,
+				'free_gift' => null,
 			);
 		};
 
@@ -109,9 +110,54 @@ final class Box_Resolver {
 		}
 
 		return array(
-			'error' => null,
-			'items' => $items,
-			'quote' => $quote,
+			'error'     => null,
+			'items'     => $items,
+			'quote'     => $quote,
+			'free_gift' => self::free_gift( $config, $items, $stock_needed, $multiplier ),
+		);
+	}
+
+	/**
+	 * The free gift a box has earned, or null. A gift that is gone or out of stock is skipped, not an error.
+	 *
+	 * @param array   $config       Campaign config.
+	 * @param array[] $items        Resolved items.
+	 * @param int[]   $stock_needed Units already needed, by stock owner id.
+	 * @param int     $multiplier   How many boxes the line holds.
+	 * @return array|null { product_id, variation_id, qty, name }.
+	 */
+	public static function free_gift( array $config, array $items, array $stock_needed = array(), $multiplier = 1 ) {
+		$gift = isset( $config['extras']['free_gift'] ) ? $config['extras']['free_gift'] : array();
+		if ( empty( $gift['enabled'] ) || empty( $gift['product_id'] ) ) {
+			return null;
+		}
+		$count = 0;
+		foreach ( $items as $item ) {
+			$count += (int) $item['qty'];
+		}
+		if ( $count < max( 1, (int) $gift['min_items'] ) ) {
+			return null;
+		}
+
+		$product = wc_get_product( (int) $gift['product_id'] );
+		$row     = array(
+			'product_id'   => (int) $gift['product_id'],
+			'variation_id' => 0,
+		);
+		if ( ! $product instanceof \WC_Product || ! self::is_offerable( $product, $row ) ) {
+			return null;
+		}
+		$stock_id = (int) $product->get_stock_managed_by_id();
+		$wanted   = ( isset( $stock_needed[ $stock_id ] ) ? $stock_needed[ $stock_id ] : 0 ) + max( 1, (int) $multiplier );
+		if ( ! $product->is_in_stock() || ! $product->has_enough_stock( $wanted ) ) {
+			return null;
+		}
+
+		return array(
+			'product_id'   => (int) $product->get_id(),
+			'variation_id' => 0,
+			'qty'          => 1,
+			'name'         => html_entity_decode( $product->get_name(), ENT_QUOTES, 'UTF-8' ),
 		);
 	}
 
@@ -135,7 +181,7 @@ final class Box_Resolver {
 	 * @return bool
 	 */
 	public static function is_offerable( \WC_Product $product, array $row ) {
-		if ( 'publish' !== $product->get_status() || ! $product->is_purchasable() ) {
+		if ( 'publish' !== $product->get_status() || ! $product->is_purchasable() || Container_Products::is_container( $product ) ) {
 			return false;
 		}
 		if ( $row['variation_id'] > 0 ) {
@@ -209,7 +255,11 @@ final class Box_Resolver {
 				if ( isset( $line['mmbb_box']['mode'] ) && 'items' === $line['mmbb_box']['mode'] ) {
 					continue;
 				}
-				foreach ( (array) $line['mmbb_box']['items'] as $item ) {
+				$box_items = (array) $line['mmbb_box']['items'];
+				if ( ! empty( $line['mmbb_box']['free_gift'] ) && is_array( $line['mmbb_box']['free_gift'] ) ) {
+					$box_items[] = $line['mmbb_box']['free_gift'];
+				}
+				foreach ( $box_items as $item ) {
 					$id            = Box_Rules::key( (int) $item['product_id'], (int) $item['variation_id'] );
 					$totals[ $id ] = ( isset( $totals[ $id ] ) ? $totals[ $id ] : 0 ) + (int) $item['qty'] * $line_qty;
 				}

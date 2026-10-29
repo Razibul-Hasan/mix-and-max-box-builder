@@ -1,6 +1,6 @@
 {
-	"name": "mix-and-max-box-builder",
-	"version": "0.1.0",
+	"name": "productboxes-mix-and-match-box-builder",
+	"version": "1.0.0",
 	"private": true,
 	"license": "GPL-2.0-or-later",
 	"engines": {
@@ -13,14 +13,14 @@
 		"lint:css": "wp-scripts lint-style \"src/**/*.css\"",
 		"format": "wp-scripts format src tools tests/js webpack.config.js jest-unit.config.js package.json",
 		"test:js": "wp-scripts test-unit-js --runInBand",
-		"test:php": "wp-env run tests-cli --env-cwd=wp-content/plugins/mix-and-max-box-builder env MMBB_TEST_SUITE=integration vendor/bin/phpunit --testsuite=integration",
+		"test:php": "wp-env run tests-cli --env-cwd=wp-content/plugins/productboxes-mix-and-match-box-builder env MMBB_TEST_SUITE=integration vendor/bin/phpunit --testsuite=integration",
 		"plugin-zip": "wp-scripts plugin-zip",
 		"env:start": "wp-env start",
 		"env:stop": "wp-env stop",
 		"tokens": "node tools/build-tokens.mjs"
 	},
 	"files": [
-		"mix-and-max-box-builder.php",
+		"productboxes-mix-and-match-box-builder.php",
 		"uninstall.php",
 		"readme.txt",
 		"LICENSE",

@@ -11,12 +11,17 @@ import {
 } from '../../components';
 import { useAdmin } from '../context';
 import { tierSummary, typeSummary } from '../format';
-import { slugInput } from './state';
+import PreviewCard from './PreviewCard';
 import { localInputToUtc, utcToLocalInput } from './time';
 
 const DEFAULT_COUNTDOWN_DAYS = 7;
 
-export default function BasicsStep( { draft, errors, dispatch, page } ) {
+export default function BasicsStep( {
+	draft,
+	errors,
+	dispatch,
+	previewProducts,
+} ) {
 	const { timezone, money } = useAdmin();
 	const formatMoney = useMoney();
 	const { config } = draft;
@@ -31,6 +36,8 @@ export default function BasicsStep( { draft, errors, dispatch, page } ) {
 		setRuns( value );
 		if ( value === 'always' ) {
 			set( 'schedule', { ...schedule, start: null, end: null } );
+		} else {
+			set( 'schedule', { ...schedule, countdown_end: null } );
 		}
 	};
 
@@ -38,57 +45,41 @@ export default function BasicsStep( { draft, errors, dispatch, page } ) {
 		<div className="mmbb-editor__cols">
 			<div className="mmbb-editor__main">
 				<Card
-					title={ __( 'Campaign', 'mix-and-max-box-builder' ) }
+					title={ __(
+						'Campaign',
+						'productboxes-mix-and-match-box-builder'
+					) }
 					subtitle={ __(
 						'The name is for you. The headline is what shoppers see.',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				>
 					<div className="mmbb-editor__stack">
-						<div className="mmbb-editor__pair">
-							<TextField
-								label={ __(
-									'Campaign name',
-									'mix-and-max-box-builder'
-								) }
-								value={ draft.title }
-								maxLength={ 200 }
-								error={ errors.title }
-								onChange={ ( event ) =>
-									dispatch( {
-										type: 'title',
-										value: event.target.value,
-									} )
-								}
-							/>
-							<TextField
-								label={ __(
-									'Page address',
-									'mix-and-max-box-builder'
-								) }
-								prefix="/"
-								value={ page.slug }
-								help={ __(
-									'Used if you create a new page on step 5.',
-									'mix-and-max-box-builder'
-								) }
-								onChange={ ( event ) =>
-									page.setSlug(
-										slugInput( event.target.value )
-									)
-								}
-							/>
-						</div>
+						<TextField
+							label={ __(
+								'Campaign name',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={ draft.title }
+							maxLength={ 200 }
+							error={ errors.title }
+							onChange={ ( event ) =>
+								dispatch( {
+									type: 'title',
+									value: event.target.value,
+								} )
+							}
+						/>
 						<TextField
 							label={ __(
 								'Headline',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 							value={ design.headline }
 							maxLength={ 80 }
 							help={ __(
 								'Lead with the number. It sits above the builder in the display font.',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 							onChange={ ( event ) =>
 								set( 'design.headline', event.target.value )
@@ -97,7 +88,7 @@ export default function BasicsStep( { draft, errors, dispatch, page } ) {
 						<TextField
 							label={ __(
 								'Intro line',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 							multiline
 							rows={ 3 }
@@ -110,23 +101,31 @@ export default function BasicsStep( { draft, errors, dispatch, page } ) {
 					</div>
 				</Card>
 
-				<Card title={ __( 'Schedule', 'mix-and-max-box-builder' ) }>
+				<Card
+					title={ __(
+						'Schedule',
+						'productboxes-mix-and-match-box-builder'
+					) }
+				>
 					<div className="mmbb-editor__stack">
 						<SegmentedControl
-							label={ __( 'Runs', 'mix-and-max-box-builder' ) }
+							label={ __(
+								'Runs',
+								'productboxes-mix-and-match-box-builder'
+							) }
 							options={ [
 								{
 									value: 'always',
 									label: __(
 										'Always on',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 								},
 								{
 									value: 'between',
 									label: __(
 										'Between dates',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 								},
 							] }
@@ -139,7 +138,7 @@ export default function BasicsStep( { draft, errors, dispatch, page } ) {
 									type="datetime-local"
 									label={ __(
 										'Starts',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 									value={ utcToLocalInput(
 										schedule.start,
@@ -159,7 +158,7 @@ export default function BasicsStep( { draft, errors, dispatch, page } ) {
 									type="datetime-local"
 									label={ __(
 										'Ends',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									) }
 									value={ utcToLocalInput(
 										schedule.end,
@@ -182,12 +181,19 @@ export default function BasicsStep( { draft, errors, dispatch, page } ) {
 							<Toggle
 								label={ __(
 									'Countdown timer',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
-								description={ __(
-									'Shows above the builder in the last 7 days, counting to the end date above.',
-									'mix-and-max-box-builder'
-								) }
+								description={
+									runs === 'between'
+										? __(
+												'Shows above the builder in the last 7 days, counting to the end date above.',
+												'productboxes-mix-and-match-box-builder'
+										  )
+										: __(
+												'Shows above the builder and counts to the time you pick. It hides once that time passes.',
+												'productboxes-mix-and-match-box-builder'
+										  )
+								}
 								checked={ schedule.countdown_days > 0 }
 								onChange={ ( on ) =>
 									set(
@@ -196,13 +202,47 @@ export default function BasicsStep( { draft, errors, dispatch, page } ) {
 									)
 								}
 							/>
+							{ runs === 'always' &&
+							schedule.countdown_days > 0 ? (
+								<TextField
+									type="datetime-local"
+									label={ __(
+										'Count down to',
+										'productboxes-mix-and-match-box-builder'
+									) }
+									value={ utcToLocalInput(
+										schedule.countdown_end,
+										timezone
+									) }
+									error={ errors[ 'schedule.countdown_end' ] }
+									help={ __(
+										'The campaign stays on after this. Only the timer stops.',
+										'productboxes-mix-and-match-box-builder'
+									) }
+									onChange={ ( event ) =>
+										set(
+											'schedule.countdown_end',
+											localInputToUtc(
+												event.target.value,
+												timezone
+											)
+										)
+									}
+								/>
+							) : null }
 						</div>
 					</div>
 				</Card>
 			</div>
 
 			<div className="mmbb-editor__side">
-				<Card title={ __( 'At a glance', 'mix-and-max-box-builder' ) }>
+				<PreviewCard draft={ draft } products={ previewProducts } />
+				<Card
+					title={ __(
+						'At a glance',
+						'productboxes-mix-and-match-box-builder'
+					) }
+				>
 					<div className="mmbb-editor__stack">
 						<div className="mmbb-editor__badges">
 							<Badge tone="brand" icon="percent">
@@ -215,7 +255,7 @@ export default function BasicsStep( { draft, errors, dispatch, page } ) {
 						<p className="mmbb-editor__note">
 							{ __(
 								'Rules and tiers come from your template. Change them on step 3.',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						</p>
 					</div>
@@ -224,12 +264,12 @@ export default function BasicsStep( { draft, errors, dispatch, page } ) {
 					tone="info"
 					title={ __(
 						'Dates follow your store time',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				>
 					{ __(
 						'WordPress › Settings › General sets the time zone.',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				</Notice>
 			</div>

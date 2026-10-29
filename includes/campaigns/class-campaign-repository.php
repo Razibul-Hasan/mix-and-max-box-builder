@@ -158,7 +158,7 @@ final class Campaign_Repository {
 		if ( null === $title || '' === trim( (string) $title ) ) {
 			$title = $template && 'blank' !== $template['id']
 				? $template['title']
-				: __( 'Untitled campaign', 'mix-and-max-box-builder' );
+				: __( 'Untitled campaign', 'productboxes-mix-and-match-box-builder' );
 		}
 
 		$id = wp_insert_post(
@@ -192,7 +192,7 @@ final class Campaign_Repository {
 	public function save( $id, array $input, $title = null, $replace = false ) {
 		$current = $this->find( $id );
 		if ( ! $current ) {
-			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'mix-and-max-box-builder' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 404 ) );
 		}
 
 		$config                         = Config::sanitize( $input, $replace ? self::defaults() : $current['config'] );
@@ -234,7 +234,7 @@ final class Campaign_Repository {
 	public function set_container_product( $id, $product_id ) {
 		$current = $this->find( $id );
 		if ( ! $current ) {
-			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'mix-and-max-box-builder' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 404 ) );
 		}
 		$config                         = $current['config'];
 		$config['container_product_id'] = max( 0, (int) $product_id );
@@ -273,7 +273,7 @@ final class Campaign_Repository {
 	public function duplicate( $id ) {
 		$source = $this->find( $id );
 		if ( ! $source ) {
-			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'mix-and-max-box-builder' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 404 ) );
 		}
 
 		$config                         = $source['config'];
@@ -285,7 +285,7 @@ final class Campaign_Repository {
 				'post_type'   => Post_Type::NAME,
 				'post_status' => 'draft',
 				/* translators: %s: campaign name */
-				'post_title'  => sprintf( __( '%s (copy)', 'mix-and-max-box-builder' ), $source['title'] ),
+				'post_title'  => sprintf( __( '%s (copy)', 'productboxes-mix-and-match-box-builder' ), $source['title'] ),
 			),
 			true
 		);
@@ -403,7 +403,7 @@ final class Campaign_Repository {
 	 */
 	private function set_post_status( $id, $status ) {
 		if ( ! $this->find( $id ) ) {
-			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'mix-and-max-box-builder' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 404 ) );
 		}
 		$result = wp_update_post(
 			array(
@@ -424,7 +424,7 @@ final class Campaign_Repository {
 	 */
 	private function set_paused( $id, $paused ) {
 		if ( ! $this->find( $id ) ) {
-			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'mix-and-max-box-builder' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 404 ) );
 		}
 		if ( $paused ) {
 			update_post_meta( absint( $id ), Post_Type::META_PAUSED, '1' );

@@ -6,22 +6,22 @@ import { cx } from './utils';
 const ADMIN_NAV = [
 	{
 		id: 'dashboard',
-		label: __( 'Dashboard', 'mix-and-max-box-builder' ),
+		label: __( 'Dashboard', 'productboxes-mix-and-match-box-builder' ),
 		icon: 'dashboard',
 	},
 	{
 		id: 'campaigns',
-		label: __( 'Campaigns', 'mix-and-max-box-builder' ),
+		label: __( 'Campaigns', 'productboxes-mix-and-match-box-builder' ),
 		icon: 'campaign',
 	},
 	{
 		id: 'analytics',
-		label: __( 'Analytics', 'mix-and-max-box-builder' ),
+		label: __( 'Analytics', 'productboxes-mix-and-match-box-builder' ),
 		icon: 'analytics',
 	},
 	{
 		id: 'settings',
-		label: __( 'Settings', 'mix-and-max-box-builder' ),
+		label: __( 'Settings', 'productboxes-mix-and-match-box-builder' ),
 		icon: 'settings',
 	},
 ];
@@ -40,17 +40,23 @@ export default function AdminShell( {
 						<Icon name="box" size={ 18 } strokeWidth={ 2.25 } />
 					</span>
 					<span className="mmbb-shell__name">
-						{ __( 'Mix and Max', 'mix-and-max-box-builder' ) }
+						{ __(
+							'ProductBoxes',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</span>
 					<span className="mmbb-shell__tag">
-						{ __( 'Box Builder', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Box Builder',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</span>
 				</div>
 				<nav
 					className="mmbb-shell__nav"
 					aria-label={ __(
-						'Mix and Max Box Builder',
-						'mix-and-max-box-builder'
+						'ProductBoxes Box Builder',
+						'productboxes-mix-and-match-box-builder'
 					) }
 				>
 					{ nav.map( ( n ) => (
@@ -86,7 +92,10 @@ export default function AdminShell( {
 						right
 					) : (
 						<Button variant="ghost" size="sm" icon="help">
-							{ __( 'Help', 'mix-and-max-box-builder' ) }
+							{ __(
+								'Help',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						</Button>
 					) }
 				</div>

@@ -1058,6 +1058,28 @@ src/styles/scaffold.css
 The remaining allowlisted plugin files/directories arrive in their planned
 phases. This is a tooling scaffold archive, not a submission release.
 
+### WordPress.org review fixes — rename and nonces (2026-10-29)
+**Done:** The first review flagged the name as too close to "Mix and Match" offerings, plus nonce/permission checks. The plugin is renamed to "ProductBoxes - Mix & Match Box Builder for WooCommerce", with slug and text domain `productboxes-mix-and-match-box-builder` and main file `productboxes-mix-and-match-box-builder.php`. "Mix and match" is removed from readme tags, the readme copy, the header description and the block keywords. The public `wc_ajax_mmbb_nonce` endpoint, which minted add-to-cart nonces for anyone, is removed: an expired nonce now shows "This page has expired. Reload it and try again." The cart "Edit box" link carries an `mmbb_edit_box` nonce (`mmbb_edit_nonce`), and `Payload::edit_box()` ignores `?mmbb_edit=` unless it verifies.
+**Decisions:** The owner chose "ProductBoxes - Mix & Match Box Builder for WooCommerce", which replaced an interim "Boxora" name. It still contains "Mix & Match", which the review flagged, so it may be raised again. The `MixMax\BoxBuilder` namespace, `MMBB_*` constants and the `mmbb` prefix stay. They are unique, not user-facing, and changing them would touch every file and stored option. Historical log entries and `docs/BUILD-PLAN.md` keep the old name.
+**Checks run:** build ✅ · lint:js ✅ · lint:css ✅ · phpcs ✅ · test:js ✅ (230) · test:unit ✅ (103)
+**Skipped checks (and why):** test:php and Plugin Check, because Docker/wp-env is unavailable. Run them after renaming the local folder.
+**Open issues:** The local plugin folder is still `mix-and-max-box-builder/`, so rename it to `productboxes-mix-and-match-box-builder/` and reactivate the plugin. Reply to the review asking for the slug `productboxes-mix-and-match-box-builder`.
+
+### Design and function review on the Local site (2026-10-29)
+**Done:** Walked every admin screen, all five wizard steps, the storefront (desktop, phone) and the guest flow builder → Cart block → Checkout block in headless Chrome against the design PNGs. Fixed:
+- Storefront and preview ladder: the first step drew its border in `--ladder-base`, so a white custom base vanished on a white page. It now always uses `--line-strong`.
+- Pale accents (theme yellow `#ffee58`): `--max-strong` was a fixed 80% mix with black, about 2:1 on white, so "Box discount" and tier highlights were unreadable. `readableOn()` / `readable_on()` now darken in 10% steps until 4.5:1 on the card. The `#ffd23f` fixture expected the unreadable value and is updated; a theme-yellow case is added.
+- Money: WooCommerce's BDT symbol carries a trailing no-break space, which showed as "10.00৳ ." when the symbol sits on the right. `Assets::get_money_settings()` trims it for right positions.
+- Dashboard: the live card ignored `schedule.countdown_end`, so evergreen countdowns showed no "Ends in". Chart ticks now put the symbol after the number when WooCommerce does.
+- Placement: when the saved page is deleted or no longer holds the builder, `placement()` finds a published page or post that does. Before this, the list said "Not placed" and the dashboard had no View on store link.
+- Product picker: the hidden box container products were offered as items. They are now excluded from `mmbb/v1/products` and rejected by `Box_Resolver::is_offerable()`.
+- Publish step: a published campaign showed "Go live"; it now says "Save changes".
+- Product tiles: "Add to box" buttons are named "Add <product> to box" for screen readers. Settings' "Follow WooCommerce (…)" label uses `sprintf` instead of concatenation.
+**Decisions:** The Design step's three layout cards stay in the prototype's `minmax(180px, 1fr)` grid even though titles wrap at this width; changing it would depart from `design/`.
+**Checks run:** build ✅ · lint:js ✅ · lint:css ✅ · phpcs ✅ · test:js ✅ (231) · test:unit ✅ (104) · browser walk-through ✅ (no console errors from this plugin)
+**Skipped checks (and why):** test:php and Plugin Check, because Docker/wp-env is unavailable.
+**Open issues:** The cart page logs a 404 for `cart/undefinedwc/store/v1/cart` from the ProductReels plugin, not this one. The Cart block still has no Edit box link (Phase 7 open issue).
+
 <!-- Copy this block for each phase:
 
 ### Phase N — Title (YYYY-MM-DD)

@@ -46,7 +46,7 @@ final class Storefront {
 		wp_register_style( self::HANDLE, MMBB_URL . 'build/storefront.css', array( 'mmbb-components' ), $asset['version'] );
 		wp_style_add_data( self::HANDLE, 'rtl', 'replace' );
 		wp_register_script( self::HANDLE, MMBB_URL . 'build/storefront.js', $asset['dependencies'], $asset['version'], true );
-		wp_set_script_translations( self::HANDLE, 'mix-and-max-box-builder', MMBB_PATH . 'languages' );
+		wp_set_script_translations( self::HANDLE, 'productboxes-mix-and-match-box-builder', MMBB_PATH . 'languages' );
 	}
 
 	/** Register the block from its built folder. */
@@ -57,7 +57,7 @@ final class Storefront {
 		register_block_type( MMBB_PATH . 'build/blocks/box-builder' );
 
 		$editor_handle = generate_block_asset_handle( self::BLOCK, 'editorScript' );
-		wp_set_script_translations( $editor_handle, 'mix-and-max-box-builder', MMBB_PATH . 'languages' );
+		wp_set_script_translations( $editor_handle, 'productboxes-mix-and-match-box-builder', MMBB_PATH . 'languages' );
 	}
 
 	/** Register `[mmbb_box]`. */

@@ -36,7 +36,7 @@ final class Assets {
 		if ( file_exists( $script_asset ) ) {
 			$asset = require $script_asset;
 			wp_register_script( 'mmbb-components', MMBB_URL . 'build/components.js', $asset['dependencies'], $asset['version'], true );
-			wp_set_script_translations( 'mmbb-components', 'mix-and-max-box-builder', MMBB_PATH . 'languages' );
+			wp_set_script_translations( 'mmbb-components', 'productboxes-mix-and-match-box-builder', MMBB_PATH . 'languages' );
 			wp_add_inline_script( 'mmbb-components', 'window.mmbbMoneySettings = ' . wp_json_encode( self::get_money_settings() ) . ';', 'before' );
 		}
 	}
@@ -47,9 +47,15 @@ final class Assets {
 	 * @return array WooCommerce money display settings.
 	 */
 	public static function get_money_settings() {
+		$position = get_option( 'woocommerce_currency_pos', 'left' );
+		$symbol   = html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' );
+		// Some symbols (BDT) carry a trailing no-break space; after the amount it would sit before punctuation.
+		if ( 0 === strpos( (string) $position, 'right' ) ) {
+			$symbol = preg_replace( '/[\s\x{00a0}]+$/u', '', $symbol );
+		}
 		return array(
-			'symbol'            => html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ),
-			'position'          => get_option( 'woocommerce_currency_pos', 'left' ),
+			'symbol'            => $symbol,
+			'position'          => $position,
 			'decimals'          => wc_get_price_decimals(),
 			'decimalSeparator'  => wc_get_price_decimal_separator(),
 			'thousandSeparator' => wc_get_price_thousand_separator(),

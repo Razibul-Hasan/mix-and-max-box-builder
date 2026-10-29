@@ -30,7 +30,7 @@ class Stats_Controller extends Base_Controller {
 					'permission_callback' => array( $this, 'permissions_check' ),
 					'args'                => array(
 						'range' => array(
-							'description'       => __( 'Range of days to report on.', 'mix-and-max-box-builder' ),
+							'description'       => __( 'Range of days to report on.', 'productboxes-mix-and-match-box-builder' ),
 							'type'              => 'string',
 							'enum'              => array( '7d', '30d', '90d' ),
 							'default'           => '30d',

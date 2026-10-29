@@ -38,7 +38,7 @@ final class Requirements {
 		}
 
 		echo '<div class="notice notice-warning is-dismissible mmbb-requirements-notice"><p>';
-		echo esc_html__( 'Mix and Max Box Builder requires WooCommerce 9.0 or later. Install or update WooCommerce, then activate it to continue.', 'mix-and-max-box-builder' );
+		echo esc_html__( 'ProductBoxes Box Builder requires WooCommerce 9.0 or later. Install or update WooCommerce, then activate it to continue.', 'productboxes-mix-and-match-box-builder' );
 		echo '</p></div>';
 	}
 }

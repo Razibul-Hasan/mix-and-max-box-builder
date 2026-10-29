@@ -38,7 +38,7 @@ export default function TemplatePicker( { onClose } ) {
 						e,
 						__(
 							'The campaign could not be created.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						)
 					)
 				);
@@ -49,11 +49,11 @@ export default function TemplatePicker( { onClose } ) {
 		<Modal
 			title={ __(
 				'Start a new box campaign',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			) }
 			description={ __(
 				'Templates fill in the rules, tiers and copy. You pick the products next.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			) }
 			size="lg"
 			onClose={ onClose }
@@ -61,11 +61,17 @@ export default function TemplatePicker( { onClose } ) {
 			footer={
 				<>
 					<span className="mmbb-picker__picked">
-						{ __( 'Selected:', 'mix-and-max-box-builder' ) }{ ' ' }
+						{ __(
+							'Selected:',
+							'productboxes-mix-and-match-box-builder'
+						) }{ ' ' }
 						<b>{ current ? current.title : '' }</b>
 					</span>
 					<Button onClick={ onClose }>
-						{ __( 'Cancel', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Cancel',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</Button>
 					<Button
 						variant="primary"
@@ -74,7 +80,10 @@ export default function TemplatePicker( { onClose } ) {
 						disabled={ ! current }
 						onClick={ create }
 					>
-						{ __( 'Use template', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Use template',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</Button>
 				</>
 			}
@@ -84,7 +93,7 @@ export default function TemplatePicker( { onClose } ) {
 					tone="critical"
 					title={ __(
 						'Something went wrong',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				>
 					{ error }

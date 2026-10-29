@@ -8,14 +8,22 @@ export function formatCompact( n, prefix = '' ) {
 		return (
 			prefix +
 			( v / 1e6 ).toFixed( a >= 1e7 ? 0 : 1 ).replace( /\.0$/, '' ) +
-			_x( 'M', 'million abbreviation', 'mix-and-max-box-builder' )
+			_x(
+				'M',
+				'million abbreviation',
+				'productboxes-mix-and-match-box-builder'
+			)
 		);
 	}
 	if ( a >= 1e3 ) {
 		return (
 			prefix +
 			( v / 1e3 ).toFixed( a >= 1e4 ? 0 : 1 ).replace( /\.0$/, '' ) +
-			_x( 'K', 'thousand abbreviation', 'mix-and-max-box-builder' )
+			_x(
+				'K',
+				'thousand abbreviation',
+				'productboxes-mix-and-match-box-builder'
+			)
 		);
 	}
 	return prefix + Math.round( v );

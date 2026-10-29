@@ -25,6 +25,7 @@ import { toMinor } from '../shared/pricing';
 import { sizeTag, tierLabel, tierList } from '../shared/tiers';
 import { addBoxToCart } from './api';
 import Drawer from './Drawer';
+import FreeGift from './FreeGift';
 import Hero from './Hero';
 import { NARROW_BELOW, useContainerWidth } from './hooks';
 import {
@@ -137,7 +138,10 @@ function BuilderView( { payload, preview, navigate } ) {
 				setToast(
 					sprintf(
 						/* translators: %s: Discount label, for example "15% off". */
-						__( 'You unlocked %s', 'mix-and-max-box-builder' ),
+						__(
+							'You unlocked %s',
+							'productboxes-mix-and-match-box-builder'
+						),
 						tierLabel( tier, formatMoney, convert )
 					)
 				);
@@ -219,7 +223,7 @@ function BuilderView( { payload, preview, navigate } ) {
 	const ctaLabel =
 		settings.ctaLabel ||
 		( editing
-			? __( 'Update your box', 'mix-and-max-box-builder' )
+			? __( 'Update your box', 'productboxes-mix-and-match-box-builder' )
 			: undefined );
 
 	const showPanel = narrow ? view.layout === 'panel' : view.layout !== 'bar';
@@ -258,16 +262,26 @@ function BuilderView( { payload, preview, navigate } ) {
 
 	const gift = (
 		<div className="mmbb-builder__gift">
+			{ payload.freeGift ? (
+				<FreeGift
+					gift={ payload.freeGift }
+					count={ count }
+					capacity={ capacity }
+				/>
+			) : null }
 			{ config.extras.gift_wrap.enabled ? (
 				<Checkbox
-					label={ __( 'Make it a gift', 'mix-and-max-box-builder' ) }
+					label={ __(
+						'Make it a gift',
+						'productboxes-mix-and-match-box-builder'
+					) }
 					description={
 						config.extras.gift_wrap.fee > 0
 							? sprintf(
 									/* translators: %s: Gift wrap price with currency. */
 									__(
 										'Ribbon, card and no prices inside. Adds %s.',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 									formatMoney(
 										convert( config.extras.gift_wrap.fee )
@@ -275,7 +289,7 @@ function BuilderView( { payload, preview, navigate } ) {
 							  )
 							: __(
 									'Ribbon, card and no prices inside.',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 							  )
 					}
 					checked={ state.gift.enabled }
@@ -286,13 +300,16 @@ function BuilderView( { payload, preview, navigate } ) {
 			) : null }
 			{ config.extras.gift_message ? (
 				<TextField
-					label={ __( 'Gift message', 'mix-and-max-box-builder' ) }
+					label={ __(
+						'Gift message',
+						'productboxes-mix-and-match-box-builder'
+					) }
 					multiline
 					rows={ 2 }
 					maxLength={ 200 }
 					placeholder={ __(
 						'Write a short note (optional)',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 					value={ state.gift.message }
 					onChange={ ( event ) =>
@@ -328,7 +345,7 @@ function BuilderView( { payload, preview, navigate } ) {
 				preview
 					? __(
 							'Add to cart is turned off in the editor.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 					  )
 					: undefined
 			}
@@ -360,7 +377,7 @@ function BuilderView( { payload, preview, navigate } ) {
 				<Notice tone="info">
 					{ __(
 						'You’re editing the box from your cart. Update it when you’re done.',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				</Notice>
 			) : null }
@@ -370,9 +387,18 @@ function BuilderView( { payload, preview, navigate } ) {
 					compact
 					current={ step }
 					steps={ [
-						__( 'Pick a size', 'mix-and-max-box-builder' ),
-						__( 'Fill your box', 'mix-and-max-box-builder' ),
-						__( 'Checkout', 'mix-and-max-box-builder' ),
+						__(
+							'Pick a size',
+							'productboxes-mix-and-match-box-builder'
+						),
+						__(
+							'Fill your box',
+							'productboxes-mix-and-match-box-builder'
+						),
+						__(
+							'Checkout',
+							'productboxes-mix-and-match-box-builder'
+						),
 					] }
 				/>
 			) : null }
@@ -386,12 +412,15 @@ function BuilderView( { payload, preview, navigate } ) {
 					{ sizes.length ? (
 						<div className="mmbb-builder__section">
 							<p className="mmbb-builder__step">
-								{ __( 'Step 1', 'mix-and-max-box-builder' ) }
+								{ __(
+									'Step 1',
+									'productboxes-mix-and-match-box-builder'
+								) }
 							</p>
 							<h3 className="mmbb-builder__subhead">
 								{ __(
 									'Pick a box size',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							</h3>
 							<BoxSizePicker
@@ -420,12 +449,15 @@ function BuilderView( { payload, preview, navigate } ) {
 								} ) ) }
 							/>
 							<p className="mmbb-builder__step">
-								{ __( 'Step 2', 'mix-and-max-box-builder' ) }
+								{ __(
+									'Step 2',
+									'productboxes-mix-and-match-box-builder'
+								) }
 							</p>
 							<h3 className="mmbb-builder__subhead">
 								{ __(
 									'Fill your box',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							</h3>
 						</div>
@@ -436,7 +468,7 @@ function BuilderView( { payload, preview, navigate } ) {
 							<Chips
 								label={ __(
 									'Category',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 								value={ category }
 								onChange={ setCategory }
@@ -445,7 +477,7 @@ function BuilderView( { payload, preview, navigate } ) {
 										value: 'all',
 										label: __(
 											'All',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 										count: Object.keys( env.products )
 											.length,
@@ -461,7 +493,7 @@ function BuilderView( { payload, preview, navigate } ) {
 								className="mmbb-builder__sort"
 								aria-label={ __(
 									'Sort products',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 								value={ order }
 								onChange={ ( event ) =>
@@ -472,28 +504,28 @@ function BuilderView( { payload, preview, navigate } ) {
 										value: 'default',
 										label: __(
 											'Featured',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 									},
 									{
 										value: 'price_asc',
 										label: __(
 											'Price: low to high',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 									},
 									{
 										value: 'price_desc',
 										label: __(
 											'Price: high to low',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 									},
 									{
 										value: 'name',
 										label: __(
 											'Name',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 									},
 								] }
@@ -562,7 +594,7 @@ function BuilderView( { payload, preview, navigate } ) {
 						<p className="mmbb-builder__empty">
 							{ __(
 								'No products to show right now.',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						</p>
 					) }

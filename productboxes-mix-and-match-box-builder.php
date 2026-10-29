@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:       Mix and Max Box Builder
- * Plugin URI:        https://bestwebexpert.com/
- * Description:       Let shoppers build their own box of products and unlock bigger discounts as the box fills. For WooCommerce.
- * Version:           0.1.0
+ * Plugin Name:       ProductBoxes - Mix & Match Box Builder for WooCommerce
+ * Plugin URI:        https://bestwebexpert.com/productboxes-mix-and-match-box-builder
+ * Description:       Let shoppers pick products into a build-your-own box and unlock tiered discounts as the box fills. For WooCommerce.
+ * Version:           1.0.0
  * Requires at least: 6.6
  * Requires PHP:      7.4
  * Requires Plugins:  woocommerce
@@ -11,7 +11,7 @@
  * Author URI:        https://bestwebexpert.com/
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       mix-and-max-box-builder
+ * Text Domain:       productboxes-mix-and-match-box-builder
  * Domain Path:       /languages
  * WC requires at least: 9.0
  * WC tested up to:   11.2.1
@@ -21,7 +21,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'MMBB_VERSION', '0.1.0' );
+define( 'MMBB_VERSION', '1.0.0' );
 define( 'MMBB_FILE', __FILE__ );
 define( 'MMBB_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MMBB_URL', plugin_dir_url( __FILE__ ) );

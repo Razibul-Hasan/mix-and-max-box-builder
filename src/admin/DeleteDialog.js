@@ -37,7 +37,10 @@ export default function DeleteDialog( {
 		count === 1
 			? sprintf(
 					/* translators: %s: Campaign name. */
-					__( 'Delete “%s”?', 'mix-and-max-box-builder' ),
+					__(
+						'Delete “%s”?',
+						'productboxes-mix-and-match-box-builder'
+					),
 					names[ 0 ]
 			  )
 			: sprintf(
@@ -46,7 +49,7 @@ export default function DeleteDialog( {
 						'Delete %d campaign?',
 						'Delete %d campaigns?',
 						count,
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					),
 					count
 			  );
@@ -55,13 +58,13 @@ export default function DeleteDialog( {
 		count === 1
 			? __(
 					'It disappears from its page and shortcode. Orders keep their box details.',
-					'mix-and-max-box-builder'
+					'productboxes-mix-and-match-box-builder'
 			  )
 			: sprintf(
 					/* translators: %s: Campaign names. */
 					__(
 						'%s disappear from their pages and shortcodes. Orders keep their box details.',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					),
 					joinNames( names )
 			  );
@@ -79,12 +82,18 @@ export default function DeleteDialog( {
 				<>
 					<span ref={ cancel } className="mmbb-modal__slot">
 						<Button onClick={ onCancel } disabled={ busy }>
-							{ __( 'Cancel', 'mix-and-max-box-builder' ) }
+							{ __(
+								'Cancel',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						</Button>
 					</span>
 					{ pausable ? (
 						<Button onClick={ onPause } disabled={ busy }>
-							{ __( 'Pause instead', 'mix-and-max-box-builder' ) }
+							{ __(
+								'Pause instead',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						</Button>
 					) : null }
 					<Button
@@ -99,7 +108,7 @@ export default function DeleteDialog( {
 								'Delete %d campaign',
 								'Delete %d campaigns',
 								count,
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 							count
 						) }
@@ -113,7 +122,10 @@ export default function DeleteDialog( {
 					tone="warning"
 					title={ sprintf(
 						/* translators: %s: Campaign name. */
-						__( '%s is live', 'mix-and-max-box-builder' ),
+						__(
+							'%s is live',
+							'productboxes-mix-and-match-box-builder'
+						),
 						campaign.title
 					) }
 				>
@@ -122,13 +134,13 @@ export default function DeleteDialog( {
 								/* translators: %s: Number of boxes sold. */
 								__(
 									'It has sold %s boxes. Pausing hides it and keeps everything, so you can bring it back.',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								),
 								formatCount( campaign.stats.boxes_sold, locale )
 						  )
 						: __(
 								'Pausing hides it and keeps everything, so you can bring it back.',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 						  ) }
 				</Notice>
 			) ) }

@@ -10,12 +10,14 @@ import {
 	Notice,
 	QuantityStepper,
 	SegmentedControl,
+	Tabs,
 	TextField,
 	useMoney,
 } from '../../components';
 import Media from '../../components/Media';
 import { getProducts, getTerms } from '../api';
 import { useDebouncedValue, useRequest, errorMessage } from '../hooks';
+import PreviewCard from './PreviewCard';
 import { moveItem, toNumber } from './state';
 
 const PER_PAGE = 20;
@@ -27,7 +29,10 @@ function stockBadge( product ) {
 	if ( product.stock_status === 'outofstock' ) {
 		return (
 			<Badge tone="critical" dot>
-				{ __( 'Out of stock', 'mix-and-max-box-builder' ) }
+				{ __(
+					'Out of stock',
+					'productboxes-mix-and-match-box-builder'
+				) }
 			</Badge>
 		);
 	}
@@ -37,7 +42,10 @@ function stockBadge( product ) {
 			<Badge tone="warning" dot>
 				{ sprintf(
 					/* translators: %d: Units in stock. */
-					__( 'Only %d left', 'mix-and-max-box-builder' ),
+					__(
+						'Only %d left',
+						'productboxes-mix-and-match-box-builder'
+					),
 					left
 				) }
 			</Badge>
@@ -50,13 +58,13 @@ function pickLabel( on, name ) {
 	if ( on ) {
 		return sprintf(
 			/* translators: %s: Product name. */
-			__( 'Remove %s', 'mix-and-max-box-builder' ),
+			__( 'Remove %s', 'productboxes-mix-and-match-box-builder' ),
 			name
 		);
 	}
 	return sprintf(
 		/* translators: %s: Product name. */
-		__( 'Add %s', 'mix-and-max-box-builder' ),
+		__( 'Add %s', 'productboxes-mix-and-match-box-builder' ),
 		name
 	);
 }
@@ -72,9 +80,10 @@ function Thumb( { product, size } ) {
 	);
 }
 
-function ProductPicker( { draft, errors, dispatch, remember } ) {
+function ProductPicker( { draft, errors, dispatch, remember, byId } ) {
 	const formatMoney = useMoney();
 	const ids = draft.config.products.ids;
+	const [ view, setView ] = useState( 'all' );
 	const [ search, setSearch ] = useState( '' );
 	const [ category, setCategory ] = useState( 0 );
 	const [ page, setPage ] = useState( 1 );
@@ -127,7 +136,10 @@ function ProductPicker( { draft, errors, dispatch, remember } ) {
 		} );
 
 	const options = [
-		{ value: 0, label: __( 'All', 'mix-and-max-box-builder' ) },
+		{
+			value: 0,
+			label: __( 'All', 'productboxes-mix-and-match-box-builder' ),
+		},
 		...( terms.data || [] )
 			.filter( ( term ) => term.count > 0 )
 			.map( ( term ) => ( {
@@ -140,30 +152,73 @@ function ProductPicker( { draft, errors, dispatch, remember } ) {
 
 	return (
 		<Card
-			title={ __( 'Add products', 'mix-and-max-box-builder' ) }
+			title={ __(
+				'Add products',
+				'productboxes-mix-and-match-box-builder'
+			) }
 			subtitle={ __(
-				'Tick what shoppers can put in this box.',
-				'mix-and-max-box-builder'
+				'Tick what shoppers can put in this box, then set the order under Picked.',
+				'productboxes-mix-and-match-box-builder'
 			) }
 			padding="none"
 		>
 			<div className="mmbb-editor__picker-head">
-				<TextField
-					aria-label={ __(
-						'Search products',
-						'mix-and-max-box-builder'
+				<Tabs
+					label={ __(
+						'Products view',
+						'productboxes-mix-and-match-box-builder'
 					) }
-					prefix="search"
-					placeholder={ __(
-						'Search products by name or SKU',
-						'mix-and-max-box-builder'
-					) }
-					value={ search }
-					onChange={ ( event ) => setSearch( event.target.value ) }
+					tabs={ [
+						{
+							id: 'all',
+							label: __(
+								'All products',
+								'productboxes-mix-and-match-box-builder'
+							),
+						},
+						{
+							id: 'picked',
+							label: __(
+								'Picked',
+								'productboxes-mix-and-match-box-builder'
+							),
+							count: ids.length,
+						},
+					] }
+					value={ view }
+					onChange={ setView }
 				/>
-				{ options.length > 1 ? (
+				{ view === 'picked' ? (
+					<p className="mmbb-editor__note">
+						{ __(
+							'Drag to set the order shoppers see, or use the arrows. Set a cap per product.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					</p>
+				) : null }
+				{ view === 'all' ? (
+					<TextField
+						aria-label={ __(
+							'Search products',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						prefix="search"
+						placeholder={ __(
+							'Search products by name or SKU',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						value={ search }
+						onChange={ ( event ) =>
+							setSearch( event.target.value )
+						}
+					/>
+				) : null }
+				{ view === 'all' && options.length > 1 ? (
 					<Chips
-						label={ __( 'Category', 'mix-and-max-box-builder' ) }
+						label={ __(
+							'Category',
+							'productboxes-mix-and-match-box-builder'
+						) }
 						options={ options }
 						value={ category }
 						onChange={ setCategory }
@@ -175,13 +230,23 @@ function ProductPicker( { draft, errors, dispatch, remember } ) {
 					</Notice>
 				) : null }
 			</div>
-			{ request.error && rows.length === 0 ? (
+			{ view === 'picked' ? (
+				<ChosenList
+					draft={ draft }
+					dispatch={ dispatch }
+					byId={ byId }
+				/>
+			) : null }
+			{ view === 'all' && request.error && rows.length === 0 ? (
 				<div className="mmbb-editor__pad">
 					<Notice
 						tone="critical"
 						action={
 							<Button size="sm" onClick={ request.reload }>
-								{ __( 'Try again', 'mix-and-max-box-builder' ) }
+								{ __(
+									'Try again',
+									'productboxes-mix-and-match-box-builder'
+								) }
 							</Button>
 						}
 					>
@@ -189,12 +254,13 @@ function ProductPicker( { draft, errors, dispatch, remember } ) {
 							request.error,
 							__(
 								'The products could not be loaded.',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							)
 						) }
 					</Notice>
 				</div>
-			) : (
+			) : null }
+			{ view === 'all' && ! ( request.error && rows.length === 0 ) ? (
 				<ul className="mmbb-editor__list" aria-busy={ request.loading }>
 					{ rows.map( ( product ) => {
 						const on = ids.includes( product.id );
@@ -227,32 +293,40 @@ function ProductPicker( { draft, errors, dispatch, remember } ) {
 						);
 					} ) }
 				</ul>
-			) }
-			<div className="mmbb-editor__list-foot">
-				<span>
-					{ request.loading && rows.length === 0
-						? __( 'Loading products…', 'mix-and-max-box-builder' )
-						: sprintf(
-								/* translators: %d: Number of products listed. */
-								_n(
-									'%d product shown',
-									'%d products shown',
-									rows.length,
-									'mix-and-max-box-builder'
-								),
-								rows.length
-						  ) }
-				</span>
-				{ hasMore ? (
-					<Button
-						size="sm"
-						loading={ request.loading }
-						onClick={ () => setPage( page + 1 ) }
-					>
-						{ __( 'Show more', 'mix-and-max-box-builder' ) }
-					</Button>
-				) : null }
-			</div>
+			) : null }
+			{ view === 'all' ? (
+				<div className="mmbb-editor__list-foot">
+					<span>
+						{ request.loading && rows.length === 0
+							? __(
+									'Loading products…',
+									'productboxes-mix-and-match-box-builder'
+							  )
+							: sprintf(
+									/* translators: %d: Number of products listed. */
+									_n(
+										'%d product shown',
+										'%d products shown',
+										rows.length,
+										'productboxes-mix-and-match-box-builder'
+									),
+									rows.length
+							  ) }
+					</span>
+					{ hasMore ? (
+						<Button
+							size="sm"
+							loading={ request.loading }
+							onClick={ () => setPage( page + 1 ) }
+						>
+							{ __(
+								'Show more',
+								'productboxes-mix-and-match-box-builder'
+							) }
+						</Button>
+					) : null }
+				</div>
+			) : null }
 		</Card>
 	);
 }
@@ -285,12 +359,18 @@ function TermPicker( { draft, errors, dispatch, source } ) {
 		<Card
 			title={
 				isCategory
-					? __( 'Choose categories', 'mix-and-max-box-builder' )
-					: __( 'Choose tags', 'mix-and-max-box-builder' )
+					? __(
+							'Choose categories',
+							'productboxes-mix-and-match-box-builder'
+					  )
+					: __(
+							'Choose tags',
+							'productboxes-mix-and-match-box-builder'
+					  )
 			}
 			subtitle={ __(
 				'Every simple product in them can go in the box. Variable products are left out.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			) }
 			padding="none"
 		>
@@ -300,9 +380,12 @@ function TermPicker( { draft, errors, dispatch, source } ) {
 						isCategory
 							? __(
 									'Search categories',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 							  )
-							: __( 'Search tags', 'mix-and-max-box-builder' )
+							: __(
+									'Search tags',
+									'productboxes-mix-and-match-box-builder'
+							  )
 					}
 					prefix="search"
 					value={ search }
@@ -339,7 +422,7 @@ function TermPicker( { draft, errors, dispatch, source } ) {
 									'%d product',
 									'%d products',
 									term.count,
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								),
 								term.count
 							) }
@@ -349,7 +432,10 @@ function TermPicker( { draft, errors, dispatch, source } ) {
 			</ul>
 			{ ! request.loading && terms.length === 0 ? (
 				<p className="mmbb-editor__list-foot">
-					{ __( 'Nothing matches.', 'mix-and-max-box-builder' ) }
+					{ __(
+						'Nothing matches.',
+						'productboxes-mix-and-match-box-builder'
+					) }
 				</p>
 			) : null }
 		</Card>
@@ -367,168 +453,143 @@ function ChosenList( { draft, dispatch, byId } ) {
 			value: moveItem( ids, from, to ),
 		} );
 
+	if ( ids.length === 0 ) {
+		return (
+			<p className="mmbb-editor__list-foot mmbb-editor__chosen-empty">
+				{ __(
+					'Nothing picked yet. Tick products under All products.',
+					'productboxes-mix-and-match-box-builder'
+				) }
+			</p>
+		);
+	}
+
 	return (
-		<Card
-			title={ sprintf(
-				/* translators: %d: Number of products picked. */
-				_n(
-					'In this box · %d product',
-					'In this box · %d products',
-					ids.length,
-					'mix-and-max-box-builder'
-				),
-				ids.length
-			) }
-			subtitle={ __(
-				'Drag to set the order shoppers see, or use the arrows. Set a cap per product.',
-				'mix-and-max-box-builder'
-			) }
-			padding="none"
-		>
-			{ ids.length === 0 ? (
-				<p className="mmbb-editor__list-foot">
-					{ __(
-						'Nothing yet. Tick products on the left.',
-						'mix-and-max-box-builder'
-					) }
-				</p>
-			) : (
-				<ol className="mmbb-editor__chosen">
-					{ ids.map( ( id, index ) => {
-						const product = byId[ id ];
-						const name = product
-							? product.name
-							: sprintf(
-									/* translators: %d: Product ID. */
+		<ol className="mmbb-editor__chosen">
+			{ ids.map( ( id, index ) => {
+				const product = byId[ id ];
+				const name = product
+					? product.name
+					: sprintf(
+							/* translators: %d: Product ID. */
+							__(
+								'Product #%d',
+								'productboxes-mix-and-match-box-builder'
+							),
+							id
+					  );
+				const cap = caps[ id ] || toNumber( perProduct ) || 1;
+				return (
+					<li
+						key={ id }
+						draggable
+						className={
+							dragging === index ? 'is-dragging' : undefined
+						}
+						onDragStart={ ( event ) => {
+							setDragging( index );
+							event.dataTransfer.effectAllowed = 'move';
+						} }
+						onDragOver={ ( event ) => event.preventDefault() }
+						onDrop={ ( event ) => {
+							event.preventDefault();
+							move( dragging, index );
+							setDragging( -1 );
+						} }
+						onDragEnd={ () => setDragging( -1 ) }
+					>
+						<span className="mmbb-editor__grip" aria-hidden="true">
+							<Icon name="grip" size={ 18 } />
+						</span>
+						<span className="mmbb-editor__move">
+							<Button
+								variant="ghost"
+								size="sm"
+								icon="arrowUp"
+								disabled={ index === 0 }
+								aria-label={ sprintf(
+									/* translators: %s: Product name. */
 									__(
-										'Product #%d',
-										'mix-and-max-box-builder'
+										'Move %s up',
+										'productboxes-mix-and-match-box-builder'
 									),
-									id
-							  );
-						const cap = caps[ id ] || toNumber( perProduct ) || 1;
-						return (
-							<li
-								key={ id }
-								draggable
-								className={
-									dragging === index
-										? 'is-dragging'
-										: undefined
-								}
-								onDragStart={ ( event ) => {
-									setDragging( index );
-									event.dataTransfer.effectAllowed = 'move';
-								} }
-								onDragOver={ ( event ) =>
-									event.preventDefault()
-								}
-								onDrop={ ( event ) => {
-									event.preventDefault();
-									move( dragging, index );
-									setDragging( -1 );
-								} }
-								onDragEnd={ () => setDragging( -1 ) }
-							>
-								<span
-									className="mmbb-editor__grip"
-									aria-hidden="true"
-								>
-									<Icon name="grip" size={ 18 } />
-								</span>
-								<span className="mmbb-editor__move">
-									<Button
-										variant="ghost"
-										size="sm"
-										icon="arrowUp"
-										disabled={ index === 0 }
-										aria-label={ sprintf(
-											/* translators: %s: Product name. */
-											__(
-												'Move %s up',
-												'mix-and-max-box-builder'
-											),
-											name
-										) }
-										onClick={ () =>
-											move( index, index - 1 )
-										}
-									/>
-									<Button
-										variant="ghost"
-										size="sm"
-										icon="arrowDown"
-										disabled={ index === ids.length - 1 }
-										aria-label={ sprintf(
-											/* translators: %s: Product name. */
-											__(
-												'Move %s down',
-												'mix-and-max-box-builder'
-											),
-											name
-										) }
-										onClick={ () =>
-											move( index, index + 1 )
-										}
-									/>
-								</span>
-								<Thumb product={ product || {} } size={ 36 } />
-								<span className="mmbb-editor__name">
-									{ name }
-								</span>
-								<QuantityStepper
-									size="sm"
-									min={ 1 }
-									max={ toNumber( capacity ) || 1 }
-									value={ cap }
-									label={ sprintf(
-										/* translators: %s: Product name. */
-										__(
-											'Max of %s per box',
-											'mix-and-max-box-builder'
-										),
-										name
-									) }
-									onChange={ ( value ) =>
-										dispatch( {
-											type: 'set',
-											path: 'products.caps.' + id,
-											value,
-										} )
-									}
-								/>
-								<Button
-									variant="ghost"
-									size="sm"
-									icon="close"
-									aria-label={ sprintf(
-										/* translators: %s: Product name. */
-										__(
-											'Remove %s',
-											'mix-and-max-box-builder'
-										),
-										name
-									) }
-									onClick={ () =>
-										dispatch( {
-											type: 'set',
-											path: 'products.ids',
-											value: ids.filter(
-												( x ) => x !== id
-											),
-										} )
-									}
-								/>
-							</li>
-						);
-					} ) }
-				</ol>
-			) }
-		</Card>
+									name
+								) }
+								onClick={ () => move( index, index - 1 ) }
+							/>
+							<Button
+								variant="ghost"
+								size="sm"
+								icon="arrowDown"
+								disabled={ index === ids.length - 1 }
+								aria-label={ sprintf(
+									/* translators: %s: Product name. */
+									__(
+										'Move %s down',
+										'productboxes-mix-and-match-box-builder'
+									),
+									name
+								) }
+								onClick={ () => move( index, index + 1 ) }
+							/>
+						</span>
+						<Thumb product={ product || {} } size={ 36 } />
+						<span className="mmbb-editor__name">{ name }</span>
+						<QuantityStepper
+							size="sm"
+							min={ 1 }
+							max={ toNumber( capacity ) || 1 }
+							value={ cap }
+							label={ sprintf(
+								/* translators: %s: Product name. */
+								__(
+									'Max of %s per box',
+									'productboxes-mix-and-match-box-builder'
+								),
+								name
+							) }
+							onChange={ ( value ) =>
+								dispatch( {
+									type: 'set',
+									path: 'products.caps.' + id,
+									value,
+								} )
+							}
+						/>
+						<Button
+							variant="ghost"
+							size="sm"
+							icon="close"
+							aria-label={ sprintf(
+								/* translators: %s: Product name. */
+								__(
+									'Remove %s',
+									'productboxes-mix-and-match-box-builder'
+								),
+								name
+							) }
+							onClick={ () =>
+								dispatch( {
+									type: 'set',
+									path: 'products.ids',
+									value: ids.filter( ( x ) => x !== id ),
+								} )
+							}
+						/>
+					</li>
+				);
+			} ) }
+		</ol>
 	);
 }
 
-export default function ProductsStep( { draft, errors, dispatch, catalog } ) {
+export default function ProductsStep( {
+	draft,
+	errors,
+	dispatch,
+	catalog,
+	previewProducts,
+} ) {
 	const { products } = draft.config;
 	const source = products.source;
 
@@ -548,25 +609,31 @@ export default function ProductsStep( { draft, errors, dispatch, catalog } ) {
 		<div className="mmbb-editor__cols">
 			<div className="mmbb-editor__main">
 				<SegmentedControl
-					label={ __( 'Source', 'mix-and-max-box-builder' ) }
+					label={ __(
+						'Source',
+						'productboxes-mix-and-match-box-builder'
+					) }
 					options={ [
 						{
 							value: 'manual',
 							label: __(
 								'Pick products',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 						},
 						{
 							value: 'category',
 							label: __(
 								'By category',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 						},
 						{
 							value: 'tag',
-							label: __( 'By tag', 'mix-and-max-box-builder' ),
+							label: __(
+								'By tag',
+								'productboxes-mix-and-match-box-builder'
+							),
 						},
 					] }
 					value={ source }
@@ -578,6 +645,7 @@ export default function ProductsStep( { draft, errors, dispatch, catalog } ) {
 						errors={ errors }
 						dispatch={ dispatch }
 						remember={ catalog.remember }
+						byId={ catalog.byId }
 					/>
 				) : (
 					<TermPicker
@@ -589,37 +657,32 @@ export default function ProductsStep( { draft, errors, dispatch, catalog } ) {
 				) }
 			</div>
 
-			<div className="mmbb-editor__side mmbb-editor__side--wide">
-				{ source === 'manual' ? (
-					<ChosenList
-						draft={ draft }
-						dispatch={ dispatch }
-						byId={ catalog.byId }
-					/>
-				) : (
+			<div className="mmbb-editor__side mmbb-editor__side--sticky">
+				<PreviewCard draft={ draft } products={ previewProducts } />
+				{ source !== 'manual' ? (
 					<Notice
 						tone="info"
 						title={ __(
 							'Products follow your store',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 					>
 						{ __(
 							'New products added to these terms appear in the box on their own.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 					</Notice>
-				) }
+				) : null }
 				<Notice
 					tone="info"
 					title={ __(
 						'Sold-out products hide themselves',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				>
 					{ __(
 						'They come back when stock returns. Change this on the next step.',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				</Notice>
 			</div>

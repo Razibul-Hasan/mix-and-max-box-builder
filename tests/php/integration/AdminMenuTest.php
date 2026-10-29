@@ -71,7 +71,7 @@ class AdminMenuTest extends \WP_UnitTestCase {
 		$this->assertFalse( wp_style_is( 'mmbb-admin', 'enqueued' ) );
 		$this->assertFalse( wp_style_is( 'mmbb-components', 'enqueued' ) );
 
-		$assets->enqueue( 'mix-and-max_page_mmbb-campaigns' );
+		$assets->enqueue( 'productboxes_page_mmbb-campaigns' );
 		$this->assertTrue( wp_script_is( 'mmbb-admin', 'enqueued' ) );
 		$this->assertTrue( wp_style_is( 'mmbb-admin', 'enqueued' ) );
 		$this->assertTrue( wp_style_is( 'mmbb-tokens', 'enqueued' ) );

@@ -44,7 +44,7 @@ class Terms_Controller extends Base_Controller {
 		return array_merge(
 			array(
 				'taxonomy' => array(
-					'description'       => __( 'Taxonomy to list.', 'mix-and-max-box-builder' ),
+					'description'       => __( 'Taxonomy to list.', 'productboxes-mix-and-match-box-builder' ),
 					'type'              => 'string',
 					'enum'              => array( 'product_cat', 'product_tag' ),
 					'default'           => 'product_cat',
@@ -52,7 +52,7 @@ class Terms_Controller extends Base_Controller {
 					'validate_callback' => 'rest_validate_request_arg',
 				),
 				'search'   => array(
-					'description'       => __( 'Limit results to terms matching a search term.', 'mix-and-max-box-builder' ),
+					'description'       => __( 'Limit results to terms matching a search term.', 'productboxes-mix-and-match-box-builder' ),
 					'type'              => 'string',
 					'sanitize_callback' => 'sanitize_text_field',
 					'validate_callback' => 'rest_validate_request_arg',
@@ -127,32 +127,32 @@ class Terms_Controller extends Base_Controller {
 			'type'       => 'object',
 			'properties' => array(
 				'id'       => array(
-					'description' => __( 'Term ID.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Term ID.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'integer',
 					'context'     => array( 'view' ),
 				),
 				'name'     => array(
-					'description' => __( 'Term name.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Term name.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'context'     => array( 'view' ),
 				),
 				'slug'     => array(
-					'description' => __( 'Term slug.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Term slug.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'context'     => array( 'view' ),
 				),
 				'parent'   => array(
-					'description' => __( 'Parent term ID, 0 for top level.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Parent term ID, 0 for top level.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'integer',
 					'context'     => array( 'view' ),
 				),
 				'count'    => array(
-					'description' => __( 'Number of products using the term.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Number of products using the term.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'integer',
 					'context'     => array( 'view' ),
 				),
 				'taxonomy' => array(
-					'description' => __( 'Taxonomy name.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Taxonomy name.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'context'     => array( 'view' ),
 				),

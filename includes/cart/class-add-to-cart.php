@@ -17,35 +17,31 @@ final class Add_To_Cart {
 	/** Nonce action for the endpoint. */
 	const NONCE_ACTION = 'mmbb_add_box';
 
+	/** Nonce action for the cart's "Edit box" link. */
+	const EDIT_NONCE_ACTION = 'mmbb_edit_box';
+
 	/** Longest gift message kept, in characters. */
 	const MAX_MESSAGE = 200;
 
-	/** Register the WooCommerce AJAX actions. */
+	/** Register the WooCommerce AJAX action. */
 	public function register() {
 		add_action( 'wc_ajax_mmbb_add_box', array( $this, 'handle_add' ) );
-		add_action( 'wc_ajax_mmbb_nonce', array( $this, 'handle_nonce' ) );
 	}
 
 	/**
 	 * Endpoint URLs for the storefront script.
 	 *
-	 * @return array { add_box, nonce }.
+	 * @return array { add_box }.
 	 */
 	public static function endpoints() {
 		return array(
 			'add_box' => \WC_AJAX::get_endpoint( 'mmbb_add_box' ),
-			'nonce'   => \WC_AJAX::get_endpoint( 'mmbb_nonce' ),
 		);
-	}
-
-	/** Answer with a fresh nonce, so a cached page can retry once. */
-	public function handle_nonce() {
-		wp_send_json_success( array( 'nonce' => wp_create_nonce( self::NONCE_ACTION ) ) );
 	}
 
 	/** Add a box to the cart. */
 	public function handle_add() {
-		// 1. Nonce. A cached page may hold an old one, so the front end can fetch a new one and retry.
+		// 1. Nonce. A page cached past its nonce gets `mmbb_nonce_expired` and asks the shopper to reload.
 		if ( ! check_ajax_referer( self::NONCE_ACTION, 'nonce', false ) ) {
 			$this->fail( 'mmbb_nonce_expired' );
 		}
@@ -178,6 +174,7 @@ final class Add_To_Cart {
 			'size'        => $size,
 			'gift'        => $gift,
 			'quote'       => $resolved['quote'],
+			'free_gift'   => $resolved['free_gift'],
 			'hash'        => md5( wp_json_encode( array( $campaign['id'], $hash_source, $size, $gift ) ) ),
 		);
 	}

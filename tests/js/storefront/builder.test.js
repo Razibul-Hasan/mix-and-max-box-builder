@@ -66,12 +66,12 @@ const payload = () => ( {
 		thousandSeparator: ',',
 	},
 	now: '2026-01-01T00:00:00Z',
-	cart: { nonce: 'n', addUrl: '/add', nonceUrl: '/nonce', cartUrl: '/cart/' },
+	cart: { nonce: 'n', addUrl: '/add', cartUrl: '/cart/' },
 	edit: null,
 } );
 
 const addButtons = () =>
-	screen.getAllByRole( 'button', { name: /add to box/i } );
+	screen.getAllByRole( 'button', { name: /^add .+ to box$/i } );
 
 beforeEach( () => {
 	window.sessionStorage.clear();

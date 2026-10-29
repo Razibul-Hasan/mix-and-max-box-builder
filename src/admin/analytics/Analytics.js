@@ -25,26 +25,32 @@ import './analytics.css';
 import { tierLabel } from '../../shared/tiers';
 
 const funnelLabels = () => ( {
-	view: __( 'Viewed builder', 'mix-and-max-box-builder' ),
-	started: __( 'Added first item', 'mix-and-max-box-builder' ),
-	tier_reached: __( 'Reached a tier', 'mix-and-max-box-builder' ),
-	add_to_cart: __( 'Added box to cart', 'mix-and-max-box-builder' ),
-	purchased: __( 'Purchased', 'mix-and-max-box-builder' ),
+	view: __( 'Viewed builder', 'productboxes-mix-and-match-box-builder' ),
+	started: __( 'Added first item', 'productboxes-mix-and-match-box-builder' ),
+	tier_reached: __(
+		'Reached a tier',
+		'productboxes-mix-and-match-box-builder'
+	),
+	add_to_cart: __(
+		'Added box to cart',
+		'productboxes-mix-and-match-box-builder'
+	),
+	purchased: __( 'Purchased', 'productboxes-mix-and-match-box-builder' ),
 } );
 
 function stopLabel( row, money, decimals ) {
 	if ( row.other ) {
-		return __( 'Other', 'mix-and-max-box-builder' );
+		return __( 'Other', 'productboxes-mix-and-match-box-builder' );
 	}
 	if ( ! row.qty ) {
-		return __( 'No tier', 'mix-and-max-box-builder' );
+		return __( 'No tier', 'productboxes-mix-and-match-box-builder' );
 	}
 	const count = sprintf(
 		/* translators: %d: Tier item count. */ _n(
 			'%d item tier',
 			'%d item tier',
 			row.qty,
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		),
 		row.qty
 	);
@@ -54,7 +60,7 @@ function stopLabel( row, money, decimals ) {
 	return sprintf(
 		/* translators: 1: Tier item count label, 2: Discount label. */ __(
 			'%1$s \u00b7 %2$s',
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		),
 		count,
 		tierLabel( row.tier, money, ( amount ) =>
@@ -70,7 +76,7 @@ function periodLabel( data, locale ) {
 		return sprintf(
 			/* translators: 1: First date, 2: Last date. */ __(
 				'Daily: %1$s to %2$s',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			),
 			date( data.from ),
 			date( data.to )
@@ -83,7 +89,7 @@ function periodLabel( data, locale ) {
 	return sprintf(
 		/* translators: 1: Current start, 2: Current end, 3: Previous start, 4: Previous end. */ __(
 			'Daily: %1$s to %2$s vs %3$s to %4$s',
-			'mix-and-max-box-builder'
+			'productboxes-mix-and-match-box-builder'
 		),
 		date( data.from ),
 		date( data.to ),
@@ -130,17 +136,23 @@ export default function Analytics() {
 	const metrics = [
 		{
 			key: 'revenue',
-			label: __( 'Box revenue', 'mix-and-max-box-builder' ),
+			label: __(
+				'Box revenue',
+				'productboxes-mix-and-match-box-builder'
+			),
 			format: money,
 		},
 		{
 			key: 'boxes',
-			label: __( 'Boxes sold', 'mix-and-max-box-builder' ),
+			label: __( 'Boxes sold', 'productboxes-mix-and-match-box-builder' ),
 			format: ( value ) => formatCount( value, locale ),
 		},
 		{
 			key: 'items_per_box',
-			label: __( 'Avg. items per box', 'mix-and-max-box-builder' ),
+			label: __(
+				'Avg. items per box',
+				'productboxes-mix-and-match-box-builder'
+			),
 			format: ( value ) =>
 				Number( value ).toLocaleString( locale, {
 					maximumFractionDigits: 1,
@@ -148,42 +160,57 @@ export default function Analytics() {
 		},
 		{
 			key: 'discount',
-			label: __( 'Discount given', 'mix-and-max-box-builder' ),
+			label: __(
+				'Discount given',
+				'productboxes-mix-and-match-box-builder'
+			),
 			format: money,
 		},
 	];
 	const columns = [
-		{ key: 'name', label: __( 'Campaign', 'mix-and-max-box-builder' ) },
+		{
+			key: 'name',
+			label: __( 'Campaign', 'productboxes-mix-and-match-box-builder' ),
+		},
 		{
 			key: 'views',
-			label: __( 'Builder views', 'mix-and-max-box-builder' ),
+			label: __(
+				'Builder views',
+				'productboxes-mix-and-match-box-builder'
+			),
 			numeric: true,
 		},
 		{
 			key: 'started',
-			label: __( 'Started a box', 'mix-and-max-box-builder' ),
+			label: __(
+				'Started a box',
+				'productboxes-mix-and-match-box-builder'
+			),
 			numeric: true,
 		},
 		{
 			key: 'boxes',
-			label: __( 'Boxes sold', 'mix-and-max-box-builder' ),
+			label: __( 'Boxes sold', 'productboxes-mix-and-match-box-builder' ),
 			numeric: true,
 		},
 		{
 			key: 'conversion',
-			label: __( 'Conversion', 'mix-and-max-box-builder' ),
+			label: __( 'Conversion', 'productboxes-mix-and-match-box-builder' ),
 			numeric: true,
 			render: ( row ) => formatPercent( row.conversion, locale ),
 		},
 		{
 			key: 'avg_box_value',
-			label: __( 'Avg. box value', 'mix-and-max-box-builder' ),
+			label: __(
+				'Avg. box value',
+				'productboxes-mix-and-match-box-builder'
+			),
 			numeric: true,
 			render: ( row ) => money( row.avg_box_value ),
 		},
 		{
 			key: 'revenue',
-			label: __( 'Revenue', 'mix-and-max-box-builder' ),
+			label: __( 'Revenue', 'productboxes-mix-and-match-box-builder' ),
 			numeric: true,
 			render: ( row ) => money( row.revenue ),
 		},
@@ -193,10 +220,13 @@ export default function Analytics() {
 		<Shell active="analytics">
 			<div className="mmbb-dash__bar">
 				<PageHeader
-					title={ __( 'Analytics', 'mix-and-max-box-builder' ) }
+					title={ __(
+						'Analytics',
+						'productboxes-mix-and-match-box-builder'
+					) }
 					subtitle={ __(
 						'What sells in boxes, and where shoppers drop off.',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				/>
 				<Button
@@ -207,37 +237,52 @@ export default function Analytics() {
 					loading={ exporting }
 					onClick={ exportCsv }
 				>
-					{ __( 'Export CSV', 'mix-and-max-box-builder' ) }
+					{ __(
+						'Export CSV',
+						'productboxes-mix-and-match-box-builder'
+					) }
 				</Button>
 			</div>
 			<div className="mmbb-analytics-filters">
 				<SegmentedControl
-					label={ __( 'Date range', 'mix-and-max-box-builder' ) }
+					label={ __(
+						'Date range',
+						'productboxes-mix-and-match-box-builder'
+					) }
 					options={ [
 						{
 							value: 'today',
-							label: __( 'Today', 'mix-and-max-box-builder' ),
+							label: __(
+								'Today',
+								'productboxes-mix-and-match-box-builder'
+							),
 						},
 						...[ 7, 30, 90 ].map( ( days ) => ( {
 							value: days + 'd',
 							label: sprintf(
 								/* translators: %d: Number of days. */ __(
 									'%d days',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								),
 								days
 							),
 						} ) ),
 						{
 							value: 'custom',
-							label: __( 'Custom', 'mix-and-max-box-builder' ),
+							label: __(
+								'Custom',
+								'productboxes-mix-and-match-box-builder'
+							),
 						},
 					] }
 					value={ range }
 					onChange={ setRange }
 				/>
 				<SelectField
-					aria-label={ __( 'Campaign', 'mix-and-max-box-builder' ) }
+					aria-label={ __(
+						'Campaign',
+						'productboxes-mix-and-match-box-builder'
+					) }
 					value={ campaign }
 					onChange={ ( event ) => setCampaign( event.target.value ) }
 					options={ [
@@ -245,7 +290,7 @@ export default function Analytics() {
 							value: '0',
 							label: __(
 								'All campaigns',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							),
 						},
 						...( campaigns.data?.items || [] ).map( ( row ) => ( {
@@ -257,7 +302,7 @@ export default function Analytics() {
 				<Checkbox
 					label={ __(
 						'Compare to previous period',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 					checked={ compare }
 					onChange={ setCompare }
@@ -266,7 +311,10 @@ export default function Analytics() {
 					<>
 						<TextField
 							type="date"
-							label={ __( 'From', 'mix-and-max-box-builder' ) }
+							label={ __(
+								'From',
+								'productboxes-mix-and-match-box-builder'
+							) }
 							value={ from }
 							onChange={ ( event ) =>
 								setFrom( event.target.value )
@@ -274,7 +322,10 @@ export default function Analytics() {
 						/>
 						<TextField
 							type="date"
-							label={ __( 'To', 'mix-and-max-box-builder' ) }
+							label={ __(
+								'To',
+								'productboxes-mix-and-match-box-builder'
+							) }
 							value={ to }
 							onChange={ ( event ) =>
 								setTo( event.target.value )
@@ -288,7 +339,7 @@ export default function Analytics() {
 					tone="alert"
 					title={ __(
 						'Could not load analytics',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				>
 					{ errorMessage( failure ) }
@@ -299,7 +350,10 @@ export default function Analytics() {
 							setExportError( null );
 						} }
 					>
-						{ __( 'Try again', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Try again',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</Button>
 				</Notice>
 			) }
@@ -307,7 +361,7 @@ export default function Analytics() {
 				<p role="status">
 					{ __(
 						'Loading analytics\u2026',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				</p>
 			) }
@@ -315,7 +369,7 @@ export default function Analytics() {
 				<p role="status">
 					{ __(
 						'Choose a start and end date.',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				</p>
 			) }
@@ -345,7 +399,7 @@ export default function Analytics() {
 					<Card
 						title={ __(
 							'Revenue from boxes',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 						subtitle={ periodLabel( data, locale ) }
 					>
@@ -353,7 +407,7 @@ export default function Analytics() {
 							height={ 280 }
 							ariaLabel={ __(
 								'Revenue from boxes, daily',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 							labels={ data.series.map( ( row ) =>
 								formatShortDate( row.date + 'T12:00:00Z', {
@@ -365,7 +419,7 @@ export default function Analytics() {
 								{
 									name: __(
 										'This period',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 									data: data.series.map(
 										( row ) => row.revenue
@@ -379,7 +433,7 @@ export default function Analytics() {
 											{
 												name: __(
 													'Previous period',
-													'mix-and-max-box-builder'
+													'productboxes-mix-and-match-box-builder'
 												),
 												data: data.series.map(
 													( row ) => row.previous
@@ -397,11 +451,11 @@ export default function Analytics() {
 						<Card
 							title={ __(
 								'Builder funnel',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 							subtitle={ __(
 								'Sessions that opened a builder',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						>
 							<FunnelChart
@@ -415,11 +469,11 @@ export default function Analytics() {
 							<Card
 								title={ __(
 									'Most-picked products',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 								subtitle={ __(
 									'Times added to a box',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							>
 								<BarList
@@ -434,11 +488,11 @@ export default function Analytics() {
 							<Card
 								title={ __(
 									'Where boxes stop',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 								subtitle={ __(
 									'Share of purchased boxes by the tier they reached',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							>
 								<BarList
@@ -463,7 +517,7 @@ export default function Analytics() {
 					<Card
 						title={ __(
 							'Campaign performance',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 						padding="none"
 					>
@@ -472,7 +526,7 @@ export default function Analytics() {
 							rows={ data.campaigns }
 							empty={ __(
 								'No activity in this period.',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						/>
 					</Card>

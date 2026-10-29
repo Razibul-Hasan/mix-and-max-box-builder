@@ -3,7 +3,6 @@ import { addBoxToCart } from '../../../src/storefront/api';
 const cart = {
 	nonce: 'old',
 	addUrl: '/?wc-ajax=mmbb_add_box',
-	nonceUrl: '/?wc-ajax=mmbb_nonce',
 	cartUrl: '/cart/',
 };
 const base = {
@@ -41,32 +40,15 @@ describe( 'addBoxToCart', () => {
 		expect( params.toString() ).not.toMatch( /price/ );
 	} );
 
-	it( 'refreshes an expired nonce once and retries', async () => {
-		const fetchImpl = jest
-			.fn()
-			.mockResolvedValueOnce( reply( expired ) )
-			.mockResolvedValueOnce(
-				reply( { success: true, data: { nonce: 'new' } } )
-			)
-			.mockResolvedValueOnce( reply( { success: true, data: {} } ) );
+	it( 'reports an expired nonce without asking for a new one', async () => {
+		const fetchImpl = jest.fn().mockResolvedValue( reply( expired ) );
 		const out = await addBoxToCart( { ...base, fetchImpl } );
-		expect( out ).toEqual( { ok: true, cartUrl: '/cart/', nonce: 'new' } );
-		expect( fetchImpl ).toHaveBeenCalledTimes( 3 );
-		expect( bodyOf( fetchImpl, 2 ).get( 'nonce' ) ).toBe( 'new' );
-	} );
-
-	it( 'gives up after one retry', async () => {
-		const fetchImpl = jest
-			.fn()
-			.mockResolvedValueOnce( reply( expired ) )
-			.mockResolvedValueOnce(
-				reply( { success: true, data: { nonce: 'new' } } )
-			)
-			.mockResolvedValueOnce( reply( expired ) );
-		const out = await addBoxToCart( { ...base, fetchImpl } );
-		expect( out.ok ).toBe( false );
-		expect( out.code ).toBe( 'mmbb_nonce_expired' );
-		expect( fetchImpl ).toHaveBeenCalledTimes( 3 );
+		expect( out ).toEqual( {
+			ok: false,
+			code: 'mmbb_nonce_expired',
+			message: 'Expired',
+		} );
+		expect( fetchImpl ).toHaveBeenCalledTimes( 1 );
 	} );
 
 	it( 'returns the server message for other errors', async () => {

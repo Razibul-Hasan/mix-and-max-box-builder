@@ -124,7 +124,7 @@ final class Collector {
 		foreach ( $request['events'] as $event ) {
 			$campaign = ( new Campaign_Repository() )->find( $event['campaign_id'] );
 			if ( ! $campaign || ! Status::is_live( $campaign['status'] ) ) {
-				return new \WP_Error( 'mmbb_invalid_event', __( 'This campaign is unavailable.', 'mix-and-max-box-builder' ), array( 'status' => 400 ) );
+				return new \WP_Error( 'mmbb_invalid_event', __( 'This campaign is unavailable.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 400 ) );
 			}
 			$product = isset( $event['product_id'] ) ? absint( $event['product_id'] ) : 0;
 			$qty     = isset( $event['qty'] ) ? absint( $event['qty'] ) : 0;
@@ -134,7 +134,7 @@ final class Collector {
 				$tiers = array_column( 'fixed' === $campaign['config']['type'] ? $campaign['config']['sizes'] : $campaign['config']['tiers'], 'qty' );
 			}
 			if ( ( 'add_item' === $event['event'] && ! in_array( $product, Box_Resolver::allowed_ids( $campaign['config'] ), true ) ) || ( 'tier_reached' === $event['event'] && ! in_array( $qty, $tiers, true ) ) ) {
-				return new \WP_Error( 'mmbb_invalid_event', __( 'The event does not belong to this campaign.', 'mix-and-max-box-builder' ), array( 'status' => 400 ) );
+				return new \WP_Error( 'mmbb_invalid_event', __( 'The event does not belong to this campaign.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 400 ) );
 			}
 			$validated[] = array(
 				'campaign_id' => absint( $event['campaign_id'] ),
@@ -147,7 +147,7 @@ final class Collector {
 		$key  = 'mmbb_rate_' . $hash . '_' . gmdate( 'YmdH' );
 		$used = (int) get_transient( $key );
 		if ( $used + count( $validated ) > 120 ) {
-			return new \WP_Error( 'mmbb_rate_limit', __( 'Too many analytics events.', 'mix-and-max-box-builder' ), array( 'status' => 429 ) );
+			return new \WP_Error( 'mmbb_rate_limit', __( 'Too many analytics events.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 429 ) );
 		}
 		set_transient( $key, $used + count( $validated ), HOUR_IN_SECONDS );
 		self::remember( $key );

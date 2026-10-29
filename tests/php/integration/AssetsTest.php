@@ -29,7 +29,7 @@ class AssetsTest extends \WP_UnitTestCase {
 		$this->assertTrue( wp_script_is( 'mmbb-components', 'registered' ) );
 		$this->assertFalse( wp_script_is( 'mmbb-components', 'enqueued' ) );
 		$this->assertSame( array( 'mmbb-tokens' ), wp_styles()->registered['mmbb-components']->deps );
-		$this->assertSame( 'mix-and-max-box-builder', wp_scripts()->registered['mmbb-components']->textdomain );
+		$this->assertSame( 'productboxes-mix-and-match-box-builder', wp_scripts()->registered['mmbb-components']->textdomain );
 		$asset = require MMBB_PATH . 'build/components.asset.php';
 		$this->assertSame( $asset['version'], wp_styles()->registered['mmbb-components']->ver );
 		$this->assertSame( $asset['dependencies'], wp_scripts()->registered['mmbb-components']->deps );

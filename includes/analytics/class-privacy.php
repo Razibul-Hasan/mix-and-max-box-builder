@@ -20,7 +20,7 @@ final class Privacy {
 	/** Offer suggested privacy text to the site owner. */
 	public function policy() {
 		if ( function_exists( 'wp_add_privacy_policy_content' ) ) {
-			wp_add_privacy_policy_content( __( 'Mix and Max Box Builder', 'mix-and-max-box-builder' ), wpautop( __( 'Builder analytics are anonymous and stay on this site. They record builder views, product picks, tiers reached, boxes added to the cart and box sales. Random browser session IDs use session storage, without tracking cookies, IP addresses or user agents. Daily salted hashes are kept for the configured raw-event retention period; aggregate statistics remain. Gift messages are stored with orders and can be exported or erased using the site privacy tools, subject to the store order data removal setting.', 'mix-and-max-box-builder' ) ) );
+			wp_add_privacy_policy_content( __( 'ProductBoxes Box Builder', 'productboxes-mix-and-match-box-builder' ), wpautop( __( 'Builder analytics are anonymous and stay on this site. They record builder views, product picks, tiers reached, boxes added to the cart and box sales. Random browser session IDs use session storage, without tracking cookies, IP addresses or user agents. Daily salted hashes are kept for the configured raw-event retention period; aggregate statistics remain. Gift messages are stored with orders and can be exported or erased using the site privacy tools, subject to the store order data removal setting.', 'productboxes-mix-and-match-box-builder' ) ) );
 		}
 	}
 	/** Register the gift-message exporter.
@@ -30,7 +30,7 @@ final class Privacy {
 	 */
 	public function exporters( $exporters ) {
 		$exporters['mmbb-gift-messages'] = array(
-			'exporter_friendly_name' => __( 'Box gift messages', 'mix-and-max-box-builder' ),
+			'exporter_friendly_name' => __( 'Box gift messages', 'productboxes-mix-and-match-box-builder' ),
 			'callback'               => array( $this, 'export' ),
 		);
 		return $exporters;
@@ -44,7 +44,7 @@ final class Privacy {
 		return array_merge(
 			array(
 				'mmbb-gift-messages' => array(
-					'eraser_friendly_name' => __( 'Box gift messages', 'mix-and-max-box-builder' ),
+					'eraser_friendly_name' => __( 'Box gift messages', 'productboxes-mix-and-match-box-builder' ),
 					'callback'             => array( $this, 'erase' ),
 				),
 			),
@@ -86,15 +86,15 @@ final class Privacy {
 				}
 				$data[] = array(
 					'group_id'    => 'mmbb-gift-messages',
-					'group_label' => __( 'Box gift messages', 'mix-and-max-box-builder' ),
+					'group_label' => __( 'Box gift messages', 'productboxes-mix-and-match-box-builder' ),
 					'item_id'     => 'mmbb-order-' . $order->get_id() . '-' . $id,
 					'data'        => array(
 						array(
-							'name'  => __( 'Order', 'mix-and-max-box-builder' ),
+							'name'  => __( 'Order', 'productboxes-mix-and-match-box-builder' ),
 							'value' => $order->get_order_number(),
 						),
 						array(
-							'name'  => __( 'Gift message', 'mix-and-max-box-builder' ),
+							'name'  => __( 'Gift message', 'productboxes-mix-and-match-box-builder' ),
 							'value' => $box['gift']['message'],
 						),
 					),
@@ -143,7 +143,7 @@ final class Privacy {
 			}
 		}
 		if ( $result['items_retained'] ) {
-			$result['messages'][] = __( 'Gift messages were retained because order data removal is disabled in WooCommerce.', 'mix-and-max-box-builder' );
+			$result['messages'][] = __( 'Gift messages were retained because order data removal is disabled in WooCommerce.', 'productboxes-mix-and-match-box-builder' );
 		}
 		return $result;
 	}

@@ -32,14 +32,14 @@ final class Renderer {
 	 */
 	public static function render( $campaign_id, array $view = array(), $block_wrapper = false ) {
 		if ( ! Settings::get( 'enabled' ) ) {
-			return self::notice_for_managers( $campaign_id, __( 'Box builders are disabled in the plugin settings.', 'mix-and-max-box-builder' ), false );
+			return self::notice_for_managers( $campaign_id, __( 'Box builders are disabled in the plugin settings.', 'productboxes-mix-and-match-box-builder' ), false );
 		}
 		$campaign = ( new Campaign_Repository() )->find( absint( $campaign_id ) );
 		if ( ! $campaign ) {
-			return self::notice_for_managers( $campaign_id, __( 'This box builder points to a campaign that no longer exists.', 'mix-and-max-box-builder' ), false );
+			return self::notice_for_managers( $campaign_id, __( 'This box builder points to a campaign that no longer exists.', 'productboxes-mix-and-match-box-builder' ), false );
 		}
 		if ( ! Status::is_live( $campaign['status'] ) ) {
-			return self::notice_for_managers( $campaign['id'], __( 'This campaign is not live, so shoppers see nothing here.', 'mix-and-max-box-builder' ), true );
+			return self::notice_for_managers( $campaign['id'], __( 'This campaign is not live, so shoppers see nothing here.', 'productboxes-mix-and-match-box-builder' ), true );
 		}
 		if ( ! Storefront::enqueue() ) {
 			return '';
@@ -60,8 +60,12 @@ final class Renderer {
 			'data-mmbb-id'  => $instance,
 			'data-campaign' => (string) $campaign['id'],
 		);
-		if ( 'dark' === $campaign['config']['design']['theme'] ) {
+		if ( $payload['colors']['dark'] ) {
 			$attributes['data-theme'] = 'dark';
+		}
+		$vars = (array) $payload['colors']['vars'];
+		if ( $vars ) {
+			$attributes['style'] = Colors::style( $vars );
 		}
 
 		$heading = '' !== (string) $campaign['config']['design']['headline'] ? $campaign['config']['design']['headline'] : $campaign['title'];
@@ -70,8 +74,8 @@ final class Renderer {
 			'<div %1$s><h2 class="mmbb-builder__title">%2$s</h2><p class="mmbb-builder__loading">%3$s</p><noscript>%4$s</noscript></div>',
 			self::attributes( $attributes, $block_wrapper ),
 			esc_html( $heading ),
-			esc_html__( 'Loading your box…', 'mix-and-max-box-builder' ),
-			esc_html__( 'Turn on JavaScript to build your box.', 'mix-and-max-box-builder' )
+			esc_html__( 'Loading your box…', 'productboxes-mix-and-match-box-builder' ),
+			esc_html__( 'Turn on JavaScript to build your box.', 'productboxes-mix-and-match-box-builder' )
 		);
 	}
 
@@ -110,7 +114,7 @@ final class Renderer {
 			$link = sprintf(
 				' <a href="%1$s">%2$s</a>',
 				esc_url( admin_url( 'admin.php?page=mmbb-campaigns&action=edit&id=' . absint( $campaign_id ) ) ),
-				esc_html__( 'Edit campaign', 'mix-and-max-box-builder' )
+				esc_html__( 'Edit campaign', 'productboxes-mix-and-match-box-builder' )
 			);
 		}
 		return '<p class="mmbb-builder-notice">' . esc_html( $message ) . $link . '</p>';

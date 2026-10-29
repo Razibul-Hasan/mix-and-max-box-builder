@@ -38,7 +38,7 @@ export default function TierProgress( {
 								{ sprintf(
 									/* translators: %s: Discount label. */ __(
 										'%s unlocked.',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 									best.label
 								) }
@@ -51,7 +51,7 @@ export default function TierProgress( {
 										'Add <count>%1$d more</count> to get <deal>%2$s</deal>',
 										'Add <count>%1$d more</count> to get <deal>%2$s</deal>',
 										next.qty - count,
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 									next.qty - count,
 									next.label
@@ -71,7 +71,7 @@ export default function TierProgress( {
 								sprintf(
 									/* translators: %s: Discount label. */ __(
 										'You unlocked <deal>%s</deal>. That’s the max deal.',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									),
 									best.label
 								),
@@ -87,7 +87,10 @@ export default function TierProgress( {
 				aria-valuemin={ 0 }
 				aria-valuemax={ top }
 				aria-valuenow={ Math.min( count, top ) }
-				aria-label={ __( 'Items in box', 'mix-and-max-box-builder' ) }
+				aria-label={ __(
+					'Items in box',
+					'productboxes-mix-and-match-box-builder'
+				) }
 			>
 				<div
 					className="mmbb-tier__fill"
@@ -123,7 +126,7 @@ export default function TierProgress( {
 									'%1$d item · %2$s',
 									'%1$d items · %2$s',
 									t.qty,
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								),
 								t.qty,
 								t.label

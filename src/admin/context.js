@@ -5,6 +5,7 @@ const DEFAULTS = {
 	urls: {},
 	templates: [],
 	money: {},
+	themeAccent: '',
 	adminUrl: '',
 	storeUrl: '/',
 	version: '',

@@ -11,8 +11,9 @@ defined( 'ABSPATH' ) || exit;
 
 use MixMax\BoxBuilder\Assets;
 use MixMax\BoxBuilder\Campaigns\Templates;
+use MixMax\BoxBuilder\Storefront\Colors;
 
-/** Enqueue the admin app on the four Mix and Max screens and nowhere else. */
+/** Enqueue the admin app on the four ProductBoxes screens and nowhere else. */
 final class Admin_Assets {
 	/** Register hooks. */
 	public function register() {
@@ -41,7 +42,7 @@ final class Admin_Assets {
 		wp_style_add_data( 'mmbb-admin', 'rtl', 'replace' );
 
 		wp_enqueue_script( 'mmbb-admin', MMBB_URL . 'build/admin.js', $asset['dependencies'], $asset['version'], true );
-		wp_set_script_translations( 'mmbb-admin', 'mix-and-max-box-builder', MMBB_PATH . 'languages' );
+		wp_set_script_translations( 'mmbb-admin', 'productboxes-mix-and-match-box-builder', MMBB_PATH . 'languages' );
 		wp_add_inline_script( 'mmbb-admin', 'window.mmbbAdmin = ' . wp_json_encode( self::get_data( $page ) ) . ';', 'before' );
 	}
 
@@ -67,16 +68,17 @@ final class Admin_Assets {
 		}
 
 		return array(
-			'page'      => $page,
-			'urls'      => $urls,
-			'templates' => $templates,
-			'money'     => Assets::get_money_settings(),
-			'adminUrl'  => admin_url(),
-			'storeUrl'  => home_url( '/' ),
-			'version'   => MMBB_VERSION,
-			'wcVersion' => defined( 'WC_VERSION' ) ? WC_VERSION : '',
-			'timezone'  => wp_timezone_string(),
-			'locale'    => str_replace( '_', '-', get_user_locale() ),
+			'page'        => $page,
+			'urls'        => $urls,
+			'templates'   => $templates,
+			'money'       => Assets::get_money_settings(),
+			'themeAccent' => Colors::theme_accent(),
+			'adminUrl'    => admin_url(),
+			'storeUrl'    => home_url( '/' ),
+			'version'     => MMBB_VERSION,
+			'wcVersion'   => defined( 'WC_VERSION' ) ? WC_VERSION : '',
+			'timezone'    => wp_timezone_string(),
+			'locale'      => str_replace( '_', '-', get_user_locale() ),
 		);
 	}
 }

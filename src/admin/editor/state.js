@@ -144,17 +144,17 @@ function validateRows( rows, key, config, errors ) {
 		if ( ! isWhole( qty ) || qty < 1 ) {
 			errors[ base + '.qty' ] = __(
 				'Enter a whole number of items.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			);
 		} else if ( qty > capacity ) {
 			errors[ base + '.qty' ] = __(
 				'Can’t be more than the box holds.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			);
 		} else if ( qty <= seen ) {
 			errors[ base + '.qty' ] = __(
 				'Needs more items than the row above.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			);
 		}
 		if ( isWhole( qty ) && qty > seen ) {
@@ -165,12 +165,12 @@ function validateRows( rows, key, config, errors ) {
 		if ( ! Number.isFinite( value ) || value <= 0 ) {
 			errors[ base + '.value' ] = __(
 				'Enter an amount above zero.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			);
 		} else if ( row.discount_type === 'percent' && value > MAX_PERCENT ) {
 			errors[ base + '.value' ] = __(
 				'Percent discounts go up to 90.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			);
 		}
 	} );
@@ -181,14 +181,22 @@ const RULES = {
 		if ( ! draft.title.trim() ) {
 			errors.title = __(
 				'Give the campaign a name.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			);
 		}
 		const { start, end } = draft.config.schedule;
 		if ( start && end && new Date( end ) <= new Date( start ) ) {
 			errors[ 'schedule.end' ] = __(
 				'The end date must be after the start date.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
+			);
+		}
+		const { countdown_days: days, countdown_end: countTo } =
+			draft.config.schedule;
+		if ( days > 0 && ! start && ! end && ! countTo ) {
+			errors[ 'schedule.countdown_end' ] = __(
+				'Pick when the countdown ends.',
+				'productboxes-mix-and-match-box-builder'
 			);
 		}
 	},
@@ -197,7 +205,7 @@ const RULES = {
 		if ( products.source === 'manual' && products.ids.length === 0 ) {
 			errors[ 'products.ids' ] = __(
 				'Pick at least one product.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			);
 		} else if (
 			products.source !== 'manual' &&
@@ -205,7 +213,7 @@ const RULES = {
 		) {
 			errors[ 'products.term_ids' ] = __(
 				'Pick at least one category or tag.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			);
 		}
 	},
@@ -219,7 +227,7 @@ const RULES = {
 		) {
 			errors[ 'box.capacity' ] = __(
 				'Enter a number from 1 to 48.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			);
 			return;
 		}
@@ -228,13 +236,13 @@ const RULES = {
 			if ( ! isWhole( minimum ) || minimum < 1 || minimum > capacity ) {
 				errors[ 'box.min_items' ] = __(
 					'Enter a number from 1 up to what the box holds.',
-					'mix-and-max-box-builder'
+					'productboxes-mix-and-match-box-builder'
 				);
 			}
 			if ( config.tiers.length === 0 ) {
 				errors.tiers = __(
 					'Add at least one discount tier.',
-					'mix-and-max-box-builder'
+					'productboxes-mix-and-match-box-builder'
 				);
 			}
 			validateRows( config.tiers, 'tiers', config, errors );
@@ -243,7 +251,7 @@ const RULES = {
 			if ( config.sizes.length === 0 ) {
 				errors.sizes = __(
 					'Add at least one box size.',
-					'mix-and-max-box-builder'
+					'productboxes-mix-and-match-box-builder'
 				);
 			}
 			validateRows( config.sizes, 'sizes', config, errors );
@@ -253,14 +261,14 @@ const RULES = {
 			if ( ! isWhole( qty ) || qty < 1 || qty > capacity ) {
 				errors[ 'bundle.qty' ] = __(
 					'Enter a number from 1 up to what the box holds.',
-					'mix-and-max-box-builder'
+					'productboxes-mix-and-match-box-builder'
 				);
 			}
 			const price = toNumber( config.bundle.price );
 			if ( ! Number.isFinite( price ) || price <= 0 ) {
 				errors[ 'bundle.price' ] = __(
 					'Set a bundle price above zero.',
-					'mix-and-max-box-builder'
+					'productboxes-mix-and-match-box-builder'
 				);
 			}
 		}
@@ -269,7 +277,7 @@ const RULES = {
 			if ( ! isWhole( max ) || max < 1 || max > capacity ) {
 				errors[ 'box.max_per_product' ] = __(
 					'Enter a number from 1 up to what the box holds.',
-					'mix-and-max-box-builder'
+					'productboxes-mix-and-match-box-builder'
 				);
 			}
 		}
@@ -279,7 +287,23 @@ const RULES = {
 			if ( ! Number.isFinite( fee ) || fee < 0 ) {
 				errors[ 'extras.gift_wrap.fee' ] = __(
 					'Enter a fee of zero or more.',
-					'mix-and-max-box-builder'
+					'productboxes-mix-and-match-box-builder'
+				);
+			}
+		}
+		const freeGift = config.extras.free_gift;
+		if ( freeGift && freeGift.enabled ) {
+			if ( ! freeGift.product_id ) {
+				errors[ 'extras.free_gift.product_id' ] = __(
+					'Pick the product to give away.',
+					'productboxes-mix-and-match-box-builder'
+				);
+			}
+			const min = toNumber( freeGift.min_items );
+			if ( ! isWhole( min ) || min < 1 || min > capacity ) {
+				errors[ 'extras.free_gift.min_items' ] = __(
+					'Enter a number from 1 up to what the box holds.',
+					'productboxes-mix-and-match-box-builder'
 				);
 			}
 		}
@@ -354,35 +378,4 @@ export function canOpenStep( index, draft ) {
 		}
 	}
 	return true;
-}
-
-/**
- * Turn the page title or campaign name into a URL slug for a new page.
- *
- * @param {string} text Text.
- * @return {string} Lowercase words joined with dashes.
- */
-export function slugify( text ) {
-	return String( text || '' )
-		.normalize( 'NFKD' )
-		.replace( /[̀-ͯ]/g, '' )
-		.toLowerCase()
-		.replace( /[^a-z0-9]+/g, '-' )
-		.replace( /^-+|-+$/g, '' );
-}
-
-/**
- * Clean a slug while it is being typed: the same rules as slugify(), except a
- * trailing dash stays so "holiday-box" can be typed.
- *
- * @param {string} text Text typed so far.
- * @return {string} Lowercase letters, digits and single dashes.
- */
-export function slugInput( text ) {
-	return String( text || '' )
-		.normalize( 'NFKD' )
-		.replace( /[\u0300-\u036f]/g, '' )
-		.toLowerCase()
-		.replace( /[^a-z0-9]+/g, '-' )
-		.replace( /^-+/, '' );
 }

@@ -7,6 +7,8 @@
 
 namespace MixMax\BoxBuilder\Campaigns;
 
+use MixMax\BoxBuilder\Storefront\Colors;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -22,8 +24,12 @@ final class Config {
 	const ORDERS         = array( 'manual', 'bestselling', 'price', 'newest' );
 	const LAYOUTS        = array( 'default', 'panel', 'bar', 'both' );
 	const COLUMNS        = array( 0, 3, 4, 5 );
-	const ACCENTS        = array( 'max', 'theme' );
-	const THEMES         = array( 'light', 'dark' );
+	const ACCENTS        = array( 'max', 'theme', 'custom' );
+	const THEMES         = array( 'light', 'dark', 'custom' );
+	const LADDERS        = array( 'default', 'custom' );
+	const COUNTDOWNS     = array( 'default', 'custom' );
+	/** Discount ladder colours: the top step, the next step to unlock and the other steps. */
+	const LADDER_COLORS = array( 'ladder_top', 'ladder_top_text', 'ladder_near', 'ladder_near_text', 'ladder_base', 'ladder_base_text' );
 
 	const MAX_CAPACITY       = 48;
 	const MAX_TIERS          = 6;
@@ -72,6 +78,7 @@ final class Config {
 				'start'          => null,
 				'end'            => null,
 				'countdown_days' => 0,
+				'countdown_end'  => null,
 			),
 			'extras'               => array(
 				'gift_message' => false,
@@ -79,19 +86,37 @@ final class Config {
 					'enabled' => false,
 					'fee'     => 0,
 				),
+				'free_gift'    => array(
+					'enabled'    => false,
+					'product_id' => 0,
+					'min_items'  => 12,
+				),
 			),
 			'design'               => array(
-				'layout'        => 'default',
-				'columns'       => 0,
-				'headline'      => '',
-				'intro'         => '',
-				'sticker'       => '',
-				'cta_label'     => '',
-				'show_hero'     => true,
-				'show_ladder'   => true,
-				'show_stickers' => true,
-				'accent'        => 'max',
-				'theme'         => 'light',
+				'layout'           => 'default',
+				'columns'          => 0,
+				'headline'         => '',
+				'intro'            => '',
+				'sticker'          => '',
+				'cta_label'        => '',
+				'show_hero'        => true,
+				'show_ladder'      => true,
+				'show_stickers'    => true,
+				'accent'           => 'max',
+				'accent_color'     => '#f04e12',
+				'theme'            => 'light',
+				'theme_canvas'     => '#f5f5f2',
+				'theme_surface'    => '#ffffff',
+				'ladder'           => 'default',
+				'ladder_top'       => '#f04e12',
+				'ladder_top_text'  => '#141414',
+				'ladder_near'      => '#ffd23f',
+				'ladder_near_text' => '#141414',
+				'ladder_base'      => '#ffffff',
+				'ladder_base_text' => '#141414',
+				'countdown'        => 'default',
+				'countdown_bg'     => '#ffd23f',
+				'countdown_text'   => '#141414',
 			),
 			'placement'            => array(
 				'page_id' => 0,
@@ -154,7 +179,7 @@ final class Config {
 
 		$out['products']  = self::sanitize_products( self::section( $input, 'products' ), $base['products'], $capacity );
 		$out['schedule']  = self::sanitize_schedule( self::section( $input, 'schedule' ), $base['schedule'] );
-		$out['extras']    = self::sanitize_extras( self::section( $input, 'extras' ), $base['extras'] );
+		$out['extras']    = self::sanitize_extras( self::section( $input, 'extras' ), $base['extras'], $capacity );
 		$out['design']    = self::sanitize_design( self::section( $input, 'design' ), $base['design'] );
 		$placement        = self::section( $input, 'placement' );
 		$out['placement'] = array(
@@ -224,9 +249,18 @@ final class Config {
 			$add( 'products.term_ids', 'terms_required' );
 		}
 
+		$free_gift = $config['extras']['free_gift'];
+		if ( $free_gift['enabled'] && $free_gift['product_id'] < 1 ) {
+			$add( 'extras.free_gift.product_id', 'gift_product_required' );
+		}
+
 		$schedule = $config['schedule'];
 		if ( null !== $schedule['start'] && null !== $schedule['end'] && $schedule['end'] <= $schedule['start'] ) {
 			$add( 'schedule.end', 'end_before_start' );
+		}
+		// Always on: the countdown needs its own time to count to.
+		if ( $schedule['countdown_days'] > 0 && null === $schedule['start'] && null === $schedule['end'] && null === $schedule['countdown_end'] ) {
+			$add( 'schedule.countdown_end', 'countdown_end_required' );
 		}
 
 		return $errors;
@@ -340,23 +374,31 @@ final class Config {
 			'start'          => array_key_exists( 'start', $in ) ? self::date( $in['start'] ) : $base['start'],
 			'end'            => array_key_exists( 'end', $in ) ? self::date( $in['end'] ) : $base['end'],
 			'countdown_days' => self::clamp_int( self::pick( $in, 'countdown_days', $base['countdown_days'] ), 0, self::MAX_COUNTDOWN_DAYS ),
+			'countdown_end'  => array_key_exists( 'countdown_end', $in ) ? self::date( $in['countdown_end'] ) : $base['countdown_end'],
 		);
 	}
 
 	/**
 	 * Sanitize the extras.
 	 *
-	 * @param array $in   Input section.
-	 * @param array $base Base section.
+	 * @param array $in       Input section.
+	 * @param array $base     Base section.
+	 * @param int   $capacity Box capacity.
 	 * @return array
 	 */
-	private static function sanitize_extras( array $in, array $base ) {
+	private static function sanitize_extras( array $in, array $base, $capacity ) {
 		$wrap = self::section( $in, 'gift_wrap' );
+		$free = self::section( $in, 'free_gift' );
 		return array(
 			'gift_message' => self::bool( self::pick( $in, 'gift_message', $base['gift_message'] ), $base['gift_message'] ),
 			'gift_wrap'    => array(
 				'enabled' => self::bool( self::pick( $wrap, 'enabled', $base['gift_wrap']['enabled'] ), $base['gift_wrap']['enabled'] ),
 				'fee'     => self::money( self::pick( $wrap, 'fee', $base['gift_wrap']['fee'] ) ),
+			),
+			'free_gift'    => array(
+				'enabled'    => self::bool( self::pick( $free, 'enabled', $base['free_gift']['enabled'] ), $base['free_gift']['enabled'] ),
+				'product_id' => max( 0, (int) self::pick( $free, 'product_id', $base['free_gift']['product_id'] ) ),
+				'min_items'  => self::clamp_int( self::pick( $free, 'min_items', $base['free_gift']['min_items'] ), 1, $capacity ),
 			),
 		);
 	}
@@ -380,9 +422,32 @@ final class Config {
 		foreach ( array( 'show_hero', 'show_ladder', 'show_stickers' ) as $key ) {
 			$out[ $key ] = self::bool( self::pick( $in, $key, $base[ $key ] ), $base[ $key ] );
 		}
-		$out['accent'] = self::enum( self::pick( $in, 'accent', $base['accent'] ), self::ACCENTS, $base['accent'] );
-		$out['theme']  = self::enum( self::pick( $in, 'theme', $base['theme'] ), self::THEMES, $base['theme'] );
+		$out['accent']        = self::enum( self::pick( $in, 'accent', $base['accent'] ), self::ACCENTS, $base['accent'] );
+		$out['accent_color']  = self::hex( $in, 'accent_color', $base );
+		$out['theme']         = self::enum( self::pick( $in, 'theme', $base['theme'] ), self::THEMES, $base['theme'] );
+		$out['theme_canvas']  = self::hex( $in, 'theme_canvas', $base );
+		$out['theme_surface'] = self::hex( $in, 'theme_surface', $base );
+		$out['ladder']        = self::enum( self::pick( $in, 'ladder', $base['ladder'] ), self::LADDERS, $base['ladder'] );
+		foreach ( self::LADDER_COLORS as $key ) {
+			$out[ $key ] = self::hex( $in, $key, $base );
+		}
+		$out['countdown']      = self::enum( self::pick( $in, 'countdown', $base['countdown'] ), self::COUNTDOWNS, $base['countdown'] );
+		$out['countdown_bg']   = self::hex( $in, 'countdown_bg', $base );
+		$out['countdown_text'] = self::hex( $in, 'countdown_text', $base );
 		return $out;
+	}
+
+	/**
+	 * A #rrggbb colour, or the base colour when the input is not one.
+	 *
+	 * @param array  $in   Input section.
+	 * @param string $key  Key.
+	 * @param array  $base Base section.
+	 * @return string
+	 */
+	private static function hex( array $in, $key, array $base ) {
+		$hex = Colors::normalize_hex( self::pick( $in, $key, $base[ $key ] ) );
+		return '' !== $hex ? $hex : $base[ $key ];
 	}
 
 	/**

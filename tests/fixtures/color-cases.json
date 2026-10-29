@@ -1,0 +1,355 @@
+{
+	"cases": [
+		{
+			"name": "default look overrides nothing",
+			"design": {
+				"accent": "max",
+				"accent_color": "#f04e12",
+				"theme": "light",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": false,
+				"vars": {}
+			}
+		},
+		{
+			"name": "dark theme with Max Orange",
+			"design": {
+				"accent": "max",
+				"accent_color": "#f04e12",
+				"theme": "dark",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": true,
+				"vars": {}
+			}
+		},
+		{
+			"name": "theme accent without a theme colour falls back",
+			"design": {
+				"accent": "theme",
+				"accent_color": "#f04e12",
+				"theme": "light",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": false,
+				"vars": {}
+			}
+		},
+		{
+			"name": "theme accent uses the theme colour",
+			"design": {
+				"accent": "theme",
+				"accent_color": "#f04e12",
+				"theme": "light",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff"
+			},
+			"themeAccent": "#3858e9",
+			"expected": {
+				"dark": false,
+				"vars": {
+					"--max": "#3858e9",
+					"--on-max": "#ffffff",
+					"--max-strong": "#2d46ba",
+					"--max-soft": "#e3e8fc"
+				}
+			}
+		},
+		{
+			"name": "pale accent text is darkened until it reads on the card",
+			"design": {
+				"accent": "theme",
+				"accent_color": "#f04e12",
+				"theme": "light",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff"
+			},
+			"themeAccent": "#ffee58",
+			"expected": {
+				"dark": false,
+				"vars": {
+					"--max": "#ffee58",
+					"--on-max": "#141414",
+					"--max-strong": "#80772c",
+					"--max-soft": "#fffde8"
+				}
+			}
+		},
+		{
+			"name": "custom dark accent gets white text",
+			"design": {
+				"accent": "custom",
+				"accent_color": "#1f3a93",
+				"theme": "light",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": false,
+				"vars": {
+					"--max": "#1f3a93",
+					"--on-max": "#ffffff",
+					"--max-strong": "#192e76",
+					"--max-soft": "#e0e3f0"
+				}
+			}
+		},
+		{
+			"name": "custom light accent gets dark text",
+			"design": {
+				"accent": "custom",
+				"accent_color": "#ffd23f",
+				"theme": "light",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": false,
+				"vars": {
+					"--max": "#ffd23f",
+					"--on-max": "#141414",
+					"--max-strong": "#806920",
+					"--max-soft": "#fff9e4"
+				}
+			}
+		},
+		{
+			"name": "custom accent on the dark theme",
+			"design": {
+				"accent": "custom",
+				"accent_color": "#1baf7a",
+				"theme": "dark",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": true,
+				"vars": {
+					"--max": "#1baf7a",
+					"--on-max": "#141414",
+					"--max-strong": "#54c39b",
+					"--max-soft": "#1a3b2e"
+				}
+			}
+		},
+		{
+			"name": "invalid custom accent is ignored",
+			"design": {
+				"accent": "custom",
+				"accent_color": "red",
+				"theme": "light",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": false,
+				"vars": {}
+			}
+		},
+		{
+			"name": "custom light theme",
+			"design": {
+				"accent": "max",
+				"accent_color": "#f04e12",
+				"theme": "custom",
+				"theme_canvas": "#fdf6ec",
+				"theme_surface": "#fffaf3"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": false,
+				"vars": {
+					"--canvas": "#fdf6ec",
+					"--surface": "#fffaf3",
+					"--surface-sunken": "#f1ece6",
+					"--surface-hover": "#f8f3ec",
+					"--line": "#e3ded8",
+					"--line-strong": "#8a8784",
+					"--ink": "#141414",
+					"--ink-muted": "#565452",
+					"--ink-subtle": "#6d6b69",
+					"--on-ink": "#fffaf3"
+				}
+			}
+		},
+		{
+			"name": "custom dark theme switches to dark tokens",
+			"design": {
+				"accent": "max",
+				"accent_color": "#f04e12",
+				"theme": "custom",
+				"theme_canvas": "#0b1d2a",
+				"theme_surface": "#13293d"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": true,
+				"vars": {
+					"--canvas": "#0b1d2a",
+					"--surface": "#13293d",
+					"--surface-sunken": "#203548",
+					"--surface-hover": "#1a2f42",
+					"--line": "#2e4152",
+					"--line-strong": "#838e96",
+					"--ink": "#f3f3ef",
+					"--ink-muted": "#b4babd",
+					"--ink-subtle": "#9ea6ab",
+					"--on-ink": "#13293d"
+				}
+			}
+		},
+		{
+			"name": "custom theme with custom accent",
+			"design": {
+				"accent": "custom",
+				"accent_color": "#ff6b9a",
+				"theme": "custom",
+				"theme_canvas": "#13293d",
+				"theme_surface": "#1b3a57"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": true,
+				"vars": {
+					"--canvas": "#13293d",
+					"--surface": "#1b3a57",
+					"--surface-sunken": "#284560",
+					"--surface-hover": "#21405c",
+					"--line": "#355069",
+					"--line-strong": "#8797a3",
+					"--ink": "#f3f3ef",
+					"--ink-muted": "#b7bfc4",
+					"--ink-subtle": "#a1adb5",
+					"--on-ink": "#1b3a57",
+					"--max": "#ff6b9a",
+					"--on-max": "#141414",
+					"--max-strong": "#ff90b3",
+					"--max-soft": "#4d4566"
+				}
+			}
+		},
+		{
+			"name": "short hex is expanded",
+			"design": {
+				"accent": "custom",
+				"accent_color": "#C0F",
+				"theme": "light",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": false,
+				"vars": {
+					"--max": "#cc00ff",
+					"--on-max": "#141414",
+					"--max-strong": "#a300cc",
+					"--max-soft": "#f8dbff"
+				}
+			}
+		},
+		{
+			"name": "default ladder ignores its colours",
+			"design": {
+				"accent": "max",
+				"accent_color": "#f04e12",
+				"theme": "light",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff",
+				"ladder": "default",
+				"ladder_top": "#8F2400",
+				"ladder_top_text": "#fff",
+				"ladder_near": "#ffd23f",
+				"ladder_near_text": "#141414",
+				"ladder_base": "#ffffff",
+				"ladder_base_text": "#141414"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": false,
+				"vars": {}
+			}
+		},
+		{
+			"name": "custom ladder sets each step and its text",
+			"design": {
+				"accent": "max",
+				"accent_color": "#f04e12",
+				"theme": "light",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff",
+				"ladder": "custom",
+				"ladder_top": "#8F2400",
+				"ladder_top_text": "#fff",
+				"ladder_near": "#ffd23f",
+				"ladder_near_text": "#141414",
+				"ladder_base": "#ffffff",
+				"ladder_base_text": "not a colour"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": false,
+				"vars": {
+					"--ladder-top": "#8f2400",
+					"--on-ladder-top": "#ffffff",
+					"--ladder-near": "#ffd23f",
+					"--on-ladder-near": "#141414",
+					"--ladder-base": "#ffffff"
+				}
+			}
+		},
+		{
+			"name": "default countdown ignores its colours",
+			"design": {
+				"accent": "max",
+				"accent_color": "#f04e12",
+				"theme": "light",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff",
+				"countdown": "default",
+				"countdown_bg": "#1f3a93",
+				"countdown_text": "#ffffff"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": false,
+				"vars": {}
+			}
+		},
+		{
+			"name": "custom countdown sets its background and text",
+			"design": {
+				"accent": "max",
+				"accent_color": "#f04e12",
+				"theme": "light",
+				"theme_canvas": "#f5f5f2",
+				"theme_surface": "#ffffff",
+				"countdown": "custom",
+				"countdown_bg": "#1F3A93",
+				"countdown_text": "#fff"
+			},
+			"themeAccent": "",
+			"expected": {
+				"dark": false,
+				"vars": {
+					"--countdown": "#1f3a93",
+					"--on-countdown": "#ffffff"
+				}
+			}
+		}
+	]
+}

@@ -12,6 +12,7 @@ defined( 'ABSPATH' ) || exit;
 use MixMax\BoxBuilder\Analytics\Query;
 use MixMax\BoxBuilder\Campaigns\Campaign_Repository;
 use MixMax\BoxBuilder\Campaigns\Config;
+use MixMax\BoxBuilder\Campaigns\Page_Content;
 use MixMax\BoxBuilder\Campaigns\Publisher;
 use MixMax\BoxBuilder\Campaigns\Status;
 use MixMax\BoxBuilder\Campaigns\Templates;
@@ -48,7 +49,7 @@ final class Campaigns_Controller extends Base_Controller {
 		$schema     = array( $this, 'get_public_item_schema' );
 		$id_arg     = array(
 			'id' => array(
-				'description' => __( 'Campaign ID.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Campaign ID.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'integer',
 				'minimum'     => 1,
 			),
@@ -70,7 +71,7 @@ final class Campaigns_Controller extends Base_Controller {
 					'permission_callback' => $permission,
 					'args'                => array(
 						'template' => array(
-							'description'       => __( 'Template to start from.', 'mix-and-max-box-builder' ),
+							'description'       => __( 'Template to start from.', 'productboxes-mix-and-match-box-builder' ),
 							'type'              => 'string',
 							'default'           => 'blank',
 							'sanitize_callback' => 'sanitize_key',
@@ -93,13 +94,13 @@ final class Campaigns_Controller extends Base_Controller {
 					'permission_callback' => $permission,
 					'args'                => array(
 						'action' => array(
-							'description' => __( 'What to do with the campaigns.', 'mix-and-max-box-builder' ),
+							'description' => __( 'What to do with the campaigns.', 'productboxes-mix-and-match-box-builder' ),
 							'type'        => 'string',
 							'enum'        => self::BULK_ACTIONS,
 							'required'    => true,
 						),
 						'ids'    => array(
-							'description' => __( 'Campaign IDs.', 'mix-and-max-box-builder' ),
+							'description' => __( 'Campaign IDs.', 'productboxes-mix-and-match-box-builder' ),
 							'type'        => 'array',
 							'items'       => array(
 								'type'    => 'integer',
@@ -178,26 +179,26 @@ final class Campaigns_Controller extends Base_Controller {
 					'permission_callback' => $permission,
 					'args'                => array(
 						'placement'  => array(
-							'description' => __( 'Where to place the builder.', 'mix-and-max-box-builder' ),
+							'description' => __( 'Where to place the builder.', 'productboxes-mix-and-match-box-builder' ),
 							'type'        => 'string',
 							'enum'        => self::PLACEMENTS,
 							'required'    => true,
 						),
 						'page_id'    => array(
-							'description' => __( 'Existing page to add the builder to.', 'mix-and-max-box-builder' ),
+							'description' => __( 'Existing page to add the builder to.', 'productboxes-mix-and-match-box-builder' ),
 							'type'        => 'integer',
 							'minimum'     => 0,
 							'default'     => 0,
 						),
 						'page_title' => array(
-							'description'       => __( 'Title of the new page.', 'mix-and-max-box-builder' ),
+							'description'       => __( 'Title of the new page.', 'productboxes-mix-and-match-box-builder' ),
 							'type'              => 'string',
 							'maxLength'         => 200,
 							'default'           => '',
 							'sanitize_callback' => 'sanitize_text_field',
 						),
 						'page_slug'  => array(
-							'description'       => __( 'Address of the new page.', 'mix-and-max-box-builder' ),
+							'description'       => __( 'Address of the new page.', 'productboxes-mix-and-match-box-builder' ),
 							'type'              => 'string',
 							'maxLength'         => 200,
 							'default'           => '',
@@ -233,32 +234,32 @@ final class Campaigns_Controller extends Base_Controller {
 		return array_merge(
 			array(
 				'status'  => array(
-					'description' => __( 'Computed status to show. "live" is active plus ending soon.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Computed status to show. "live" is active plus ending soon.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'enum'        => array_merge( array( 'all', 'live' ), Status::all() ),
 					'default'     => 'all',
 				),
 				'search'  => array(
-					'description'       => __( 'Search campaign names.', 'mix-and-max-box-builder' ),
+					'description'       => __( 'Search campaign names.', 'productboxes-mix-and-match-box-builder' ),
 					'type'              => 'string',
 					'maxLength'         => 200,
 					'default'           => '',
 					'sanitize_callback' => 'sanitize_text_field',
 				),
 				'type'    => array(
-					'description' => __( 'Campaign type.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Campaign type.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'enum'        => array_merge( array( '' ), Config::TYPES ),
 					'default'     => '',
 				),
 				'orderby' => array(
-					'description' => __( 'Sort by.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Sort by.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'enum'        => array( 'date', 'title', 'modified', 'revenue', 'conversion' ),
 					'default'     => 'date',
 				),
 				'order'   => array(
-					'description' => __( 'Sort direction.', 'mix-and-max-box-builder' ),
+					'description' => __( 'Sort direction.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'string',
 					'enum'        => array( 'asc', 'desc' ),
 					'default'     => 'desc',
@@ -375,7 +376,7 @@ final class Campaigns_Controller extends Base_Controller {
 		}
 		$previous = $this->prepare_campaign( $campaign );
 		if ( ! $this->repo->delete( $campaign['id'] ) ) {
-			return $this->error( 'mmbb_delete_failed', __( 'The campaign could not be deleted.', 'mix-and-max-box-builder' ), 500 );
+			return $this->error( 'mmbb_delete_failed', __( 'The campaign could not be deleted.', 'productboxes-mix-and-match-box-builder' ), 500 );
 		}
 		return rest_ensure_response(
 			array(
@@ -422,17 +423,17 @@ final class Campaigns_Controller extends Base_Controller {
 		if ( 'existing_page' === $placement ) {
 			$page = get_post( (int) $request['page_id'] );
 			if ( ! $page || 'page' !== $page->post_type || 'trash' === $page->post_status ) {
-				return $this->error( 'mmbb_invalid_page', __( 'Choose an existing page for the builder.', 'mix-and-max-box-builder' ), 400 );
+				return $this->error( 'mmbb_invalid_page', __( 'Choose an existing page for the builder.', 'productboxes-mix-and-match-box-builder' ), 400 );
 			}
 		} elseif ( 'new_page' === $placement && '' === trim( (string) $request['page_title'] ) ) {
-			return $this->error( 'mmbb_page_title_required', __( 'Give the new page a title.', 'mix-and-max-box-builder' ), 400 );
+			return $this->error( 'mmbb_page_title_required', __( 'Give the new page a title.', 'productboxes-mix-and-match-box-builder' ), 400 );
 		}
 
 		$errors = Config::validate( $campaign['config'] );
 		if ( ! empty( $errors ) ) {
 			return $this->error(
 				'mmbb_invalid_config',
-				__( 'Fix these before going live.', 'mix-and-max-box-builder' ),
+				__( 'Fix these before going live.', 'productboxes-mix-and-match-box-builder' ),
 				422,
 				array( 'errors' => Config_Messages::describe( $errors ) )
 			);
@@ -479,13 +480,13 @@ final class Campaigns_Controller extends Base_Controller {
 
 		foreach ( array_unique( array_map( 'absint', (array) $request['ids'] ) ) as $id ) {
 			if ( ! $this->repo->find( $id ) ) {
-				$results[] = $this->bulk_result( $id, new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'mix-and-max-box-builder' ) ) );
+				$results[] = $this->bulk_result( $id, new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'productboxes-mix-and-match-box-builder' ) ) );
 				continue;
 			}
 			if ( 'delete' === $action ) {
 				$outcome = $this->repo->delete( $id )
 					? true
-					: new \WP_Error( 'mmbb_delete_failed', __( 'The campaign could not be deleted.', 'mix-and-max-box-builder' ) );
+					: new \WP_Error( 'mmbb_delete_failed', __( 'The campaign could not be deleted.', 'productboxes-mix-and-match-box-builder' ) );
 			} else {
 				$outcome = $this->repo->$action( $id );
 			}
@@ -510,7 +511,7 @@ final class Campaigns_Controller extends Base_Controller {
 		if ( is_string( $value ) && null !== Templates::get( sanitize_key( $value ) ) ) {
 			return true;
 		}
-		return $this->error( 'mmbb_invalid_template', __( 'That template does not exist.', 'mix-and-max-box-builder' ), 400 );
+		return $this->error( 'mmbb_invalid_template', __( 'That template does not exist.', 'productboxes-mix-and-match-box-builder' ), 400 );
 	}
 
 	/**
@@ -584,6 +585,7 @@ final class Campaigns_Controller extends Base_Controller {
 				'preview'  => array( 'type' => 'boolean' ),
 				'config'   => array( 'type' => 'object' ),
 				'view'     => array( 'type' => 'object' ),
+				'colors'   => array( 'type' => 'object' ),
 				'settings' => array( 'type' => 'object' ),
 				'products' => array(
 					'type'  => 'array',
@@ -603,50 +605,50 @@ final class Campaigns_Controller extends Base_Controller {
 	private static function campaign_properties() {
 		return array(
 			'id'          => array(
-				'description' => __( 'Campaign ID.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Campaign ID.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'integer',
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => true,
 			),
 			'title'       => array(
-				'description' => __( 'Campaign name.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Campaign name.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'string',
 				'context'     => array( 'view', 'edit' ),
 			),
 			'status'      => array(
-				'description' => __( 'Computed status.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Computed status.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'string',
 				'enum'        => Status::all(),
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => true,
 			),
 			'post_status' => array(
-				'description' => __( 'Stored post status.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Stored post status.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'string',
 				'enum'        => array( 'draft', 'publish' ),
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => true,
 			),
 			'paused'      => array(
-				'description' => __( 'Whether the campaign is paused.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Whether the campaign is paused.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'boolean',
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => true,
 			),
 			'type'        => array(
-				'description' => __( 'Campaign type.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Campaign type.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'string',
 				'enum'        => Config::TYPES,
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => true,
 			),
 			'config'      => array(
-				'description' => __( 'Sanitized campaign config.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Sanitized campaign config.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'object',
 				'context'     => array( 'view', 'edit' ),
 			),
 			'placement'   => array(
-				'description' => __( 'Where the builder is placed.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Where the builder is placed.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'object',
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => true,
@@ -662,7 +664,7 @@ final class Campaigns_Controller extends Base_Controller {
 				),
 			),
 			'stats'       => array(
-				'description' => __( 'Sales figures. Filled by analytics.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Sales figures. Filled by analytics.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'object',
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => true,
@@ -673,21 +675,21 @@ final class Campaigns_Controller extends Base_Controller {
 				),
 			),
 			'edit_url'    => array(
-				'description' => __( 'Campaign editor address.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Campaign editor address.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'string',
 				'format'      => 'uri',
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => true,
 			),
 			'created'     => array(
-				'description' => __( 'Created, UTC.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Created, UTC.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'string',
 				'format'      => 'date-time',
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => true,
 			),
 			'modified'    => array(
-				'description' => __( 'Last saved, UTC.', 'mix-and-max-box-builder' ),
+				'description' => __( 'Last saved, UTC.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'string',
 				'format'      => 'date-time',
 				'context'     => array( 'view', 'edit' ),
@@ -705,7 +707,7 @@ final class Campaigns_Controller extends Base_Controller {
 	private function find( $request ) {
 		$campaign = $this->repo->find( (int) $request['id'] );
 		if ( ! $campaign ) {
-			return $this->error( 'mmbb_not_found', __( 'Campaign not found.', 'mix-and-max-box-builder' ), 404 );
+			return $this->error( 'mmbb_not_found', __( 'Campaign not found.', 'productboxes-mix-and-match-box-builder' ), 404 );
 		}
 		return $campaign;
 	}
@@ -742,6 +744,32 @@ final class Campaigns_Controller extends Base_Controller {
 	}
 
 	/**
+	 * A published page or post that shows this campaign's block or shortcode.
+	 *
+	 * @param int $campaign_id Campaign id.
+	 * @return \WP_Post|null
+	 */
+	private function find_placed_page( $campaign_id ) {
+		foreach ( array( 'mmbb/box-builder', 'mmbb_box' ) as $needle ) {
+			$posts = get_posts(
+				array(
+					'post_type'      => array( 'page', 'post' ),
+					'post_status'    => 'publish',
+					'posts_per_page' => 20,
+					's'              => $needle,
+					'no_found_rows'  => true,
+				)
+			);
+			foreach ( $posts as $post ) {
+				if ( Page_Content::contains( $post->post_content, $campaign_id ) ) {
+					return $post;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Describe where the builder is placed.
 	 *
 	 * @param array $campaign Campaign.
@@ -756,6 +784,11 @@ final class Campaigns_Controller extends Base_Controller {
 			'shortcode'  => sprintf( '[mmbb_box id="%d"]', $campaign['id'] ),
 		);
 		$page = get_post( $campaign['config']['placement']['page_id'] );
+		if ( ! $page || 'trash' === $page->post_status || ! Page_Content::contains( $page->post_content, $campaign['id'] ) ) {
+			// The saved page was deleted or edited; the merchant may have placed the builder elsewhere by hand.
+			$found = $this->find_placed_page( $campaign['id'] );
+			$page  = $found ? $found : $page;
+		}
 		if ( ! $page || 'trash' === $page->post_status ) {
 			return $out;
 		}
@@ -804,7 +837,7 @@ final class Campaigns_Controller extends Base_Controller {
 	 */
 	private function title_arg() {
 		return array(
-			'description'       => __( 'Campaign name.', 'mix-and-max-box-builder' ),
+			'description'       => __( 'Campaign name.', 'productboxes-mix-and-match-box-builder' ),
 			'type'              => 'string',
 			'maxLength'         => 200,
 			'sanitize_callback' => 'sanitize_text_field',
@@ -820,7 +853,7 @@ final class Campaigns_Controller extends Base_Controller {
 	 */
 	private function config_arg( $required ) {
 		return array(
-			'description'          => __( 'Campaign config. PATCH merges a partial config; PUT replaces it.', 'mix-and-max-box-builder' ),
+			'description'          => __( 'Campaign config. PATCH merges a partial config; PUT replaces it.', 'productboxes-mix-and-match-box-builder' ),
 			'type'                 => 'object',
 			'required'             => $required,
 			'additionalProperties' => true,

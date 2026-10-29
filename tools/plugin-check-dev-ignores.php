@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Mix and Max Box Builder — Plugin Check dev ignores
+ * Plugin Name: ProductBoxes Box Builder — Plugin Check dev ignores
  * Description: Development only. Makes Plugin Check skip the dev files that .distignore keeps out of the release zip, so the in-place checkout can be checked from wp-admin. Copy into wp-content/mu-plugins/. Never ships.
  *
  * @package MixMax\BoxBuilder
@@ -40,7 +40,7 @@ function mmbb_dev_plugin_check_files() {
 		'composer.json',
 		'composer.lock',
 		'jest-unit.config.js',
-		'mix-and-max-box-builder.zip',
+		'productboxes-mix-and-match-box-builder.zip',
 		'package-lock.json',
 		'phpcs.xml.dist',
 		'phpunit.xml.dist',
@@ -52,7 +52,7 @@ add_filter(
 	static function ( $dirs ) {
 		// Plugin Check matches "/$dir/" anywhere in the path, so the plugin slug keeps this scoped to us.
 		foreach ( mmbb_dev_plugin_check_directories() as $dir ) {
-			$dirs[] = 'mix-and-max-box-builder/' . $dir;
+			$dirs[] = 'productboxes-mix-and-match-box-builder/' . $dir;
 		}
 		return $dirs;
 	}
@@ -63,7 +63,7 @@ add_filter(
 	static function ( $files ) {
 		// Plugin Check matches "/$file" at the end of the path.
 		foreach ( mmbb_dev_plugin_check_files() as $file ) {
-			$files[] = 'mix-and-max-box-builder/' . $file;
+			$files[] = 'productboxes-mix-and-match-box-builder/' . $file;
 		}
 		return $files;
 	}

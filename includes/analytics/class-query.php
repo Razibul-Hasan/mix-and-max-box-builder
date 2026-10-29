@@ -213,7 +213,7 @@ final class Query {
 			$performance[] = array_merge(
 				array(
 					'id'   => $id,
-					'name' => get_the_title( $id ) ? get_the_title( $id ) : __( 'Deleted campaign', 'mix-and-max-box-builder' ),
+					'name' => get_the_title( $id ) ? get_the_title( $id ) : __( 'Deleted campaign', 'productboxes-mix-and-match-box-builder' ),
 				),
 				self::ratios( $values )
 			);
@@ -235,14 +235,14 @@ final class Query {
 			$product = wc_get_product( $id );
 			$picks[] = array(
 				'id'    => (int) $id,
-				'name'  => $product ? $product->get_name() : __( 'Deleted product', 'mix-and-max-box-builder' ),
+				'name'  => $product ? $product->get_name() : __( 'Deleted product', 'productboxes-mix-and-match-box-builder' ),
 				'count' => $count,
 			);
 		}
 		if ( $other ) {
 			$picks[] = array(
 				'id'    => 0,
-				'name'  => __( 'Other', 'mix-and-max-box-builder' ),
+				'name'  => __( 'Other', 'productboxes-mix-and-match-box-builder' ),
 				'count' => $other,
 			);
 		}

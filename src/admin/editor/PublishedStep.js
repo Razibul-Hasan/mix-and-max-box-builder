@@ -21,15 +21,19 @@ export default function PublishedStep( { campaign, draft } ) {
 	const { page_url: pageUrl, page_title: pageTitle } = campaign.placement;
 	const end = draft.config.schedule.end;
 	const days = draft.config.schedule.countdown_days;
+	const countTo = draft.config.schedule.countdown_end;
 
 	const copyLink = () =>
 		copyText( pageUrl ).then( ( ok ) =>
 			toast(
 				ok
-					? __( 'Link copied', 'mix-and-max-box-builder' )
+					? __(
+							'Link copied',
+							'productboxes-mix-and-match-box-builder'
+					  )
 					: __(
 							'Copy didn’t work. Select the link and copy by hand.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 					  )
 			)
 		);
@@ -39,13 +43,13 @@ export default function PublishedStep( { campaign, draft } ) {
 				/* translators: %s: Address of the page, such as example.com/holiday-box. */
 				__(
 					'Shoppers can build boxes at %s now.',
-					'mix-and-max-box-builder'
+					'productboxes-mix-and-match-box-builder'
 				),
 				linkText( pageUrl )
 		  )
 		: __(
 				'Paste the shortcode on a page to show the builder.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 		  );
 	if ( end && days > 0 ) {
 		description +=
@@ -54,10 +58,21 @@ export default function PublishedStep( { campaign, draft } ) {
 				/* translators: 1: Number of days, 2: End date. */
 				__(
 					'The countdown starts %1$d days before %2$s.',
-					'mix-and-max-box-builder'
+					'productboxes-mix-and-match-box-builder'
 				),
 				days,
 				formatShortDate( end, { locale, timezone } )
+			);
+	} else if ( ! end && countTo && days > 0 ) {
+		description +=
+			' ' +
+			sprintf(
+				/* translators: %s: Date the countdown ends. */
+				__(
+					'The countdown runs until %s.',
+					'productboxes-mix-and-match-box-builder'
+				),
+				formatShortDate( countTo, { locale, timezone } )
 			);
 	}
 
@@ -68,7 +83,10 @@ export default function PublishedStep( { campaign, draft } ) {
 					icon="check"
 					title={ sprintf(
 						/* translators: %s: Campaign name. */
-						__( '%s is live', 'mix-and-max-box-builder' ),
+						__(
+							'%s is live',
+							'productboxes-mix-and-match-box-builder'
+						),
 						draft.title
 					) }
 					description={ description }
@@ -79,7 +97,10 @@ export default function PublishedStep( { campaign, draft } ) {
 							<Icon name="store" size={ 18 } />
 							<span>{ linkText( pageUrl ) }</span>
 							<Button size="sm" icon="copy" onClick={ copyLink }>
-								{ __( 'Copy link', 'mix-and-max-box-builder' ) }
+								{ __(
+									'Copy link',
+									'productboxes-mix-and-match-box-builder'
+								) }
 							</Button>
 						</div>
 					) : null }
@@ -94,14 +115,14 @@ export default function PublishedStep( { campaign, draft } ) {
 							>
 								{ __(
 									'View on store',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							</Button>
 						) : null }
 						<Button href={ urls.dashboard }>
 							{ __(
 								'Back to dashboard',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						</Button>
 					</div>
@@ -110,7 +131,10 @@ export default function PublishedStep( { campaign, draft } ) {
 
 			<div className="mmbb-editor__stack mmbb-editor__stack--tight">
 				<h2 className="mmbb-editor__h2">
-					{ __( 'What to do next', 'mix-and-max-box-builder' ) }
+					{ __(
+						'What to do next',
+						'productboxes-mix-and-match-box-builder'
+					) }
 				</h2>
 				<div className="mmbb-editor__next">
 					<a href={ urls.analytics }>
@@ -118,12 +142,15 @@ export default function PublishedStep( { campaign, draft } ) {
 							<Icon name="analytics" size={ 20 } />
 						</span>
 						<b>
-							{ __( 'Watch it sell', 'mix-and-max-box-builder' ) }
+							{ __(
+								'Watch it sell',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						</b>
 						<span>
 							{ __(
 								'Revenue, boxes and the builder funnel update every hour.',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						</span>
 					</a>
@@ -134,7 +161,7 @@ export default function PublishedStep( { campaign, draft } ) {
 						<b>
 							{ __(
 								'Add a menu link',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						</b>
 						<span>
@@ -143,13 +170,13 @@ export default function PublishedStep( { campaign, draft } ) {
 										/* translators: %s: Page title. */
 										__(
 											'Appearance › Menus › add the %s page.',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 										pageTitle
 								  )
 								: __(
 										'Appearance › Menus › add the page that holds the builder.',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 								  ) }
 						</span>
 					</div>
@@ -164,13 +191,13 @@ export default function PublishedStep( { campaign, draft } ) {
 						<b>
 							{ __(
 								'Tune your tiers',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						</b>
 						<span>
 							{ __(
 								'After a week, check where boxes stop and move a tier if most stall one short.',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						</span>
 					</a>

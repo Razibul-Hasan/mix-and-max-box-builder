@@ -40,7 +40,7 @@ final class Publisher {
 	public function publish( $campaign_id, array $args ) {
 		$campaign = $this->repo->find( $campaign_id );
 		if ( ! $campaign ) {
-			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'mix-and-max-box-builder' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'mmbb_not_found', __( 'Campaign not found.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 404 ) );
 		}
 
 		$placement = isset( $args['placement'] ) ? (string) $args['placement'] : 'none';
@@ -107,7 +107,7 @@ final class Publisher {
 	 */
 	private function create_page( $campaign_id, array $args ) {
 		if ( ! current_user_can( 'publish_pages' ) ) {
-			return new \WP_Error( 'mmbb_cannot_publish_page', __( 'You are not allowed to publish pages.', 'mix-and-max-box-builder' ), array( 'status' => 403 ) );
+			return new \WP_Error( 'mmbb_cannot_publish_page', __( 'You are not allowed to publish pages.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 403 ) );
 		}
 
 		$title = sanitize_text_field( isset( $args['page_title'] ) ? (string) $args['page_title'] : '' );
@@ -138,10 +138,10 @@ final class Publisher {
 	private function add_to_page( $campaign_id, $page_id ) {
 		$page = get_post( $page_id );
 		if ( ! $page || 'page' !== $page->post_type || 'trash' === $page->post_status ) {
-			return new \WP_Error( 'mmbb_invalid_page', __( 'Choose an existing page for the builder.', 'mix-and-max-box-builder' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'mmbb_invalid_page', __( 'Choose an existing page for the builder.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 400 ) );
 		}
 		if ( ! current_user_can( 'edit_post', $page->ID ) ) {
-			return new \WP_Error( 'mmbb_cannot_edit_page', __( 'You are not allowed to edit that page.', 'mix-and-max-box-builder' ), array( 'status' => 403 ) );
+			return new \WP_Error( 'mmbb_cannot_edit_page', __( 'You are not allowed to edit that page.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 403 ) );
 		}
 
 		$content = Page_Content::prepend( $page->post_content, $campaign_id, has_blocks( $page->post_content ) || '' === trim( $page->post_content ) );

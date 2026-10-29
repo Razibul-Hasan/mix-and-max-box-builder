@@ -321,24 +321,27 @@ export function cartRows( env, state ) {
 }
 
 /**
- * The end date to count down to, when the campaign shows one: it has an end date
- * and fewer than `countdown_days` days remain.
+ * The date to count down to, when the campaign shows one. With an end date the
+ * countdown shows once fewer than `countdown_days` days remain; an always-on
+ * campaign counts to its own `countdown_end` until that time passes.
  *
- * @param {Object} schedule { end, countdown_days }.
+ * @param {Object} schedule { end, countdown_days, countdown_end }.
  * @param {number} nowMs    Current time in milliseconds.
  * @return {string|null} ISO date, or null.
  */
 export function countdownEnd( schedule, nowMs ) {
-	if ( ! schedule.end || ! ( schedule.countdown_days > 0 ) ) {
+	if ( ! ( schedule.countdown_days > 0 ) ) {
 		return null;
 	}
-	const end = Date.parse( schedule.end );
+	const target = schedule.end || schedule.countdown_end;
+	const end = target ? Date.parse( target ) : NaN;
 	if ( Number.isNaN( end ) || end <= nowMs ) {
 		return null;
 	}
-	return end - nowMs <= schedule.countdown_days * 86400000
-		? schedule.end
-		: null;
+	if ( ! schedule.end ) {
+		return target;
+	}
+	return end - nowMs <= schedule.countdown_days * 86400000 ? target : null;
 }
 
 /**

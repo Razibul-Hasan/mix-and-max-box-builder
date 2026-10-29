@@ -9,7 +9,7 @@ namespace MixMax\BoxBuilder\Admin;
 
 defined( 'ABSPATH' ) || exit;
 
-/** Add the Mix and Max menu with its four pages. */
+/** Add the ProductBoxes menu with its four pages. */
 final class Menu {
 	const CAPABILITY = 'manage_woocommerce';
 	const SLUG       = 'mmbb';
@@ -68,16 +68,16 @@ final class Menu {
 	/** Add the top-level menu and the four pages. */
 	public function add_menu() {
 		$labels = array(
-			'dashboard' => __( 'Dashboard', 'mix-and-max-box-builder' ),
-			'campaigns' => __( 'Campaigns', 'mix-and-max-box-builder' ),
-			'analytics' => __( 'Analytics', 'mix-and-max-box-builder' ),
-			'settings'  => __( 'Settings', 'mix-and-max-box-builder' ),
+			'dashboard' => __( 'Dashboard', 'productboxes-mix-and-match-box-builder' ),
+			'campaigns' => __( 'Campaigns', 'productboxes-mix-and-match-box-builder' ),
+			'analytics' => __( 'Analytics', 'productboxes-mix-and-match-box-builder' ),
+			'settings'  => __( 'Settings', 'productboxes-mix-and-match-box-builder' ),
 		);
 
 		// WooCommerce puts Products at 55.5, so 56 sits right after it.
 		self::$hooks['dashboard'] = (string) add_menu_page(
-			__( 'Mix and Max', 'mix-and-max-box-builder' ),
-			__( 'Mix and Max', 'mix-and-max-box-builder' ),
+			__( 'ProductBoxes', 'productboxes-mix-and-match-box-builder' ),
+			__( 'ProductBoxes', 'productboxes-mix-and-match-box-builder' ),
 			self::CAPABILITY,
 			self::SLUG,
 			function () {
@@ -127,7 +127,7 @@ final class Menu {
 	 */
 	public function render( $page ) {
 		if ( ! current_user_can( self::CAPABILITY ) ) {
-			wp_die( esc_html__( 'Sorry, you are not allowed to access this page.', 'mix-and-max-box-builder' ), 403 );
+			wp_die( esc_html__( 'Sorry, you are not allowed to access this page.', 'productboxes-mix-and-match-box-builder' ), 403 );
 		}
 		printf(
 			'<div id="mmbb-admin" class="mmbb-root" data-page="%s"></div>',

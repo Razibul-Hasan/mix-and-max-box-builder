@@ -32,7 +32,6 @@ import {
 	editorReducer,
 	initEditor,
 	payloadFor,
-	slugify,
 	STEPS,
 	stepForPath,
 	validateAll,
@@ -42,11 +41,11 @@ import {
 const AUTOSAVE_MS = 30000;
 
 const stepLabels = () => ( {
-	basics: __( 'Basics', 'mix-and-max-box-builder' ),
-	products: __( 'Products', 'mix-and-max-box-builder' ),
-	rules: __( 'Box rules', 'mix-and-max-box-builder' ),
-	design: __( 'Design', 'mix-and-max-box-builder' ),
-	publish: __( 'Publish', 'mix-and-max-box-builder' ),
+	basics: __( 'Basics', 'productboxes-mix-and-match-box-builder' ),
+	products: __( 'Products', 'productboxes-mix-and-match-box-builder' ),
+	rules: __( 'Box rules', 'productboxes-mix-and-match-box-builder' ),
+	design: __( 'Design', 'productboxes-mix-and-match-box-builder' ),
+	publish: __( 'Publish', 'productboxes-mix-and-match-box-builder' ),
 } );
 
 const isStep = ( value ) => STEPS.includes( value ) || value === 'published';
@@ -68,9 +67,6 @@ function firstBlocked( target, draft ) {
 
 function readPage( campaign ) {
 	const fallback = {
-		mode: campaign.placement.page_id > 0 ? 'existing' : 'new',
-		title: null,
-		slug: null,
 		pageId: campaign.placement.page_id || 0,
 	};
 	try {
@@ -117,13 +113,7 @@ function EditorBody( { initial } ) {
 	const savingRef = useRef( false );
 
 	const page = {
-		mode: rawPage.mode,
-		title: rawPage.title === null ? draft.title : rawPage.title,
-		slug: rawPage.slug === null ? slugify( draft.title ) : rawPage.slug,
 		pageId: rawPage.pageId,
-		setMode: ( mode ) => setRawPage( ( p ) => ( { ...p, mode } ) ),
-		setTitle: ( title ) => setRawPage( ( p ) => ( { ...p, title } ) ),
-		setSlug: ( slug ) => setRawPage( ( p ) => ( { ...p, slug } ) ),
 		setPageId: ( pageId ) => setRawPage( ( p ) => ( { ...p, pageId } ) ),
 	};
 
@@ -132,9 +122,6 @@ function EditorBody( { initial } ) {
 		writeStored(
 			'mmbb:editor:' + initial.id,
 			JSON.stringify( {
-				mode: rawPage.mode,
-				title: rawPage.title,
-				slug: rawPage.slug,
 				pageId: rawPage.pageId,
 			} )
 		);
@@ -207,7 +194,7 @@ function EditorBody( { initial } ) {
 							error,
 							__(
 								'The campaign could not be saved.',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							)
 						)
 					);
@@ -308,14 +295,7 @@ function EditorBody( { initial } ) {
 		}
 		setBusy( true );
 		setServerErrors( [] );
-		const body =
-			page.mode === 'existing'
-				? { placement: 'existing_page', page_id: page.pageId }
-				: {
-						placement: 'new_page',
-						page_title: page.title.trim(),
-						page_slug: slugify( page.slug ),
-				  };
+		const body = { placement: 'existing_page', page_id: page.pageId };
 		const saved = dirty ? save() : Promise.resolve( true );
 		saved
 			.then( () => publishCampaign( initial.id, body ) )
@@ -344,7 +324,7 @@ function EditorBody( { initial } ) {
 						error,
 						__(
 							'The campaign could not go live.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						)
 					)
 				);
@@ -355,15 +335,18 @@ function EditorBody( { initial } ) {
 	const status = statusInfo( meta.status );
 	let saveLine;
 	if ( saving ) {
-		saveLine = __( 'Saving…', 'mix-and-max-box-builder' );
+		saveLine = __( 'Saving…', 'productboxes-mix-and-match-box-builder' );
 	} else if ( saveError ) {
-		saveLine = __( 'Not saved', 'mix-and-max-box-builder' );
+		saveLine = __( 'Not saved', 'productboxes-mix-and-match-box-builder' );
 	} else if ( dirty ) {
-		saveLine = __( 'Unsaved changes', 'mix-and-max-box-builder' );
+		saveLine = __(
+			'Unsaved changes',
+			'productboxes-mix-and-match-box-builder'
+		);
 	} else {
 		saveLine = sprintf(
 			/* translators: %s: Time of day, such as 2:30 PM. */
-			__( 'Last saved %s', 'mix-and-max-box-builder' ),
+			__( 'Last saved %s', 'productboxes-mix-and-match-box-builder' ),
 			new Intl.DateTimeFormat( locale, {
 				hour: 'numeric',
 				minute: '2-digit',
@@ -379,10 +362,15 @@ function EditorBody( { initial } ) {
 				variant="ghost"
 				loading={ saving }
 				onClick={ () =>
-					saveByHand( __( 'Draft saved', 'mix-and-max-box-builder' ) )
+					saveByHand(
+						__(
+							'Draft saved',
+							'productboxes-mix-and-match-box-builder'
+						)
+					)
 				}
 			>
-				{ __( 'Save draft', 'mix-and-max-box-builder' ) }
+				{ __( 'Save draft', 'productboxes-mix-and-match-box-builder' ) }
 			</Button>
 		);
 	} else if ( meta.placement.page_url ) {
@@ -393,7 +381,10 @@ function EditorBody( { initial } ) {
 				target="_blank"
 				rel="noopener noreferrer"
 			>
-				{ __( 'View on store', 'mix-and-max-box-builder' ) }
+				{ __(
+					'View on store',
+					'productboxes-mix-and-match-box-builder'
+				) }
 			</Button>
 		);
 	}
@@ -402,7 +393,6 @@ function EditorBody( { initial } ) {
 		draft,
 		errors,
 		dispatch,
-		page,
 		catalog,
 		previewProducts,
 	};
@@ -428,6 +418,7 @@ function EditorBody( { initial } ) {
 					serverErrors={ serverErrors }
 					busy={ busy }
 					onGoLive={ goLive }
+					previewProducts={ previewProducts }
 					onOpenStep={ ( target ) => {
 						setAttempted( ( a ) => ( { ...a, [ target ]: true } ) );
 						goTo( target );
@@ -447,19 +438,25 @@ function EditorBody( { initial } ) {
 					role="region"
 					aria-label={ __(
 						'Unsaved changes',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 				>
 					<span className="mmbb-editor__bar-text">
 						<Icon name="alert" size={ 18 } strokeWidth={ 2 } />
-						{ __( 'Unsaved changes', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Unsaved changes',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</span>
 					<button
 						type="button"
 						className="mmbb-editor__bar-discard"
 						onClick={ () => dispatch( { type: 'discard' } ) }
 					>
-						{ __( 'Discard', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Discard',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</button>
 					<Button
 						size="sm"
@@ -469,12 +466,15 @@ function EditorBody( { initial } ) {
 							saveByHand(
 								__(
 									'Campaign saved',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								)
 							)
 						}
 					>
-						{ __( 'Save campaign', 'mix-and-max-box-builder' ) }
+						{ __(
+							'Save campaign',
+							'productboxes-mix-and-match-box-builder'
+						) }
 					</Button>
 				</div>
 			) : null }
@@ -489,7 +489,7 @@ function EditorBody( { initial } ) {
 									draft.title ||
 									__(
 										'Untitled campaign',
-										'mix-and-max-box-builder'
+										'productboxes-mix-and-match-box-builder'
 									)
 								}
 								subtitle={ subtitle }
@@ -500,7 +500,7 @@ function EditorBody( { initial } ) {
 								}
 								backLabel={ __(
 									'Campaigns',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 								backHref={ urls.campaigns }
 							/>
@@ -541,9 +541,12 @@ function EditorBody( { initial } ) {
 								{ index === 0
 									? __(
 											'Back to templates',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 									  )
-									: __( 'Back', 'mix-and-max-box-builder' ) }
+									: __(
+											'Back',
+											'productboxes-mix-and-match-box-builder'
+									  ) }
 							</Button>
 							{ step !== 'publish' ? (
 								<Button
@@ -555,7 +558,7 @@ function EditorBody( { initial } ) {
 										/* translators: %s: Name of the next wizard step. */
 										__(
 											'Next: %s',
-											'mix-and-max-box-builder'
+											'productboxes-mix-and-match-box-builder'
 										),
 										labels[ STEPS[ index + 1 ] ]
 									) }
@@ -592,17 +595,20 @@ export default function Editor( { id } ) {
 					tone="critical"
 					title={ __(
 						'The campaign could not be opened',
-						'mix-and-max-box-builder'
+						'productboxes-mix-and-match-box-builder'
 					) }
 					action={
 						<>
 							<Button size="sm" onClick={ reload }>
-								{ __( 'Try again', 'mix-and-max-box-builder' ) }
+								{ __(
+									'Try again',
+									'productboxes-mix-and-match-box-builder'
+								) }
 							</Button>
 							<Button size="sm" href={ urls.campaigns }>
 								{ __(
 									'Back to campaigns',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							</Button>
 						</>
@@ -610,12 +616,18 @@ export default function Editor( { id } ) {
 				>
 					{ errorMessage(
 						error,
-						__( 'Something went wrong.', 'mix-and-max-box-builder' )
+						__(
+							'Something went wrong.',
+							'productboxes-mix-and-match-box-builder'
+						)
 					) }
 				</Notice>
 			) : (
 				<p className="mmbb-editor__loading" role="status">
-					{ __( 'Loading campaign…', 'mix-and-max-box-builder' ) }
+					{ __(
+						'Loading campaign…',
+						'productboxes-mix-and-match-box-builder'
+					) }
 				</p>
 			) }
 		</Shell>

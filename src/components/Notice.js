@@ -42,7 +42,10 @@ export default function Notice( {
 				<button
 					type="button"
 					className="mmbb-notice__close"
-					aria-label={ __( 'Dismiss', 'mix-and-max-box-builder' ) }
+					aria-label={ __(
+						'Dismiss',
+						'productboxes-mix-and-match-box-builder'
+					) }
 					onClick={ onDismiss }
 				>
 					<Icon name="close" size={ 16 } />

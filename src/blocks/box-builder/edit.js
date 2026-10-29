@@ -28,9 +28,9 @@ const editUrl = ( id ) =>
 
 function typeLabel( type ) {
 	const labels = {
-		tiered: __( 'Tiered mix', 'mix-and-max-box-builder' ),
-		fixed: __( 'Fixed box', 'mix-and-max-box-builder' ),
-		bundle: __( 'Bundle price', 'mix-and-max-box-builder' ),
+		tiered: __( 'Tiered mix', 'productboxes-mix-and-match-box-builder' ),
+		fixed: __( 'Fixed box', 'productboxes-mix-and-match-box-builder' ),
+		bundle: __( 'Bundle price', 'productboxes-mix-and-match-box-builder' ),
 	};
 	return labels[ type ] || type;
 }
@@ -94,7 +94,10 @@ export default function Edit( { attributes, setAttributes } ) {
 		return [
 			{
 				value: '0',
-				label: __( 'Choose a campaign…', 'mix-and-max-box-builder' ),
+				label: __(
+					'Choose a campaign…',
+					'productboxes-mix-and-match-box-builder'
+				),
 			},
 			...list,
 		];
@@ -117,20 +120,18 @@ export default function Edit( { attributes, setAttributes } ) {
 
 	const blockProps = useBlockProps( {
 		className: 'mmbb-root mmbb-builder',
-		'data-theme':
-			payload && payload.config.design.theme === 'dark'
-				? 'dark'
-				: undefined,
+		'data-theme': payload?.colors?.dark ? 'dark' : undefined,
+		style: payload?.colors?.vars,
 	} );
 
 	const picker = (
 		<SelectControl
 			__nextHasNoMarginBottom
 			__next40pxDefaultSize
-			label={ __( 'Campaign', 'mix-and-max-box-builder' ) }
+			label={ __( 'Campaign', 'productboxes-mix-and-match-box-builder' ) }
 			help={ __(
 				'Only active and scheduled campaigns are listed.',
-				'mix-and-max-box-builder'
+				'productboxes-mix-and-match-box-builder'
 			) }
 			value={ String( campaignId || 0 ) }
 			options={ options }
@@ -144,7 +145,10 @@ export default function Edit( { attributes, setAttributes } ) {
 		<>
 			<InspectorControls>
 				<PanelBody
-					title={ __( 'Box builder', 'mix-and-max-box-builder' ) }
+					title={ __(
+						'Box builder',
+						'productboxes-mix-and-match-box-builder'
+					) }
 				>
 					{ picker }
 					{ campaignId ? (
@@ -156,7 +160,7 @@ export default function Edit( { attributes, setAttributes } ) {
 							>
 								{ __(
 									'Edit campaign',
-									'mix-and-max-box-builder'
+									'productboxes-mix-and-match-box-builder'
 								) }
 							</a>
 						</p>
@@ -165,7 +169,10 @@ export default function Edit( { attributes, setAttributes } ) {
 						__nextHasNoMarginBottom
 						__next40pxDefaultSize
 						isBlock
-						label={ __( 'Box summary', 'mix-and-max-box-builder' ) }
+						label={ __(
+							'Box summary',
+							'productboxes-mix-and-match-box-builder'
+						) }
 						value={ layout }
 						onChange={ ( value ) =>
 							setAttributes( { layout: value } )
@@ -173,19 +180,31 @@ export default function Edit( { attributes, setAttributes } ) {
 					>
 						<ToggleGroupControlOption
 							value="default"
-							label={ __( 'Auto', 'mix-and-max-box-builder' ) }
+							label={ __(
+								'Auto',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						/>
 						<ToggleGroupControlOption
 							value="panel"
-							label={ __( 'Panel', 'mix-and-max-box-builder' ) }
+							label={ __(
+								'Panel',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						/>
 						<ToggleGroupControlOption
 							value="bar"
-							label={ __( 'Bar', 'mix-and-max-box-builder' ) }
+							label={ __(
+								'Bar',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						/>
 						<ToggleGroupControlOption
 							value="both"
-							label={ __( 'Both', 'mix-and-max-box-builder' ) }
+							label={ __(
+								'Both',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						/>
 					</ToggleGroupControl>
 					<ToggleGroupControl
@@ -194,7 +213,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						isBlock
 						label={ __(
 							'Products per row',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 						value={ columns }
 						onChange={ ( value ) =>
@@ -203,7 +222,10 @@ export default function Edit( { attributes, setAttributes } ) {
 					>
 						<ToggleGroupControlOption
 							value={ 0 }
-							label={ __( 'Auto', 'mix-and-max-box-builder' ) }
+							label={ __(
+								'Auto',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						/>
 						<ToggleGroupControlOption value={ 3 } label="3" />
 						<ToggleGroupControlOption value={ 4 } label="4" />
@@ -213,11 +235,11 @@ export default function Edit( { attributes, setAttributes } ) {
 						__nextHasNoMarginBottom
 						label={ __(
 							'Show the hero',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 						help={ __(
 							'Sticker, headline and countdown above the products.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 						checked={ showHero }
 						onChange={ ( value ) =>
@@ -227,7 +249,7 @@ export default function Edit( { attributes, setAttributes } ) {
 					<Notice status="info" isDismissible={ false }>
 						{ __(
 							'Products, tiers and dates live in the campaign.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 					</Notice>
 				</PanelBody>
@@ -238,12 +260,12 @@ export default function Edit( { attributes, setAttributes } ) {
 					<Placeholder
 						icon="products"
 						label={ __(
-							'Mix and Max Box Builder',
-							'mix-and-max-box-builder'
+							'ProductBoxes Box Builder',
+							'productboxes-mix-and-match-box-builder'
 						) }
 						instructions={ __(
 							'Choose a campaign to show on this page.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 					>
 						{ campaigns === null ? <Spinner /> : picker }
@@ -254,7 +276,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						>
 							{ __(
 								'Create campaign',
-								'mix-and-max-box-builder'
+								'productboxes-mix-and-match-box-builder'
 							) }
 						</Button>
 					</Placeholder>
@@ -264,7 +286,7 @@ export default function Edit( { attributes, setAttributes } ) {
 					<Notice status="warning" isDismissible={ false }>
 						{ __(
 							'This campaign could not be loaded. Pick another one, or check that it still exists.',
-							'mix-and-max-box-builder'
+							'productboxes-mix-and-match-box-builder'
 						) }
 					</Notice>
 				) : null }

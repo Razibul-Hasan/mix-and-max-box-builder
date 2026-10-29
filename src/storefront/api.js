@@ -3,7 +3,7 @@ import { __ } from '@wordpress/i18n';
 function genericMessage() {
 	return __(
 		'We couldn’t add your box. Check your connection and try again.',
-		'mix-and-max-box-builder'
+		'productboxes-mix-and-match-box-builder'
 	);
 }
 
@@ -72,10 +72,10 @@ function form( {
  * Add the box to the cart. Prices are never sent: the server prices the box.
  *
  * When the nonce on a cached page has expired the server answers
- * `mmbb_nonce_expired`; this asks for a fresh nonce once and retries once.
+ * `mmbb_nonce_expired` with a message asking the shopper to reload.
  *
  * @param {Object}   options
- * @param {Object}   options.cart             Payload `cart`: { nonce, addUrl, nonceUrl, cartUrl }.
+ * @param {Object}   options.cart             Payload `cart`: { nonce, addUrl, cartUrl }.
  * @param {number}   options.campaignId       Campaign id.
  * @param {Array}    options.rows             List of { product_id, variation_id, qty }.
  * @param {number}   options.size             Chosen size (Fixed box), or 0.
@@ -95,53 +95,37 @@ export async function addBoxToCart( {
 	analyticsSession = '',
 	fetchImpl = ( ...args ) => window.fetch( ...args ),
 } ) {
-	let nonce = cart.nonce;
+	const nonce = cart.nonce;
 
 	try {
-		for ( let attempt = 0; attempt < 2; attempt++ ) {
-			const json = await post(
-				cart.addUrl,
-				form( {
-					nonce,
-					campaignId,
-					rows,
-					size,
-					gift,
-					editKey,
-					analyticsSession,
-				} ),
-				fetchImpl
-			);
-			if ( json && json.success ) {
-				return {
-					ok: true,
-					cartUrl: json.data.cart_url || cart.cartUrl,
-					nonce,
-				};
-			}
-			const data = json && json.data ? json.data : {};
-			if ( data.code !== 'mmbb_nonce_expired' || attempt === 1 ) {
-				return failure(
-					data.code || 'error',
-					data.message || genericMessage()
-				);
-			}
-
-			// The page is older than its nonce. Get a new one and try again, once.
-			const fresh = await post(
-				cart.nonceUrl,
-				new URLSearchParams(),
-				fetchImpl
-			);
-			if ( ! fresh || ! fresh.success || ! fresh.data.nonce ) {
-				return failure( data.code, data.message || genericMessage() );
-			}
-			nonce = fresh.data.nonce;
+		const json = await post(
+			cart.addUrl,
+			form( {
+				nonce,
+				campaignId,
+				rows,
+				size,
+				gift,
+				editKey,
+				analyticsSession,
+			} ),
+			fetchImpl
+		);
+		if ( json && json.success ) {
+			return {
+				ok: true,
+				cartUrl: json.data.cart_url || cart.cartUrl,
+				nonce,
+			};
 		}
+		const data = json && json.data ? json.data : {};
+		return failure(
+			data.code || 'error',
+			data.message || genericMessage()
+		);
 	} catch ( error ) {
 		return failure( 'network', genericMessage() );
 	}
-	return failure( 'error', genericMessage() );
 }
 
 // Tracking deliberately drops failures and stale cached nonces without a retry.

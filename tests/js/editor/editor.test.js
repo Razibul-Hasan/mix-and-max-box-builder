@@ -49,7 +49,11 @@ const baseConfig = () => ( {
 		caps: {},
 	},
 	schedule: { start: null, end: null, countdown_days: 0 },
-	extras: { gift_message: false, gift_wrap: { enabled: false, fee: 0 } },
+	extras: {
+		gift_message: false,
+		gift_wrap: { enabled: false, fee: 0 },
+		free_gift: { enabled: false, product_id: 0, min_items: 12 },
+	},
 	design: {
 		layout: 'both',
 		columns: 0,
@@ -127,13 +131,28 @@ function open( step ) {
 	return render( <App page="campaigns" /> );
 }
 
+async function choosePage() {
+	const select = await screen.findByLabelText( 'Page' );
+	await screen.findByRole( 'option', { name: 'Shop' } );
+	fireEvent.change( select, { target: { value: '22' } } );
+}
+
 beforeEach( () => {
 	jest.clearAllMocks();
 	window.scrollTo = jest.fn();
 	api.getCampaign.mockResolvedValue( campaign() );
 	api.getProducts.mockResolvedValue( [ product ] );
 	api.getTerms.mockResolvedValue( [] );
-	api.getPages.mockResolvedValue( [] );
+	api.getPages.mockResolvedValue( [
+		{
+			id: 22,
+			title: 'Shop',
+			status: 'publish',
+			link: 'http://localhost/shop/',
+			edit_link: '',
+			has_builder: false,
+		},
+	] );
 	api.getSetup.mockResolvedValue( { test_order: false } );
 	api.markTestDone.mockResolvedValue( {} );
 	api.saveCampaign.mockImplementation( ( id, payload ) =>
@@ -298,7 +317,7 @@ describe( 'campaign editor', () => {
 		).toBeTruthy();
 	} );
 
-	it( 'goes live with a new page, saving first, then shows the published screen', async () => {
+	it( 'goes live on the chosen page, saving first, then shows the published screen', async () => {
 		api.publishCampaign.mockResolvedValue(
 			campaign(
 				{
@@ -316,18 +335,14 @@ describe( 'campaign editor', () => {
 			)
 		);
 		open( 'publish' );
-		await screen.findByText( 'Where shoppers find it' );
-		fireEvent.change( screen.getByLabelText( 'Page title' ), {
-			target: { value: 'Holiday Treat Box' },
-		} );
+		await choosePage();
 		fireEvent.click( screen.getByRole( 'button', { name: /Go live/ } ) );
 
 		await waitFor( () => expect( api.publishCampaign ).toHaveBeenCalled() );
 		expect( api.publishCampaign.mock.calls[ 0 ][ 0 ] ).toBe( 5 );
 		expect( api.publishCampaign.mock.calls[ 0 ][ 1 ] ).toEqual( {
-			placement: 'new_page',
-			page_title: 'Holiday Treat Box',
-			page_slug: 'holiday-box',
+			placement: 'existing_page',
+			page_id: 22,
 		} );
 		expect( await screen.findByText( 'Holiday box is live' ) ).toBeTruthy();
 		expect( window.location.search ).toContain( 'step=published' );
@@ -337,26 +352,11 @@ describe( 'campaign editor', () => {
 	} );
 
 	it( 'publishes onto an existing page', async () => {
-		api.getPages.mockResolvedValue( [
-			{
-				id: 22,
-				title: 'Shop',
-				status: 'publish',
-				link: 'http://localhost/shop/',
-				edit_link: '',
-				has_builder: false,
-			},
-		] );
 		api.publishCampaign.mockResolvedValue(
 			campaign( { status: 'active', post_status: 'publish' } )
 		);
 		open( 'publish' );
-		fireEvent.click(
-			await screen.findByRole( 'radio', { name: /Add to a page I have/ } )
-		);
-		const select = await screen.findByLabelText( 'Page' );
-		await screen.findByRole( 'option', { name: 'Shop' } );
-		fireEvent.change( select, { target: { value: '22' } } );
+		await choosePage();
 		fireEvent.click( screen.getByRole( 'button', { name: /Go live/ } ) );
 
 		await waitFor( () => expect( api.publishCampaign ).toHaveBeenCalled() );
@@ -382,7 +382,7 @@ describe( 'campaign editor', () => {
 			},
 		} );
 		open( 'publish' );
-		await screen.findByText( 'Where shoppers find it' );
+		await choosePage();
 		fireEvent.click( screen.getByRole( 'button', { name: /Go live/ } ) );
 		expect(
 			await screen.findByText( 'Add at least one discount tier.' )

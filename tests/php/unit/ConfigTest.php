@@ -69,6 +69,26 @@ class ConfigTest extends TestCase {
 		$this->assertSame( 'light', $config['design']['theme'] );
 	}
 
+	/** Custom colours are stored as #rrggbb; anything else keeps the previous colour. */
+	public function test_design_colors() {
+		$config = Config::sanitize(
+			array(
+				'design' => array(
+					'accent'        => 'custom',
+					'accent_color'  => '#ABC',
+					'theme'         => 'custom',
+					'theme_canvas'  => 'url(evil)',
+					'theme_surface' => '13293D',
+				),
+			)
+		);
+		$this->assertSame( 'custom', $config['design']['accent'] );
+		$this->assertSame( '#aabbcc', $config['design']['accent_color'] );
+		$this->assertSame( 'custom', $config['design']['theme'] );
+		$this->assertSame( '#f5f5f2', $config['design']['theme_canvas'] );
+		$this->assertSame( '#13293d', $config['design']['theme_surface'] );
+	}
+
 	/** Box numbers are clamped to their documented ranges. */
 	public function test_box_bounds() {
 		$box = Config::sanitize( array( 'box' => array( 'capacity' => 500, 'min_items' => 99, 'max_per_product' => 0 ) ) )['box']; // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing
@@ -286,6 +306,68 @@ class ConfigTest extends TestCase {
 		$this->assertNull( Config::sanitize( array( 'schedule' => array( 'start' => '' ) ) )['schedule']['start'] );
 	}
 
+	/** Ladder colours default to the stock look and only take #rrggbb values. */
+	public function test_ladder_colors() {
+		$design = Config::sanitize( array() )['design'];
+		$this->assertSame( 'default', $design['ladder'] );
+		$this->assertSame( '#f04e12', $design['ladder_top'] );
+
+		$design = Config::sanitize(
+			array(
+				'design' => array(
+					'ladder'          => 'custom',
+					'ladder_top'      => '#8F2400',
+					'ladder_top_text' => 'red',
+				),
+			)
+		)['design'];
+		$this->assertSame( 'custom', $design['ladder'] );
+		$this->assertSame( '#8f2400', $design['ladder_top'] );
+		$this->assertSame( '#141414', $design['ladder_top_text'] );
+		$this->assertSame( 'default', Config::sanitize( array( 'design' => array( 'ladder' => 'rainbow' ) ) )['design']['ladder'] );
+	}
+
+	/** Countdown colours default to the stock pill and only take #rrggbb values. */
+	public function test_countdown_colors() {
+		$design = Config::sanitize( array() )['design'];
+		$this->assertSame( 'default', $design['countdown'] );
+		$this->assertSame( '#ffd23f', $design['countdown_bg'] );
+
+		$design = Config::sanitize(
+			array(
+				'design' => array(
+					'countdown'      => 'custom',
+					'countdown_bg'   => '#1F3A93',
+					'countdown_text' => 'nope',
+				),
+			)
+		)['design'];
+		$this->assertSame( 'custom', $design['countdown'] );
+		$this->assertSame( '#1f3a93', $design['countdown_bg'] );
+		$this->assertSame( '#141414', $design['countdown_text'] );
+	}
+
+	/** An always-on campaign with a countdown needs its own countdown time to go live. */
+	public function test_countdown_end() {
+		$config = Config::sanitize( array( 'schedule' => array( 'countdown_days' => 7 ) ) );
+		$this->assertNull( $config['schedule']['countdown_end'] );
+		$this->assertContains( 'countdown_end_required', array_column( Config::validate( $config ), 'code' ) );
+
+		$config = Config::sanitize( array( 'schedule' => array( 'countdown_end' => '2026-12-24T09:00:00+02:00' ) ), $config );
+		$this->assertSame( '2026-12-24T07:00:00Z', $config['schedule']['countdown_end'] );
+		$this->assertNotContains( 'countdown_end_required', array_column( Config::validate( $config ), 'code' ) );
+
+		$config = Config::sanitize(
+			array(
+				'schedule' => array(
+					'countdown_days' => 7,
+					'end'            => '2026-12-24T00:00:00Z',
+				),
+			)
+		);
+		$this->assertNotContains( 'countdown_end_required', array_column( Config::validate( $config ), 'code' ) );
+	}
+
 	/** Money values are never negative and keep four decimals at most. */
 	public function test_money() {
 		$config = Config::sanitize(
@@ -417,5 +499,39 @@ class ConfigTest extends TestCase {
 		$this->assertContains( 'qty_over_capacity', $codes );
 		$this->assertContains( 'percent_too_high', $codes );
 		$this->assertContains( 'end_before_start', $codes );
+	}
+
+	/**
+	 * The free gift is off by default, clamps to the box and needs a product to go live.
+	 */
+	public function test_free_gift() {
+		$this->assertFalse( Config::defaults()['extras']['free_gift']['enabled'] );
+
+		$config = Config::sanitize(
+			array(
+				'box'    => array( 'capacity' => 6 ),
+				'extras' => array(
+					'free_gift' => array(
+						'enabled'    => '1',
+						'product_id' => '42',
+						'min_items'  => 99,
+					),
+				),
+			)
+		);
+		$this->assertSame(
+			array(
+				'enabled'    => true,
+				'product_id' => 42,
+				'min_items'  => 6,
+			),
+			$config['extras']['free_gift']
+		);
+		$this->assertSame( 0, Config::sanitize( array( 'extras' => array( 'free_gift' => array( 'product_id' => -3 ) ) ) )['extras']['free_gift']['product_id'] );
+
+		$config['extras']['free_gift']['product_id'] = 0;
+		$this->assertContains( 'gift_product_required', array_column( Config::validate( $config ), 'code' ) );
+		$config['extras']['free_gift']['enabled'] = false;
+		$this->assertNotContains( 'gift_product_required', array_column( Config::validate( $config ), 'code' ) );
 	}
 }
