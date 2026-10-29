@@ -245,6 +245,8 @@ final class Config {
 		$products = $config['products'];
 		if ( 'manual' === $products['source'] && empty( $products['ids'] ) ) {
 			$add( 'products.ids', 'products_required' );
+		} elseif ( 'manual' === $products['source'] && self::needed_items( $config ) > self::reachable_items( $config ) ) {
+			$add( 'box.allow_duplicates', 'not_enough_products' );
 		} elseif ( 'manual' !== $products['source'] && empty( $products['term_ids'] ) ) {
 			$add( 'products.term_ids', 'terms_required' );
 		}
@@ -264,6 +266,35 @@ final class Config {
 		}
 
 		return $errors;
+	}
+
+	/**
+	 * The most items a shopper must pick: the largest size, the tiered minimum, or the bundle.
+	 *
+	 * @param array $config Sanitized config.
+	 * @return int
+	 */
+	private static function needed_items( array $config ) {
+		if ( 'fixed' === $config['type'] ) {
+			$sizes = array_column( $config['sizes'], 'qty' );
+			return $sizes ? (int) max( $sizes ) : 0;
+		}
+		if ( 'tiered' === $config['type'] ) {
+			return (int) $config['box']['min_items'];
+		}
+		return (int) $config['bundle']['qty'];
+	}
+
+	/**
+	 * The most items a hand-picked product list can supply. Per-product caps are left
+	 * out, so this only flags boxes that can never be filled.
+	 *
+	 * @param array $config Sanitized config.
+	 * @return int
+	 */
+	private static function reachable_items( array $config ) {
+		$count = count( array_unique( array_map( 'intval', $config['products']['ids'] ) ) );
+		return $config['box']['allow_duplicates'] ? $count * max( 1, (int) $config['box']['max_per_product'] ) : $count;
 	}
 
 	/**

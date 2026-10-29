@@ -32,7 +32,7 @@ const baseConfig = () => ( {
 		capacity: 12,
 		min_items: 4,
 		allow_duplicates: true,
-		max_per_product: 3,
+		max_per_product: 12,
 		hide_sold_out: false,
 	},
 	tiers: [

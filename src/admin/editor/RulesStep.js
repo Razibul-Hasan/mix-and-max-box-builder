@@ -597,6 +597,11 @@ export default function RulesStep( {
 									}
 								/>
 							) : null }
+							{ errors[ 'box.allow_duplicates' ] ? (
+								<Notice tone="critical">
+									{ errors[ 'box.allow_duplicates' ] }
+								</Notice>
+							) : null }
 						</div>
 						<div className="mmbb-editor__rule">
 							<Toggle

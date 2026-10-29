@@ -21,7 +21,7 @@ const config = ( overrides = {} ) => ( {
 		capacity: 12,
 		min_items: 4,
 		allow_duplicates: true,
-		max_per_product: 3,
+		max_per_product: 12,
 		hide_sold_out: false,
 	},
 	tiers: [
@@ -336,6 +336,41 @@ describe( 'rules validation', () => {
 					...config().box,
 					max_per_product: 13,
 					allow_duplicates: false,
+				},
+				products: { ...config().products, ids: [ 1, 2, 3, 4 ] },
+			} )
+		).toEqual( {} );
+	} );
+
+	it( 'flags a hand-picked list that can never fill the box', () => {
+		const fixed = {
+			type: 'fixed',
+			sizes: [ tier( 4, 10 ), tier( 6, 15 ) ],
+			box: { ...config().box, capacity: 6, allow_duplicates: false },
+			products: { ...config().products, ids: [ 1, 2, 3, 4, 5 ] },
+		};
+		expect( errorsFor( 'rules', fixed ) ).toEqual( {
+			'box.allow_duplicates':
+				'The picked products can’t fill this box. Pick more products, or allow more of each one.',
+		} );
+		expect(
+			errorsFor( 'rules', {
+				...fixed,
+				box: {
+					...fixed.box,
+					allow_duplicates: true,
+					max_per_product: 2,
+				},
+			} )
+		).toEqual( {} );
+		expect(
+			errorsFor( 'rules', {
+				...fixed,
+				products: {
+					...fixed.products,
+					source: 'category',
+					ids: [],
+					term_ids: [ 3 ],
 				},
 			} )
 		).toEqual( {} );

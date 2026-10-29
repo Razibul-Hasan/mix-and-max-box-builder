@@ -135,6 +135,28 @@ export function payloadFor( draft ) {
 
 // ---- Validation ------------------------------------------------------------
 
+// The most items a shopper must pick: the largest size, the tiered minimum, or the bundle.
+function neededItems( config ) {
+	if ( config.type === 'fixed' ) {
+		return Math.max(
+			0,
+			...config.sizes.map( ( s ) => toNumber( s.qty ) || 0 )
+		);
+	}
+	if ( config.type === 'tiered' ) {
+		return toNumber( config.box.min_items ) || 0;
+	}
+	return toNumber( config.bundle.qty ) || 0;
+}
+
+// The most items a hand-picked list can supply; per-product caps are left out.
+function reachableItems( config ) {
+	const count = new Set( config.products.ids.map( Number ) ).size;
+	return config.box.allow_duplicates
+		? count * Math.max( 1, toNumber( config.box.max_per_product ) || 1 )
+		: count;
+}
+
 function validateRows( rows, key, config, errors ) {
 	const capacity = toNumber( config.box.capacity );
 	let seen = 0;
@@ -280,6 +302,17 @@ const RULES = {
 					'productboxes-mix-and-match-box-builder'
 				);
 			}
+		}
+		// Mirrors Config::validate(): a hand-picked list that can never fill the box.
+		if (
+			config.products.source === 'manual' &&
+			config.products.ids.length > 0 &&
+			neededItems( config ) > reachableItems( config )
+		) {
+			errors[ 'box.allow_duplicates' ] = __(
+				'The picked products can’t fill this box. Pick more products, or allow more of each one.',
+				'productboxes-mix-and-match-box-builder'
+			);
 		}
 		const wrap = config.extras.gift_wrap;
 		if ( wrap.enabled ) {

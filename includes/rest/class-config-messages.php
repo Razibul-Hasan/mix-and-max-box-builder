@@ -53,6 +53,8 @@ final class Config_Messages {
 				return __( 'Percent discounts go up to 90%.', 'productboxes-mix-and-match-box-builder' );
 			case 'products_required':
 				return __( 'Pick at least one product.', 'productboxes-mix-and-match-box-builder' );
+			case 'not_enough_products':
+				return __( 'The picked products can’t fill this box. Pick more products, or allow more of each one.', 'productboxes-mix-and-match-box-builder' );
 			case 'terms_required':
 				return __( 'Pick at least one category or tag.', 'productboxes-mix-and-match-box-builder' );
 			case 'gift_product_required':

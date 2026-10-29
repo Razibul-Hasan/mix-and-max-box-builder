@@ -432,6 +432,44 @@ class ConfigTest extends TestCase {
 		$this->assertSame( array(), Config::validate( $config ) );
 	}
 
+	/** A hand-picked list too short for the box, with no repeats, can never be filled. */
+	public function test_validate_flags_a_box_the_products_cannot_fill() {
+		$input  = array(
+			'type'     => 'fixed',
+			'sizes'    => array(
+				array(
+					'qty'           => 4,
+					'discount_type' => 'percent',
+					'value'         => 10,
+				),
+				array(
+					'qty'           => 6,
+					'discount_type' => 'percent',
+					'value'         => 15,
+				),
+			),
+			'box'      => array(
+				'capacity'         => 6,
+				'allow_duplicates' => false,
+			),
+			'products' => array( 'ids' => array( 1, 2, 3, 4, 5 ) ),
+		);
+		$errors = Config::validate( Config::sanitize( $input ) );
+		$this->assertSame( array( 'box.allow_duplicates' ), array_column( $errors, 'path' ) );
+		$this->assertSame( array( 'not_enough_products' ), array_column( $errors, 'code' ) );
+
+		$input['box']['allow_duplicates'] = true;
+		$input['box']['max_per_product']  = 2;
+		$this->assertSame( array(), Config::validate( Config::sanitize( $input ) ) );
+
+		$input['products'] = array(
+			'source'   => 'category',
+			'term_ids' => array( 3 ),
+		);
+		$input['box']['allow_duplicates'] = false;
+		$this->assertSame( array(), Config::validate( Config::sanitize( $input ) ), 'Category lists are not counted.' );
+	}
+
 	/** Each type has its own required parts. */
 	public function test_validate_per_type() {
 		$fixed = Config::sanitize(
