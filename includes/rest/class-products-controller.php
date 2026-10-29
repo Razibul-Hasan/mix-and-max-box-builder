@@ -106,7 +106,7 @@ class Products_Controller extends Base_Controller {
 			'orderby'  => 'title',
 			'order'    => 'ASC',
 			// A box's own container product must never be offered as an item.
-			'exclude'  => $this->container_ids(),
+			'exclude'  => $this->container_ids(), // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- One hidden product per campaign; filtering in PHP would break paging.
 		);
 
 		if ( '' !== (string) $request['search'] ) {

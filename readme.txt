@@ -54,7 +54,7 @@ This plugin does not connect to any external service. It makes no requests to ot
 
 1. Install and activate WooCommerce 9.0 or later.
 2. Upload the productboxes-mix-and-match-box-builder folder to /wp-content/plugins/, or install the plugin from the Plugins screen.
-3. Activate ProductBoxes Box Builder. On a multisite network each site gets its own defaults.
+3. Activate ProductBoxes - Mix & Match Box Builder for WooCommerce. On a multisite network each site gets its own defaults.
 4. Open ProductBoxes in the admin menu and choose Create campaign.
 
 == Frequently Asked Questions ==
