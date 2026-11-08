@@ -17,7 +17,8 @@
 		"plugin-zip": "wp-scripts plugin-zip",
 		"env:start": "wp-env start",
 		"env:stop": "wp-env stop",
-		"tokens": "node tools/build-tokens.mjs"
+		"tokens": "node tools/build-tokens.mjs",
+		"blueprint": "node tools/blueprint/build.mjs"
 	},
 	"files": [
 		"productboxes-mix-and-match-box-builder.php",

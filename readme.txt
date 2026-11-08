@@ -131,9 +131,14 @@ All hooks use the `mmbb_` prefix.
 
 == Screenshots ==
 
-1. The storefront box builder: shoppers pick products, watch the discount tiers unlock and add the box to the cart.
-2. The campaign editor: choose a campaign type, set box rules and discount tiers, and see a live shopper preview.
-3. The dashboard with box revenue, boxes sold, conversion, top campaigns and most-picked products.
+1. Mix-and-match storefront box builder with tiered discount progress.
+2. Gift box builder with selectable box sizes, products, and gift messages.
+3. Fixed-price product bundles: choose any three shirts for one price.
+4. Guided campaign setup with a live shopper preview.
+5. Box rules, item limits, discount tiers, and optional extras.
+6. Customize layout, labels, colors, and storefront appearance.
+7. Analytics dashboard showing revenue, funnel, and product activity.
+8. Campaign management overview with statuses and performance.
 
 == Changelog ==
 

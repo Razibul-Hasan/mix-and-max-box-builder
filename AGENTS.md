@@ -73,6 +73,8 @@ npx wp-env run cli wp plugin check productboxes-mix-and-match-box-builder
 # into wp-content/mu-plugins/ so Plugin Check skips the dev files .distignore excludes.
 npm run plugin-zip       # release zip
 npm run tokens           # regenerate committed CSS from design/system/tokens.json
+npm run blueprint        # rebuild .wordpress-org/blueprints/blueprint.json (live preview) from tools/blueprint/
+node tools/blueprint/build.mjs --local   # same, but activates a mounted checkout, for @wp-playground/cli
 ```
 
 The integration command uses the `tests-cli` container in pinned wp-env 10.30.0
