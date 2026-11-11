@@ -53,7 +53,19 @@ class PublisherTest extends \WP_UnitTestCase {
 		$product_id = $product->save();
 
 		$campaign = $this->repo->create_from_template( 'holiday' );
-		$this->repo->save( $campaign['id'], array( 'products' => array( 'ids' => array( $product_id ) ) ) );
+		// One product can fill the box only when it may be picked more than once.
+		$this->repo->save(
+			$campaign['id'],
+			array(
+				'products' => array( 'ids' => array( $product_id ) ),
+				'box'      => array(
+					'allow_duplicates' => true,
+					'max_per_product'  => 48,
+				),
+				// The preset turns the countdown on; an always-on box needs a time to count to.
+				'schedule' => array( 'countdown_end' => gmdate( 'c', time() + WEEK_IN_SECONDS ) ),
+			)
+		);
 		return $campaign['id'];
 	}
 
