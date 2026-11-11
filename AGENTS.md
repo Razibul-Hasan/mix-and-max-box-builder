@@ -149,31 +149,34 @@ Names that appear in the design copy (for example `productboxes_`, `[productboxe
 - Finish every part with its **Done when** checks. Then update `docs/REDESIGN-PROGRESS.md` and commit `Redesign Part N: <title>`.
 - If a check can't run here (no Docker, no browser), run everything else and record what you skipped and why.
 
-### Frozen identifiers (filled in by Part 0, never changed afterwards)
+### Frozen identifiers (filled in by Part 0, never change them)
 
 | Thing | Value in this plugin |
 | --- | --- |
-| Plugin name (header) | _Part 0_ |
-| Slug / folder | _Part 0_ |
-| Main file | _Part 0_ |
-| **Text domain** | _Part 0_ |
-| Domain Path | _Part 0_ |
-| PHP namespace / class prefix | _Part 0_ |
-| Global prefix (functions, options, hooks, meta, handles) | _Part 0_ |
-| Constants | _Part 0_ |
-| Custom post type(s) | _Part 0_ |
-| Options | _Part 0_ |
-| Post / order / item meta keys | _Part 0_ |
-| Custom tables | _Part 0_ |
-| REST namespace and routes | _Part 0_ |
-| AJAX / wc-ajax actions | _Part 0_ |
-| Block name(s) | _Part 0_ |
-| Shortcode tag and attributes | _Part 0_ |
-| Admin page slugs | _Part 0_ |
-| Script / style handles | _Part 0_ |
-| JS globals / storage keys | _Part 0_ |
-| Capability used for admin | _Part 0_ |
-| Current version, Requires at least, Requires PHP, WC requires | _Part 0_ |
+| Plugin name (header) | ProductBoxes - Mix & Match Box Builder for WooCommerce |
+| Slug / folder | `productboxes-mix-and-match-box-builder` |
+| Main file | `productboxes-mix-and-match-box-builder.php` |
+| **Text domain** | `productboxes-mix-and-match-box-builder` |
+| Domain Path | `/languages` |
+| PHP namespace / class prefix | `MixMax\BoxBuilder` (files `includes/<module>/class-<name>.php`) |
+| Global prefix (functions, options, hooks, meta, handles) | `mmbb` (`mmbb_` in PHP and data, `mmbb-` in handles and CSS classes, `mmbb:` in browser storage) |
+| Constants | `MMBB_VERSION`, `MMBB_FILE`, `MMBB_PATH`, `MMBB_URL`, `MMBB_BASENAME` |
+| Custom post type(s) | `mmbb_campaign` (post statuses `draft`, `publish`, `trash`; computed statuses `draft`, `scheduled`, `active`, `ending_soon`, `ended`, `paused`) |
+| Options | `mmbb_settings` (and every key inside it), `mmbb_version`, `mmbb_db_version`, `mmbb_catalog_generation`, `mmbb_analytics_generation`, `mmbb_analytics_salt`, `mmbb_analytics_transients`, `mmbb_setup_test_done`. Settings group `mmbb_settings_group`. Transient prefixes `mmbb_products_`, `mmbb_report_`, `mmbb_campaign_totals_`, `mmbb_rate_` |
+| Post / order / item meta keys | Post: `_mmbb_config` (and every key inside the JSON config), `_mmbb_paused`, `_mmbb_campaign_id`. Order: `_mmbb_has_box`. Order item: `_mmbb_box`, `mmbb_box_key`, `_mmbb_box_part`, `mmbb_box_parent`, `_mmbb_stock_reduced`. Cart item data: `mmbb_box`, `mmbb_instance`, `mmbb_parent`, `mmbb_free_gift` |
+| Custom tables | `{prefix}mmbb_events`, `{prefix}mmbb_stats_daily`, `{prefix}mmbb_purchases` (columns in `docs/AUDIT.md`) |
+| REST namespace and routes | `mmbb/v1`: `/campaigns`, `/campaigns/bulk`, `/campaigns/<id>`, `/campaigns/<id>/duplicate`, `/campaigns/<id>/publish`, `/campaigns/<id>/preview`, `/products`, `/terms`, `/pages`, `/settings`, `/setup`, `/stats`, `/analytics`, `/analytics/export`, `/events` (public, nonce `mmbb_track`) |
+| AJAX / wc-ajax actions | `wc-ajax=mmbb_add_box`. Nonce actions `mmbb_add_box`, `mmbb_edit_box`, `mmbb_track`. Query args `mmbb_edit`, `mmbb_edit_nonce` |
+| Block name(s) | `mmbb/box-builder` with attributes `campaignId`, `layout`, `columns`, `showHero` |
+| Shortcode tag and attributes | `[mmbb_box id="12" layout="bar" columns="3" hero="false"]` |
+| Admin page slugs | `mmbb` (Dashboard), `mmbb-campaigns` (with `action=new`, or `action=edit&id=<id>` and optional `step`), `mmbb-analytics`, `mmbb-settings` |
+| Script / style handles | `mmbb-tokens`, `mmbb-components`, `mmbb-admin`, `mmbb-storefront`, plus the block editor handle WordPress generates |
+| JS globals / storage keys | Globals `window.mmbbAdmin`, `window.mmbbBuilders`, `window.mmbbMoneySettings`, `window.mmbbComponents`. localStorage `mmbb:checklist-dismissed`, `mmbb:editor:<id>`, `mmbb:editor:device`. sessionStorage `mmbb:box:<id>`, `mmbb:analytics-session`, `mmbb:view:<id>` |
+| Hooks fired | Actions `mmbb_campaign_saved`, `mmbb_rollup_daily` (scheduled). Filters `mmbb_campaign_config_defaults`, `mmbb_templates`, `mmbb_ensure_container_product`, `mmbb_pricing_quote`, `mmbb_track_events` |
+| Capability used for admin | `manage_woocommerce` |
+| Current version, Requires at least, Requires PHP, WC requires | 1.0.0 · WordPress 6.6 · PHP 7.4 · WooCommerce 9.0 (DB schema version `0.9.0`) |
+
+The full inventory, with example values, is in `docs/AUDIT.md`.
 
 ### Stack rules
 
