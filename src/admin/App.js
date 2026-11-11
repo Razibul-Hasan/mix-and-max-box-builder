@@ -36,7 +36,7 @@ function Screen( { name, id } ) {
 		case 'campaigns':
 			return <Campaigns />;
 		case 'campaigns-new':
-			return <Campaigns openPicker />;
+			return <Campaigns openCreate />;
 		case 'analytics':
 			return <Analytics />;
 		case 'settings':

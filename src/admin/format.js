@@ -1,4 +1,4 @@
-import { __, _x, sprintf } from '@wordpress/i18n';
+import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { toMinor } from '../shared/pricing';
 
 const OFFSET = /^([+-])(\d{2}):?(\d{2})$/;
@@ -243,4 +243,139 @@ export function placementInfo( placement ) {
 		// Keep the page title.
 	}
 	return { kind: 'page', text: path };
+}
+
+/**
+ * The name of each way a discount can work, as the Create a box modal says it.
+ *
+ * @param {string} type tiered, fixed or bundle.
+ * @return {string} Name.
+ */
+export function boxTypeTitle( type ) {
+	const titles = {
+		tiered: __(
+			'Bigger box, bigger discount',
+			'productboxes-mix-and-match-box-builder'
+		),
+		fixed: __(
+			'Pick a box size',
+			'productboxes-mix-and-match-box-builder'
+		),
+		bundle: __(
+			'Set price bundle',
+			'productboxes-mix-and-match-box-builder'
+		),
+	};
+	return titles[ type ] || titles.tiered;
+}
+
+/**
+ * Line under a box's name in the Boxes list: "Bigger box, bigger discount · up to 12",
+ * "Pick a box size · 4 / 6", "Bundle price · 3 for $45.00".
+ *
+ * @param {Object}   config      Box config.
+ * @param {Function} formatMoney Formats minor units.
+ * @param {number}   decimals    Store currency decimals.
+ * @return {string} Summary line.
+ */
+export function boxSummary( config, formatMoney, decimals ) {
+	if ( config.type === 'fixed' ) {
+		const sizes = ( config.sizes || [] ).map( ( size ) => size.qty );
+		const title = boxTypeTitle( 'fixed' );
+		return sizes.length ? title + ' \u00b7 ' + sizes.join( ' / ' ) : title;
+	}
+	if ( config.type === 'bundle' ) {
+		const bundle = config.bundle || {};
+		if ( ! bundle.price || bundle.price <= 0 ) {
+			return sprintf(
+				/* translators: %d: Number of items in the bundle. */
+				__(
+					'Bundle price \u00b7 %d items',
+					'productboxes-mix-and-match-box-builder'
+				),
+				bundle.qty || 0
+			);
+		}
+		return sprintf(
+			/* translators: 1: Number of items in the bundle, 2: Bundle price. */
+			__(
+				'Bundle price \u00b7 %1$d for %2$s',
+				'productboxes-mix-and-match-box-builder'
+			),
+			bundle.qty || 0,
+			formatMoney( toMinor( bundle.price, decimals ) )
+		);
+	}
+	return sprintf(
+		/* translators: %d: Largest number of items in the box. */
+		__(
+			'Bigger box, bigger discount \u00b7 up to %d',
+			'productboxes-mix-and-match-box-builder'
+		),
+		( config.box && config.box.capacity ) || 0
+	);
+}
+
+/**
+ * Line under a box's name on Home: "Up to 12 items · 10 / 15 / 25% off",
+ * "Sizes 4 / 6", "3 items for one price".
+ *
+ * @param {Object} config Box config.
+ * @return {string} Detail line.
+ */
+export function boxDetails( config ) {
+	if ( config.type === 'fixed' ) {
+		const sizes = ( config.sizes || [] ).map( ( size ) => size.qty );
+		return sizes.length
+			? sprintf(
+					/* translators: %s: Box sizes joined with slashes, such as 4 / 6. */
+					__( 'Sizes %s', 'productboxes-mix-and-match-box-builder' ),
+					sizes.join( ' / ' )
+			  )
+			: boxTypeTitle( 'fixed' );
+	}
+	if ( config.type === 'bundle' ) {
+		const qty = ( config.bundle && config.bundle.qty ) || 0;
+		return sprintf(
+			/* translators: %d: Number of items in the bundle. */
+			_n(
+				'%d item for one price',
+				'%d items for one price',
+				qty,
+				'productboxes-mix-and-match-box-builder'
+			),
+			qty
+		);
+	}
+	const capacity = ( config.box && config.box.capacity ) || 0;
+	const upTo = sprintf(
+		/* translators: %d: Largest number of items in the box. */
+		_n(
+			'Up to %d item',
+			'Up to %d items',
+			capacity,
+			'productboxes-mix-and-match-box-builder'
+		),
+		capacity
+	);
+	const tiers = tierSummary( config );
+	return tiers ? upTo + ' \u00b7 ' + tiers : upTo;
+}
+
+/**
+ * Where a box is shown: the page path, or nothing when it is on no page yet.
+ *
+ * @param {Object} placement The `placement` object from the REST API.
+ * @return {string} Path such as /holiday-treat-box/, or an empty string.
+ */
+export function shownOnPath( placement ) {
+	// A saved page that no longer holds the block or shortcode doesn't count.
+	if ( ! placement || placement.method === 'none' || ! placement.page_url ) {
+		return '';
+	}
+	try {
+		return new URL( placement.page_url ).pathname || placement.page_url;
+	} catch ( e ) {
+		return placement.page_title || placement.page_url;
+	}
 }

@@ -1,12 +1,17 @@
 import {
+	act,
 	fireEvent,
 	render,
 	screen,
 	waitFor,
 	within,
 } from '@testing-library/react';
+import { dispatch, select } from '@wordpress/data';
+import { store as noticesStore } from '@wordpress/notices';
 import App from '../../../src/admin/App';
+import { NOTICE_CONTEXT } from '../../../src/admin/components';
 import * as api from '../../../src/admin/api';
+import { navigate } from '../../../src/admin/navigate';
 
 jest.mock( '../../../src/admin/api', () => ( {
 	getCampaigns: jest.fn(),
@@ -17,6 +22,11 @@ jest.mock( '../../../src/admin/api', () => ( {
 	getStats: jest.fn(),
 	getSetup: jest.fn(),
 	markTestDone: jest.fn(),
+	dismissChecklist: jest.fn(),
+} ) );
+
+jest.mock( '../../../src/admin/navigate', () => ( {
+	navigate: jest.fn(),
 } ) );
 
 const campaign = ( id, title, status, extra = {} ) => ( {
@@ -29,6 +39,7 @@ const campaign = ( id, title, status, extra = {} ) => ( {
 	config: {
 		type: 'tiered',
 		box: { capacity: 12 },
+		tiers: [],
 		sizes: [],
 		bundle: { qty: 3, price: 0 },
 		products: { source: 'manual', ids: [], term_ids: [] },
@@ -49,9 +60,29 @@ const campaign = ( id, title, status, extra = {} ) => ( {
 } );
 
 const rows = [
-	campaign( 12, 'Holiday Treat Box', 'active' ),
-	campaign( 9, 'Build-a-Spa Kit', 'active' ),
-	campaign( 7, 'Chocolate Lab', 'draft' ),
+	campaign( 12, 'Holiday Treat Box', 'active', {
+		placement: {
+			page_id: 40,
+			page_title: 'Holiday treat box',
+			page_url: 'http://shop.test/holiday-treat-box/',
+			method: 'block',
+			shortcode: '[mmbb_box id="12"]',
+		},
+		stats: { boxes_sold: 1, revenue: 18445, conversion: 2.7 },
+	} ),
+	campaign( 9, 'Tee Trio', 'paused', {
+		type: 'bundle',
+		config: {
+			type: 'bundle',
+			box: { capacity: 3 },
+			tiers: [],
+			sizes: [],
+			bundle: { qty: 3, price: 45 },
+			products: { source: 'manual', ids: [], term_ids: [] },
+			schedule: {},
+		},
+	} ),
+	campaign( 7, 'Summer Mix', 'draft' ),
 ];
 
 const listOf = ( items, extra = {} ) => ( {
@@ -60,13 +91,13 @@ const listOf = ( items, extra = {} ) => ( {
 	pages: 1,
 	counts: {
 		all: 3,
-		live: 2,
-		active: 2,
+		live: 1,
+		active: 1,
 		ending_soon: 0,
 		scheduled: 0,
 		draft: 1,
 		ended: 0,
-		paused: 0,
+		paused: 1,
 	},
 	...extra,
 } );
@@ -76,8 +107,28 @@ const lastQuery = () => {
 	return calls[ calls.length - 1 ][ 0 ];
 };
 
+// jsdom can't navigate, so the one navigation helper is a mock.
+const assign = navigate;
+
+// Snackbars live in the shared notices store; start every test with none.
+const clearSnackbars = () => {
+	const notices = select( noticesStore ).getNotices( NOTICE_CONTEXT );
+	dispatch( noticesStore ).removeNotices(
+		notices.map( ( n ) => n.id ),
+		NOTICE_CONTEXT
+	);
+};
+
+// The snackbar itself, not its copy in the screen-reader live region.
+const findSnackbar = ( text ) =>
+	screen.findByText( text, { selector: '.components-snackbar__content' } );
+
 beforeEach( () => {
 	jest.clearAllMocks();
+	clearSnackbars();
+	// jsdom has no scrolling; WordPress components call it.
+	window.scrollTo = jest.fn();
+	window.history.replaceState( null, '', '/' );
 	window.mmbbAdmin = {
 		page: 'campaigns',
 		urls: {
@@ -90,15 +141,7 @@ beforeEach( () => {
 			newCampaign:
 				'http://shop.test/wp-admin/admin.php?page=mmbb-campaigns&action=new',
 		},
-		templates: [
-			{
-				id: 'blank',
-				title: 'Start blank',
-				typeLabel: 'Any type',
-				description: 'Empty rules.',
-				art: [],
-			},
-		],
+		templates: [],
 		money: {
 			symbol: '$',
 			position: 'left',
@@ -123,49 +166,76 @@ const loaded = async () => {
 	await screen.findByText( 'Holiday Treat Box' );
 };
 
-describe( 'Campaigns list', () => {
-	it( 'shows the rows, status words and tab counts', async () => {
+const rowOf = ( name ) => screen.getByText( name ).closest( 'tr' );
+
+describe( 'Boxes list', () => {
+	it( 'shows the rows with status words, summaries, Shown on and money', async () => {
 		await loaded();
-		expect( screen.getAllByText( 'Active' ).length ).toBeGreaterThan( 0 );
-		expect( screen.getByText( 'Draft' ) ).toBeTruthy();
-		expect( screen.getAllByText( 'Not placed' ) ).toHaveLength( 3 );
-		const tab = screen.getByRole( 'tab', { name: /Active/ } );
-		expect( within( tab ).getByText( '2' ) ).toBeTruthy();
-		expect( screen.getByText( 'Showing 1–3 of 3' ) ).toBeTruthy();
-		expect( lastQuery() ).toMatchObject( {
-			status: '',
-			page: 1,
-			per_page: 20,
-		} );
+		expect(
+			screen.getByRole( 'heading', { level: 1, name: 'Boxes' } )
+		).toBeTruthy();
+
+		const holiday = rowOf( 'Holiday Treat Box' );
+		expect( within( holiday ).getByText( 'Live' ) ).toBeTruthy();
+		expect(
+			within( holiday ).getByText(
+				'Bigger box, bigger discount · up to 12'
+			)
+		).toBeTruthy();
+		expect(
+			within( holiday )
+				.getByRole( 'link', { name: /\/holiday-treat-box\// } )
+				.getAttribute( 'href' )
+		).toBe( 'http://shop.test/holiday-treat-box/' );
+		expect( within( holiday ).getByText( '$184.45' ) ).toBeTruthy();
+
+		const tee = rowOf( 'Tee Trio' );
+		expect( within( tee ).getByText( 'Paused' ) ).toBeTruthy();
+		expect(
+			within( tee ).getByText( 'Bundle price · 3 for $45.00' )
+		).toBeTruthy();
+		expect(
+			within( tee )
+				.getByRole( 'link', { name: 'Add to a page' } )
+				.getAttribute( 'href' )
+		).toContain( 'action=edit&id=9&step=publish' );
+
+		expect( screen.getByText( '3 boxes' ) ).toBeTruthy();
 	} );
 
-	it( 'filters by status tab, type and sort', async () => {
+	it( 'has the four tabs with counts and maps them to the stored statuses', async () => {
 		await loaded();
-		fireEvent.click( screen.getByRole( 'tab', { name: /Drafts/ } ) );
-		await waitFor( () => expect( lastQuery().status ).toBe( 'draft' ) );
+		const tabs = screen.getByRole( 'group', { name: 'Filter boxes' } );
+		const names = within( tabs )
+			.getAllByRole( 'button' )
+			.map( ( b ) => b.textContent );
+		expect( names ).toEqual( [ 'All3', 'Live1', 'Drafts1', 'Ended0' ] );
+		expect( lastQuery() ).toMatchObject( { status: '', page: 1 } );
 
-		fireEvent.click( screen.getByRole( 'tab', { name: /Active/ } ) );
+		fireEvent.click(
+			within( tabs ).getByRole( 'button', { name: /Live/ } )
+		);
 		await waitFor( () => expect( lastQuery().status ).toBe( 'live' ) );
+		expect(
+			within( tabs )
+				.getByRole( 'button', { name: /Live/ } )
+				.getAttribute( 'aria-pressed' )
+		).toBe( 'true' );
 
-		fireEvent.change( screen.getByLabelText( 'Campaign type' ), {
-			target: { value: 'fixed' },
-		} );
-		await waitFor( () => expect( lastQuery().type ).toBe( 'fixed' ) );
-
-		fireEvent.change( screen.getByLabelText( 'Sort' ), {
-			target: { value: 'revenue' },
-		} );
-		await waitFor( () => expect( lastQuery().orderby ).toBe( 'revenue' ) );
-		expect( lastQuery() ).toMatchObject( {
-			status: 'live',
-			type: 'fixed',
-		} );
+		fireEvent.click(
+			within( tabs ).getByRole( 'button', { name: /Drafts/ } )
+		);
+		await waitFor( () => expect( lastQuery().status ).toBe( 'draft' ) );
+		fireEvent.click(
+			within( tabs ).getByRole( 'button', { name: /Ended/ } )
+		);
+		await waitFor( () => expect( lastQuery().status ).toBe( 'ended' ) );
 	} );
 
 	it( 'debounces the search box', async () => {
 		await loaded();
 		const calls = api.getCampaigns.mock.calls.length;
-		const box = screen.getByLabelText( 'Search campaigns' );
+		const box = screen.getByRole( 'searchbox', { name: 'Search boxes' } );
 		fireEvent.change( box, { target: { value: 't' } } );
 		fireEvent.change( box, { target: { value: 'te' } } );
 		fireEvent.change( box, { target: { value: 'tea' } } );
@@ -176,140 +246,260 @@ describe( 'Campaigns list', () => {
 		expect( api.getCampaigns.mock.calls.length ).toBe( calls + 1 );
 	} );
 
-	it( 'moves between pages', async () => {
-		api.getCampaigns.mockResolvedValue(
-			listOf( rows, { total: 45, pages: 3 } )
-		);
-		await loaded();
-		expect( screen.getByText( 'Showing 1–20 of 45' ) ).toBeTruthy();
-		const previous = screen.getByRole( 'button', {
-			name: 'Previous page',
-		} );
-		expect( previous.disabled ).toBe( true );
-		fireEvent.click( screen.getByRole( 'button', { name: 'Next page' } ) );
-		await waitFor( () => expect( lastQuery().page ).toBe( 2 ) );
-	} );
-
-	it( 'selects rows, shows the bulk bar and pauses only what can pause', async () => {
+	it( 'runs bulk actions on the selection, pausing only what can pause', async () => {
 		await loaded();
 		fireEvent.click(
 			screen.getByRole( 'checkbox', { name: 'Select Holiday Treat Box' } )
 		);
 		fireEvent.click(
-			screen.getByRole( 'checkbox', { name: 'Select Chocolate Lab' } )
+			screen.getByRole( 'checkbox', { name: 'Select Summer Mix' } )
 		);
-		expect( screen.getByText( '2 selected' ) ).toBeTruthy();
+		const bar = screen.getByRole( 'region', { name: 'Bulk actions' } );
+		expect( within( bar ).getByText( '2 selected' ) ).toBeTruthy();
+		expect(
+			within( bar ).queryByRole( 'button', { name: 'Resume' } )
+		).toBeNull();
 
-		fireEvent.click( screen.getByRole( 'button', { name: 'Pause' } ) );
+		fireEvent.click(
+			within( bar ).getByRole( 'button', { name: 'Pause' } )
+		);
 		await waitFor( () =>
 			expect( api.bulkCampaigns ).toHaveBeenCalledWith( 'pause', [ 12 ] )
 		);
-		await screen.findByText( 'Paused 1 campaign' );
+		await findSnackbar( 'Paused 1 box' );
 		await waitFor( () =>
-			expect( screen.queryByText( '2 selected' ) ).toBeNull()
+			expect(
+				screen.queryByRole( 'region', { name: 'Bulk actions' } )
+			).toBeNull()
 		);
 	} );
 
 	it( 'selects every row from the header checkbox', async () => {
 		await loaded();
 		fireEvent.click(
-			screen.getByRole( 'checkbox', { name: 'Select all' } )
+			screen.getByRole( 'checkbox', { name: 'Select all rows' } )
 		);
 		expect( screen.getByText( '3 selected' ) ).toBeTruthy();
 		fireEvent.click(
-			screen.getByRole( 'checkbox', { name: 'Select all' } )
+			screen.getByRole( 'checkbox', { name: 'Select all rows' } )
 		);
 		expect( screen.queryByText( '3 selected' ) ).toBeNull();
 	} );
 
-	it( 'confirms before deleting, with focus on Cancel', async () => {
+	it( 'duplicates, pauses and resumes from the row menu', async () => {
 		await loaded();
+		api.bulkCampaigns.mockResolvedValueOnce( {
+			action: 'duplicate',
+			results: [
+				{
+					id: 12,
+					ok: true,
+					campaign: { id: 13, title: 'Holiday Treat Box (copy)' },
+				},
+			],
+		} );
+		fireEvent.click(
+			screen.getByRole( 'button', {
+				name: 'More actions for Holiday Treat Box',
+			} )
+		);
+		fireEvent.click(
+			await screen.findByRole( 'menuitem', { name: 'Duplicate' } )
+		);
+		await waitFor( () =>
+			expect( api.bulkCampaigns ).toHaveBeenCalledWith( 'duplicate', [
+				12,
+			] )
+		);
+		await findSnackbar( 'Duplicated as “Holiday Treat Box (copy)”' );
+
+		fireEvent.click(
+			screen.getByRole( 'button', {
+				name: 'More actions for Holiday Treat Box',
+			} )
+		);
+		expect(
+			screen.queryByRole( 'menuitem', { name: 'Resume' } )
+		).toBeNull();
+		fireEvent.click(
+			await screen.findByRole( 'menuitem', { name: 'Pause' } )
+		);
+		await waitFor( () =>
+			expect( api.bulkCampaigns ).toHaveBeenCalledWith( 'pause', [ 12 ] )
+		);
+
+		// Row menus are disabled while the previous action is saving.
+		const teeMenu = screen.getByRole( 'button', {
+			name: 'More actions for Tee Trio',
+		} );
+		await waitFor( () => expect( teeMenu.disabled ).toBe( false ) );
+		fireEvent.click( teeMenu );
+		fireEvent.click(
+			await screen.findByRole( 'menuitem', { name: 'Resume' } )
+		);
+		await waitFor( () =>
+			expect( api.bulkCampaigns ).toHaveBeenCalledWith( 'resume', [ 9 ] )
+		);
+	} );
+
+	it( 'confirms Move to trash, and Escape cancels it', async () => {
+		await loaded();
+		fireEvent.click(
+			screen.getByRole( 'button', {
+				name: 'More actions for Holiday Treat Box',
+			} )
+		);
+		fireEvent.click(
+			await screen.findByRole( 'menuitem', { name: 'Move to trash' } )
+		);
+		const dialog = await screen.findByRole( 'dialog', {
+			name: 'Move “Holiday Treat Box” to the trash?',
+		} );
+		fireEvent.keyDown( dialog, { key: 'Escape' } );
+		await waitFor( () =>
+			expect(
+				screen.queryByRole( 'dialog', { name: /to the trash/ } )
+			).toBeNull()
+		);
+		expect( api.bulkCampaigns ).not.toHaveBeenCalled();
+
 		fireEvent.click(
 			screen.getByRole( 'checkbox', { name: 'Select Holiday Treat Box' } )
 		);
-		const opener = screen.getByRole( 'button', { name: 'Delete' } );
-		opener.focus();
-		fireEvent.click( opener );
-
-		const dialog = screen.getByRole( 'alertdialog' );
-		expect(
-			within( dialog ).getByText( /Delete “Holiday Treat Box”\?/ )
-		).toBeTruthy();
-		expect(
-			within( dialog ).getByText( 'Holiday Treat Box is live' )
-		).toBeTruthy();
-		expect( document.activeElement ).toBe(
-			within( dialog ).getByRole( 'button', { name: 'Cancel' } )
-		);
-
-		fireEvent.keyDown( document, { key: 'Escape' } );
-		expect( screen.queryByRole( 'alertdialog' ) ).toBeNull();
-		expect( api.bulkCampaigns ).not.toHaveBeenCalled();
-
-		fireEvent.click( screen.getByRole( 'button', { name: 'Delete' } ) );
 		fireEvent.click(
-			within( screen.getByRole( 'alertdialog' ) ).getByRole( 'button', {
-				name: 'Delete 1 campaign',
-			} )
+			within(
+				screen.getByRole( 'region', { name: 'Bulk actions' } )
+			).getByRole( 'button', { name: 'Move to trash' } )
+		);
+		const confirm = await screen.findByRole( 'dialog', {
+			name: /to the trash/,
+		} );
+		fireEvent.click(
+			within( confirm ).getByRole( 'button', { name: 'Move to trash' } )
 		);
 		await waitFor( () =>
 			expect( api.bulkCampaigns ).toHaveBeenCalledWith( 'delete', [ 12 ] )
 		);
 	} );
 
-	it( 'offers Pause instead and uses it', async () => {
-		await loaded();
-		fireEvent.click(
-			screen.getByRole( 'checkbox', { name: 'Select Holiday Treat Box' } )
-		);
-		fireEvent.click( screen.getByRole( 'button', { name: 'Delete' } ) );
-		fireEvent.click(
-			screen.getByRole( 'button', { name: 'Pause instead' } )
-		);
-		await waitFor( () =>
-			expect( api.bulkCampaigns ).toHaveBeenCalledWith( 'pause', [ 12 ] )
-		);
-	} );
-
-	it( 'shows a critical notice with Retry when loading fails', async () => {
+	it( 'shows an error notice with Retry when loading fails', async () => {
 		api.getCampaigns.mockRejectedValueOnce( new Error( 'Nope' ) );
 		render( <App page="campaigns" /> );
-		const alert = await screen.findByRole( 'alert' );
-		expect(
-			within( alert ).getByText( 'Campaigns could not load' )
-		).toBeTruthy();
-		fireEvent.click(
-			within( alert ).getByRole( 'button', { name: 'Retry' } )
-		);
+		await screen.findByText( 'Nope' );
+		fireEvent.click( screen.getByRole( 'button', { name: 'Retry' } ) );
 		await screen.findByText( 'Holiday Treat Box' );
 	} );
 
-	it( 'shows the first-run state when there are no campaigns at all', async () => {
+	it( 'shows the empty state when there are no boxes at all', async () => {
 		api.getCampaigns.mockResolvedValue(
 			listOf( [], {
 				total: 0,
 				pages: 0,
-				counts: {
-					all: 0,
-					live: 0,
-					draft: 0,
-					scheduled: 0,
-					ended: 0,
-					paused: 0,
-				},
+				counts: { all: 0, live: 0, draft: 0, ended: 0 },
 			} )
 		);
 		render( <App page="campaigns" /> );
-		await screen.findByText( 'Launch your first box' );
+		await screen.findByText( 'Create your first box' );
+	} );
+} );
+
+describe( 'Create a box', () => {
+	it( 'creates a draft of the chosen type and opens the editor at products', async () => {
+		api.createCampaign.mockResolvedValue(
+			campaign( 31, 'Snacks', 'draft' )
+		);
+		await loaded();
+		fireEvent.click( screen.getByRole( 'button', { name: 'Create box' } ) );
+		const dialog = await screen.findByRole( 'dialog', {
+			name: 'Create a box',
+		} );
+
+		const name = within( dialog ).getByLabelText( 'Box name' );
+		fireEvent.change( name, { target: { value: 'Snacks' } } );
+
+		const tiered = within( dialog ).getByRole( 'radio', {
+			name: /Bigger box, bigger discount/,
+		} );
+		expect( tiered.checked ).toBe( true );
+		fireEvent.click(
+			within( dialog ).getByRole( 'radio', { name: /Set price bundle/ } )
+		);
+		expect( tiered.checked ).toBe( false );
+
+		await act( async () => {
+			fireEvent.click(
+				within( dialog ).getByRole( 'button', {
+					name: 'Create and pick products',
+				} )
+			);
+		} );
+		expect( api.createCampaign ).toHaveBeenCalledWith(
+			'blank',
+			'Snacks',
+			'bundle'
+		);
+		await waitFor( () =>
+			expect( assign ).toHaveBeenCalledWith(
+				expect.stringContaining( 'action=edit&id=31&step=products' )
+			)
+		);
 	} );
 
-	it( 'opens the template picker from Create campaign', async () => {
+	it( 'shows the error and stays open when creating fails', async () => {
+		api.createCampaign.mockRejectedValue( new Error( 'No room' ) );
 		await loaded();
+		fireEvent.click( screen.getByRole( 'button', { name: 'Create box' } ) );
+		const dialog = await screen.findByRole( 'dialog', {
+			name: 'Create a box',
+		} );
 		fireEvent.click(
-			screen.getAllByRole( 'button', { name: 'Create campaign' } )[ 0 ]
+			within( dialog ).getByRole( 'button', {
+				name: 'Create and pick products',
+			} )
 		);
-		expect(
-			screen.getByRole( 'dialog', { name: 'Start a new box campaign' } )
-		).toBeTruthy();
+		await within( dialog ).findByText( 'No room' );
+		expect( assign ).not.toHaveBeenCalled();
+	} );
+
+	it( 'closes with Cancel and with Escape', async () => {
+		await loaded();
+		fireEvent.click( screen.getByRole( 'button', { name: 'Create box' } ) );
+		let dialog = await screen.findByRole( 'dialog', {
+			name: 'Create a box',
+		} );
+		fireEvent.click(
+			within( dialog ).getByRole( 'button', { name: 'Cancel' } )
+		);
+		await waitFor( () =>
+			expect(
+				screen.queryByRole( 'dialog', { name: 'Create a box' } )
+			).toBeNull()
+		);
+
+		fireEvent.click( screen.getByRole( 'button', { name: 'Create box' } ) );
+		dialog = await screen.findByRole( 'dialog', { name: 'Create a box' } );
+		fireEvent.keyDown( dialog, { key: 'Escape' } );
+		await waitFor( () =>
+			expect(
+				screen.queryByRole( 'dialog', { name: 'Create a box' } )
+			).toBeNull()
+		);
+		expect( api.createCampaign ).not.toHaveBeenCalled();
+	} );
+
+	it( 'opens on load from action=new and drops the arg on close', async () => {
+		window.history.replaceState(
+			null,
+			'',
+			'/wp-admin/admin.php?page=mmbb-campaigns&action=new'
+		);
+		render( <App page="campaigns" /> );
+		const dialog = await screen.findByRole( 'dialog', {
+			name: 'Create a box',
+		} );
+		fireEvent.click(
+			within( dialog ).getByRole( 'button', { name: 'Cancel' } )
+		);
+		expect( window.location.search ).toBe( '?page=mmbb-campaigns' );
 	} );
 } );

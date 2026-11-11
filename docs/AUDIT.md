@@ -257,7 +257,7 @@ A campaign as the repository and REST return it: `{ id, title, post_status, paus
 - Globals: `window.mmbbAdmin`, `window.mmbbBuilders` (payload per instance id `mmbb-1`, `mmbb-2`, …), `window.mmbbMoneySettings`, `window.mmbbComponents`.
 - `localStorage`: `mmbb:checklist-dismissed`, `mmbb:editor:<campaign id>` (unsaved editor draft), `mmbb:editor:device`.
 - `sessionStorage`: `mmbb:box:<campaign id>` (the shopper's picks), `mmbb:analytics-session`, `mmbb:view:<campaign id>`.
-- No user meta is stored.
+- User meta: `mmbb_checklist_dismissed` (Home checklist hidden, per user; added in Redesign Part 3). 1.0 stored no user meta.
 
 ## Interfaces
 
@@ -268,7 +268,7 @@ Every admin route uses `Base_Controller::permissions_check()`, which requires `m
 | Method | Path | Notes |
 | --- | --- | --- |
 | GET | `/campaigns` | List with status, search, type, orderby, paging; returns counts |
-| POST | `/campaigns` | Args `template` (preset id, default `blank`) and `title` |
+| POST | `/campaigns` | Args `template` (preset id, default `blank`), `title` and, from Redesign Part 3, `type` (tiered / fixed / bundle, used with the blank template) |
 | POST | `/campaigns/bulk` | `action` pause / resume / duplicate / delete, `ids` (up to 100) |
 | GET | `/campaigns/<id>` | One campaign |
 | PUT | `/campaigns/<id>` | Replace config (`title`, `config`) |
@@ -281,7 +281,7 @@ Every admin route uses `Base_Controller::permissions_check()`, which requires `m
 | GET | `/terms` | Product categories and tags |
 | GET | `/pages` | Pages for placement |
 | GET, POST/PUT/PATCH | `/settings` | Read and update `mmbb_settings` |
-| GET, POST | `/setup` | Setup checklist state; mark the test order done |
+| GET, POST | `/setup` | Setup checklist state; mark the test order done; from Redesign Part 3, `dismissed` per user |
 | GET | `/stats` | Dashboard numbers, `range` |
 | GET | `/analytics` | `range` today / 7d / 30d / 90d / custom, `from`, `to`, `campaign`, `compare` |
 | GET | `/analytics/export` | CSV, same args |

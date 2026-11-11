@@ -1,0 +1,471 @@
+/*
+ * Home, Boxes and Create a box (design/canvas/Main, Boxes, NewBox), on top of
+ * the shell variables in app.css. Scoped under .mmbb-app, except the modals,
+ * which WordPress renders outside it.
+ */
+
+/* ---------- Cards ---------- */
+.mmbb-app .mmbb-app-muted {
+	margin: 0;
+	color: var(--mmbb-app-gray-700);
+}
+
+.mmbb-app-card {
+	min-width: 0;
+	background: var(--mmbb-app-surface);
+	border: 1px solid var(--mmbb-app-gray-200);
+	border-radius: 8px;
+}
+
+.mmbb-app-card__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: 56px;
+	padding: 12px 24px;
+	border-bottom: 1px solid var(--mmbb-app-gray-100);
+}
+
+.mmbb-app .mmbb-app-card__head h2 {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+.mmbb-app-card__body {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 24px;
+}
+
+.mmbb-app-card__foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-wrap: wrap;
+	min-height: 48px;
+	padding: 8px 16px;
+}
+
+.mmbb-app-card__table {
+	transition: opacity 0.15s ease;
+}
+
+.mmbb-app-card__table.is-loading,
+.mmbb-app-stack > .is-loading {
+	opacity: 0.6;
+}
+
+.mmbb-app-split {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 24px;
+}
+
+.mmbb-app-split__main {
+	flex: 2 1 560px;
+}
+
+.mmbb-app-split__side {
+	flex: 1 1 320px;
+}
+
+.mmbb-app-loading {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 40px;
+	color: var(--mmbb-app-gray-700);
+}
+
+.mmbb-app-loading .components-spinner,
+.mmbb-app-toolbar__search .components-spinner {
+	margin: 0;
+}
+
+.mmbb-app-stat__value .components-spinner {
+	margin: 8px 0;
+}
+
+.mmbb-app-page-head__actions .mmbb-app-period {
+	width: auto;
+}
+
+/* ---------- Setup checklist ---------- */
+.mmbb-app .mmbb-app-setup {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.mmbb-app .mmbb-app-setup__step {
+	display: flex;
+	gap: 12px;
+	margin: 0;
+	padding: 20px 24px;
+	box-shadow: -1px 0 0 var(--mmbb-app-gray-100);
+}
+
+.mmbb-app-setup__step.is-next {
+	background: rgba(var(--wp-admin-theme-color--rgb, 56, 88, 233), 0.05);
+}
+
+.mmbb-app-setup__mark {
+	display: flex;
+	flex: 0 0 16px;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	margin-top: 2px;
+	border: 1px solid var(--mmbb-app-ink);
+	border-radius: 2px;
+	background: var(--mmbb-app-surface);
+	color: var(--mmbb-app-surface);
+}
+
+.mmbb-app-setup__step.is-done .mmbb-app-setup__mark {
+	border-color: var(--mmbb-app-accent);
+	background: var(--mmbb-app-accent);
+}
+
+.mmbb-app-setup__text {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+	min-width: 0;
+}
+
+.mmbb-app-setup__text b {
+	font-weight: 600;
+}
+
+.mmbb-app-setup__buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+/* ---------- Box cell and thumbnails ---------- */
+.mmbb-app-box-cell {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 220px;
+}
+
+.mmbb-app .mmbb-app-box-cell__name {
+	color: var(--mmbb-app-ink);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.mmbb-app a.mmbb-app-box-cell__name:hover {
+	color: var(--mmbb-app-accent);
+	text-decoration: underline;
+}
+
+.mmbb-app-thumbs {
+	display: flex;
+	flex: none;
+}
+
+.mmbb-app-thumb {
+	display: block;
+	width: 40px;
+	height: 40px;
+	border-radius: 4px;
+	background: #eaeff3;
+	object-fit: cover;
+}
+
+.mmbb-app-thumbs.is-stack .mmbb-app-thumb {
+	width: 32px;
+	height: 32px;
+	margin-left: -8px;
+	border: 2px solid var(--mmbb-app-surface);
+	border-radius: 8px;
+}
+
+.mmbb-app-thumbs.is-stack .mmbb-app-thumb:first-child {
+	margin-left: 0;
+}
+
+.mmbb-app-row-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 4px;
+	white-space: nowrap;
+}
+
+/* ---------- Boxes toolbar, tabs and bulk bar ---------- */
+.mmbb-app-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 16px;
+	flex-wrap: wrap;
+	padding: 0 16px 0 8px;
+	border-bottom: 1px solid var(--mmbb-app-gray-200);
+}
+
+.mmbb-app-tabs {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.mmbb-app .mmbb-app-tab {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	height: 48px;
+	padding: 0 16px;
+	border: 0;
+	background: transparent;
+	color: var(--mmbb-app-ink);
+	font: inherit;
+	cursor: pointer;
+}
+
+.mmbb-app .mmbb-app-tab:hover {
+	color: var(--mmbb-app-accent);
+}
+
+.mmbb-app .mmbb-app-tab.is-current {
+	box-shadow: inset 0 -2px 0 var(--mmbb-app-accent);
+	font-weight: 500;
+}
+
+.mmbb-app .mmbb-app-tab:focus-visible {
+	outline: 2px solid var(--mmbb-app-accent);
+	outline-offset: -2px;
+}
+
+.mmbb-app-count {
+	padding: 0 6px;
+	border-radius: 9px;
+	background: var(--mmbb-app-gray-100);
+	font-size: 11px;
+	line-height: 18px;
+}
+
+.mmbb-app-toolbar__search {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 300px;
+	max-width: 100%;
+	padding: 8px 0;
+}
+
+.mmbb-app-toolbar__search .components-search-control {
+	flex: 1;
+}
+
+.mmbb-app-bulk {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	padding: 8px 16px;
+	border-bottom: 1px solid var(--mmbb-app-gray-200);
+	background: var(--mmbb-app-info-bg);
+}
+
+.mmbb-app-bulk > span {
+	margin-right: 8px;
+	font-weight: 500;
+}
+
+.mmbb-app-pager {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* ---------- Most picked bars ---------- */
+.mmbb-app .mmbb-app-bars {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.mmbb-app .mmbb-app-bars li {
+	margin: 0;
+}
+
+.mmbb-app-bars__row {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.mmbb-app-bars__row span:last-child {
+	font-variant-numeric: tabular-nums;
+}
+
+.mmbb-app-bars__track {
+	height: 8px;
+	margin-top: 6px;
+	border-radius: 4px;
+	background: var(--mmbb-app-gray-100);
+	overflow: hidden;
+}
+
+.mmbb-app-bars__track i {
+	display: block;
+	height: 100%;
+	border-radius: 4px;
+	background: var(--mmbb-app-accent);
+}
+
+/* ---------- Modals ---------- */
+.mmbb-app-modal {
+	--mmbb-app-accent: var(--wp-admin-theme-color, #3858e9);
+	--mmbb-app-ink: #1e1e1e;
+	--mmbb-app-gray-700: #757575;
+	--mmbb-app-gray-200: #e0e0e0;
+	--mmbb-app-gray-100: #f0f0f0;
+}
+
+.mmbb-app-modal .components-modal__content {
+	padding-bottom: 0;
+}
+
+.mmbb-app-modal__form {
+	display: flex;
+	flex-direction: column;
+}
+
+.mmbb-app-modal__body {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	padding-bottom: 24px;
+}
+
+.mmbb-app-modal__body p {
+	margin: 0;
+}
+
+.mmbb-app-modal__body .components-notice {
+	margin: 0;
+}
+
+.mmbb-app-modal__foot {
+	position: sticky;
+	bottom: 0;
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin: 0 -32px;
+	padding: 16px 32px;
+	border-top: 1px solid var(--mmbb-app-gray-100);
+	background: #fff;
+}
+
+.mmbb-app-modal .mmbb-app-label {
+	display: block;
+	margin-bottom: 8px;
+	padding: 0;
+	color: var(--mmbb-app-ink);
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.mmbb-app-choices {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.mmbb-app-choice {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 16px;
+	border: 1px solid var(--mmbb-app-gray-200);
+	border-radius: 4px;
+	background: #fff;
+	color: var(--mmbb-app-ink);
+	cursor: pointer;
+}
+
+.mmbb-app-choice.is-selected {
+	border-color: var(--mmbb-app-accent);
+	box-shadow: inset 0 0 0 1px var(--mmbb-app-accent);
+}
+
+.mmbb-app-choice:focus-within {
+	outline: 2px solid var(--mmbb-app-accent);
+	outline-offset: 2px;
+}
+
+.mmbb-app-choice input[type="radio"] {
+	flex: none;
+	margin: 2px 0 0;
+}
+
+.mmbb-app-choice input[type="radio"]:focus {
+	box-shadow: none;
+}
+
+.mmbb-app-choice__text {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.mmbb-app-choice__text b {
+	font-weight: 600;
+}
+
+.mmbb-app-choice__desc {
+	color: var(--mmbb-app-gray-700);
+}
+
+.mmbb-app-choice__example {
+	flex: none;
+	padding: 2px 8px;
+	border-radius: 2px;
+	background: var(--mmbb-app-gray-100);
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+
+	.mmbb-app-choice {
+		flex-wrap: wrap;
+	}
+
+	.mmbb-app-choice__example {
+		margin-left: 28px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.mmbb-app-card__table {
+		transition: none;
+	}
+}

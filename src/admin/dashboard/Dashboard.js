@@ -1,135 +1,106 @@
-import { useState } from '@wordpress/element';
-import { __, sprintf } from '@wordpress/i18n';
+import { Button, Notice, Spinner } from '@wordpress/components';
+import { useEffect, useState } from '@wordpress/element';
+import { __, _n, sprintf } from '@wordpress/i18n';
+import { plus } from '@wordpress/icons';
+import { useMoney } from '../../components';
 import {
-	Badge,
-	BarList,
-	Button,
-	Card,
-	Countdown,
+	dismissChecklist,
+	getCampaigns,
+	getSetup,
+	getStats,
+	markTestDone,
+} from '../api';
+import CreateBoxModal from '../campaigns/CreateBoxModal';
+import { useProductImages } from '../CampaignThumbs';
+import {
+	BoxThumbs,
 	DataTable,
 	EmptyState,
-	Icon,
-	LineChart,
-	Notice,
 	PageHeader,
-	ProgressBar,
-	SegmentedControl,
 	StatCard,
-	useMoney,
-} from '../../components';
-import { formatCompact } from '../../components/utils';
-import { createMoneyFormatter } from '../../utils/money';
-import { getCampaigns, getSetup, getStats, markTestDone } from '../api';
-import { copyText } from '../copy-text';
+	StatGroup,
+	StatusBadge,
+} from '../components';
+import { ToggleGroupControl, ToggleGroupControlOption } from '../components/wp';
 import { RANGES } from '../constants';
 import { useAdmin } from '../context';
-import CampaignThumbs, { useProductImages } from '../CampaignThumbs';
-import {
-	formatCount,
-	formatPercent,
-	formatShortDate,
-	isLive,
-	statusInfo,
-	tierSummary,
-	typeSummary,
-} from '../format';
-import { errorMessage, readStored, useRequest, writeStored } from '../hooks';
+import { boxDetails, formatCount, formatPercent } from '../format';
+import { errorMessage, readStored, useRequest } from '../hooks';
 import Shell from '../Shell';
-import TemplatePicker from '../TemplatePicker';
-import { useToast } from '../toast';
-import SetupChecklist, {
-	nextHint,
-	progress,
-	remainingTitle,
-} from './SetupChecklist';
+import SetupChecklist, { progress } from './SetupChecklist';
 
-const DISMISS_KEY = 'mmbb:checklist-dismissed';
+// 1.0 hid the checklist in this browser only. Carried over to user meta once.
+const LEGACY_DISMISS_KEY = 'mmbb:checklist-dismissed';
+const BOXES_SHOWN = 5;
+const PICKS_SHOWN = 5;
 
-const rangeLabel = ( range ) => {
-	const days = parseInt( range, 10 );
-	return sprintf(
-		/* translators: %d: Number of days. */
-		__( '%d days', 'productboxes-mix-and-match-box-builder' ),
-		days
-	);
-};
+const days = ( range ) => parseInt( range, 10 );
 
-// Sparklines and the chart read plain numbers, so minor units become major ones.
-const toMajor = ( minor, decimals ) => minor / Math.pow( 10, decimals );
-
+/**
+ * Home: setup checklist, the period's key numbers, your boxes and the most
+ * picked products. Data from GET /stats, GET /setup and GET /campaigns.
+ */
 export default function Dashboard() {
-	const { urls, locale, money } = useAdmin();
+	const { urls, locale } = useAdmin();
 	const formatMoney = useMoney();
-	const toast = useToast();
 	const [ range, setRange ] = useState( '30d' );
-	const [ picker, setPicker ] = useState( false );
+	const [ creating, setCreating ] = useState( false );
 	const [ saving, setSaving ] = useState( false );
-	const [ dismissed, setDismissed ] = useState(
-		readStored( DISMISS_KEY, '' ) === '1'
-	);
+	const [ hidden, setHidden ] = useState( false );
+	const [ actionError, setActionError ] = useState( '' );
 
 	const stats = useRequest( () => getStats( range ), [ range ] );
 	const setup = useRequest( () => getSetup(), [] );
-	const campaigns = useRequest(
-		() => getCampaigns( { orderby: 'revenue', per_page: 50 } ),
+	const boxes = useRequest(
+		() => getCampaigns( { orderby: 'revenue', per_page: BOXES_SHOWN } ),
 		[]
 	);
-	const items = campaigns.data ? campaigns.data.items : [];
-	const live = items.filter( ( c ) => isLive( c.status ) );
-	const performance = stats.data?.top_campaigns || [];
-	const top = performance.length
-		? performance
-				.map( ( row ) => {
-					const found = items.find( ( item ) => item.id === row.id );
-					return found
-						? {
-								...found,
-								stats: {
-									boxes_sold: row.boxes,
-									revenue: row.revenue,
-								},
-						  }
-						: null;
-				} )
-				.filter( Boolean )
-				.slice( 0, 3 )
-		: live.slice( 0, 3 );
-	const images = useProductImages( top );
+	const items = boxes.data ? boxes.data.items : [];
+	const images = useProductImages( items );
 
-	const failed = stats.error || setup.error || campaigns.error;
-	const ready = stats.data && setup.data && campaigns.data;
-	const reloadAll = () => {
-		stats.reload();
-		setup.reload();
-		campaigns.reload();
-	};
+	// Carry a dismissal saved by 1.0 in localStorage over to the user's account.
+	const setupData = setup.data;
+	useEffect( () => {
+		if (
+			setupData &&
+			! setupData.dismissed &&
+			readStored( LEGACY_DISMISS_KEY, '' ) === '1'
+		) {
+			setHidden( true );
+			dismissChecklist( true ).catch( () => {} );
+		}
+	}, [ setupData ] );
 
-	const copyShortcode = ( campaign ) => {
-		copyText( campaign.placement.shortcode ).then( ( ok ) =>
-			toast(
-				ok
-					? __(
-							'Shortcode copied',
-							'productboxes-mix-and-match-box-builder'
-					  )
-					: __(
-							'Could not copy. Select the shortcode and copy it.',
-							'productboxes-mix-and-match-box-builder'
-					  )
-			)
-		);
+	const failed = [ stats, setup, boxes ].filter( ( r ) => r.error );
+	const retry = () => failed.forEach( ( r ) => r.reload() );
+
+	const dismiss = () => {
+		setHidden( true );
+		dismissChecklist( true ).catch( ( e ) => {
+			setHidden( false );
+			setActionError(
+				errorMessage(
+					e,
+					__(
+						'The checklist could not be hidden. Try again.',
+						'productboxes-mix-and-match-box-builder'
+					)
+				)
+			);
+		} );
 	};
 
 	const testDone = () => {
 		setSaving( true );
+		setActionError( '' );
 		markTestDone()
 			.then( () => setup.reload() )
 			.catch( ( e ) =>
-				toast(
+				setActionError(
 					errorMessage(
 						e,
 						__(
-							'That did not save.',
+							'That did not save. Try again.',
 							'productboxes-mix-and-match-box-builder'
 						)
 					)
@@ -138,707 +109,495 @@ export default function Dashboard() {
 			.then( () => setSaving( false ) );
 	};
 
-	const dismiss = () => {
-		writeStored( DISMISS_KEY, '1' );
-		setDismissed( true );
+	const showChecklist =
+		setupData &&
+		! setupData.dismissed &&
+		! hidden &&
+		progress( setupData ).next !== null;
+
+	// ---- Key numbers ----
+	const kpis = stats.data ? stats.data.kpis : null;
+	const period = days( range );
+	const pending = <Spinner />;
+
+	const signed = ( diff, format ) =>
+		( diff > 0 ? '+' : '−' ) + format( Math.abs( diff ) );
+
+	const change = ( kpi, format ) => {
+		if ( ! kpi || kpi.previous === null || kpi.previous === undefined ) {
+			return { text: null };
+		}
+		const diff = kpi.value - kpi.previous;
+		if ( diff === 0 ) {
+			return { text: null };
+		}
+		return {
+			text: sprintf(
+				/* translators: 1: Change such as +$184.45, 2: Number of days. */
+				_n(
+					'%1$s vs previous %2$d day',
+					'%1$s vs previous %2$d days',
+					period,
+					'productboxes-mix-and-match-box-builder'
+				),
+				signed( diff, format ),
+				period
+			),
+			tone: diff > 0 ? 'positive' : 'negative',
+		};
 	};
 
-	const checklist = ( layout ) => (
-		<SetupChecklist
-			setup={ setup.data }
-			campaign={ items[ 0 ] }
-			layout={ layout }
-			busy={ saving }
-			onCreate={ () => setPicker( true ) }
-			onCopy={ copyShortcode }
-			onTestDone={ testDone }
-		/>
-	);
-
-	const common = (
-		<>
-			{ failed ? (
-				<Notice
-					tone="critical"
-					title={ __(
-						'The dashboard could not load',
-						'productboxes-mix-and-match-box-builder'
-					) }
-					action={
-						<Button size="sm" onClick={ reloadAll }>
-							{ __(
-								'Retry',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						</Button>
-					}
-				>
-					{ errorMessage( failed, '' ) }
-				</Notice>
-			) : null }
-			{ picker ? (
-				<TemplatePicker onClose={ () => setPicker( false ) } />
-			) : null }
-		</>
-	);
-
-	if ( ! ready ) {
-		return (
-			<Shell active="dashboard" viewStore>
-				<PageHeader
-					title={ __(
-						'Dashboard',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				/>
-				{ common }
-				{ ! failed ? (
-					<Card>
-						<p role="status" className="mmbb-muted">
-							{ __(
-								'Loading your dashboard…',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						</p>
-					</Card>
-				) : null }
-			</Shell>
+	const funnelCount = ( step ) => {
+		const row = ( ( stats.data && stats.data.funnel ) || [] ).find(
+			( f ) => f.step === step
 		);
-	}
+		return row ? row.count : 0;
+	};
 
-	const kpis = stats.data.kpis;
-	const firstRun = kpis.boxes.value + kpis.boxes.previous === 0;
-	const steps = progress( setup.data );
-
-	if ( firstRun ) {
-		return (
-			<Shell active="dashboard" viewStore>
-				<PageHeader
-					title={ __(
-						'Welcome to ProductBoxes',
-						'productboxes-mix-and-match-box-builder'
-					) }
-					subtitle={ __(
-						'Let shoppers build their own box. Most stores go live in under 5 minutes.',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				/>
-				{ common }
-				<div className="mmbb-dash__split">
-					<div className="mmbb-dash__main">
-						<Card padding="none">
-							<EmptyState
-								icon="box"
-								title={ __(
-									'Launch your first box',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								description={ __(
-									'Pick the products, set the discount tiers, drop the builder on a page. Start blank or from a ready-made template.',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								action={
-									<Button
-										variant="max"
-										icon="plus"
-										href={ urls.newCampaign }
-									>
-										{ __(
-											'Create campaign',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									</Button>
-								}
-								secondaryAction={
-									<Button
-										icon="layers"
-										href={ urls.newCampaign }
-									>
-										{ __(
-											'Start from a template',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									</Button>
-								}
-							/>
-						</Card>
-						<section className="mmbb-howto">
-							<h2 className="mmbb-howto__title">
-								{ __(
-									'How a box campaign works',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							</h2>
-							<div className="mmbb-howto__grid">
-								<div className="mmbb-howto__step">
-									<span className="mmbb-howto__icon is-max">
-										<Icon name="tag" size={ 22 } />
-									</span>
-									<b>
-										{ __(
-											'1. Pick products',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									</b>
-									<span>
-										{ __(
-											'Choose products, a category or a tag. Sold-out items hide themselves.',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									</span>
-								</div>
-								<div className="mmbb-howto__step">
-									<span className="mmbb-howto__icon is-pop">
-										<Icon name="percent" size={ 22 } />
-									</span>
-									<b>
-										{ __(
-											'2. Set discount tiers',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									</b>
-									<span>
-										{ __(
-											'4 items 10% off, 6 items 15%, 12 items 25%. Shoppers see what the next item unlocks.',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									</span>
-								</div>
-								<div className="mmbb-howto__step">
-									<span className="mmbb-howto__icon is-ink">
-										<Icon name="layers" size={ 22 } />
-									</span>
-									<b>
-										{ __(
-											'3. Place it on a page',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									</b>
-									<span>
-										{ __(
-											'Add the Box Builder block or paste a shortcode. The box goes to the cart as one line.',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									</span>
-								</div>
-							</div>
-						</section>
-					</div>
-					<div className="mmbb-dash__side">
-						<Card
-							title={ __(
-								'Get set up',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							subtitle={ __(
-								'Your progress is saved as you go.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						>
-							<div className="mmbb-dash__stack">
-								<ProgressBar
-									label={ __(
-										'Setup',
-										'productboxes-mix-and-match-box-builder'
-									) }
-									valueLabel={ sprintf(
-										/* translators: 1: Steps done, 2: Total steps. */
-										__(
-											'%1$d of %2$d done',
-											'productboxes-mix-and-match-box-builder'
-										),
-										steps.done,
-										steps.total
-									) }
-									value={ steps.done }
-									max={ steps.total }
-									tone="max"
-								/>
-								{ checklist( 'stack' ) }
-							</div>
-						</Card>
-						<Notice
-							tone="info"
-							title={ __(
-								'Your numbers show up here',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						>
-							{ __(
-								'Once your first box sells, this page shows revenue, boxes sold and what shoppers pick most.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						</Notice>
-					</div>
-				</div>
-			</Shell>
-		);
-	}
-
-	// ---- Active state: boxes have sold ----
-	const decimals = money.decimals;
-	const whole = createMoneyFormatter( { ...money, decimals: 0 } );
-	const bigMoney = ( minor ) =>
-		minor >= 1000 * Math.pow( 10, decimals )
-			? whole( Math.round( toMajor( minor, decimals ) ) )
-			: formatMoney( minor );
-	const symbol = money.symbol || '';
-	const symbolAfter = String( money.position || '' ).startsWith( 'right' );
-	const delta = ( kpi ) =>
-		kpi.delta === null || kpi.delta === undefined
-			? null
-			: Math.round( kpi.delta * 10 ) / 10;
-	const series = stats.data.revenue_series;
-	const labels = series.map( ( d ) =>
-		formatShortDate( d.date + 'T12:00:00Z', { locale, timezone: 'UTC' } )
+	const revenueChange = change( kpis && kpis.revenue, formatMoney );
+	const boxesChange = change( kpis && kpis.boxes, ( n ) =>
+		formatCount( n, locale )
 	);
-	const showChecklist = ! setup.data.complete && ! dismissed;
-	const liveCampaign =
-		live.find(
-			( c ) =>
-				stats.data.live_campaign && c.id === stats.data.live_campaign.id
-		) || live[ 0 ];
-	const liveStats = stats.data.live_campaign || {};
-	// Without an end date, an evergreen countdown still shows its own deadline on the store.
-	const endTarget =
-		liveCampaign &&
-		( liveCampaign.config.schedule.end ||
-			liveCampaign.config.schedule.countdown_end );
-	const end =
-		endTarget && Date.parse( endTarget ) > Date.now() ? endTarget : null;
-	const tiers = liveCampaign ? tierSummary( liveCampaign.config ) : '';
+	const perBox = kpis ? kpis.items_per_box : null;
+	const visits = funnelCount( 'view' );
+	const orders = funnelCount( 'purchased' );
 
-	const topRows = top.map( ( c ) => ( { ...c, id: c.id } ) );
-	const topColumns = [
+	// ---- Your boxes: this period's numbers per box ----
+	const periodStats = {};
+	( ( stats.data && stats.data.top_campaigns ) || [] ).forEach( ( row ) => {
+		periodStats[ row.id ] = row;
+	} );
+	const sold = ( c ) =>
+		periodStats[ c.id ] ? periodStats[ c.id ].boxes : 0;
+	const revenue = ( c ) =>
+		periodStats[ c.id ] ? periodStats[ c.id ].revenue : 0;
+
+	const columns = [
 		{
 			key: 'title',
-			label: __( 'Campaign', 'productboxes-mix-and-match-box-builder' ),
+			label: __( 'Box', 'productboxes-mix-and-match-box-builder' ),
 			render: ( c ) => (
-				<div className="mmbb-campaign-cell">
-					<CampaignThumbs campaign={ c } images={ images } />
-					<span>
-						<span className="mmbb-cell-title">{ c.title }</span>
-						<span className="mmbb-cell-meta">
-							{ typeSummary( c.config, formatMoney, decimals ) }
-						</span>
-					</span>
+				<div className="mmbb-app-box-cell">
+					<BoxThumbs
+						ids={
+							( c.config.products && c.config.products.ids ) || []
+						}
+						images={ images }
+						max={ 1 }
+					/>
+					<div>
+						<b className="mmbb-app-box-cell__name">{ c.title }</b>
+						<p className="mmbb-app-muted">
+							{ boxDetails( c.config ) }
+						</p>
+					</div>
 				</div>
 			),
 		},
 		{
 			key: 'status',
 			label: __( 'Status', 'productboxes-mix-and-match-box-builder' ),
-			render: ( c ) => {
-				const info = statusInfo( c.status );
-				return (
-					<Badge tone={ info.tone } dot>
-						{ info.label }
-					</Badge>
-				);
-			},
+			render: ( c ) => <StatusBadge status={ c.status } />,
 		},
 		{
-			key: 'boxes',
-			label: __( 'Boxes', 'productboxes-mix-and-match-box-builder' ),
+			key: 'sold',
+			label: __( 'Sold', 'productboxes-mix-and-match-box-builder' ),
 			numeric: true,
-			render: ( c ) => formatCount( c.stats.boxes_sold, locale ),
+			render: ( c ) => formatCount( sold( c ), locale ),
 		},
 		{
 			key: 'revenue',
 			label: __( 'Revenue', 'productboxes-mix-and-match-box-builder' ),
 			numeric: true,
-			render: ( c ) => formatMoney( c.stats.revenue ),
+			render: ( c ) => formatMoney( revenue( c ) ),
 		},
-	];
-
-	const picks = stats.data.top_products.map( ( p ) => ( {
-		label: p.name,
-		value: p.count,
-		meta: p.note || undefined,
-	} ) );
-
-	return (
-		<Shell active="dashboard" viewStore>
-			<div className="mmbb-dash__bar">
-				<PageHeader
-					title={ __(
-						'Dashboard',
-						'productboxes-mix-and-match-box-builder'
-					) }
-					subtitle={ sprintf(
-						/* translators: %d: Number of days. */
-						__(
-							'All campaigns · last %d days',
-							'productboxes-mix-and-match-box-builder'
-						),
-						parseInt( range, 10 )
-					) }
-				/>
-				<div className="mmbb-dash__controls">
-					<SegmentedControl
-						label={ __(
-							'Date range',
-							'productboxes-mix-and-match-box-builder'
-						) }
-						options={ RANGES.map( ( value ) => ( {
-							value,
-							label: rangeLabel( value ),
-						} ) ) }
-						value={ range }
-						onChange={ setRange }
-					/>
+		{
+			key: 'actions',
+			label: __( 'Actions', 'productboxes-mix-and-match-box-builder' ),
+			hideLabel: true,
+			render: ( c ) => (
+				<div className="mmbb-app-row-actions">
 					<Button
-						variant="primary"
-						icon="plus"
-						href={ urls.newCampaign }
+						__next40pxDefaultSize
+						variant="secondary"
+						href={ c.edit_url }
+						label={ sprintf(
+							/* translators: %s: Box name. */
+							__(
+								'Edit %s',
+								'productboxes-mix-and-match-box-builder'
+							),
+							c.title
+						) }
+						showTooltip={ false }
 					>
 						{ __(
-							'Create campaign',
+							'Edit',
 							'productboxes-mix-and-match-box-builder'
 						) }
 					</Button>
 				</div>
-			</div>
-			{ common }
-			<div
-				className={
-					'mmbb-dash__stack' + ( stats.loading ? ' is-loading' : '' )
-				}
-				aria-busy={ stats.loading }
-			>
-				{ showChecklist ? (
-					<Card>
-						<div className="mmbb-dash__intro">
-							<div className="mmbb-dash__intro-text">
-								<h2 className="mmbb-dash__intro-title">
-									{ remainingTitle( steps.remaining ) }
-								</h2>
-								<p>{ nextHint( setup.data.next ) }</p>
-								<ProgressBar
-									label={ __(
-										'Setup',
-										'productboxes-mix-and-match-box-builder'
-									) }
-									valueLabel={ sprintf(
-										/* translators: 1: Steps done, 2: Total steps. */
-										__(
-											'%1$d of %2$d done',
-											'productboxes-mix-and-match-box-builder'
-										),
-										steps.done,
-										steps.total
-									) }
-									value={ steps.done }
-									max={ steps.total }
-									tone="max"
-								/>
-								<Button
-									size="sm"
-									variant="ghost"
-									onClick={ dismiss }
-								>
-									{ __(
-										'Hide checklist',
-										'productboxes-mix-and-match-box-builder'
-									) }
-								</Button>
-							</div>
-							{ checklist( 'wide' ) }
-						</div>
-					</Card>
+			),
+		},
+	];
+
+	// ---- Most picked ----
+	const picks = ( ( stats.data && stats.data.top_products ) || [] ).slice(
+		0,
+		PICKS_SHOWN
+	);
+	const most = picks.reduce( ( max, p ) => Math.max( max, p.count ), 0 );
+
+	const createButton = (
+		<Button
+			__next40pxDefaultSize
+			variant="primary"
+			icon={ plus }
+			onClick={ () => setCreating( true ) }
+		>
+			{ __( 'Create box', 'productboxes-mix-and-match-box-builder' ) }
+		</Button>
+	);
+
+	const loadingRow = (
+		<span className="mmbb-app-loading">
+			<Spinner />
+			{ __( 'Loading boxes…', 'productboxes-mix-and-match-box-builder' ) }
+		</span>
+	);
+
+	return (
+		<Shell active="dashboard" viewStore>
+			<div className="mmbb-app-stack">
+				<PageHeader
+					title={ __(
+						'Home',
+						'productboxes-mix-and-match-box-builder'
+					) }
+					description={ sprintf(
+						/* translators: %d: Number of days. */
+						_n(
+							'How your boxes did in the last %d day.',
+							'How your boxes did in the last %d days.',
+							period,
+							'productboxes-mix-and-match-box-builder'
+						),
+						period
+					) }
+					actions={
+						<>
+							<ToggleGroupControl
+								__next40pxDefaultSize
+								__nextHasNoMarginBottom
+								className="mmbb-app-period"
+								label={ __(
+									'Period',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								hideLabelFromVision
+								isBlock={ false }
+								value={ range }
+								onChange={ ( value ) =>
+									value && setRange( value )
+								}
+							>
+								{ RANGES.map( ( value ) => (
+									<ToggleGroupControlOption
+										key={ value }
+										value={ value }
+										label={ sprintf(
+											/* translators: %d: Number of days. */
+											_n(
+												'%d day',
+												'%d days',
+												days( value ),
+												'productboxes-mix-and-match-box-builder'
+											),
+											days( value )
+										) }
+									/>
+								) ) }
+							</ToggleGroupControl>
+							{ createButton }
+						</>
+					}
+				/>
+
+				{ failed.length > 0 ? (
+					<Notice
+						status="error"
+						isDismissible={ false }
+						actions={ [
+							{
+								label: __(
+									'Retry',
+									'productboxes-mix-and-match-box-builder'
+								),
+								onClick: retry,
+							},
+						] }
+					>
+						{ errorMessage(
+							failed[ 0 ].error,
+							__(
+								'Home could not load.',
+								'productboxes-mix-and-match-box-builder'
+							)
+						) }
+					</Notice>
+				) : null }
+				{ actionError ? (
+					<Notice
+						status="warning"
+						onRemove={ () => setActionError( '' ) }
+					>
+						{ actionError }
+					</Notice>
 				) : null }
 
-				<div className="mmbb-dash__kpis">
-					<StatCard
+				{ showChecklist ? (
+					<SetupChecklist
+						setup={ setupData }
+						boxes={ items }
+						busy={ saving }
+						onCreate={ () => setCreating( true ) }
+						onTestDone={ testDone }
+						onDismiss={ dismiss }
+					/>
+				) : null }
+
+				<div
+					className={
+						stats.loading && kpis ? 'is-loading' : undefined
+					}
+					aria-busy={ stats.loading }
+				>
+					<StatGroup
 						label={ __(
-							'Box revenue',
+							'Key numbers',
 							'productboxes-mix-and-match-box-builder'
 						) }
-						value={ bigMoney( kpis.revenue.value ) }
-						delta={ delta( kpis.revenue ) }
-						trend={ kpis.revenue.series }
-					/>
-					<StatCard
-						label={ __(
-							'Boxes sold',
-							'productboxes-mix-and-match-box-builder'
-						) }
-						value={ formatCount( kpis.boxes.value, locale ) }
-						delta={ delta( kpis.boxes ) }
-						trend={ kpis.boxes.series }
-					/>
-					<StatCard
-						label={ __(
-							'Avg. box value',
-							'productboxes-mix-and-match-box-builder'
-						) }
-						value={ formatMoney( kpis.avg_box_value.value ) }
-						delta={ delta( kpis.avg_box_value ) }
-						trend={ kpis.avg_box_value.series }
-					/>
-					<StatCard
-						label={ __(
-							'Builder conversion',
-							'productboxes-mix-and-match-box-builder'
-						) }
-						value={ formatPercent( kpis.conversion.value, locale ) }
-						delta={ delta( kpis.conversion ) }
-						trend={ kpis.conversion.series }
-					/>
+					>
+						<StatCard
+							label={ __(
+								'Box revenue',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={
+								kpis
+									? formatMoney( kpis.revenue.value )
+									: pending
+							}
+							delta={ revenueChange.text }
+							tone={ revenueChange.tone }
+						/>
+						<StatCard
+							label={ __(
+								'Boxes sold',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={
+								kpis
+									? formatCount( kpis.boxes.value, locale )
+									: pending
+							}
+							delta={ boxesChange.text }
+							tone={ boxesChange.tone }
+						/>
+						<StatCard
+							label={ __(
+								'Average box value',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={
+								kpis
+									? formatMoney( kpis.avg_box_value.value )
+									: pending
+							}
+							note={
+								perBox && perBox.value > 0
+									? sprintf(
+											/* translators: %s: Average number of items in a box. */
+											__(
+												'%s items per box',
+												'productboxes-mix-and-match-box-builder'
+											),
+											new Intl.NumberFormat( locale, {
+												maximumFractionDigits: 1,
+											} ).format( perBox.value )
+									  )
+									: null
+							}
+						/>
+						<StatCard
+							label={ __(
+								'Builder conversion',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={
+								kpis
+									? formatPercent(
+											kpis.conversion.value,
+											locale
+									  )
+									: pending
+							}
+							note={
+								kpis
+									? [
+											sprintf(
+												/* translators: %s: Number of builder visits. */
+												_n(
+													'%s visit',
+													'%s visits',
+													visits,
+													'productboxes-mix-and-match-box-builder'
+												),
+												formatCount( visits, locale )
+											),
+											sprintf(
+												/* translators: %s: Number of box orders. */
+												_n(
+													'%s order',
+													'%s orders',
+													orders,
+													'productboxes-mix-and-match-box-builder'
+												),
+												formatCount( orders, locale )
+											),
+									  ].join( ', ' )
+									: null
+							}
+						/>
+					</StatGroup>
 				</div>
 
-				<div className="mmbb-dash__split">
-					<div className="mmbb-dash__main">
-						<Card>
-							<div className="mmbb-dash__card-head">
-								<div>
-									<h3 className="mmbb-dash__card-title">
-										{ __(
-											'Revenue from boxes',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									</h3>
-									<p className="mmbb-dash__card-sub">
-										{ __(
-											'Daily, this period vs previous',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									</p>
-								</div>
-								<Button
-									size="sm"
-									variant="ghost"
-									iconRight="arrowRight"
-									href={ urls.analytics }
-								>
-									{ __(
-										'Analytics',
-										'productboxes-mix-and-match-box-builder'
-									) }
-								</Button>
-							</div>
-							<LineChart
-								labels={ labels }
-								height={ 250 }
-								ariaLabel={ __(
-									'Revenue from boxes, daily',
+				<div className="mmbb-app-split">
+					<section
+						className="mmbb-app-card mmbb-app-split__main"
+						aria-labelledby="mmbb-home-boxes"
+					>
+						<div className="mmbb-app-card__head">
+							<h2 id="mmbb-home-boxes">
+								{ __(
+									'Your boxes',
 									'productboxes-mix-and-match-box-builder'
 								) }
-								series={ [
-									{
-										name: __(
-											'This period',
-											'productboxes-mix-and-match-box-builder'
-										),
-										color: 'chart-1',
-										area: true,
-										label: true,
-										data: series.map( ( d ) =>
-											toMajor( d.current, decimals )
-										),
-									},
-									{
-										name: __(
-											'Previous period',
-											'productboxes-mix-and-match-box-builder'
-										),
-										color: 'chart-muted',
-										data: series.map( ( d ) =>
-											toMajor( d.previous, decimals )
-										),
-									},
-								] }
-								formatValue={ ( v ) =>
-									formatMoney(
-										Math.round(
-											v * Math.pow( 10, decimals )
-										)
-									)
-								}
-								formatTick={ ( v ) =>
-									symbolAfter
-										? formatCompact( v ) + symbol
-										: formatCompact( v, symbol )
-								}
-							/>
-						</Card>
-
-						<Card padding="none">
-							<div className="mmbb-dash__table-head">
-								<h3 className="mmbb-dash__card-title">
-									{ __(
-										'Top campaigns',
-										'productboxes-mix-and-match-box-builder'
-									) }
-								</h3>
-								<Button
-									size="sm"
-									variant="ghost"
-									iconRight="arrowRight"
-									href={ urls.campaigns }
-								>
-									{ __(
-										'All campaigns',
-										'productboxes-mix-and-match-box-builder'
-									) }
-								</Button>
-							</div>
+							</h2>
+							<Button variant="tertiary" href={ urls.campaigns }>
+								{ __(
+									'View all',
+									'productboxes-mix-and-match-box-builder'
+								) }
+							</Button>
+						</div>
+						{ boxes.data && items.length === 0 ? (
+							<EmptyState
+								title={ __(
+									'Create your first box',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								actions={ createButton }
+							>
+								{ __(
+									'Pick the products, set the discount and put it on a page.',
+									'productboxes-mix-and-match-box-builder'
+								) }
+							</EmptyState>
+						) : (
 							<DataTable
-								columns={ topColumns }
-								rows={ topRows }
-								empty={ __(
-									'No campaign is live right now.',
+								caption={ __(
+									'Your boxes',
 									'productboxes-mix-and-match-box-builder'
 								) }
+								columns={ columns }
+								rows={ items }
+								emptyMessage={
+									boxes.error
+										? __(
+												'Boxes could not load.',
+												'productboxes-mix-and-match-box-builder'
+										  )
+										: loadingRow
+								}
 							/>
-						</Card>
-					</div>
+						) }
+					</section>
 
-					<div className="mmbb-dash__side">
-						<Card>
-							{ liveCampaign ? (
-								<>
-									<div className="mmbb-dash__live-head">
-										<Badge tone="success" dot>
-											{ __(
-												'Live now',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										</Badge>
-										{ end ? (
-											<Countdown
-												endsAt={ end }
-												tone="soft"
-												label={ __(
-													'Ends in',
-													'productboxes-mix-and-match-box-builder'
-												) }
-											/>
-										) : null }
-									</div>
-									<p className="mmbb-dash__live-title">
-										{ liveCampaign.title }
-									</p>
-									<p className="mmbb-muted">
-										{ [
-											typeSummary(
-												liveCampaign.config,
-												formatMoney,
-												decimals
-											),
-											tiers,
-										]
-											.filter( Boolean )
-											.join( ' · ' ) }
-									</p>
-									<div className="mmbb-dash__live-stats">
-										<div>
-											<span>
-												{ __(
-													'Boxes today',
-													'productboxes-mix-and-match-box-builder'
-												) }
-											</span>
-											<b>
-												{ formatCount(
-													liveStats.boxes_today,
-													locale
-												) }
-											</b>
-										</div>
-										<div>
-											<span>
-												{ __(
-													'Conversion',
-													'productboxes-mix-and-match-box-builder'
-												) }
-											</span>
-											<b>
-												{ formatPercent(
-													liveStats.conversion,
-													locale
-												) }
-											</b>
-										</div>
-									</div>
-									<div className="mmbb-dash__live-actions">
-										<Button
-											variant="primary"
-											icon="edit"
-											href={ liveCampaign.edit_url }
-										>
-											{ __(
-												'Edit',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										</Button>
-										{ liveCampaign.placement.page_url ? (
-											<Button
-												icon="eye"
-												href={
-													liveCampaign.placement
-														.page_url
-												}
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												{ __(
-													'View on store',
-													'productboxes-mix-and-match-box-builder'
-												) }
-											</Button>
-										) : null }
-									</div>
-								</>
-							) : (
-								<>
-									<p className="mmbb-dash__live-title">
-										{ __(
-											'Nothing is live right now',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									</p>
-									<p className="mmbb-muted">
-										{ __(
-											'Go live with a campaign to see its countdown and today’s boxes here.',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									</p>
-									<div className="mmbb-dash__live-actions">
-										<Button href={ urls.campaigns }>
-											{ __(
-												'View campaigns',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										</Button>
-									</div>
-								</>
-							) }
-						</Card>
-						<Card
-							title={ __(
-								'Most-picked products',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							subtitle={ __(
-								'Times added to a box',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						>
-							{ picks.length > 0 ? (
-								<BarList items={ picks } />
-							) : (
-								<p className="mmbb-muted">
+					<section
+						className="mmbb-app-card mmbb-app-split__side"
+						aria-labelledby="mmbb-home-picked"
+					>
+						<div className="mmbb-app-card__head">
+							<h2 id="mmbb-home-picked">
+								{ __(
+									'Most picked',
+									'productboxes-mix-and-match-box-builder'
+								) }
+							</h2>
+							<span className="mmbb-app-muted">
+								{ __(
+									'times added',
+									'productboxes-mix-and-match-box-builder'
+								) }
+							</span>
+						</div>
+						<div className="mmbb-app-card__body">
+							{ ! stats.data && ! stats.error ? (
+								<span className="mmbb-app-loading">
+									<Spinner />
+								</span>
+							) : null }
+							{ stats.data && picks.length === 0 ? (
+								<p className="mmbb-app-muted">
 									{ __(
 										'Products show up here once shoppers start building boxes.',
 										'productboxes-mix-and-match-box-builder'
 									) }
 								</p>
-							) }
-						</Card>
-					</div>
+							) : null }
+							{ picks.length > 0 ? (
+								<ol className="mmbb-app-bars">
+									{ picks.map( ( p, index ) => (
+										<li key={ p.id || p.name + index }>
+											<div className="mmbb-app-bars__row">
+												<span>{ p.name }</span>
+												<span>
+													{ formatCount(
+														p.count,
+														locale
+													) }
+												</span>
+											</div>
+											<div
+												className="mmbb-app-bars__track"
+												aria-hidden="true"
+											>
+												<i
+													style={ {
+														width:
+															( most
+																? Math.round(
+																		( 100 *
+																			p.count ) /
+																			most
+																  )
+																: 0 ) + '%',
+													} }
+												/>
+											</div>
+										</li>
+									) ) }
+								</ol>
+							) : null }
+						</div>
+					</section>
 				</div>
 			</div>
+
+			{ creating ? (
+				<CreateBoxModal onClose={ () => setCreating( false ) } />
+			) : null }
 		</Shell>
 	);
 }

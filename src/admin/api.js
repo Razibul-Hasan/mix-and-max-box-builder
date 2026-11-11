@@ -26,11 +26,12 @@ export function getCampaigns( params ) {
 	} );
 }
 
-export function createCampaign( template, title ) {
+// `type` (tiered / fixed / bundle) starts a blank box from that type's rules.
+export function createCampaign( template, title, type ) {
 	return apiFetch( {
 		path: BASE + '/campaigns',
 		method: 'POST',
-		data: clean( { template, title } ),
+		data: clean( { template, title, type } ),
 	} );
 }
 
@@ -70,6 +71,15 @@ export function markTestDone( done = true ) {
 		path: BASE + '/setup',
 		method: 'POST',
 		data: { test_done: done },
+	} );
+}
+
+// Hide (or show) the setup checklist for the current user.
+export function dismissChecklist( dismissed = true ) {
+	return apiFetch( {
+		path: BASE + '/setup',
+		method: 'POST',
+		data: { dismissed },
 	} );
 }
 

@@ -13,6 +13,10 @@
 			"rules": { "selector-class-pattern": "^(mmbb-[a-z0-9_-]+|is-[a-z0-9-]+|has-[a-z0-9-]+|folded|auto-fold)$" }
 		},
 		{
+			"files": [ "src/admin/components/screens.css" ],
+			"rules": { "selector-class-pattern": "^(mmbb-[a-z0-9_-]+|is-[a-z0-9-]+|has-[a-z0-9-]+|components-[a-z0-9_-]+)$" }
+		},
+		{
 			"files": [ "src/admin/admin.css", "src/admin/editor/editor.css", "src/admin/settings/settings.css", "src/storefront/storefront.css" ],
 			"rules": { "selector-class-pattern": null }
 		}

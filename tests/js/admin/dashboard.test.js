@@ -16,6 +16,11 @@ jest.mock( '../../../src/admin/api', () => ( {
 	getStats: jest.fn(),
 	getSetup: jest.fn(),
 	markTestDone: jest.fn(),
+	dismissChecklist: jest.fn(),
+} ) );
+
+jest.mock( '../../../src/admin/navigate', () => ( {
+	navigate: jest.fn(),
 } ) );
 
 const kpi = ( value, extra = {} ) => ( {
@@ -26,39 +31,32 @@ const kpi = ( value, extra = {} ) => ( {
 	...extra,
 } );
 
-const emptyStats = {
+const stats = {
 	range: '30d',
 	kpis: {
-		revenue: kpi( 0 ),
-		boxes: kpi( 0 ),
-		avg_box_value: kpi( 0 ),
-		conversion: kpi( 0 ),
+		revenue: kpi( 18445 ),
+		boxes: kpi( 1 ),
+		avg_box_value: kpi( 18445 ),
+		items_per_box: kpi( 6 ),
+		conversion: kpi( 2.7 ),
 	},
 	revenue_series: [],
-	top_campaigns: [],
-	live_campaign: null,
-	top_products: [],
-};
-
-const busyStats = {
-	range: '30d',
-	kpis: {
-		revenue: kpi( 1248000, { previous: 1054000, delta: 18.4 } ),
-		boxes: kpi( 412, { previous: 378, delta: 9.1 } ),
-		avg_box_value: kpi( 3029, { previous: 3100, delta: -2.3 } ),
-		conversion: kpi( 7.8, { previous: 6.6, delta: 1.2 } ),
-	},
-	revenue_series: [
-		{ date: '2026-10-18', current: 78000, previous: 47000 },
-		{ date: '2026-10-19', current: 86000, previous: 48000 },
+	top_campaigns: [
+		{ id: 12, name: 'Holiday treat box', boxes: 1, revenue: 18445 },
 	],
-	top_campaigns: [],
-	live_campaign: { id: 12, boxes_today: 18, conversion: 9.2 },
-	top_products: [ { name: 'Brown Butter Chip', count: 486 } ],
+	live_campaign: null,
+	top_products: [
+		{ id: 1, name: 'Polo', count: 25 },
+		{ id: 2, name: 'Belt', count: 23 },
+	],
+	funnel: [
+		{ step: 'view', count: 37 },
+		{ step: 'started', count: 9 },
+		{ step: 'purchased', count: 1 },
+	],
 };
 
-const step = ( id, done ) => ( { id, done } );
-const setupAt = ( doneIds, next ) => ( {
+const setupAt = ( doneIds, extra = {} ) => ( {
 	steps: [
 		'woocommerce',
 		'campaign',
@@ -66,15 +64,17 @@ const setupAt = ( doneIds, next ) => ( {
 		'placed',
 		'test_order',
 		'live',
-	].map( ( id ) => step( id, doneIds.includes( id ) ) ),
-	next,
-	complete: next === null,
+	].map( ( id ) => ( { id, done: doneIds.includes( id ) } ) ),
+	next: null,
+	complete: false,
+	dismissed: false,
+	...extra,
 } );
 
-const holiday = {
-	id: 12,
-	title: 'Holiday Treat Box',
-	status: 'active',
+const box = ( id, title, status, extra = {} ) => ( {
+	id,
+	title,
+	status,
 	config: {
 		type: 'tiered',
 		box: { capacity: 12 },
@@ -85,22 +85,51 @@ const holiday = {
 		],
 		sizes: [],
 		bundle: { qty: 3, price: 0 },
-		products: { source: 'manual', ids: [], term_ids: [] },
-		schedule: { start: null, end: '2099-12-24T00:00:00Z' },
+		products: { source: 'manual', ids: [ 1, 2, 3, 4, 5 ], term_ids: [] },
+		schedule: {},
 	},
 	placement: {
-		page_url: 'http://shop.test/holiday-box/',
-		method: 'block',
-		shortcode: '[mmbb_box id="12"]',
+		page_id: 0,
+		page_title: '',
+		page_url: '',
+		method: 'none',
+		shortcode: '[mmbb_box id="' + id + '"]',
 	},
-	stats: { boxes_sold: 214, revenue: 648050, conversion: 9.2 },
+	stats: { boxes_sold: 0, revenue: 0, conversion: 0 },
 	edit_url:
-		'http://shop.test/wp-admin/admin.php?page=mmbb-campaigns&action=edit&id=12',
-};
+		'http://shop.test/wp-admin/admin.php?page=mmbb-campaigns&action=edit&id=' +
+		id,
+	...extra,
+} );
+
+const boxes = [
+	box( 12, 'Holiday treat box', 'active' ),
+	box( 7, 'Tee trio', 'draft', {
+		config: {
+			type: 'bundle',
+			box: { capacity: 3 },
+			tiers: [],
+			sizes: [],
+			bundle: { qty: 3, price: 45 },
+			products: { source: 'manual', ids: [], term_ids: [] },
+			schedule: {},
+		},
+	} ),
+];
+
+// jsdom has no layout. ToggleGroupControl watches its size; the stub never fires.
+beforeAll( () => {
+	window.ResizeObserver = class {
+		observe() {}
+		unobserve() {}
+		disconnect() {}
+	};
+} );
 
 beforeEach( () => {
 	jest.clearAllMocks();
 	window.localStorage.clear();
+	window.scrollTo = jest.fn();
 	window.mmbbAdmin = {
 		page: 'dashboard',
 		urls: {
@@ -126,110 +155,182 @@ beforeEach( () => {
 		locale: 'en-US',
 	};
 	api.getProducts.mockResolvedValue( [] );
+	api.getStats.mockResolvedValue( stats );
+	api.getSetup.mockResolvedValue(
+		setupAt( [ 'woocommerce', 'campaign', 'products' ] )
+	);
 	api.getCampaigns.mockResolvedValue( {
-		items: [ holiday ],
-		total: 1,
+		items: boxes,
+		total: 2,
 		pages: 1,
-		counts: { all: 1 },
+		counts: { all: 2 },
 	} );
+	api.dismissChecklist.mockResolvedValue(
+		setupAt( [], { dismissed: true } )
+	);
+	api.markTestDone.mockResolvedValue( setupAt( [] ) );
 } );
 
-describe( 'Dashboard', () => {
-	it( 'shows the first-run state until a box has sold', async () => {
-		api.getStats.mockResolvedValue( emptyStats );
-		api.getSetup.mockResolvedValue(
-			setupAt( [ 'woocommerce', 'campaign' ], 'products' )
-		);
-		render( <App page="dashboard" /> );
+const loaded = async () => {
+	render( <App page="dashboard" /> );
+	await screen.findByText( 'Average box value' );
+	await screen.findByText( 'Tee trio' );
+};
 
-		await screen.findByText( 'Welcome to ProductBoxes' );
-		expect( screen.getByText( 'Launch your first box' ) ).toBeTruthy();
-		expect( screen.getByText( 'How a box campaign works' ) ).toBeTruthy();
-		expect( screen.getByText( '2 of 6 done' ) ).toBeTruthy();
-
-		// Only the next step carries its action inline.
-		const next = screen
-			.getByText( 'Add products to the box' )
-			.closest( 'li' );
-		expect( next.getAttribute( 'aria-current' ) ).toBe( 'step' );
+describe( 'Home', () => {
+	it( 'shows the key numbers with their change and notes', async () => {
+		await loaded();
 		expect(
-			within( next )
-				.getByRole( 'link', { name: 'Add products' } )
+			screen.getByRole( 'heading', { level: 1, name: 'Home' } )
+		).toBeTruthy();
+		expect(
+			screen.getByText( 'How your boxes did in the last 30 days.' )
+		).toBeTruthy();
+		const numbers = screen.getByRole( 'region', { name: 'Key numbers' } );
+		expect( within( numbers ).getAllByText( '$184.45' ) ).toHaveLength( 2 );
+		expect(
+			within( numbers ).getByText( '+$184.45 vs previous 30 days' )
+		).toBeTruthy();
+		expect(
+			within( numbers ).getByText( '+1 vs previous 30 days' )
+		).toBeTruthy();
+		expect( within( numbers ).getByText( '6 items per box' ) ).toBeTruthy();
+		expect( within( numbers ).getByText( '2.7%' ) ).toBeTruthy();
+		expect(
+			within( numbers ).getByText( '37 visits, 1 order' )
+		).toBeTruthy();
+	} );
+
+	it( 'lists your boxes with this period’s numbers and an Edit link', async () => {
+		await loaded();
+		const table = screen.getByRole( 'table', { name: 'Your boxes' } );
+		const holiday = within( table )
+			.getByText( 'Holiday treat box' )
+			.closest( 'tr' );
+		expect(
+			within( holiday ).getByText( 'Up to 12 items · 10 / 15 / 25% off' )
+		).toBeTruthy();
+		expect( within( holiday ).getByText( 'Live' ) ).toBeTruthy();
+		expect( within( holiday ).getByText( '$184.45' ) ).toBeTruthy();
+		expect(
+			within( holiday )
+				.getByRole( 'link', { name: 'Edit Holiday treat box' } )
 				.getAttribute( 'href' )
-		).toContain( 'action=edit&id=12&step=products' );
-		expect( screen.queryByText( 'Box revenue' ) ).toBeNull();
+		).toContain( 'action=edit&id=12' );
+
+		const tee = within( table ).getByText( 'Tee trio' ).closest( 'tr' );
+		expect(
+			within( tee ).getByText( '3 items for one price' )
+		).toBeTruthy();
+		expect( within( tee ).getByText( 'Draft' ) ).toBeTruthy();
+		expect( within( tee ).getByText( '$0.00' ) ).toBeTruthy();
 	} );
 
-	it( 'shows KPIs, the chart, the live campaign and top products once boxes sell', async () => {
-		api.getStats.mockResolvedValue( busyStats );
-		api.getSetup.mockResolvedValue(
-			setupAt( [ 'woocommerce', 'campaign', 'products' ], 'placed' )
+	it( 'draws most picked as bars scaled to the top product', async () => {
+		await loaded();
+		const card = screen
+			.getByRole( 'heading', { name: 'Most picked' } )
+			.closest( 'section' );
+		expect( within( card ).getByText( 'Polo' ) ).toBeTruthy();
+		const bars = card.querySelectorAll( '.mmbb-app-bars__track i' );
+		expect( bars[ 0 ].style.width ).toBe( '100%' );
+		expect( bars[ 1 ].style.width ).toBe( '92%' );
+	} );
+
+	it( 'shows four setup steps with the next one highlighted and its action inline', async () => {
+		await loaded();
+		const card = screen
+			.getByRole( 'heading', { name: 'Finish setting up' } )
+			.closest( 'section' );
+		expect( within( card ).getByText( '2 of 4 done.' ) ).toBeTruthy();
+		const steps = within( card ).getAllByRole( 'listitem' );
+		expect( steps ).toHaveLength( 4 );
+		expect(
+			within( steps[ 0 ] ).getByText( 'Holiday treat box' )
+		).toBeTruthy();
+		expect(
+			within( steps[ 1 ] ).getByText( '5 products picked' )
+		).toBeTruthy();
+
+		const next = steps[ 2 ];
+		expect( next.getAttribute( 'aria-current' ) ).toBe( 'step' );
+		const add = within( next ).getByRole( 'link', {
+			name: 'Add to a page',
+		} );
+		expect( add.getAttribute( 'href' ) ).toContain(
+			'action=edit&id=12&step=publish'
 		);
-		render( <App page="dashboard" /> );
+		expect( add.className ).toContain( 'is-primary' );
 
-		await screen.findByText( 'Box revenue' );
-		expect( screen.getByText( '$12,480' ) ).toBeTruthy();
-		expect( screen.getByText( '412' ) ).toBeTruthy();
-		expect( screen.getByText( '$30.29' ) ).toBeTruthy();
-		expect( screen.getByText( '7.8%' ) ).toBeTruthy();
-		expect(
-			screen.getByText( '3 steps to your first box sale' )
-		).toBeTruthy();
-		expect(
-			screen.getByRole( 'button', { name: 'Copy shortcode' } )
-		).toBeTruthy();
-
-		expect( screen.getByText( 'Live now' ) ).toBeTruthy();
-		expect( screen.getByRole( 'timer' ) ).toBeTruthy();
-		expect(
-			screen.getByText( /Tiered mix · up to 12 · 10 \/ 15 \/ 25% off/ )
-		).toBeTruthy();
-		expect( screen.getByText( 'Brown Butter Chip' ) ).toBeTruthy();
-		expect(
-			screen.getByRole( 'img', { name: 'Revenue from boxes, daily' } )
-		).toBeTruthy();
+		fireEvent.click(
+			within( steps[ 3 ] ).getByRole( 'button', { name: 'Mark as done' } )
+		);
+		await waitFor( () => expect( api.markTestDone ).toHaveBeenCalled() );
 	} );
 
-	it( 'rescopes every number when the date range changes', async () => {
-		api.getStats.mockResolvedValue( busyStats );
-		api.getSetup.mockResolvedValue( setupAt( [], 'woocommerce' ) );
-		render( <App page="dashboard" /> );
-		await screen.findByText( 'Box revenue' );
-		expect( api.getStats ).toHaveBeenLastCalledWith( '30d' );
+	it( 'hides the checklist for this user when dismissed', async () => {
+		await loaded();
+		fireEvent.click(
+			screen.getByRole( 'button', { name: 'Hide the setup checklist' } )
+		);
+		expect( screen.queryByText( 'Finish setting up' ) ).toBeNull();
+		expect( api.dismissChecklist ).toHaveBeenCalledWith( true );
+	} );
 
+	it( 'does not show the checklist once dismissed or finished', async () => {
+		api.getSetup.mockResolvedValue( setupAt( [], { dismissed: true } ) );
+		await loaded();
+		expect( screen.queryByText( 'Finish setting up' ) ).toBeNull();
+	} );
+
+	it( 'carries a 1.0 dismissal from localStorage over to the account', async () => {
+		window.localStorage.setItem( 'mmbb:checklist-dismissed', '1' );
+		await loaded();
+		await waitFor( () =>
+			expect( api.dismissChecklist ).toHaveBeenCalledWith( true )
+		);
+		expect( screen.queryByText( 'Finish setting up' ) ).toBeNull();
+	} );
+
+	it( 'rescopes the numbers when the period changes', async () => {
+		await loaded();
+		expect( api.getStats ).toHaveBeenLastCalledWith( '30d' );
 		fireEvent.click( screen.getByRole( 'radio', { name: '7 days' } ) );
 		await waitFor( () =>
 			expect( api.getStats ).toHaveBeenLastCalledWith( '7d' )
 		);
-		expect( screen.getByText( /last 7 days/ ) ).toBeTruthy();
-	} );
-
-	it( 'hides the checklist when dismissed and remembers it', async () => {
-		api.getStats.mockResolvedValue( busyStats );
-		api.getSetup.mockResolvedValue(
-			setupAt( [ 'woocommerce' ], 'campaign' )
-		);
-		render( <App page="dashboard" /> );
-		await screen.findByText( 'Box revenue' );
-		fireEvent.click(
-			screen.getByRole( 'button', { name: 'Hide checklist' } )
-		);
-		expect( screen.queryByText( 'Run a test order' ) ).toBeNull();
 		expect(
-			window.localStorage.getItem( 'mmbb:checklist-dismissed' )
-		).toBe( '1' );
+			screen.getByText( 'How your boxes did in the last 7 days.' )
+		).toBeTruthy();
 	} );
 
-	it( 'shows a critical notice with Retry when a request fails', async () => {
+	it( 'shows an error notice with Retry when a request fails', async () => {
 		api.getStats.mockRejectedValueOnce( new Error( 'Stats are down' ) );
-		api.getSetup.mockResolvedValue( setupAt( [], 'woocommerce' ) );
 		render( <App page="dashboard" /> );
-		const alert = await screen.findByRole( 'alert' );
-		expect( within( alert ).getByText( 'Stats are down' ) ).toBeTruthy();
-		api.getStats.mockResolvedValue( busyStats );
+		await screen.findByText( 'Stats are down', {
+			selector: '.components-notice__content',
+		} );
+		fireEvent.click( screen.getByRole( 'button', { name: 'Retry' } ) );
+		await screen.findByText( '37 visits, 1 order' );
+		expect( document.querySelector( '.components-notice' ) ).toBeNull();
+	} );
+
+	it( 'shows the empty state and opens Create a box with no boxes yet', async () => {
+		api.getCampaigns.mockResolvedValue( {
+			items: [],
+			total: 0,
+			pages: 0,
+			counts: { all: 0 },
+		} );
+		api.getSetup.mockResolvedValue( setupAt( [ 'woocommerce' ] ) );
+		render( <App page="dashboard" /> );
+		await screen.findByText( 'Create your first box' );
+		const steps = screen.getAllByRole( 'listitem' );
 		fireEvent.click(
-			within( alert ).getByRole( 'button', { name: 'Retry' } )
+			within( steps[ 0 ] ).getByRole( 'button', { name: 'Create a box' } )
 		);
-		await screen.findByText( 'Box revenue' );
+		expect(
+			await screen.findByRole( 'dialog', { name: 'Create a box' } )
+		).toBeTruthy();
 	} );
 } );

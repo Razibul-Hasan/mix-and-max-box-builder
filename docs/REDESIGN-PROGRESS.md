@@ -7,7 +7,7 @@ Updated by the agent at the end of every part.
 | 0 | Audit and freeze | done | Redesign Part 0: Audit and freeze |
 | 1 | Baseline and safety net | done | Redesign Part 1: Baseline and safety net |
 | 2 | Admin foundation | done | Redesign Part 2: Admin foundation |
-| 3 | Home, Boxes, Create a box | not started | |
+| 3 | Home, Boxes, Create a box | done | Redesign Part 3: Home, Boxes list and Create a box |
 | 4 | Editor shell and iframe preview | not started | |
 | 5 | Products and Discounts steps | not started | |
 | 6 | Design settings and Design step | not started | |
@@ -92,6 +92,74 @@ Updated by the agent at the end of every part.
 **Open issues:**
 - Open issue 8 is answered by the plan's rule (labels now Home and Boxes). Say so if you'd rather keep Dashboard and Campaigns.
 - The 7 stale integration tests from Part 1 still fail. They are untouched here.
+
+### Part 3 — Home, Boxes list and Create a box (2026-11-11)
+**Done:**
+- **Home** (`src/admin/dashboard/Dashboard.js`, rewritten in place) on `@wordpress/components`:
+  - Page header "Home" with a 7 / 30 / 90 days `ToggleGroupControl` (from `components/wp.js`) and Create box.
+  - The setup checklist card.
+  - Four stat cards: revenue and boxes sold with "+$x vs previous 30 days", average box value with "6 items per box", conversion with "37 visits, 1 order".
+  - "Your boxes": thumbnail, name, detail line, status, this period's sold and revenue, Edit.
+  - "Most picked" bars scaled to the top product.
+- **Setup checklist** (`SetupChecklist.js`, rewritten):
+  - Four steps: create a box, add products, put it on a page, place a test order. Done steps show what was done ("Holiday treat box", "5 products picked").
+  - The next step is highlighted, and its action is the primary button: Create a box, Add products → editor `step=products`, Add to a page → editor `step=publish`, Open the box plus Mark as done.
+  - Dismissing it stores the new user meta `mmbb_checklist_dismissed` through `POST /setup { dismissed }`. A 1.0 dismissal in `localStorage` (`mmbb:checklist-dismissed`) is carried over to user meta the first time Home loads.
+- **Boxes** (`src/admin/campaigns/Campaigns.js`, rewritten):
+  - Tabs All / Live / Drafts / Ended with counts, and a 300 ms debounced `SearchControl`.
+  - `DataTable` columns: checkbox, Box (thumbnail stack + "Bigger box, bigger discount · up to 12"), Status, Shown on (page path, or "Add to a page" → editor `step=publish`), Sold, Revenue, Edit, and a `DropdownMenu` with Duplicate, Pause or Resume, and Move to trash.
+  - A bulk bar on selection: Duplicate, Pause, Resume, Move to trash, Clear selection. Results show as snackbars.
+  - Move to trash asks first (`TrashDialog.js`) and uses the existing bulk `delete` action, which trashes the box and its container product.
+- **Create a box** (`campaigns/CreateBoxModal.js`):
+  - A WordPress `Modal` with a Box name `TextControl`, three radio choice cards (tiered / fixed / bundle) and the info `Notice`.
+  - Cancel and "Create and pick products". Creating POSTs `{ template: 'blank', title, type }` and opens the editor at `step=products`.
+  - It opens from Home, the Boxes header and the empty states, and on load from `action=new` (the menu's existing `newCampaign` link).
+- **States:** `Spinner` placeholders sit inside the real cards and table rows, so the layout doesn't jump. Reloads dim the table. Failures show an error `Notice` with Retry. Empty states follow the design.
+- **Server:**
+  - `POST /campaigns` takes an optional `type` (enum `''` / tiered / fixed / bundle). With the blank template it starts from `Templates::starter( $type )`: tiered 4 = 10%, 6 = 15%, up to 12; fixed one 6-pack at 10%; bundle 3 items, price to set.
+  - `POST /setup`: `test_done` is no longer required; it takes `test_done` and/or `dismissed`, and sending neither is a 400 as before.
+  - `GET /setup` adds `dismissed` for the current user.
+  - `GET /stats` adds `funnel`, which the report already computed.
+  - Uninstall with "Delete all plugin data" removes `mmbb_checklist_dismissed` from every user.
+- New shared pieces: `components/BoxThumbs.js`, `components/screens.css` (bundled into `build/admin.css`; modal rules scoped to `.mmbb-app-modal` because WordPress renders modals outside `.mmbb-app`), format helpers `boxTypeTitle`, `boxSummary`, `boxDetails`, `shownOnPath`, and `src/admin/navigate.js` (one place that calls `location.assign`, so Jest can stand in for it).
+- Tests:
+  - `tests/js/admin/dashboard.test.js` (10) and `campaigns.test.js` (13) are rewritten for the new screens.
+  - New `box-format.test.js` (4).
+  - PHP: `RestCampaignsTest::test_create_with_type`, `RestStoreTest::test_setup_dismissed_is_per_user` (and the old "requires test_done" test, now "test_done or dismissed"), a funnel assertion in `test_stats_7d_has_seven_days`, and the user meta in `LifecycleTest`'s opt-in uninstall.
+
+**Decisions:**
+- **Rewritten in place, not added beside.** Home and Boxes keep their module names and paths (`dashboard/Dashboard.js`, `dashboard/SetupChecklist.js`, `campaigns/Campaigns.js`), so imports and `App.js` routing are unchanged. The only change in `App.js` is that `Campaigns`' prop is now `openCreate`.
+- **Old modules left in place, now unused by these screens:** `TemplatePicker.js`, `DeleteDialog.js`, `RowMenu.js`, `CampaignThumbs.js` (its `useProductImages` hook is still used). Nothing else imports them. Deleting them can wait for Part 6 (TemplatePicker) or Part 11.
+- **Four checklist steps, six in the payload.** `GET /setup` still reports `woocommerce` and `live`. Home draws the four from the design. A missing WooCommerce already gets the Plugins-screen notice from `Requirements`. The design's "About two minutes left" was dropped: there is nothing to base an honest estimate on.
+- **Tabs:** scheduled and paused boxes have no tab of their own and show under All, as in the design. Stored statuses are unchanged. "Live" is the existing `live` filter (active + ending soon).
+- **Create a box vs presets (open issue 3).** The modal creates from `type` with the blank template. The five presets still exist: the `mmbb_templates` filter and the `template` arg keep their meaning, and the type applies only with `blank`. No screen offers the presets right now. Part 6 decides whether they come back.
+- **Bundle example** in the modal reads "3 for one price" rather than an amount: no price exists before the box does.
+- **Home "Your boxes" uses this period's numbers** (from `stats.top_campaigns`), matching "How your boxes did in the last 30 days". Boxes shows all-time numbers, as 1.0 did.
+- The Boxes list loses 1.0's type filter, sort select and Copy shortcode menu item, which the design doesn't draw. The REST args stay. Copy shortcode belongs to Publish (Part 9).
+- `screens.css` gets its own stylelint override that also allows `components-*` classes, because it adjusts spacing inside WordPress components. `app.css` keeps its stricter pattern.
+- "Untitled campaign" (the server's default name) is unchanged. It is shared with the editor and container products; relabel it with the editor in Part 4.
+
+**Frozen identifiers touched:** none renamed. One **new** identifier: user meta `mmbb_checklist_dismissed`, added to the Frozen identifiers table and `docs/AUDIT.md`. The localStorage key `mmbb:checklist-dismissed` is still read, for the one-time carry-over.
+**Data changes and migration steps:** No stored data changes, and no upgrade step is needed. The one-time carry-over of the localStorage dismissal runs in the browser and only adds user meta. No query was added beyond `get_user_meta` / `update_user_meta` / `delete_user_meta`, plus one `delete_metadata()` on opt-in uninstall.
+**Checks run:**
+- build ✅ (`build/` 646 KB; `admin.js` 191,486 bytes, −1,178; `admin.css` 39,463 bytes)
+- `admin.asset.php` unchanged, still with `wp-components` and no React copy ✅
+- lint:js ✅ · lint:css ✅ · PHPCS ✅ (0/0)
+- test:js ✅ (20 suites, 261 tests) · test:unit ✅ (109)
+- integration, legacy orders: 192 tests, the same 7 stale failures as Parts 1–2 and no new ones · integration, HPOS: the same
+- legacy fixtures ✅ (15 tests)
+- Plugin Check in place ✅ (no errors, same as the baseline) · plugin-review PHPCS ruleset on the packaged zip ✅ (zip 560,778 bytes)
+- `wp i18n make-pot` with the frozen domain ✅. One new duplicate-translator-comment warning ("%d selected") was fixed by reusing the existing comment; the three from before this part remain.
+- Keyboard and screen reader, in Jest: Escape closes both modals; Cancel closes Create a box; the radio cards are native radios in a fieldset with a legend; icon buttons have labels ("Hide the setup checklist", "More actions for …"); row checkboxes are named "Select …"; and the external page links say "(opens in a new tab)".
+
+**Skipped checks (and why):**
+- No browser was driven, so the screens were not compared on screen with `design/canvas/Main`, `Boxes` and `NewBox`, and focus moving into the modal was not observed. WordPress's `Modal` traps focus and is asked to focus the name field (`focusOnMount="firstContentElement"`). jsdom has no layout, so the tabbable lookup finds nothing there and that assertion can't run in Jest.
+- "With the Part 1 fixtures loaded, all three screens show real data" was checked through the REST routes the screens call, in the integration suite, and through the screens in Jest with fixture-shaped data. It was not checked by loading wp-admin on the Local site, which holds the owner's data.
+- wp-env needs Docker, as in Part 1.
+
+**Open issues:**
+- Open issue 3 (presets) is now visible: no screen offers the five presets. Say whether Part 6 should bring them back as a "Start from" choice, or retire them.
+- The 7 stale integration tests from Part 1 still fail (`PublisherTest`, `RestCampaignsTest::test_publish` and `test_preview`). Part 4 changes publish and preview, so fix them before or in Part 4.
 
 <!-- Copy for each part:
 

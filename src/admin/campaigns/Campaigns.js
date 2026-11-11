@@ -1,53 +1,48 @@
+import {
+	Button,
+	DropdownMenu,
+	MenuGroup,
+	MenuItem,
+	Notice,
+	SearchControl,
+	Spinner,
+} from '@wordpress/components';
 import { useEffect, useReducer, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
+import { moreHorizontal, plus } from '@wordpress/icons';
+import { addQueryArgs } from '@wordpress/url';
+import { useMoney } from '../../components';
+import { bulkCampaigns, getCampaigns } from '../api';
+import { useProductImages } from '../CampaignThumbs';
 import {
-	Badge,
-	Button,
-	Card,
+	BoxThumbs,
 	DataTable,
 	EmptyState,
-	Icon,
-	Notice,
 	PageHeader,
-	SelectField,
-	Tabs,
-	TextField,
-	useMoney,
-} from '../../components';
-import { bulkCampaigns, getCampaigns } from '../api';
-import { copyText } from '../copy-text';
+	StatusBadge,
+	useSnackbar,
+} from '../components';
 import { useAdmin } from '../context';
-import DeleteDialog from '../DeleteDialog';
-import {
-	canPause,
-	formatCount,
-	formatPercent,
-	isLive,
-	placementInfo,
-	scheduleLabel,
-	statusInfo,
-	typeSummary,
-} from '../format';
+import { boxSummary, canPause, formatCount, shownOnPath } from '../format';
 import { errorMessage, useDebouncedValue, useRequest } from '../hooks';
-import RowMenu from '../RowMenu';
 import Shell from '../Shell';
-import TemplatePicker from '../TemplatePicker';
-import { useToast } from '../toast';
-import CampaignThumbs, { useProductImages } from '../CampaignThumbs';
+import CreateBoxModal from './CreateBoxModal';
 import {
 	campaignsReducer,
 	hasFilters,
 	initialState,
 	queryFor,
-	rangeFor,
 	summarizeBulk,
 } from './state';
+import TrashDialog from './TrashDialog';
 
-const PICKER_ACTION = 'new';
+const CREATE_ACTION = 'new';
 
-function useTabs( counts, status ) {
-	const count = ( key ) => ( counts ? counts[ key ] : undefined );
-	const tabs = [
+// The four tabs from the design. Stored statuses are not renamed: "Live" is the
+// existing `live` filter (active + ending soon); scheduled and paused boxes show under All.
+function tabsFor( counts ) {
+	const count = ( key ) => ( counts ? counts[ key ] || 0 : null );
+	return [
 		{
 			id: 'all',
 			label: __( 'All', 'productboxes-mix-and-match-box-builder' ),
@@ -55,13 +50,8 @@ function useTabs( counts, status ) {
 		},
 		{
 			id: 'live',
-			label: __( 'Active', 'productboxes-mix-and-match-box-builder' ),
+			label: __( 'Live', 'productboxes-mix-and-match-box-builder' ),
 			count: count( 'live' ),
-		},
-		{
-			id: 'scheduled',
-			label: __( 'Scheduled', 'productboxes-mix-and-match-box-builder' ),
-			count: count( 'scheduled' ),
 		},
 		{
 			id: 'draft',
@@ -74,24 +64,15 @@ function useTabs( counts, status ) {
 			count: count( 'ended' ),
 		},
 	];
-	// Paused campaigns only get a tab when there are some (or one is being viewed).
-	if ( count( 'paused' ) > 0 || status === 'paused' ) {
-		tabs.push( {
-			id: 'paused',
-			label: __( 'Paused', 'productboxes-mix-and-match-box-builder' ),
-			count: count( 'paused' ),
-		} );
-	}
-	return tabs;
 }
 
-const message = {
+const done = {
 	pause: ( n ) =>
 		sprintf(
-			/* translators: %d: Number of campaigns. */
+			/* translators: %d: Number of boxes. */
 			_n(
-				'Paused %d campaign',
-				'Paused %d campaigns',
+				'Paused %d box',
+				'Paused %d boxes',
 				n,
 				'productboxes-mix-and-match-box-builder'
 			),
@@ -99,10 +80,10 @@ const message = {
 		),
 	resume: ( n ) =>
 		sprintf(
-			/* translators: %d: Number of campaigns. */
+			/* translators: %d: Number of boxes. */
 			_n(
-				'Resumed %d campaign',
-				'Resumed %d campaigns',
+				'Resumed %d box',
+				'Resumed %d boxes',
 				n,
 				'productboxes-mix-and-match-box-builder'
 			),
@@ -110,10 +91,10 @@ const message = {
 		),
 	duplicate: ( n ) =>
 		sprintf(
-			/* translators: %d: Number of campaigns. */
+			/* translators: %d: Number of boxes. */
 			_n(
-				'Duplicated %d campaign',
-				'Duplicated %d campaigns',
+				'Duplicated %d box',
+				'Duplicated %d boxes',
 				n,
 				'productboxes-mix-and-match-box-builder'
 			),
@@ -121,10 +102,10 @@ const message = {
 		),
 	delete: ( n ) =>
 		sprintf(
-			/* translators: %d: Number of campaigns. */
+			/* translators: %d: Number of boxes. */
 			_n(
-				'Deleted %d campaign',
-				'Deleted %d campaigns',
+				'Moved %d box to the trash',
+				'Moved %d boxes to the trash',
 				n,
 				'productboxes-mix-and-match-box-builder'
 			),
@@ -132,14 +113,20 @@ const message = {
 		),
 };
 
-export default function Campaigns( { openPicker = false } ) {
-	const { locale, timezone, money } = useAdmin();
+/**
+ * Boxes: every box with its status, where it is shown and what it sold.
+ *
+ * @param {Object}  props
+ * @param {boolean} props.openCreate Open "Create a box" on load (`action=new`).
+ */
+export default function Campaigns( { openCreate = false } ) {
+	const { locale, money } = useAdmin();
 	const formatMoney = useMoney();
-	const toast = useToast();
+	const snackbar = useSnackbar();
 	const [ state, dispatch ] = useReducer( campaignsReducer, initialState );
 	const [ searchText, setSearchText ] = useState( '' );
-	const [ picker, setPicker ] = useState( openPicker );
-	const [ pendingDelete, setPendingDelete ] = useState( null );
+	const [ creating, setCreating ] = useState( openCreate );
+	const [ pendingTrash, setPendingTrash ] = useState( null );
 	const [ busy, setBusy ] = useState( false );
 	const [ actionError, setActionError ] = useState( '' );
 
@@ -157,19 +144,18 @@ export default function Campaigns( { openPicker = false } ) {
 	const counts = data ? data.counts : null;
 	const total = data ? data.total : 0;
 	const images = useProductImages( items );
-	const tabs = useTabs( counts, state.status );
 
-	// Deleting the last row of the last page leaves an empty page behind.
+	// Trashing the last row of the last page leaves an empty page behind.
 	useEffect( () => {
 		if ( data && data.pages > 0 && state.page > data.pages ) {
 			dispatch( { type: 'page', value: data.pages } );
 		}
 	}, [ data, state.page ] );
 
-	const closePicker = () => {
-		setPicker( false );
+	const closeCreate = () => {
+		setCreating( false );
 		const url = new URL( window.location.href );
-		if ( url.searchParams.get( 'action' ) === PICKER_ACTION ) {
+		if ( url.searchParams.get( 'action' ) === CREATE_ACTION ) {
 			url.searchParams.delete( 'action' );
 			window.history.replaceState( null, '', url.toString() );
 		}
@@ -179,9 +165,12 @@ export default function Campaigns( { openPicker = false } ) {
 		state.selected.includes( c.id )
 	);
 
-	// Run one bulk action, then report what happened.
-	const run = ( action, campaigns ) => {
-		const ids = campaigns.map( ( c ) => c.id );
+	// Run one bulk action through POST /campaigns/bulk, then report what happened.
+	const run = ( action, boxes ) => {
+		const ids = boxes.map( ( c ) => c.id );
+		if ( ids.length === 0 ) {
+			return Promise.resolve();
+		}
 		setBusy( true );
 		setActionError( '' );
 		return bulkCampaigns( action, ids )
@@ -192,26 +181,26 @@ export default function Campaigns( { openPicker = false } ) {
 						action === 'duplicate' && ids.length === 1
 							? response.results[ 0 ].campaign
 							: null;
-					toast(
+					snackbar(
 						copy
 							? sprintf(
-									/* translators: %s: Name of the new campaign. */
+									/* translators: %s: Name of the new box. */
 									__(
 										'Duplicated as “%s”',
 										'productboxes-mix-and-match-box-builder'
 									),
 									copy.title
 							  )
-							: message[ action ]( outcome.ok )
+							: done[ action ]( outcome.ok )
 					);
 				}
 				if ( outcome.failed > 0 ) {
 					setActionError(
 						sprintf(
-							/* translators: 1: Number of campaigns, 2: Reason. */
+							/* translators: 1: Number of boxes, 2: Reason. */
 							_n(
-								'%1$d campaign could not be changed. %2$s',
-								'%1$d campaigns could not be changed. %2$s',
+								'%1$d box could not be changed. %2$s',
+								'%1$d boxes could not be changed. %2$s',
 								outcome.failed,
 								'productboxes-mix-and-match-box-builder'
 							),
@@ -236,156 +225,104 @@ export default function Campaigns( { openPicker = false } ) {
 			} )
 			.then( () => {
 				setBusy( false );
-				setPendingDelete( null );
+				setPendingTrash( null );
 			} );
 	};
 
-	const copyShortcode = ( campaign ) => {
-		copyText( campaign.placement.shortcode ).then( ( ok ) => {
-			toast(
-				ok
-					? __(
-							'Shortcode copied',
-							'productboxes-mix-and-match-box-builder'
-					  )
-					: __(
-							'Could not copy. Select the shortcode and copy it.',
-							'productboxes-mix-and-match-box-builder'
-					  )
-			);
-		} );
-	};
+	const publishUrl = ( c ) => addQueryArgs( c.edit_url, { step: 'publish' } );
 
-	const menuItems = ( campaign ) => {
-		const menu = [];
-		if ( campaign.placement.page_url && isLive( campaign.status ) ) {
-			menu.push( {
-				id: 'view',
-				label: __(
-					'View on store',
-					'productboxes-mix-and-match-box-builder'
-				),
-				icon: 'eye',
-				href: campaign.placement.page_url,
-				external: true,
-			} );
-		}
-		menu.push( {
-			id: 'duplicate',
-			label: __( 'Duplicate', 'productboxes-mix-and-match-box-builder' ),
-			icon: 'copy',
-			onSelect: () => run( 'duplicate', [ campaign ] ),
-		} );
-		if ( campaign.status === 'paused' ) {
-			menu.push( {
-				id: 'resume',
-				label: __( 'Resume', 'productboxes-mix-and-match-box-builder' ),
-				icon: 'refresh',
-				onSelect: () => run( 'resume', [ campaign ] ),
-			} );
-		} else if ( canPause( campaign.status ) ) {
-			menu.push( {
-				id: 'pause',
-				label: __( 'Pause', 'productboxes-mix-and-match-box-builder' ),
-				icon: 'clock',
-				onSelect: () => run( 'pause', [ campaign ] ),
-			} );
-		}
-		menu.push(
+	const rowControls = ( c ) => {
+		const controls = [
 			{
-				id: 'shortcode',
-				label: __(
-					'Copy shortcode',
+				title: __(
+					'Duplicate',
 					'productboxes-mix-and-match-box-builder'
 				),
-				icon: 'code',
-				onSelect: () => copyShortcode( campaign ),
+				onClick: () => run( 'duplicate', [ c ] ),
 			},
-			{
-				id: 'delete',
-				label: __( 'Delete', 'productboxes-mix-and-match-box-builder' ),
-				icon: 'trash',
-				danger: true,
-				onSelect: () => setPendingDelete( [ campaign ] ),
-			}
-		);
-		return menu;
+		];
+		if ( c.status === 'paused' ) {
+			controls.push( {
+				title: __( 'Resume', 'productboxes-mix-and-match-box-builder' ),
+				onClick: () => run( 'resume', [ c ] ),
+			} );
+		} else if ( canPause( c.status ) ) {
+			controls.push( {
+				title: __( 'Pause', 'productboxes-mix-and-match-box-builder' ),
+				onClick: () => run( 'pause', [ c ] ),
+			} );
+		}
+		return controls;
 	};
 
-	const dates = { locale, timezone };
 	const columns = [
 		{
 			key: 'title',
-			label: __( 'Campaign', 'productboxes-mix-and-match-box-builder' ),
+			label: __( 'Box', 'productboxes-mix-and-match-box-builder' ),
 			render: ( c ) => (
-				<div className="mmbb-campaign-cell">
-					<CampaignThumbs campaign={ c } images={ images } />
-					<span>
+				<div className="mmbb-app-box-cell">
+					<BoxThumbs
+						ids={
+							( c.config.products && c.config.products.ids ) || []
+						}
+						images={ images }
+						max={ 3 }
+					/>
+					<div>
 						<a
-							className="mmbb-cell-title mmbb-cell-link"
+							className="mmbb-app-box-cell__name"
 							href={ c.edit_url }
 						>
 							{ c.title }
 						</a>
-						<span className="mmbb-cell-meta">
-							{ typeSummary(
+						<p className="mmbb-app-muted">
+							{ boxSummary(
 								c.config,
 								formatMoney,
 								money.decimals
 							) }
-						</span>
-					</span>
+						</p>
+					</div>
 				</div>
 			),
 		},
 		{
 			key: 'status',
 			label: __( 'Status', 'productboxes-mix-and-match-box-builder' ),
-			render: ( c ) => {
-				const info = statusInfo( c.status );
-				return (
-					<Badge tone={ info.tone } dot>
-						{ info.label }
-					</Badge>
-				);
-			},
+			render: ( c ) => <StatusBadge status={ c.status } />,
 		},
 		{
-			key: 'schedule',
-			label: __( 'Schedule', 'productboxes-mix-and-match-box-builder' ),
-			render: ( c ) => (
-				<span className="mmbb-muted">
-					{ scheduleLabel( c, dates ) }
-				</span>
-			),
-		},
-		{
-			key: 'placement',
-			label: __( 'Placement', 'productboxes-mix-and-match-box-builder' ),
+			key: 'shown',
+			label: __( 'Shown on', 'productboxes-mix-and-match-box-builder' ),
 			render: ( c ) => {
-				const info = placementInfo( c.placement );
-				if ( info.kind === 'code' ) {
-					return <code className="mmbb-code">{ info.text }</code>;
-				}
-				if ( info.kind === 'none' ) {
-					return (
-						<span className="mmbb-placement is-warning">
-							<Icon name="alert" size={ 14 } />
-							{ info.text }
+				const path = shownOnPath( c.placement );
+				return path ? (
+					<a
+						href={ c.placement.page_url }
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						{ path }
+						<span className="screen-reader-text">
+							{ __(
+								'(opens in a new tab)',
+								'productboxes-mix-and-match-box-builder'
+							) }
 						</span>
-					);
-				}
-				return (
-					<span className="mmbb-placement">
-						<Icon name="layers" size={ 14 } />
-						{ info.text }
-					</span>
+					</a>
+				) : (
+					<a href={ publishUrl( c ) }>
+						{ __(
+							'Add to a page',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					</a>
 				);
 			},
 		},
 		{
-			key: 'boxes',
-			label: __( 'Boxes sold', 'productboxes-mix-and-match-box-builder' ),
+			key: 'sold',
+			label: __( 'Sold', 'productboxes-mix-and-match-box-builder' ),
 			numeric: true,
 			render: ( c ) => formatCount( c.stats.boxes_sold, locale ),
 		},
@@ -396,304 +333,280 @@ export default function Campaigns( { openPicker = false } ) {
 			render: ( c ) => formatMoney( c.stats.revenue ),
 		},
 		{
-			key: 'conversion',
-			label: __( 'Conversion', 'productboxes-mix-and-match-box-builder' ),
-			numeric: true,
-			render: ( c ) => formatPercent( c.stats.conversion, locale ),
-		},
-		{
 			key: 'actions',
-			width: 88,
-			label: (
-				<span className="mmbb-sr">
-					{ __(
-						'Actions',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				</span>
-			),
+			label: __( 'Actions', 'productboxes-mix-and-match-box-builder' ),
+			hideLabel: true,
 			render: ( c ) => (
-				<div className="mmbb-row-actions">
+				<div className="mmbb-app-row-actions">
 					<Button
-						variant="ghost"
-						size="sm"
-						icon="edit"
+						__next40pxDefaultSize
+						variant="secondary"
 						href={ c.edit_url }
-						aria-label={ sprintf(
-							/* translators: %s: Campaign name. */
+						label={ sprintf(
+							/* translators: %s: Box name. */
 							__(
 								'Edit %s',
 								'productboxes-mix-and-match-box-builder'
 							),
 							c.title
 						) }
-					/>
-					<RowMenu
+						showTooltip={ false }
+					>
+						{ __(
+							'Edit',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					</Button>
+					<DropdownMenu
+						icon={ moreHorizontal }
 						label={ sprintf(
-							/* translators: %s: Campaign name. */
+							/* translators: %s: Box name. */
 							__(
 								'More actions for %s',
 								'productboxes-mix-and-match-box-builder'
 							),
 							c.title
 						) }
-						items={ menuItems( c ) }
-					/>
+						toggleProps={ { disabled: busy, size: 'compact' } }
+						popoverProps={ { placement: 'bottom-end' } }
+					>
+						{ ( { onClose } ) => (
+							<>
+								<MenuGroup>
+									{ rowControls( c ).map( ( control ) => (
+										<MenuItem
+											key={ control.title }
+											onClick={ () => {
+												onClose();
+												control.onClick();
+											} }
+										>
+											{ control.title }
+										</MenuItem>
+									) ) }
+								</MenuGroup>
+								<MenuGroup>
+									<MenuItem
+										isDestructive
+										onClick={ () => {
+											onClose();
+											setPendingTrash( [ c ] );
+										} }
+									>
+										{ __(
+											'Move to trash',
+											'productboxes-mix-and-match-box-builder'
+										) }
+									</MenuItem>
+								</MenuGroup>
+							</>
+						) }
+					</DropdownMenu>
 				</div>
 			),
 		},
 	];
 
-	const range = rangeFor( state.page, total );
 	const firstRun = data && counts.all === 0 && ! hasFilters( state );
 	const pausable = selectedItems.filter( ( c ) => canPause( c.status ) );
+	const resumable = selectedItems.filter( ( c ) => c.status === 'paused' );
+	const tabs = tabsFor( counts );
+
+	const createButton = (
+		<Button
+			__next40pxDefaultSize
+			variant="primary"
+			icon={ plus }
+			onClick={ () => setCreating( true ) }
+		>
+			{ __( 'Create box', 'productboxes-mix-and-match-box-builder' ) }
+		</Button>
+	);
+
+	let emptyMessage = (
+		<span className="mmbb-app-loading">
+			<Spinner />
+			{ __( 'Loading boxes…', 'productboxes-mix-and-match-box-builder' ) }
+		</span>
+	);
+	if ( data ) {
+		emptyMessage = __(
+			'No boxes match. Try another tab or search.',
+			'productboxes-mix-and-match-box-builder'
+		);
+	} else if ( error ) {
+		emptyMessage = __(
+			'Boxes could not load.',
+			'productboxes-mix-and-match-box-builder'
+		);
+	}
 
 	return (
 		<Shell active="campaigns">
-			<PageHeader
-				title={ __(
-					'Campaigns',
-					'productboxes-mix-and-match-box-builder'
-				) }
-				subtitle={ __(
-					'Every box builder on your store, with what it sold.',
-					'productboxes-mix-and-match-box-builder'
-				) }
-				actions={
-					<>
-						<Button
-							icon="layers"
-							onClick={ () => setPicker( true ) }
-						>
-							{ __(
-								'Templates',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						</Button>
-						<Button
-							variant="primary"
-							icon="plus"
-							onClick={ () => setPicker( true ) }
-						>
-							{ __(
-								'Create campaign',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						</Button>
-					</>
-				}
-			/>
-
-			{ error ? (
-				<Notice
-					tone="critical"
+			<div className="mmbb-app-stack">
+				<PageHeader
 					title={ __(
-						'Campaigns could not load',
+						'Boxes',
 						'productboxes-mix-and-match-box-builder'
 					) }
-					action={
-						<Button size="sm" onClick={ reload }>
-							{ __(
-								'Retry',
+					description={ __(
+						'Each box is a builder shoppers fill on your store.',
+						'productboxes-mix-and-match-box-builder'
+					) }
+					actions={ createButton }
+				/>
+
+				{ error ? (
+					<Notice
+						status="error"
+						isDismissible={ false }
+						actions={ [
+							{
+								label: __(
+									'Retry',
+									'productboxes-mix-and-match-box-builder'
+								),
+								onClick: reload,
+							},
+						] }
+					>
+						{ errorMessage(
+							error,
+							__(
+								'Boxes could not load.',
+								'productboxes-mix-and-match-box-builder'
+							)
+						) }
+					</Notice>
+				) : null }
+				{ actionError ? (
+					<Notice
+						status="warning"
+						onRemove={ () => setActionError( '' ) }
+					>
+						{ actionError }
+					</Notice>
+				) : null }
+
+				{ firstRun ? (
+					<section className="mmbb-app-card">
+						<EmptyState
+							title={ __(
+								'Create your first box',
 								'productboxes-mix-and-match-box-builder'
 							) }
-						</Button>
-					}
-				>
-					{ errorMessage( error, '' ) }
-				</Notice>
-			) : null }
-			{ actionError ? (
-				<Notice tone="warning" onDismiss={ () => setActionError( '' ) }>
-					{ actionError }
-				</Notice>
-			) : null }
-
-			{ firstRun ? (
-				<Card padding="none">
-					<EmptyState
-						icon="box"
-						title={ __(
-							'Launch your first box',
+							actions={ createButton }
+						>
+							{ __(
+								'Pick the products, set the discount and put it on a page. Nothing goes live until you publish.',
+								'productboxes-mix-and-match-box-builder'
+							) }
+						</EmptyState>
+					</section>
+				) : (
+					<section
+						className="mmbb-app-card"
+						aria-label={ __(
+							'Boxes',
 							'productboxes-mix-and-match-box-builder'
 						) }
-						description={ __(
-							'Pick the products, set the discount tiers, drop the builder on a page. Start blank or from a ready-made template.',
-							'productboxes-mix-and-match-box-builder'
-						) }
-						action={
-							<Button
-								variant="max"
-								icon="plus"
-								onClick={ () => setPicker( true ) }
-							>
-								{ __(
-									'Create campaign',
+					>
+						<div className="mmbb-app-toolbar">
+							<div
+								className="mmbb-app-tabs"
+								role="group"
+								aria-label={ __(
+									'Filter boxes',
 									'productboxes-mix-and-match-box-builder'
 								) }
-							</Button>
-						}
-					/>
-				</Card>
-			) : (
-				<Card padding="none">
-					<div className="mmbb-list__tabs">
-						<Tabs
-							label={ __(
-								'Campaign status',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							tabs={ tabs }
-							value={ state.status }
-							onChange={ ( value ) =>
-								dispatch( { type: 'status', value } )
-							}
-						/>
-					</div>
-					<div className="mmbb-list__filters">
-						<TextField
-							aria-label={ __(
-								'Search campaigns',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							prefix="search"
-							type="search"
-							placeholder={ __(
-								'Search campaigns',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							className="mmbb-list__search"
-							value={ searchText }
-							onChange={ ( e ) =>
-								setSearchText( e.target.value )
-							}
-						/>
-						<SelectField
-							aria-label={ __(
-								'Campaign type',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							className="mmbb-list__select"
-							value={ state.type }
-							options={ [
-								{
-									value: '',
-									label: __(
-										'All types',
-										'productboxes-mix-and-match-box-builder'
-									),
-								},
-								{
-									value: 'tiered',
-									label: __(
-										'Tiered mix',
-										'productboxes-mix-and-match-box-builder'
-									),
-								},
-								{
-									value: 'fixed',
-									label: __(
-										'Fixed box',
-										'productboxes-mix-and-match-box-builder'
-									),
-								},
-								{
-									value: 'bundle',
-									label: __(
-										'Bundle price',
-										'productboxes-mix-and-match-box-builder'
-									),
-								},
-							] }
-							onChange={ ( e ) =>
-								dispatch( {
-									type: 'type',
-									value: e.target.value,
-								} )
-							}
-						/>
-						<SelectField
-							aria-label={ __(
-								'Sort',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							className="mmbb-list__select"
-							value={ state.orderby }
-							options={ [
-								{
-									value: 'date',
-									label: __(
-										'Sort: Newest',
-										'productboxes-mix-and-match-box-builder'
-									),
-								},
-								{
-									value: 'revenue',
-									label: __(
-										'Sort: Revenue',
-										'productboxes-mix-and-match-box-builder'
-									),
-								},
-								{
-									value: 'conversion',
-									label: __(
-										'Sort: Conversion',
-										'productboxes-mix-and-match-box-builder'
-									),
-								},
-							] }
-							onChange={ ( e ) =>
-								dispatch( {
-									type: 'orderby',
-									value: e.target.value,
-								} )
-							}
-						/>
-					</div>
-					<div
-						className={
-							'mmbb-list__body' + ( loading ? ' is-loading' : '' )
-						}
-						aria-busy={ loading }
-					>
-						<DataTable
-							columns={ columns }
-							rows={ items }
-							selectable
-							selected={ state.selected }
-							onSelectionChange={ ( ids ) =>
-								dispatch( { type: 'select', ids } )
-							}
-							rowLabel={ ( c ) =>
-								sprintf(
-									/* translators: %s: Campaign name. */
-									__(
-										'Select %s',
-										'productboxes-mix-and-match-box-builder'
-									),
-									c.title
-								)
-							}
-							bulkActions={
-								<>
-									<Button
-										size="sm"
-										icon="copy"
-										disabled={ busy }
+							>
+								{ tabs.map( ( tab ) => (
+									<button
+										key={ tab.id }
+										type="button"
+										className={
+											'mmbb-app-tab' +
+											( state.status === tab.id
+												? ' is-current'
+												: '' )
+										}
+										aria-pressed={ state.status === tab.id }
 										onClick={ () =>
-											run( 'duplicate', selectedItems )
+											dispatch( {
+												type: 'status',
+												value: tab.id,
+											} )
 										}
 									>
-										{ __(
-											'Duplicate',
+										{ tab.label }
+										{ tab.count !== null ? (
+											<span className="mmbb-app-count">
+												{ formatCount(
+													tab.count,
+													locale
+												) }
+											</span>
+										) : null }
+									</button>
+								) ) }
+							</div>
+							<div className="mmbb-app-toolbar__search">
+								{ loading && data ? <Spinner /> : null }
+								<SearchControl
+									__nextHasNoMarginBottom
+									label={ __(
+										'Search boxes',
+										'productboxes-mix-and-match-box-builder'
+									) }
+									placeholder={ __(
+										'Search boxes',
+										'productboxes-mix-and-match-box-builder'
+									) }
+									value={ searchText }
+									onChange={ setSearchText }
+								/>
+							</div>
+						</div>
+
+						{ selectedItems.length > 0 ? (
+							<div
+								className="mmbb-app-bulk"
+								role="region"
+								aria-label={ __(
+									'Bulk actions',
+									'productboxes-mix-and-match-box-builder'
+								) }
+							>
+								<span>
+									{ sprintf(
+										/* translators: %d: Number of items. */
+										_n(
+											'%d selected',
+											'%d selected',
+											selectedItems.length,
 											'productboxes-mix-and-match-box-builder'
-										) }
-									</Button>
+										),
+										selectedItems.length
+									) }
+								</span>
+								<Button
+									variant="secondary"
+									size="compact"
+									disabled={ busy }
+									onClick={ () =>
+										run( 'duplicate', selectedItems )
+									}
+								>
+									{ __(
+										'Duplicate',
+										'productboxes-mix-and-match-box-builder'
+									) }
+								</Button>
+								{ pausable.length > 0 ? (
 									<Button
-										size="sm"
-										disabled={
-											busy || pausable.length === 0
-										}
+										variant="secondary"
+										size="compact"
+										disabled={ busy }
 										onClick={ () =>
 											run( 'pause', pausable )
 										}
@@ -703,103 +616,148 @@ export default function Campaigns( { openPicker = false } ) {
 											'productboxes-mix-and-match-box-builder'
 										) }
 									</Button>
+								) : null }
+								{ resumable.length > 0 ? (
 									<Button
-										size="sm"
-										variant="ghost"
-										icon="trash"
+										variant="secondary"
+										size="compact"
 										disabled={ busy }
 										onClick={ () =>
-											setPendingDelete( selectedItems )
+											run( 'resume', resumable )
 										}
 									>
 										{ __(
-											'Delete',
+											'Resume',
 											'productboxes-mix-and-match-box-builder'
 										) }
 									</Button>
-								</>
-							}
-							empty={
-								data
-									? __(
-											'No campaigns match these filters.',
-											'productboxes-mix-and-match-box-builder'
-									  )
-									: __(
-											'Loading campaigns…',
-											'productboxes-mix-and-match-box-builder'
-									  )
-							}
-						/>
-					</div>
-					{ total > 0 ? (
-						<div className="mmbb-list__foot">
-							<span>
-								{ sprintf(
-									/* translators: 1: First row number, 2: Last row number, 3: Total rows. */
-									__(
-										'Showing %1$d–%2$d of %3$d',
-										'productboxes-mix-and-match-box-builder'
-									),
-									range.from,
-									range.to,
-									total
-								) }
-							</span>
-							<span className="mmbb-list__pager">
+								) : null }
 								<Button
-									size="sm"
-									icon="chevronLeft"
-									aria-label={ __(
-										'Previous page',
+									variant="secondary"
+									size="compact"
+									isDestructive
+									disabled={ busy }
+									onClick={ () =>
+										setPendingTrash( selectedItems )
+									}
+								>
+									{ __(
+										'Move to trash',
 										'productboxes-mix-and-match-box-builder'
 									) }
-									disabled={ state.page <= 1 }
-									onClick={ () =>
-										dispatch( {
-											type: 'page',
-											value: state.page - 1,
-										} )
-									}
-								/>
+								</Button>
 								<Button
-									size="sm"
-									icon="chevronRight"
-									aria-label={ __(
-										'Next page',
+									variant="tertiary"
+									size="compact"
+									onClick={ () =>
+										dispatch( { type: 'clear_selection' } )
+									}
+								>
+									{ __(
+										'Clear selection',
 										'productboxes-mix-and-match-box-builder'
 									) }
-									disabled={
-										! data || state.page >= data.pages
-									}
-									onClick={ () =>
-										dispatch( {
-											type: 'page',
-											value: state.page + 1,
-										} )
-									}
-								/>
-							</span>
-						</div>
-					) : null }
-				</Card>
-			) }
+								</Button>
+							</div>
+						) : null }
 
-			{ picker ? <TemplatePicker onClose={ closePicker } /> : null }
-			{ pendingDelete ? (
-				<DeleteDialog
-					campaigns={ pendingDelete }
+						<div
+							className={
+								'mmbb-app-card__table' +
+								( loading && data ? ' is-loading' : '' )
+							}
+							aria-busy={ loading }
+						>
+							<DataTable
+								caption={ __(
+									'Boxes',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								columns={ columns }
+								rows={ items }
+								selected={ state.selected }
+								onSelect={ ( ids ) =>
+									dispatch( { type: 'select', ids } )
+								}
+								rowLabel={ ( c ) => c.title }
+								emptyMessage={ emptyMessage }
+							/>
+						</div>
+
+						<div className="mmbb-app-card__foot">
+							<span className="mmbb-app-muted">
+								{ data
+									? sprintf(
+											/* translators: %d: Number of boxes. */
+											_n(
+												'%d box',
+												'%d boxes',
+												total,
+												'productboxes-mix-and-match-box-builder'
+											),
+											total
+									  )
+									: ' ' }
+							</span>
+							{ data && data.pages > 1 ? (
+								<span className="mmbb-app-pager">
+									<Button
+										variant="secondary"
+										size="compact"
+										disabled={ state.page <= 1 }
+										onClick={ () =>
+											dispatch( {
+												type: 'page',
+												value: state.page - 1,
+											} )
+										}
+									>
+										{ __(
+											'Previous',
+											'productboxes-mix-and-match-box-builder'
+										) }
+									</Button>
+									<span className="mmbb-app-muted">
+										{ sprintf(
+											/* translators: 1: Current page, 2: Number of pages. */
+											__(
+												'Page %1$d of %2$d',
+												'productboxes-mix-and-match-box-builder'
+											),
+											state.page,
+											data.pages
+										) }
+									</span>
+									<Button
+										variant="secondary"
+										size="compact"
+										disabled={ state.page >= data.pages }
+										onClick={ () =>
+											dispatch( {
+												type: 'page',
+												value: state.page + 1,
+											} )
+										}
+									>
+										{ __(
+											'Next',
+											'productboxes-mix-and-match-box-builder'
+										) }
+									</Button>
+								</span>
+							) : null }
+						</div>
+					</section>
+				) }
+			</div>
+
+			{ creating ? <CreateBoxModal onClose={ closeCreate } /> : null }
+			{ pendingTrash ? (
+				<TrashDialog
+					boxes={ pendingTrash }
 					busy={ busy }
-					onCancel={ () => setPendingDelete( null ) }
-					onPause={ () =>
-						run(
-							'pause',
-							pendingDelete.filter( ( c ) =>
-								canPause( c.status )
-							)
-						)
-					}
-					onDelete={ () => run( 'delete', pendingDelete ) }
+					onCancel={ () => setPendingTrash( null ) }
+					onConfirm={ () => run( 'delete', pendingTrash ) }
 				/>
 			) : null }
 		</Shell>
