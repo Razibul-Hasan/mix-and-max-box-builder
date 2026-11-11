@@ -478,7 +478,7 @@ function EditorBody( { initial } ) {
 					</Button>
 				</div>
 			) : null }
-			<Shell active="campaigns" viewStore>
+			<Shell active="campaigns" viewStore wide>
 				{ step === 'published' ? (
 					<PublishedStep campaign={ meta } draft={ draft } />
 				) : (

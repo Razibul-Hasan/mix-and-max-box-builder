@@ -35,6 +35,8 @@ class AdminMenuTest extends \WP_UnitTestCase {
 		$this->assertArrayHasKey( 'mmbb', $submenu );
 		$slugs = wp_list_pluck( $submenu['mmbb'], 2 );
 		$this->assertSame( array( 'mmbb', 'mmbb-campaigns', 'mmbb-analytics', 'mmbb-settings' ), $slugs );
+		// Labels follow the redesign (Home, Boxes); the slugs above are frozen.
+		$this->assertSame( array( 'Home', 'Boxes', 'Analytics', 'Settings' ), wp_list_pluck( $submenu['mmbb'], 0 ) );
 		foreach ( $submenu['mmbb'] as $item ) {
 			$this->assertSame( 'manage_woocommerce', $item[1] );
 		}
@@ -70,11 +72,13 @@ class AdminMenuTest extends \WP_UnitTestCase {
 		$this->assertFalse( wp_script_is( 'mmbb-admin', 'enqueued' ) );
 		$this->assertFalse( wp_style_is( 'mmbb-admin', 'enqueued' ) );
 		$this->assertFalse( wp_style_is( 'mmbb-components', 'enqueued' ) );
+		$this->assertFalse( wp_style_is( 'wp-components', 'enqueued' ) );
 
 		$assets->enqueue( 'productboxes_page_mmbb-campaigns' );
 		$this->assertTrue( wp_script_is( 'mmbb-admin', 'enqueued' ) );
 		$this->assertTrue( wp_style_is( 'mmbb-admin', 'enqueued' ) );
 		$this->assertTrue( wp_style_is( 'mmbb-tokens', 'enqueued' ) );
+		$this->assertTrue( wp_style_is( 'wp-components', 'enqueued' ) );
 		$before = wp_scripts()->get_data( 'mmbb-admin', 'before' );
 		$this->assertStringContainsString( 'window.mmbbAdmin = ', implode( '', (array) $before ) );
 	}

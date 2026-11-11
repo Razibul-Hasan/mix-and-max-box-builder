@@ -1,5 +1,6 @@
 import { MoneyProvider } from '../components';
 import Campaigns from './campaigns/Campaigns';
+import { Notices } from './components';
 import Analytics from './analytics/Analytics';
 import { AdminContext, readAdminData } from './context';
 import Dashboard from './dashboard/Dashboard';
@@ -56,6 +57,7 @@ export default function App( { page } ) {
 						name={ pickScreen( page || data.page, params ) }
 						id={ Number( params.get( 'id' ) ) }
 					/>
+					<Notices />
 				</ToastProvider>
 			</MoneyProvider>
 		</AdminContext.Provider>

@@ -1,0 +1,460 @@
+/*
+ * Redesigned admin shell and shared pieces (design/canvas/wp.css), scoped
+ * under .mmbb-app. The accent follows the merchant's admin colour scheme
+ * through --wp-admin-theme-color; the greys are the @wordpress/components ones.
+ */
+.mmbb-app {
+	--mmbb-app-accent: var(--wp-admin-theme-color, #3858e9);
+	--mmbb-app-accent-dark: var(--wp-admin-theme-color-darker-10, #2145e6);
+	--mmbb-app-ink: #1e1e1e;
+	--mmbb-app-gray-700: #757575;
+	--mmbb-app-gray-600: #949494;
+	--mmbb-app-gray-200: #e0e0e0;
+	--mmbb-app-gray-100: #f0f0f0;
+	--mmbb-app-canvas: #f0f0f1;
+	--mmbb-app-surface: #fff;
+	--mmbb-app-ok: #005c12;
+	--mmbb-app-ok-bg: #edfaef;
+	--mmbb-app-ok-dot: #008a20;
+	--mmbb-app-warn: #8a4d00;
+	--mmbb-app-warn-bg: #fcf9e8;
+	--mmbb-app-info: #0a4b78;
+	--mmbb-app-info-bg: #f0f6fc;
+	--mmbb-app-negative: #cc1818;
+	--mmbb-app-font: -apple-system, blinkmacsystemfont, "Segoe UI", roboto, oxygen-sans, ubuntu, cantarell, "Helvetica Neue", sans-serif;
+
+	min-height: inherit;
+	display: flex;
+	flex-direction: column;
+	background: var(--mmbb-app-canvas);
+	color: var(--mmbb-app-ink);
+	font-family: var(--mmbb-app-font);
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.mmbb-app *,
+.mmbb-app *::before,
+.mmbb-app *::after {
+	box-sizing: border-box;
+}
+
+/* ---------- Header and nav ---------- */
+.mmbb-app__head {
+	position: sticky;
+	top: 32px;
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	gap: 24px;
+	min-height: 60px;
+	padding: 0 32px;
+	background: var(--mmbb-app-surface);
+	border-bottom: 1px solid var(--mmbb-app-gray-200);
+}
+
+.mmbb-app__logo {
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 15px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.mmbb-app__mark {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 6px;
+	background: var(--mmbb-app-ink);
+	color: var(--mmbb-app-surface);
+}
+
+.mmbb-app__nav {
+	display: flex;
+	flex: 1 1 auto;
+	align-self: stretch;
+	gap: 4px;
+	min-width: 0;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.mmbb-app__nav a {
+	display: flex;
+	align-items: center;
+	min-height: 60px;
+	padding: 0 12px;
+	color: var(--mmbb-app-ink);
+	font-size: 13px;
+	text-decoration: none;
+	white-space: nowrap;
+	box-shadow: inset 0 -2px 0 transparent;
+}
+
+.mmbb-app__nav a:hover {
+	color: var(--mmbb-app-accent);
+}
+
+.mmbb-app__nav a.is-current {
+	font-weight: 500;
+	box-shadow: inset 0 -2px 0 var(--mmbb-app-accent);
+}
+
+.mmbb-app__nav a:focus {
+	outline: none;
+	box-shadow: none;
+}
+
+.mmbb-app__nav a:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--mmbb-app-accent);
+}
+
+.mmbb-app__nav a.is-current:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--mmbb-app-accent), inset 0 -2px 0 var(--mmbb-app-accent);
+}
+
+.mmbb-app__actions {
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-left: auto;
+}
+
+.mmbb-app__main {
+	width: 100%;
+	max-width: 1160px;
+	margin: 0 auto;
+	padding: 32px;
+}
+
+.mmbb-app__main.is-wide {
+	max-width: none;
+}
+
+/* Vertical rhythm for redesigned screens (the old screens keep their own). */
+.mmbb-app-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+@media (max-width: 782px) {
+
+	.mmbb-app__head {
+		position: static;
+		flex-wrap: wrap;
+		gap: 0 16px;
+		padding: 0 16px;
+	}
+
+	.mmbb-app__nav {
+		order: 3;
+		flex-basis: 100%;
+	}
+
+	.mmbb-app__nav a {
+		min-height: 48px;
+	}
+
+	.mmbb-app__main {
+		padding: 24px 16px;
+	}
+}
+
+/* ---------- Snackbars ---------- */
+.mmbb-app__snackbars {
+	position: fixed;
+	bottom: 24px;
+	left: 184px;
+	z-index: 100001;
+	width: auto;
+	max-width: calc(100% - 208px);
+}
+
+body.folded .mmbb-app__snackbars {
+	left: 60px;
+	max-width: calc(100% - 84px);
+}
+
+@media (max-width: 960px) {
+
+	body.auto-fold .mmbb-app__snackbars {
+		left: 60px;
+		max-width: calc(100% - 84px);
+	}
+}
+
+@media (max-width: 782px) {
+
+	body.auto-fold .mmbb-app__snackbars {
+		left: 16px;
+		max-width: calc(100% - 32px);
+	}
+}
+
+/* ---------- PageHeader ---------- */
+.mmbb-app-page-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.mmbb-app-page-head__text {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.mmbb-app .mmbb-app-page-head__title {
+	margin: 0;
+	padding: 0;
+	color: var(--mmbb-app-ink);
+	font-size: 23px;
+	font-weight: 400;
+	line-height: 1.3;
+}
+
+.mmbb-app .mmbb-app-page-head__desc {
+	margin: 0;
+	color: var(--mmbb-app-gray-700);
+	font-size: 13px;
+}
+
+.mmbb-app-page-head__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+}
+
+/* ---------- StatCard ---------- */
+.mmbb-app-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	background: var(--mmbb-app-surface);
+	border: 1px solid var(--mmbb-app-gray-200);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.mmbb-app-stat {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+	padding: 20px 24px;
+}
+
+.mmbb-app-stats > .mmbb-app-stat {
+	box-shadow: -1px 0 0 var(--mmbb-app-gray-100);
+}
+
+.mmbb-app-stat__label,
+.mmbb-app-stat__note {
+	color: var(--mmbb-app-gray-700);
+}
+
+.mmbb-app-stat__note {
+	font-size: 12px;
+}
+
+.mmbb-app-stat__value {
+	font-size: 28px;
+	font-weight: 400;
+	line-height: 1.2;
+	font-variant-numeric: tabular-nums;
+}
+
+.mmbb-app-stat__delta {
+	font-size: 12px;
+}
+
+.mmbb-app-stat__delta.is-positive {
+	color: var(--mmbb-app-ok-dot);
+}
+
+.mmbb-app-stat__delta.is-negative {
+	color: var(--mmbb-app-negative);
+}
+
+.mmbb-app-stat__delta.is-neutral {
+	color: var(--mmbb-app-gray-700);
+}
+
+/* ---------- StatusBadge ---------- */
+.mmbb-app-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 24px;
+	padding: 0 8px;
+	border-radius: 2px;
+	background: var(--mmbb-app-gray-100);
+	color: var(--mmbb-app-ink);
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+.mmbb-app-badge__dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: currentcolor;
+}
+
+.mmbb-app-badge.is-success {
+	background: var(--mmbb-app-ok-bg);
+	color: var(--mmbb-app-ok);
+}
+
+.mmbb-app-badge.is-warning {
+	background: var(--mmbb-app-warn-bg);
+	color: var(--mmbb-app-warn);
+}
+
+.mmbb-app-badge.is-info {
+	background: var(--mmbb-app-info-bg);
+	color: var(--mmbb-app-info);
+}
+
+/* ---------- EmptyState ---------- */
+.mmbb-app-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 48px 24px;
+	text-align: center;
+}
+
+.mmbb-app-empty__icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 56px;
+	height: 56px;
+	margin-bottom: 8px;
+	border-radius: 50%;
+	background: var(--mmbb-app-gray-100);
+	color: var(--mmbb-app-ink);
+}
+
+.mmbb-app-empty__icon svg {
+	fill: currentcolor;
+}
+
+.mmbb-app .mmbb-app-empty__title {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.mmbb-app-empty__text {
+	max-width: 440px;
+	color: var(--mmbb-app-gray-700);
+}
+
+.mmbb-app-empty__actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 8px;
+	margin-top: 8px;
+}
+
+/* ---------- DataTable ---------- */
+.mmbb-app-table-wrap {
+	overflow-x: auto;
+}
+
+.mmbb-app-table {
+	width: 100%;
+	border-collapse: collapse;
+	background: var(--mmbb-app-surface);
+}
+
+.mmbb-app-table th {
+	padding: 12px 16px;
+	border-bottom: 1px solid var(--mmbb-app-gray-200);
+	color: var(--mmbb-app-gray-700);
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	text-align: left;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.mmbb-app-table td {
+	padding: 14px 16px;
+	border-bottom: 1px solid var(--mmbb-app-gray-100);
+	vertical-align: middle;
+}
+
+.mmbb-app-table .is-numeric {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.mmbb-app-table tr.is-selected td {
+	background: var(--mmbb-app-info-bg);
+}
+
+.mmbb-app-table .mmbb-app-table__check {
+	width: 48px;
+	padding-right: 0;
+}
+
+.mmbb-app-table__sort {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	letter-spacing: inherit;
+	text-transform: inherit;
+	cursor: pointer;
+}
+
+.mmbb-app-table__sort:hover {
+	color: var(--mmbb-app-accent);
+}
+
+.mmbb-app-table__sort:focus-visible {
+	outline: 2px solid var(--mmbb-app-accent);
+	outline-offset: 2px;
+	border-radius: 2px;
+}
+
+.mmbb-app-table th:not([aria-sort]) .mmbb-app-table__arrow {
+	visibility: hidden;
+}
+
+.mmbb-app-table th:not([aria-sort]) .mmbb-app-table__sort:hover .mmbb-app-table__arrow {
+	visibility: visible;
+}
+
+.mmbb-app-table .mmbb-app-table__empty {
+	padding: 32px 16px;
+	color: var(--mmbb-app-gray-700);
+	text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.mmbb-app * {
+		transition: none;
+	}
+}

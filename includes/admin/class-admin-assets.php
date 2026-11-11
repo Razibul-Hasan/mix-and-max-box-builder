@@ -37,8 +37,10 @@ final class Admin_Assets {
 		}
 		$asset = require $asset_file;
 
+		// The app is built on @wordpress/components, so it needs their stylesheet too.
+		wp_enqueue_style( 'wp-components' );
 		wp_enqueue_style( 'mmbb-components' );
-		wp_enqueue_style( 'mmbb-admin', MMBB_URL . 'build/admin.css', array( 'mmbb-components' ), $asset['version'] );
+		wp_enqueue_style( 'mmbb-admin', MMBB_URL . 'build/admin.css', array( 'wp-components', 'mmbb-components' ), $asset['version'] );
 		wp_style_add_data( 'mmbb-admin', 'rtl', 'replace' );
 
 		wp_enqueue_script( 'mmbb-admin', MMBB_URL . 'build/admin.js', $asset['dependencies'], $asset['version'], true );

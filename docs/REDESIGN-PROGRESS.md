@@ -6,7 +6,7 @@ Updated by the agent at the end of every part.
 | --- | --- | --- | --- |
 | 0 | Audit and freeze | done | Redesign Part 0: Audit and freeze |
 | 1 | Baseline and safety net | done | Redesign Part 1: Baseline and safety net |
-| 2 | Admin foundation | not started | |
+| 2 | Admin foundation | done | Redesign Part 2: Admin foundation |
 | 3 | Home, Boxes, Create a box | not started | |
 | 4 | Editor shell and iframe preview | not started | |
 | 5 | Products and Discounts steps | not started | |
@@ -63,6 +63,36 @@ Updated by the agent at the end of every part.
 - **7 integration tests already fail on the code before this part** (checked by rerunning them with the Part 1 installer change reverted). `PublisherTest` (5 tests) and `RestCampaignsTest::test_publish` build a box from the "holiday" preset with one product. The newer `not_enough_products` validation (min 4 items, one product) rejects it, so the publish route answers 422. `RestCampaignsTest::test_preview` expects the payload keys from before `colors` and `freeGift` were added. These are stale tests, not broken features, and the legacy fixtures publish, price and render fine. Fixing them is outside this part; suggest a short fix commit before Part 4, which changes publish and preview.
 - The Local site runs this checkout. Its `mmbb_db_version` moves to `2.0.0` the next time wp-admin loads. The step is empty, so no data changes.
 
+### Part 2 — Admin foundation (2026-11-11)
+**Done:**
+- `src/admin/components/` holds the new shared admin pieces, built on `@wordpress/components`:
+  - `wp.js` is the only file that imports `__experimental*` components. It re-exports the eight from the plan under stable names.
+  - `AppShell`: white header with the box mark and name, real `admin.php?page=…` links (`aria-current` on the current one), Help on the right, and content up to 1160px wide.
+  - `PageHeader`, `StatCard` + `StatGroup`, `StatusBadge` (word + dot for all six computed statuses), `EmptyState`.
+  - `DataTable`: a plain `<table>` with a hidden caption, `aria-sort`, sort buttons (sorted here, or by the caller through `sort`/`onSort`), and row and select-all checkboxes (`CheckboxControl`, indeterminate).
+  - `Notices`: a `SnackbarList` fed by the `core/notices` store in its own context (`mmbb-admin`), plus `useSnackbar()`. Mounted once in `App.js`.
+- `src/admin/components/app.css` carries the admin rules from `design/canvas/wp.css` (header, nav, main, title, stats, badge, table, empty state, snackbars), scoped under `.mmbb-app` / `.mmbb-app-*`. The accent is `var(--wp-admin-theme-color)`, so the merchant's admin colour scheme applies. It is bundled into the existing `build/admin.css` (handle `mmbb-admin`).
+- `src/admin/Shell.js`, the wrapper all five screens already use, now renders `AppShell`. Dashboard, Campaigns (list and new), the editor, Analytics and Settings all load inside the new header and keep their old content until Parts 3–10. The editor passes `wide` so its two-column layout isn't squeezed to 1160px before Part 4 replaces it.
+- `Admin_Assets::enqueue()` enqueues the `wp-components` stylesheet, only on our four screens (the existing `Menu::page_for_hook()` gate). `mmbb-admin` depends on it. `wp_set_script_translations( 'mmbb-admin', 'productboxes-mix-and-match-box-builder', … )` was already in place and is unchanged.
+- `build/admin.asset.php` now lists `react-jsx-runtime, wp-api-fetch, wp-components, wp-data, wp-element, wp-i18n, wp-notices, wp-primitives, wp-url`.
+- Tests: `tests/js/admin/app-components.test.js` (17) covers the experimental re-exports, shell links and current page, frozen slugs in the nav, the header pieces, every status badge, DataTable sort (own and controlled), selection, the empty row, and that snackbars from another context don't show. `AdminMenuTest` now asserts that `wp-components` is enqueued on our screen only, and that the labels changed while the slugs did not.
+
+**Decisions:**
+- **Menu and nav labels are now Home and Boxes** (open issue 8). The plan says to change labels where the audit shows they differ from the design. Slugs (`mmbb`, `mmbb-campaigns`) and page ids are unchanged. The old screens' own page titles ("Dashboard", "Campaigns") stay until Part 3 rebuilds those screens. Reverting means two strings in `class-menu.php` and two in `Shell.js`.
+- **No `wp-icons` dependency** (open issue 10, audit risk 9). `@wordpress/scripts` 31.8.0 bundles `@wordpress/icons`; WordPress ships no `wp-icons` handle for 6.6. The two icons used (help, external) are tree-shaken into `admin.js`, and `@wordpress/primitives` comes from WordPress (`wp-primitives`). `admin.js` grew 605 bytes.
+- **New packages pinned to the same WordPress release as `@wordpress/components` 30.3.0**: `@wordpress/data` 10.30.0, `@wordpress/notices` 5.30.0, `@wordpress/icons` 10.30.0. There is also an npm `overrides` entry pinning `@wordpress/rich-text` to 7.30.0. The lockfile had `rich-text` 7.57.0, whose nested `@wordpress/private-apis` 2.0.0 cannot unlock the objects `components` 30.3.0 locks with 1.x. Importing `@wordpress/components` in Jest failed with "Cannot unlock an object that was not locked before". The block editor code never hit it because no test imported it. Production is unaffected either way: all of these are externals loaded from WordPress.
+- `.mmbb-app__main` has no flex gap, so the old screens keep their spacing. New screens wrap their content in `.mmbb-app-stack` (24px rhythm, as in the design).
+- The existing `ToastProvider` (plugin toasts) stays for the old screens. New screens use `useSnackbar()`. Old design-system components (`src/components`, `window.mmbbComponents`, `AdminShell`) are untouched.
+- `.stylelintrc.json` gives `app.css` the `mmbb-` class pattern, with WordPress's own `folded` / `auto-fold` body classes allowed (the snackbar list moves with the folded admin menu).
+
+**Frozen identifiers touched:** none. Handles, page slugs, the mount point (`#mmbb-admin.mmbb-root`), `window.mmbbAdmin` and the text domain are unchanged. Only two menu labels changed (labels are not identifiers).
+**Data changes and migration steps:** none.
+**Checks run:** build ✅ (`build/` 642 KB; `admin.js` 192,664 bytes, +605; `admin.css` 32,925 bytes) · no React or `@wordpress/*` copy in `admin.js` ✅ (searched for React internals and package code) · `admin.asset.php` lists `wp-components` ✅ · lint:js ✅ · lint:css ✅ · PHPCS ✅ (0/0) · test:js ✅ (250, 17 new) · test:unit ✅ (109) · integration, legacy orders: 190 tests, the same 7 failures as Part 1 and no new ones · integration, HPOS: same 7 · legacy fixtures ✅ (15 tests) · `AdminMenuTest` ✅ · `wp i18n make-pot . --domain=productboxes-mix-and-match-box-builder` ✅. It printed three duplicate-translator-comment warnings, all from before this part. A fourth, from the new `Select %s`, was fixed by reusing the existing comment. · Plugin Check in place ✅ (no errors, same as the baseline) · plugin-review PHPCS ruleset on the packaged zip ✅ (zip 551,328 bytes)
+**Skipped checks (and why):** No browser was driven here, so the shell was not looked at against `design/canvas/Main.dc.html` on screen. Every screen renders inside it in Jest (dashboard, campaigns, settings, analytics and editor tests). wp-env needs Docker, as in Part 1.
+**Open issues:**
+- Open issue 8 is answered by the plan's rule (labels now Home and Boxes). Say so if you'd rather keep Dashboard and Campaigns.
+- The 7 stale integration tests from Part 1 still fail. They are untouched here.
+
 <!-- Copy for each part:
 
 ### Part N — Title (YYYY-MM-DD)
@@ -86,9 +116,9 @@ Questions for the owner from Part 0. The numbers in brackets are the risks in `d
 5. **Countdown (risk 6).** The design offers only "the last 3 days". Today a merchant picks 0 to 30 days. Keep the number, or fix it at 3 for new boxes?
 6. **Gift wrap and note (risk 7).** One toggle in the design, two separate options today. Proposed: keep both keys and show two toggles.
 7. **Features with no place in the new design:** size tags (popular, best value), fixed-amount and box-price tiers, the sticker text, custom ladder and countdown colours, low-stock notes, the unlock toast, the store-wide button label and empty-slot hint, and "Load assets only on builder pages". Proposed: keep the data and behaviour, and give each a control where it fits; none is removed without your say.
-8. **Admin menu labels.** The design says Home and Boxes; the menu says Dashboard and Campaigns. Labels are not identifiers. Change them?
+8. **Admin menu labels.** The design says Home and Boxes; the menu says Dashboard and Campaigns. Labels are not identifiers. Change them? *Part 2: changed to Home and Boxes per the plan; slugs unchanged. Easy to revert.*
 9. **Figtree.** Today's storefront and admin use it, and it is not in the new font list. Keep shipping it for the Spotlight template?
-10. **`@wordpress/icons` (risk 9).** It is compiled into our script by `@wordpress/scripts`, not loaded from WordPress, so Part 2's `wp-icons` dependency does not apply. No minimum WordPress bump is needed so far.
+10. **`@wordpress/icons` (risk 9).** It is compiled into our script by `@wordpress/scripts`, not loaded from WordPress, so Part 2's `wp-icons` dependency does not apply. No minimum WordPress bump is needed so far. *Part 2: confirmed, no `wp-icons` handle; icons are tree-shaken into `admin.js`.*
 11. **WP-CLI** is needed for `wp i18n make-pot` (Parts 2 and 11) and was not on PATH here.
 
 ## Compatibility matrix (Part 11)
