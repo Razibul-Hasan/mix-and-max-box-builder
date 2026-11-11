@@ -1,0 +1,38 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-11-08T17:20:00Z"},
+  "title": "ProductBoxes redesign",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 1440, "h": 1000, "title": "Home", "expand": "fill", "is_interactive": true},
+    "Boxes.dc.html": {"x": 1520, "y": 0, "w": 1440, "h": 900, "title": "Boxes", "expand": "fill", "is_interactive": true},
+    "NewBox.dc.html": {"x": 3040, "y": 0, "w": 1440, "h": 900, "title": "Create a box (modal)", "expand": "fill", "is_interactive": true},
+    "EditorProducts.dc.html": {"x": 0, "y": 1520, "w": 1440, "h": 960, "title": "Editor 1 · Products", "expand": "fill", "is_interactive": true},
+    "EditorDiscounts.dc.html": {"x": 1520, "y": 1520, "w": 1440, "h": 960, "title": "Editor 2 · Discounts", "expand": "fill", "is_interactive": true},
+    "EditorDesign.dc.html": {"x": 3040, "y": 1520, "w": 1440, "h": 960, "title": "Editor 3 · Design", "expand": "fill", "is_interactive": true},
+    "Publish.dc.html": {"x": 4560, "y": 1520, "w": 1440, "h": 960, "title": "Publish (modal)", "expand": "fill", "is_interactive": true},
+    "Analytics.dc.html": {"x": 0, "y": 3000, "w": 1440, "h": 1350, "title": "Analytics", "expand": "fill", "is_interactive": true},
+    "Settings.dc.html": {"x": 1520, "y": 3000, "w": 1440, "h": 1350, "title": "Settings", "expand": "fill", "is_interactive": true},
+    "TplClassic.dc.html": {"x": 0, "y": 4870, "w": 1280, "h": 1200, "title": "01 · Spotlight", "is_interactive": true},
+    "TplMinimal.dc.html": {"x": 1360, "y": 4870, "w": 1280, "h": 1200, "title": "02 · Clean list", "is_interactive": true},
+    "TplSteps.dc.html": {"x": 2720, "y": 4870, "w": 1280, "h": 1200, "title": "03 · Guided steps", "is_interactive": true},
+    "TplGiftBox.dc.html": {"x": 4080, "y": 4870, "w": 1280, "h": 1200, "title": "04 · Gift tray", "is_interactive": true},
+    "TplBold.dc.html": {"x": 5440, "y": 4870, "w": 1280, "h": 1200, "title": "05 · Color block", "is_interactive": true},
+    "TplPastel.dc.html": {"x": 0, "y": 6190, "w": 1280, "h": 1200, "title": "06 · Pastel", "is_interactive": true},
+    "TplEditorial.dc.html": {"x": 1360, "y": 6190, "w": 1280, "h": 1200, "title": "07 · Editorial", "is_interactive": true},
+    "TplNight.dc.html": {"x": 2720, "y": 6190, "w": 1280, "h": 1200, "title": "08 · Night", "is_interactive": true},
+    "TplSplit.dc.html": {"x": 4080, "y": 6190, "w": 1280, "h": 1200, "title": "09 · Split screen", "is_interactive": true},
+    "TplCompact.dc.html": {"x": 5440, "y": 6190, "w": 640, "h": 1200, "title": "10 · Compact card", "is_interactive": true},
+    "Mobile.dc.html": {"x": 6160, "y": 6190, "w": 390, "h": 844, "title": "Phone · Clean list", "is_interactive": true}
+  },
+  "order": ["Main.dc.html", "Boxes.dc.html", "NewBox.dc.html", "EditorProducts.dc.html", "EditorDiscounts.dc.html", "EditorDesign.dc.html", "Publish.dc.html", "Analytics.dc.html", "Settings.dc.html", "TplClassic.dc.html", "TplMinimal.dc.html", "TplSteps.dc.html", "TplGiftBox.dc.html", "TplBold.dc.html", "TplPastel.dc.html", "TplEditorial.dc.html", "TplNight.dc.html", "TplSplit.dc.html", "TplCompact.dc.html", "Mobile.dc.html"],
+  "notes": {
+    "t1": {"x": 0, "y": -300, "text": "Admin · Home, Boxes, Create", "kind": "title1", "maxW": 4480},
+    "t2": {"x": 0, "y": 1220, "text": "Box editor · 3 steps, live iframe preview, publish", "kind": "title1", "maxW": 6000},
+    "t3": {"x": 0, "y": 2700, "text": "Reports and settings", "kind": "title1", "maxW": 2960},
+    "t4": {"x": 0, "y": 4570, "text": "Storefront templates · 10 looks, one per box", "kind": "title1", "maxW": 6720},
+    "n1": {"x": 6080, "y": 1520, "w": 360, "size": "m", "fill": "blue", "text": "Preview runs in an iframe\n\nIn the plugin the editor preview is a real <iframe> of the storefront: /?productboxes_preview=12&template=spotlight&_wpnonce=…\n\nThe theme's CSS and fonts load inside it, wp-admin CSS stays out, so the merchant sees exactly what shoppers see.\n\nThe editor sends unsaved changes to it with postMessage, so it updates as you type without reloading.\n\nOn this canvas the frame is drawn with the real template inside, because a canvas can't hold iframes."}
+  },
+  "designSystems": []
+}

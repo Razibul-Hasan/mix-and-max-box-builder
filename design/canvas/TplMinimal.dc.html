@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Template 02 · Clean list</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wp.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400..800&display=swap">
+<style>
+body{margin:0}
+.t2{font-family:"Inter Tight",system-ui,sans-serif;color:#111}
+.t2 *{box-sizing:border-box}
+.t2 h2,.t2 p{margin:0}
+.t2 .row{display:flex;align-items:center;gap:24px;padding:18px 0;border-bottom:1px solid #ededed}
+.t2 .row img{width:104px;height:104px;border-radius:16px;object-fit:cover;background:#eef1f4;mix-blend-mode:multiply}
+.t2 .add{width:140px;height:48px;border-radius:24px;border:1.5px solid #111;background:#fff;font:inherit;font-size:15px;font-weight:600;cursor:pointer;color:#111}
+.t2 .add:hover{background:#111;color:#fff}
+.t2 .qty{width:140px;height:48px;border-radius:24px;display:flex;align-items:center;justify-content:space-between;color:#fff}
+.t2 .qty button{width:48px;height:48px;border:0;background:transparent;color:#fff;font-size:20px;cursor:pointer;font-family:inherit}
+.t2 .seg i{flex:1;height:10px;border-radius:5px;display:block}
+</style>
+</helmet>
+<div class="t2" style="width: 1280px; height: 1200px; box-sizing: border-box; background: #ffffff; position: relative; overflow: hidden">
+<div style="max-width: 800px; margin: 0 auto; padding: 72px 0 180px; display: flex; flex-direction: column; gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 16px; align-items: center; text-align: center">
+<h2 style="font-size: 64px; font-weight: 750; line-height: 1; letter-spacing: -0.04em">Fill the box.<br><span style="color: #a3a8b0">Keep the savings.</span></h2>
+<p style="color: #5b6069; font-size: 18px">4 items 10% off · 6 items 15% off · 12 items 25% off</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div class="seg" style="display: flex; gap: 6px" aria-hidden="true"><sc-for list="{{segs}}" as="s" hint-placeholder-count="12"><i style="background: {{s.c}}"></i></sc-for></div>
+<div style="display: flex; justify-content: space-between; font-size: 14px; color: #5b6069"><span>{{count}} of 12 picked</span><span>{{msgLead}} <b style="color: #111">{{msgDeal}}</b></span></div>
+</div>
+<div style="border-top: 1px solid #ededed">
+<sc-for list="{{products}}" as="p" hint-placeholder-count="5">
+<div class="row">
+<img src="{{p.img}}" alt="{{p.name}}">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 4px"><b style="font-size: 20px; font-weight: 600; letter-spacing: -0.01em">{{p.name}}</b><span style="font-size: 16px; color: #5b6069">{{p.priceS}}</span></div>
+<sc-if value="{{p.empty}}" hint-placeholder-val="{{true}}"><button type="button" class="add" onClick="{{p.add}}" aria-label="Add {{p.name}}">Add</button></sc-if>
+<sc-if value="{{p.has}}" hint-placeholder-val="{{false}}"><div class="qty" style="background: {{accent}}"><button type="button" onClick="{{p.rem}}" aria-label="Remove one {{p.name}}">−</button><b>{{p.qty}}</b><button type="button" onClick="{{p.add}}" aria-label="Add one more {{p.name}}">+</button></div></sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); width: 960px; background: #111; color: #fff; border-radius: 28px; padding: 14px 14px 14px 28px; display: flex; align-items: center; gap: 28px; box-shadow: 0 24px 48px -16px rgba(0,0,0,.4)">
+<b style="font-size: 40px; font-weight: 750; letter-spacing: -0.03em; font-variant-numeric: tabular-nums">{{count}}<span style="font-size: 18px; color: #8d929b; font-weight: 500">/12</span></b>
+<div style="flex: 1; display: flex; flex-direction: column" aria-live="polite"><span style="font-size: 15px">{{nowLine}}</span><span style="font-size: 13px; color: #a3a8b0">You save {{discS}}</span></div>
+<b style="font-size: 28px; letter-spacing: -0.02em">{{totalS}}</b>
+<sc-if value="{{ready}}" hint-placeholder-val="{{true}}"><button type="button" style="height: 56px; padding: 0 28px; border: 0; border-radius: 20px; background: #fff; color: #111; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer">Add box to cart</button></sc-if>
+<sc-if value="{{notReady}}" hint-placeholder-val="{{false}}"><button type="button" disabled style="height: 56px; padding: 0 28px; border: 0; border-radius: 20px; background: #2a2a2e; color: #a3a8b0; font: inherit; font-size: 16px; font-weight: 600">{{ctaWait}}</button></sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#111111","options":["#111111","#2b4bff","#0a7a3b","#ff4f1f"]},"$preview":{"width":1280,"height":1200}}'>
+const PB_P = [
+  { id: 'beanie', name: 'Beanie', price: 18, img: '/_blob/a21d75322d1f2c79c0b493d770e100ba' },
+  { id: 'belt', name: 'Belt', price: 55, img: '/_blob/dbf6bf4993577849550a7cf059cabaac' },
+  { id: 'cap', name: 'Cap', price: 16, img: '/_blob/7bb413bb81c62e7140669f3f245799f6' },
+  { id: 'sunglasses', name: 'Sunglasses', price: 90, img: '/_blob/3b8ae96639edc920d9a59a6c11f5a7d8' },
+  { id: 'tshirt', name: 'T-shirt', price: 18, img: '/_blob/e08619cc92331767f559db4a150cf594' }
+];
+const PB_T = [{ q: 4, d: 10 }, { q: 6, d: 15 }, { q: 12, d: 25 }];
+const PB_CAP = 12, PB_MIN = 4, PB_PER = 3;
+function pbMoney(n) { return n.toFixed(2) + '৳'; }
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { box: { beanie: 2, cap: 1, tshirt: 2 } }; }
+  renderVals() {
+    const accent = this.props.accent ?? '#111111';
+    const box = this.state.box;
+    const count = Object.values(box).reduce((a, b) => a + b, 0);
+    const sub = PB_P.reduce((s, p) => s + (box[p.id] || 0) * p.price, 0);
+    let tier = null; PB_T.forEach((t) => { if (count >= t.q) tier = t; });
+    const next = PB_T.find((t) => t.q > count);
+    const disc = tier ? Math.round(sub * tier.d) / 100 : 0;
+    const set = (b) => this.setState({ box: b });
+    const segs = [];
+    for (let i = 1; i <= PB_CAP; i++) { const tierMark = PB_T.some((t) => t.q === i); segs.push({ c: i <= count ? accent : (tierMark ? '#c9cdd3' : '#eceef1') }); }
+    return {
+      accent, count, segs,
+      products: PB_P.map((p) => { const qty = box[p.id] || 0; return { ...p, qty, has: qty > 0, empty: qty === 0, priceS: pbMoney(p.price),
+        add: () => { if (count >= PB_CAP || qty >= PB_PER) return; set({ ...box, [p.id]: qty + 1 }); },
+        rem: () => { const b = { ...box }; if (qty <= 1) delete b[p.id]; else b[p.id] = qty - 1; set(b); } }; }),
+      msgLead: next ? 'Add ' + (next.q - count) + ' more to get' : 'Best deal unlocked:',
+      msgDeal: next ? next.d + '% off' : '25% off',
+      nowLine: tier ? tier.d + '% off is on' : 'No discount yet',
+      discS: pbMoney(disc), totalS: pbMoney(sub - disc),
+      ready: count >= PB_MIN, notReady: count < PB_MIN,
+      ctaWait: 'Add ' + (PB_MIN - count) + ' more'
+    };
+  }
+}
+</script>
+</body>
+</html>

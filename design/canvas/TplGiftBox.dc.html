@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Template 04 · Gift tray</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wp.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=DM+Sans:wght@400..700&display=swap">
+<style>
+body{margin:0}
+.t4{font-family:"DM Sans",system-ui,sans-serif;color:#f6efe3}
+.t4 *{box-sizing:border-box}
+.t4 h2,.t4 h3,.t4 p{margin:0}
+.t4 .serif{font-family:Fraunces,Georgia,serif}
+.t4 .slot{aspect-ratio:1/1;border-radius:14px;background:#fffaf1;box-shadow:inset 0 2px 4px rgba(15,61,46,.12);overflow:hidden;display:flex;align-items:center;justify-content:center;color:#b9ab95;font-size:13px}
+.t4 .slot img{width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply}
+.t4 .tile{position:relative;border-radius:20px;background:#f6efe3;overflow:hidden}
+.t4 .tile img{width:100%;aspect-ratio:4/5;object-fit:cover;display:block;mix-blend-mode:multiply}
+.t4 .rnd{position:absolute;right:12px;bottom:12px;width:48px;height:48px;border-radius:50%;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#0f3d2e;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.t4 .pill{position:absolute;right:12px;bottom:12px;height:48px;border-radius:24px;display:flex;align-items:center;color:#0f3d2e;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.t4 .pill button{width:42px;height:48px;border:0;background:transparent;color:#0f3d2e;font-size:20px;cursor:pointer;font-family:inherit}
+</style>
+</helmet>
+<div class="t4" style="width: 1280px; min-height: 1200px; box-sizing: border-box; background: #0f3d2e; padding: 56px 64px; display: flex; flex-direction: column; gap: 44px">
+<div style="display: flex; gap: 48px; align-items: center">
+<div style="flex: 0 0 400px; display: flex; flex-direction: column; gap: 18px">
+<span style="font-size: 14px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: {{accent}}">The holiday box</span>
+<h2 class="serif" style="font-size: 64px; font-weight: 500; line-height: 1; letter-spacing: -0.02em">Wrap up <i>something</i> good.</h2>
+<p style="font-size: 18px; color: #c8d6cf">Fill 4, 6 or 12 spots. The fuller the box, the bigger the gift to you.</p>
+<div style="display: flex; gap: 8px; flex-wrap: wrap"><sc-for list="{{tiers}}" as="t" hint-placeholder-count="3"><span style="height: 36px; padding: 0 14px; border-radius: 18px; display: inline-flex; align-items: center; font-size: 14px; font-weight: 600; background: {{t.bg}}; color: {{t.fg}}">{{t.q}} items · {{t.d}}% off</span></sc-for></div>
+</div>
+<section style="flex: 1; background: #f6efe3; color: #0f3d2e; border-radius: 28px; padding: 26px; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 30px 60px -20px rgba(0,0,0,.45)" aria-label="Your box">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><h3 class="serif" style="font-size: 26px; font-weight: 600">Your gift box</h3><span style="font-weight: 600">{{count}} of 12</span></div>
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; padding: 14px; border-radius: 18px; background: #e9dfcd"><sc-for list="{{slots}}" as="s" hint-placeholder-count="12"><div class="slot"><sc-if value="{{s.img}}" hint-placeholder-val="{{false}}"><img src="{{s.img}}" alt="{{s.name}}"></sc-if><sc-if value="{{s.empty}}" hint-placeholder-val="{{true}}"><span>{{s.n}}</span></sc-if></div></sc-for></div>
+<div style="display: flex; align-items: center; gap: 22px">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 8px" aria-live="polite"><p style="font-size: 15px">{{msgLead}} <b>{{msgDeal}}</b></p><div style="height: 8px; border-radius: 4px; background: #e2d6c2; overflow: hidden"><div style="height: 100%; width: {{pct}}%; background: #0f3d2e; border-radius: 4px"></div></div></div>
+<div style="text-align: right"><span style="display: block; font-size: 13px; color: #5a6f66">You save {{discS}}</span><b class="serif" style="font-size: 30px">{{totalS}}</b></div>
+<sc-if value="{{ready}}" hint-placeholder-val="{{true}}"><button type="button" style="height: 56px; padding: 0 26px; border: 0; border-radius: 28px; background: #0f3d2e; color: #f6efe3; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer">Add box to cart</button></sc-if>
+<sc-if value="{{notReady}}" hint-placeholder-val="{{false}}"><button type="button" disabled style="height: 56px; padding: 0 26px; border: 0; border-radius: 28px; background: #e2d6c2; color: #5a6f66; font: inherit; font-size: 16px; font-weight: 600">{{ctaWait}}</button></sc-if>
+</div>
+</section>
+</div>
+<div style="display: flex; flex-direction: column; gap: 20px">
+<h3 class="serif" style="font-size: 30px; font-weight: 500">Choose your favourites</h3>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px">
+<sc-for list="{{products}}" as="p" hint-placeholder-count="5">
+<article style="display: flex; flex-direction: column; gap: 12px">
+<div class="tile"><img src="{{p.img}}" alt="{{p.name}}">
+<sc-if value="{{p.empty}}" hint-placeholder-val="{{true}}"><button type="button" class="rnd" style="background: {{accent}}" onClick="{{p.add}}" aria-label="Add {{p.name}} to box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></sc-if>
+<sc-if value="{{p.has}}" hint-placeholder-val="{{false}}"><div class="pill" style="background: {{accent}}"><button type="button" onClick="{{p.rem}}" aria-label="Remove one {{p.name}}">−</button><b style="min-width: 14px; text-align: center">{{p.qty}}</b><button type="button" onClick="{{p.add}}" aria-label="Add one more {{p.name}}">+</button></div></sc-if>
+</div>
+<div style="display: flex; justify-content: space-between; font-size: 16px"><b style="font-weight: 600">{{p.name}}</b><span style="color: #c8d6cf">{{p.priceS}}</span></div>
+</article>
+</sc-for>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#f2c14e","options":["#f2c14e","#f6efe3","#ff8f6b","#9be3c1"]},"$preview":{"width":1280,"height":1200}}'>
+const PB_P = [
+  { id: 'beanie', name: 'Beanie', price: 18, img: '/_blob/a21d75322d1f2c79c0b493d770e100ba' },
+  { id: 'belt', name: 'Belt', price: 55, img: '/_blob/dbf6bf4993577849550a7cf059cabaac' },
+  { id: 'cap', name: 'Cap', price: 16, img: '/_blob/7bb413bb81c62e7140669f3f245799f6' },
+  { id: 'sunglasses', name: 'Sunglasses', price: 90, img: '/_blob/3b8ae96639edc920d9a59a6c11f5a7d8' },
+  { id: 'tshirt', name: 'T-shirt', price: 18, img: '/_blob/e08619cc92331767f559db4a150cf594' }
+];
+const PB_T = [{ q: 4, d: 10 }, { q: 6, d: 15 }, { q: 12, d: 25 }];
+const PB_CAP = 12, PB_MIN = 4, PB_PER = 3;
+function pbMoney(n) { return n.toFixed(2) + '৳'; }
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { box: { beanie: 2, cap: 1, tshirt: 2 } }; }
+  renderVals() {
+    const accent = this.props.accent ?? '#f2c14e';
+    const box = this.state.box;
+    const count = Object.values(box).reduce((a, b) => a + b, 0);
+    const sub = PB_P.reduce((s, p) => s + (box[p.id] || 0) * p.price, 0);
+    let tier = null; PB_T.forEach((t) => { if (count >= t.q) tier = t; });
+    const next = PB_T.find((t) => t.q > count);
+    const disc = tier ? Math.round(sub * tier.d) / 100 : 0;
+    const set = (b) => this.setState({ box: b });
+    const filled = [];
+    PB_P.forEach((p) => { for (let i = 0; i < (box[p.id] || 0); i++) filled.push(p); });
+    const slots = [];
+    for (let i = 0; i < PB_CAP; i++) { const f = filled[i]; slots.push(f ? { img: f.img, name: f.name, empty: false, n: i + 1 } : { img: '', name: '', empty: true, n: i + 1 }); }
+    return {
+      accent, count, slots,
+      tiers: PB_T.map((t) => { const hit = count >= t.q; return { ...t, bg: hit ? accent : 'rgba(246,239,227,.12)', fg: hit ? '#0f3d2e' : '#f6efe3' }; }),
+      products: PB_P.map((p) => { const qty = box[p.id] || 0; return { ...p, qty, has: qty > 0, empty: qty === 0, priceS: pbMoney(p.price),
+        add: () => { if (count >= PB_CAP || qty >= PB_PER) return; set({ ...box, [p.id]: qty + 1 }); },
+        rem: () => { const b = { ...box }; if (qty <= 1) delete b[p.id]; else b[p.id] = qty - 1; set(b); } }; }),
+      msgLead: next ? 'Add ' + (next.q - count) + ' more to get' : 'Best deal unlocked:',
+      msgDeal: next ? next.d + '% off' : '25% off',
+      pct: Math.min(100, (count / PB_CAP) * 100),
+      discS: pbMoney(disc), totalS: pbMoney(sub - disc),
+      ready: count >= PB_MIN, notReady: count < PB_MIN,
+      ctaWait: 'Add ' + (PB_MIN - count) + ' more'
+    };
+  }
+}
+</script>
+</body>
+</html>

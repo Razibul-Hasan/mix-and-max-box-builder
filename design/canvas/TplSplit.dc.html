@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Template 09 · Split screen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wp.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400..700&display=swap">
+<style>
+body{margin:0}
+.t9{font-family:Inter,system-ui,sans-serif;color:#111}
+.t9 *{box-sizing:border-box}
+.t9 h2,.t9 h3,.t9 p{margin:0}
+.t9 .disp{font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.t9 .slot{aspect-ratio:1/1;border-radius:16px;background:rgba(255,255,255,.22);border:1.5px dashed rgba(255,255,255,.55);overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.85);font-weight:600}
+.t9 .slot.full{background:#fff;border:0}
+.t9 .slot img{width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply}
+.t9 .pic{border-radius:20px;background:#f2f3f5;overflow:hidden;position:relative}
+.t9 .pic img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;mix-blend-mode:multiply}
+.t9 .add{height:46px;border-radius:23px;border:1.5px solid #111;background:#fff;font:inherit;font-size:15px;font-weight:600;cursor:pointer;color:#111}
+.t9 .qty{height:46px;border-radius:23px;display:flex;align-items:center;justify-content:space-between;color:#fff}
+.t9 .qty button{width:46px;height:46px;border:0;background:transparent;color:#fff;font-size:20px;cursor:pointer;font-family:inherit}
+</style>
+</helmet>
+<div class="t9" style="width: 1280px; height: 1200px; box-sizing: border-box; background: #ffffff; display: flex">
+<section style="flex: 0 0 540px; background: {{accent}}; color: #fff; padding: 56px 48px; display: flex; flex-direction: column; gap: 26px" aria-label="Your box">
+<h2 class="disp" style="font-size: 64px; font-weight: 800; line-height: 0.95; letter-spacing: -0.04em">Fill it up.<br>Pay less.</h2>
+<div style="display: flex; gap: 8px"><sc-for list="{{tiers}}" as="t" hint-placeholder-count="3"><span style="flex: 1; height: 54px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: {{t.bg}}; color: {{t.fg}}"><b style="font-size: 18px; line-height: 1.1">{{t.d}}%</b><span style="font-size: 12px">{{t.q}} items</span></span></sc-for></div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px"><sc-for list="{{slots}}" as="s" hint-placeholder-count="12"><div class="slot {{s.cls}}"><sc-if value="{{s.img}}" hint-placeholder-val="{{false}}"><img src="{{s.img}}" alt="{{s.name}}"></sc-if><sc-if value="{{s.empty}}" hint-placeholder-val="{{true}}"><span>{{s.n}}</span></sc-if></div></sc-for></div>
+<p style="font-size: 17px" aria-live="polite">{{msgLead}} <b>{{msgDeal}}</b></p>
+<div style="margin-top: auto; background: #fff; color: #111; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="color: #5b6069">{{count}} items · save {{discS}}</span><b class="disp" style="font-size: 34px; letter-spacing: -0.03em">{{totalS}}</b></div>
+<sc-if value="{{ready}}" hint-placeholder-val="{{true}}"><button type="button" style="height: 56px; border: 0; border-radius: 28px; background: #111; color: #fff; font: inherit; font-size: 17px; font-weight: 700; cursor: pointer">Add box to cart</button></sc-if>
+<sc-if value="{{notReady}}" hint-placeholder-val="{{false}}"><button type="button" disabled style="height: 56px; border: 0; border-radius: 28px; background: #eef0f2; color: #5b6069; font: inherit; font-size: 16px; font-weight: 600">{{ctaWait}}</button></sc-if>
+</div>
+</section>
+<div style="flex: 1; min-width: 0; padding: 56px 48px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; justify-content: space-between; align-items: center"><h3 class="disp" style="font-size: 28px; font-weight: 700">Pick your favourites</h3><span style="color: #5b6069">5 products</span></div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 18px">
+<sc-for list="{{products}}" as="p" hint-placeholder-count="5">
+<article style="display: flex; flex-direction: column; gap: 12px">
+<div class="pic"><img src="{{p.img}}" alt="{{p.name}}"><sc-if value="{{p.has}}" hint-placeholder-val="{{false}}"><span style="position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; background: {{accent}}; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center">{{p.qty}}</span></sc-if></div>
+<div style="display: flex; justify-content: space-between"><b style="font-size: 17px">{{p.name}}</b><span>{{p.priceS}}</span></div>
+<sc-if value="{{p.empty}}" hint-placeholder-val="{{true}}"><button type="button" class="add" onClick="{{p.add}}">Add</button></sc-if>
+<sc-if value="{{p.has}}" hint-placeholder-val="{{false}}"><div class="qty" style="background: {{accent}}"><button type="button" onClick="{{p.rem}}" aria-label="Remove one {{p.name}}">−</button><b>{{p.qty}}</b><button type="button" onClick="{{p.add}}" aria-label="Add one more {{p.name}}">+</button></div></sc-if>
+</article>
+</sc-for>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#ff6b4a","options":["#ff6b4a","#2b4bff","#111111","#0a7a3b"]},"$preview":{"width":1280,"height":1200}}'>
+const PB_P = [
+  { id: 'beanie', name: 'Beanie', price: 18, img: '/_blob/a21d75322d1f2c79c0b493d770e100ba' },
+  { id: 'belt', name: 'Belt', price: 55, img: '/_blob/dbf6bf4993577849550a7cf059cabaac' },
+  { id: 'cap', name: 'Cap', price: 16, img: '/_blob/7bb413bb81c62e7140669f3f245799f6' },
+  { id: 'sunglasses', name: 'Sunglasses', price: 90, img: '/_blob/3b8ae96639edc920d9a59a6c11f5a7d8' },
+  { id: 'tshirt', name: 'T-shirt', price: 18, img: '/_blob/e08619cc92331767f559db4a150cf594' }
+];
+const PB_T = [{ q: 4, d: 10 }, { q: 6, d: 15 }, { q: 12, d: 25 }];
+const PB_CAP = 12, PB_MIN = 4, PB_PER = 3;
+function pbMoney(n) { return n.toFixed(2) + '৳'; }
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { box: { beanie: 2, cap: 1, tshirt: 2 } }; }
+  renderVals() {
+    const accent = this.props.accent ?? '#ff6b4a';
+    const box = this.state.box;
+    const count = Object.values(box).reduce((a, b) => a + b, 0);
+    const sub = PB_P.reduce((s, p) => s + (box[p.id] || 0) * p.price, 0);
+    let tier = null; PB_T.forEach((t) => { if (count >= t.q) tier = t; });
+    const next = PB_T.find((t) => t.q > count);
+    const disc = tier ? Math.round(sub * tier.d) / 100 : 0;
+    const set = (b) => this.setState({ box: b });
+    const filled = [];
+    PB_P.forEach((p) => { for (let i = 0; i < (box[p.id] || 0); i++) filled.push(p); });
+    const slots = [];
+    for (let i = 0; i < PB_CAP; i++) { const f = filled[i]; slots.push(f ? { img: f.img, name: f.name, cls: 'full', empty: false, n: i + 1 } : { img: '', name: '', cls: '', empty: true, n: i + 1 }); }
+    return {
+      accent, count, slots,
+      tiers: PB_T.map((t) => { const hit = count >= t.q; return { ...t, bg: hit ? '#111' : 'rgba(255,255,255,.2)', fg: '#fff' }; }),
+      products: PB_P.map((p) => { const qty = box[p.id] || 0; return { ...p, qty, has: qty > 0, empty: qty === 0, priceS: pbMoney(p.price),
+        add: () => { if (count >= PB_CAP || qty >= PB_PER) return; set({ ...box, [p.id]: qty + 1 }); },
+        rem: () => { const b = { ...box }; if (qty <= 1) delete b[p.id]; else b[p.id] = qty - 1; set(b); } }; }),
+      msgLead: next ? 'Add ' + (next.q - count) + ' more to get' : 'Best deal unlocked:',
+      msgDeal: next ? next.d + '% off' : '25% off',
+      discS: pbMoney(disc), totalS: pbMoney(sub - disc),
+      ready: count >= PB_MIN, notReady: count < PB_MIN,
+      ctaWait: 'Add ' + (PB_MIN - count) + ' more to continue'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Box editor · Publish</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lib/wpc.css">
+<link rel="stylesheet" href="./wp.css">
+<script src="./lib/wpc.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#3858e9}a:hover{color:#2145e6}
+</style>
+</helmet>
+<div class="wp" style="position: relative; min-height: 960px">
+<dc-import name="EditorDesign" hint-size="100%,960px"></dc-import>
+<div class="scrim">
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="pub-h">
+<sc-if value="{{editing}}" hint-placeholder-val="{{true}}">
+<div class="modal-h"><h2 id="pub-h">Publish Holiday treat box</h2><a class="btn btn-ghost btn-icon" href="EditorDesign.dc.html" aria-label="Close"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+<div class="modal-b">
+<div style="display: flex; gap: 6px; flex-wrap: wrap"><span class="badge">Up to 12 items</span><span class="badge">10 / 15 / 25% off</span><span class="badge">5 products</span><span class="badge">Classic template</span></div>
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+<legend class="lbl">Where should shoppers find it?</legend>
+<button type="button" class="choice {{w.page}}" onClick="{{set.page}}" style="font: inherit; text-align: left; width: 100%"><span class="radio {{r.page}}" aria-hidden="true" style="margin-top: 2px"></span><span style="flex: 1"><b>Add to a page I have</b><span class="muted">It goes at the top of the page.</span></span></button>
+<sc-if value="{{is.page}}" hint-placeholder-val="{{true}}"><div style="padding: 0 0 4px 28px"><label class="lbl" for="pub-page" style="position: absolute; left: -9999px">Page</label><select class="input select" id="pub-page"><option>Holiday treat box</option><option>Shop</option><option>Sample Page</option></select></div></sc-if>
+<button type="button" class="choice {{w.new}}" onClick="{{set.new}}" style="font: inherit; text-align: left; width: 100%"><span class="radio {{r.new}}" aria-hidden="true" style="margin-top: 2px"></span><span style="flex: 1"><b>Create a new page</b><span class="muted">We make the page and add the box.</span></span></button>
+<sc-if value="{{is.new}}" hint-placeholder-val="{{false}}"><div style="padding: 0 0 4px 28px"><label class="lbl" for="pub-title">Page title</label><input class="input" id="pub-title" type="text" value="Build a box"><p class="help">Address: /build-a-box/</p></div></sc-if>
+<button type="button" class="choice {{w.self}}" onClick="{{set.self}}" style="font: inherit; text-align: left; width: 100%"><span class="radio {{r.self}}" aria-hidden="true" style="margin-top: 2px"></span><span style="flex: 1"><b>I’ll place it myself</b><span class="muted">Use the ProductBoxes block or a shortcode.</span></span></button>
+<sc-if value="{{is.self}}" hint-placeholder-val="{{false}}"><div style="padding: 0 0 4px 28px; display: flex; gap: 8px"><code style="flex: 1; height: 40px; display: flex; align-items: center; padding: 0 12px; background: #f0f0f0; border-radius: 2px; font-size: 13px">[productboxes id="12"]</code><button type="button" class="btn btn-secondary btn-lg">Copy</button></div></sc-if>
+</fieldset>
+<div>
+<span class="lbl">When</span>
+<div class="seg" role="group" aria-label="When"><button type="button" class="{{when.now}}" onClick="{{setNow}}">Right away</button><button type="button" class="{{when.sched}}" onClick="{{setSched}}">Pick dates</button></div>
+<sc-if value="{{sched}}" hint-placeholder-val="{{false}}">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px">
+<div><label class="lbl" for="pub-start">Starts</label><input class="input" id="pub-start" type="text" value="Dec 1, 2026 9:00 AM"></div>
+<div><label class="lbl" for="pub-end">Ends</label><input class="input" id="pub-end" type="text" value="Dec 24, 2026 11:59 PM"></div>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px"><span>Show a countdown in the last 3 days</span><span class="toggle on" role="switch" aria-checked="true" aria-label="Countdown"></span></div>
+</sc-if>
+</div>
+</div>
+<div class="modal-f"><a class="btn btn-tertiary" href="EditorDesign.dc.html">Cancel</a><button type="button" class="btn btn-primary" onClick="{{publish}}">Publish</button></div>
+</sc-if>
+<sc-if value="{{done}}" hint-placeholder-val="{{false}}">
+<div style="padding: 40px 32px 32px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+<span style="width: 48px; height: 48px; border-radius: 50%; background: #edfaef; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#008a20" stroke-width="2" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span>
+<h2 style="font-size: 20px; font-weight: 400">Your box is live</h2>
+<p class="muted">Shoppers can build it at <a href="TplClassic.dc.html">/holiday-treat-box/</a>. Place a test order to check the cart line.</p>
+<div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; justify-content: center"><a class="btn btn-secondary" href="Boxes.dc.html">Back to boxes</a><a class="btn btn-primary" href="TplClassic.dc.html">View on store</a></div>
+</div>
+</sc-if>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { where: 'page', sched: false, done: false }; }
+  renderVals() {
+    const ids = ['page', 'new', 'self'];
+    const w = {}, r = {}, is = {}, set = {};
+    ids.forEach((id) => { const on = this.state.where === id; w[id] = on ? 'sel' : ''; r[id] = on ? 'on' : ''; is[id] = on; set[id] = () => this.setState({ where: id }); });
+    return {
+      w, r, is, set,
+      sched: this.state.sched,
+      when: { now: this.state.sched ? '' : 'sel', sched: this.state.sched ? 'sel' : '' },
+      setNow: () => this.setState({ sched: false }),
+      setSched: () => this.setState({ sched: true }),
+      editing: !this.state.done,
+      done: this.state.done,
+      publish: () => this.setState({ done: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

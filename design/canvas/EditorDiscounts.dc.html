@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Box editor · Discounts</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lib/wpc.css">
+<link rel="stylesheet" href="./wp.css">
+<script src="./lib/wpc.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#3858e9}a:hover{color:#2145e6}
+.pb-steps{display:flex;align-items:center;gap:4px;margin:0 auto}
+.trow{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr)) 36px;gap:8px;align-items:end}
+.trow .components-base-control{margin:0}
+</style>
+</helmet>
+<div class="wp" style="min-height: 960px; background: #f0f0f1; display: flex; flex-direction: column">
+<header class="ed-top2" style="gap: 8px">
+<a href="Boxes.dc.html" aria-label="Back to boxes" style="width: 64px; height: 64px; margin-left: -16px; background: #1e1e1e; color: #fff; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7.5 12 3l9 4.5-9 4.5-9-4.5Z"/><path d="M3 7.5v9L12 21l9-4.5v-9M12 12v9"/></svg></a>
+<x-import component-from-global-scope="WPC.IconButton" name="undo" label="Undo"></x-import>
+<x-import component-from-global-scope="WPC.IconButton" name="redo" label="Redo"></x-import>
+<nav class="pb-steps" aria-label="Steps">
+<x-import component-from-global-scope="WPC.IconButton" name="check" href="EditorProducts.dc.html">Products</x-import>
+<x-import component-from-global-scope="WPC.Button" variant="secondary" href="EditorDiscounts.dc.html" aria-current="step">2 · Discounts</x-import>
+<x-import component-from-global-scope="WPC.Button" variant="tertiary" href="EditorDesign.dc.html">3 · Design</x-import>
+</nav>
+<div style="width: 220px">
+<x-import component-from-global-scope="WPC.ToggleGroupControl" label="Preview size" hide-label-from-vision="{{yes}}" is-block="{{yes}}" value="{{device}}" on-change="{{setDevice}}">
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="desktop" label="Desktop"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="mobile" label="Phone"></x-import>
+</x-import>
+</div>
+<x-import component-from-global-scope="WPC.Button" variant="tertiary">Save draft</x-import>
+<x-import component-from-global-scope="WPC.Button" variant="primary" href="Publish.dc.html">Publish</x-import>
+</header>
+<div style="display: flex; flex-wrap: wrap; flex: 1">
+<section class="ed-stage" aria-label="Shopper preview" style="padding-bottom: 28px">
+<sc-if value="{{desk}}" hint-placeholder-val="{{true}}">
+<div class="browser">
+<div class="browser-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="url"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>plugin-dev.local/holiday-treat-box/</span><span class="live-tag">Preview</span></div>
+<div class="iframe-body" style="height: 790px"><div style="width: 1280px; zoom: 0.81"><dc-import name="TplClassic" hint-size="1280px,1200px"></dc-import></div></div>
+</div>
+</sc-if>
+<sc-if value="{{phone}}" hint-placeholder-val="{{false}}"><div class="phone"><dc-import name="Mobile" hint-size="390px,844px"></dc-import></div></sc-if>
+</section>
+<aside style="width: 360px; flex: 0 0 360px; background: #fff; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; height: 896px" aria-label="Discounts">
+<div style="flex: 1; overflow-y: auto">
+<x-import component-from-global-scope="WPC.Panel">
+<x-import component-from-global-scope="WPC.PanelBody" title="Discount type" initial-open="{{yes}}">
+<x-import component-from-global-scope="WPC.RadioControl" label="How the discount works" hide-label-from-vision="{{yes}}" selected="{{type}}" options="{{typeOpts}}" on-change="{{setType}}"></x-import>
+</x-import>
+<x-import component-from-global-scope="WPC.PanelBody" title="Box size" initial-open="{{yes}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<x-import component-from-global-scope="WPC.RangeControl" label="Holds up to" help="items" value="{{cap}}" on-change="{{setCap}}" min="{{two}}" max="{{fortyEight}}"></x-import>
+<x-import component-from-global-scope="WPC.RangeControl" label="Minimum to buy" value="{{min}}" on-change="{{setMin}}" min="{{one}}" max="{{cap}}"></x-import>
+</div>
+</x-import>
+<x-import component-from-global-scope="WPC.PanelBody" title="Discount steps" initial-open="{{yes}}">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<sc-for list="{{tiers}}" as="t" hint-placeholder-count="3">
+<div class="trow">
+<x-import component-from-global-scope="WPC.NumberControl" label="From items" value="{{t.q}}" on-change="{{t.setQ}}" min="{{one}}"></x-import>
+<x-import component-from-global-scope="WPC.NumberControl" label="% off" value="{{t.d}}" on-change="{{t.setD}}" min="{{zero}}" max="{{ninety}}"></x-import>
+<x-import component-from-global-scope="WPC.IconButton" name="close" label="Remove step" on-click="{{t.remove}}"></x-import>
+</div>
+</sc-for>
+<x-import component-from-global-scope="WPC.IconButton" name="plus" variant="secondary" on-click="{{addTier}}">Add step</x-import>
+<x-import component-from-global-scope="WPC.Notice" status="info" is-dismissible="{{no}}">Shoppers first read: “{{sentence}}”</x-import>
+</div>
+</x-import>
+<x-import component-from-global-scope="WPC.PanelBody" title="Rules" initial-open="{{no}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<x-import component-from-global-scope="WPC.ToggleControl" label="Same product more than once" checked="{{dupes}}" on-change="{{setDupes}}"></x-import>
+<sc-if value="{{dupes}}" hint-placeholder-val="{{true}}"><x-import component-from-global-scope="WPC.RangeControl" label="Max of one product" value="{{perProduct}}" on-change="{{setPerProduct}}" min="{{one}}" max="{{cap}}"></x-import></sc-if>
+<x-import component-from-global-scope="WPC.ToggleControl" label="Hide sold-out products" help="Otherwise they show as Sold out." checked="{{hideSold}}" on-change="{{setHideSold}}"></x-import>
+<x-import component-from-global-scope="WPC.ToggleControl" label="Allow coupons on this box" checked="{{coupons}}" on-change="{{setCoupons}}"></x-import>
+</div>
+</x-import>
+<x-import component-from-global-scope="WPC.PanelBody" title="Extras" initial-open="{{no}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<x-import component-from-global-scope="WPC.ToggleControl" label="Gift wrap and note" checked="{{gift}}" on-change="{{setGift}}"></x-import>
+<sc-if value="{{gift}}" hint-placeholder-val="{{true}}"><x-import component-from-global-scope="WPC.NumberControl" label="Gift wrap fee (৳)" value="{{giftFee}}" on-change="{{setGiftFee}}" min="{{zero}}"></x-import></sc-if>
+<x-import component-from-global-scope="WPC.ToggleControl" label="Free gift at a set size" checked="{{free}}" on-change="{{setFree}}"></x-import>
+<sc-if value="{{free}}" hint-placeholder-val="{{false}}"><x-import component-from-global-scope="WPC.SelectControl" label="Gift product" value="{{freeProduct}}" options="{{freeOpts}}" on-change="{{setFreeProduct}}"></x-import></sc-if>
+</div>
+</x-import>
+<x-import component-from-global-scope="WPC.PanelBody" title="Schedule" initial-open="{{no}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<x-import component-from-global-scope="WPC.ToggleGroupControl" label="Runs" is-block="{{yes}}" value="{{runs}}" on-change="{{setRuns}}">
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="always" label="Always"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="dates" label="Between dates"></x-import>
+</x-import>
+<sc-if value="{{dated}}" hint-placeholder-val="{{false}}"><x-import component-from-global-scope="WPC.TextControl" label="Ends" type="datetime-local" value="{{ends}}" on-change="{{setEnds}}" help="Uses your store time zone."></x-import>
+<x-import component-from-global-scope="WPC.ToggleControl" label="Show a countdown in the last 3 days" checked="{{countdown}}" on-change="{{setCountdown}}"></x-import></sc-if>
+</div>
+</x-import>
+</x-import>
+</div>
+<div style="padding: 12px 16px; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; gap: 8px">
+<x-import component-from-global-scope="WPC.Button" variant="secondary" href="EditorProducts.dc.html">Back</x-import>
+<x-import component-from-global-scope="WPC.Button" variant="primary" href="EditorDesign.dc.html">Continue to design</x-import>
+</div>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = { device: 'desktop', type: 'tiered', cap: 12, min: 4, tiers: [{ q: 4, d: 10 }, { q: 6, d: 15 }, { q: 12, d: 25 }],
+      dupes: true, perProduct: 3, hideSold: false, coupons: false, gift: true, giftFee: 10, free: false, freeProduct: 'sunglasses',
+      runs: 'always', ends: '2026-12-24T23:59', countdown: true };
+  }
+  renderVals() {
+    const s = this.state;
+    const up = (k) => (v) => this.setState({ [k]: v });
+    const num = (v, d) => { const n = parseInt(v, 10); return isNaN(n) ? d : n; };
+    const desk = s.device !== 'mobile';
+    const setTier = (i, k) => (v) => this.setState({ tiers: s.tiers.map((t, j) => (j === i ? { ...t, [k]: num(v, t[k]) } : t)) });
+    return {
+      yes: true, no: false, zero: 0, one: 1, two: 2, ninety: 90, fortyEight: 48,
+      device: s.device, setDevice: (v) => this.setState({ device: v || 'desktop' }), desk, phone: !desk,
+      type: s.type, setType: up('type'),
+      typeOpts: [{ label: 'Bigger box, bigger discount', value: 'tiered' }, { label: 'Pick a box size', value: 'fixed' }, { label: 'Set price bundle', value: 'bundle' }],
+      cap: s.cap, setCap: (v) => this.setState({ cap: v ?? 12, min: Math.min(s.min, v ?? 12) }),
+      min: s.min, setMin: (v) => this.setState({ min: v ?? 4 }),
+      tiers: s.tiers.map((t, i) => ({ ...t, setQ: setTier(i, 'q'), setD: setTier(i, 'd'), remove: () => this.setState({ tiers: s.tiers.filter((_, j) => j !== i) }) })),
+      addTier: () => { const last = s.tiers[s.tiers.length - 1] || { q: 2, d: 5 }; if (s.tiers.length < 6) this.setState({ tiers: [...s.tiers, { q: Math.min(s.cap, last.q + 2), d: Math.min(90, last.d + 5) }] }); },
+      sentence: s.tiers[0] ? 'Add ' + s.tiers[0].q + ' items to get ' + s.tiers[0].d + '% off' : 'Add items to your box',
+      dupes: s.dupes, setDupes: up('dupes'), perProduct: s.perProduct, setPerProduct: (v) => this.setState({ perProduct: v ?? 3 }),
+      hideSold: s.hideSold, setHideSold: up('hideSold'), coupons: s.coupons, setCoupons: up('coupons'),
+      gift: s.gift, setGift: up('gift'), giftFee: s.giftFee, setGiftFee: (v) => this.setState({ giftFee: num(v, 0) }),
+      free: s.free, setFree: up('free'), freeProduct: s.freeProduct, setFreeProduct: up('freeProduct'),
+      freeOpts: [{ label: 'Sunglasses', value: 'sunglasses' }, { label: 'Cap', value: 'cap' }, { label: 'Beanie', value: 'beanie' }],
+      runs: s.runs, setRuns: up('runs'), dated: s.runs === 'dates', ends: s.ends, setEnds: up('ends'),
+      countdown: s.countdown, setCountdown: up('countdown')
+    };
+  }
+}
+</script>
+</body>
+</html>

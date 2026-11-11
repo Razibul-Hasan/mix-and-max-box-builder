@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Template 03 · Guided steps</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wp.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400..800&display=swap">
+<style>
+body{margin:0}
+.t3{font-family:"Plus Jakarta Sans",system-ui,sans-serif;color:#1b1240}
+.t3 *{box-sizing:border-box}
+.t3 h2,.t3 h3,.t3 p{margin:0}
+.t3 .st{display:flex;align-items:center;gap:10px;height:44px;padding:0 18px 0 6px;border-radius:22px;border:0;background:transparent;font:inherit;font-size:15px;font-weight:600;cursor:pointer;color:#7c74a3}
+.t3 .st .n{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;background:#e9e5ff;color:#5b3df5}
+.t3 .size{flex:1;border:0;border-radius:28px;padding:32px 28px;font:inherit;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:6px;position:relative;box-shadow:0 1px 2px rgba(27,18,64,.06)}
+.t3 .card{background:#fff;border-radius:22px;padding:10px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 2px rgba(27,18,64,.06)}
+.t3 .card img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:16px;background:#f1eefc;mix-blend-mode:multiply;display:block}
+.t3 .add{height:44px;border-radius:14px;border:0;background:#f1eefc;color:#1b1240;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.t3 .qty{height:44px;border-radius:14px;display:flex;align-items:center;justify-content:space-between;color:#fff}
+.t3 .qty button{width:44px;height:44px;border:0;background:transparent;color:#fff;font-size:20px;cursor:pointer;font-family:inherit}
+.t3 .slot{width:64px;height:64px;border-radius:16px;background:#fff;border:2px dashed #d8d2f5;overflow:hidden}
+.t3 .slot img{width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply}
+.t3 .cta{height:56px;border:0;border-radius:18px;font:inherit;font-size:16px;font-weight:700;cursor:pointer;color:#fff;padding:0 32px}
+</style>
+</helmet>
+<div class="t3" style="width: 1280px; min-height: 1200px; box-sizing: border-box; background: #f6f4ff; padding: 56px 0">
+<div style="max-width: 1060px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px">
+<div style="display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center">
+<h2 style="font-size: 56px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.02">Your box in <span style="color: {{accent}}">3 easy steps</span></h2>
+<p style="color: #625a8a; font-size: 18px">Bigger box, bigger saving. Up to 25% off.</p>
+</div>
+<nav style="display: flex; justify-content: center; gap: 6px; background: #fff; border-radius: 28px; padding: 6px; align-self: center; box-shadow: 0 1px 2px rgba(27,18,64,.06)" aria-label="Steps">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="3"><button type="button" class="st" onClick="{{s.go}}" aria-current="{{s.cur}}" style="background: {{s.bg}}; color: {{s.fg}}"><span class="n" style="background: {{s.nbg}}; color: {{s.nfg}}">{{s.n}}</span>{{s.label}}</button></sc-for>
+</nav>
+
+<sc-if value="{{is1}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 28px; align-items: center">
+<div style="display: flex; gap: 18px; width: 100%">
+<sc-for list="{{sizes}}" as="z" hint-placeholder-count="3">
+<button type="button" class="size" onClick="{{z.pick}}" aria-pressed="{{z.on}}" style="background: {{z.bg}}; color: {{z.fg}}">
+<sc-if value="{{z.tag}}" hint-placeholder-val="{{false}}"><span style="position: absolute; top: 20px; right: 20px; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 14px; background: #ffd84d; color: #1b1240">{{z.tag}}</span></sc-if>
+<b style="font-size: 88px; line-height: 0.9; font-weight: 800; letter-spacing: -0.05em">{{z.q}}</b><span style="font-size: 16px; opacity: .8">item box</span><span style="margin-top: 14px; font-size: 22px; font-weight: 800">{{z.d}}% off</span>
+</button>
+</sc-for>
+</div>
+<button type="button" class="cta" style="background: {{accent}}" onClick="{{go2}}">Continue with {{size}} items</button>
+</div>
+</sc-if>
+
+<sc-if value="{{is2}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 18px 18px 18px 26px; background: #fff; border-radius: 26px; box-shadow: 0 1px 2px rgba(27,18,64,.06)">
+<div style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 18px">{{size}}-item box · {{sizeD}}% off</b><span style="color: #625a8a; font-size: 15px" aria-live="polite">{{fillMsg}}</span></div>
+<div style="display: flex; gap: 8px"><sc-for list="{{slots}}" as="s" hint-placeholder-count="6"><div class="slot" style="border-style: {{s.bs}}"><sc-if value="{{s.img}}" hint-placeholder-val="{{false}}"><img src="{{s.img}}" alt="{{s.name}}"></sc-if></div></sc-for></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px">
+<sc-for list="{{products}}" as="p" hint-placeholder-count="5">
+<article class="card">
+<img src="{{p.img}}" alt="{{p.name}}">
+<div style="display: flex; justify-content: space-between; padding: 0 4px"><b style="font-size: 16px">{{p.name}}</b><span style="font-weight: 600">{{p.priceS}}</span></div>
+<sc-if value="{{p.empty}}" hint-placeholder-val="{{true}}"><button type="button" class="add" onClick="{{p.add}}">+ Add</button></sc-if>
+<sc-if value="{{p.has}}" hint-placeholder-val="{{false}}"><div class="qty" style="background: {{accent}}"><button type="button" onClick="{{p.rem}}" aria-label="Remove one {{p.name}}">−</button><b>{{p.qty}}</b><button type="button" onClick="{{p.add}}" aria-label="Add one more {{p.name}}">+</button></div></sc-if>
+</article>
+</sc-for>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<button type="button" class="cta" style="background: #fff; color: #1b1240" onClick="{{go1}}">Back</button>
+<sc-if value="{{full}}" hint-placeholder-val="{{false}}"><button type="button" class="cta" style="background: {{accent}}" onClick="{{go3}}">Review my box</button></sc-if>
+<sc-if value="{{notFull}}" hint-placeholder-val="{{true}}"><button type="button" class="cta" disabled style="background: #e2ddf7; color: #7c74a3; cursor: default">{{waitLabel}}</button></sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{is3}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; gap: 24px; align-items: flex-start">
+<div style="flex: 1; background: #fff; border-radius: 26px; padding: 12px 28px">
+<sc-for list="{{lines}}" as="l" hint-placeholder-count="3"><div style="display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid #f0edfb"><img src="{{l.img}}" alt="" style="width: 64px; height: 64px; border-radius: 14px; object-fit: cover; background: #f1eefc; mix-blend-mode: multiply"><b style="flex: 1; font-size: 16px">{{l.qty}} × {{l.name}}</b><span>{{l.lineS}}</span></div></sc-for>
+</div>
+<div style="width: 400px; background: #1b1240; color: #fff; border-radius: 26px; padding: 28px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; color: #c9c2ef"><span>Items</span><span>{{subS}}</span></div>
+<div style="display: flex; justify-content: space-between; color: #c9c2ef"><span>Box discount ({{sizeD}}%)</span><span>−{{discS}}</span></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline"><b style="font-size: 18px">Total</b><b style="font-size: 34px; letter-spacing: -0.02em">{{totalS}}</b></div>
+<button type="button" class="cta" style="background: #ffd84d; color: #1b1240; margin-top: 8px">Add box to cart</button>
+<button type="button" onClick="{{go2}}" style="height: 44px; border: 0; background: transparent; color: #c9c2ef; font: inherit; font-weight: 600; cursor: pointer">Change items</button>
+</div>
+</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#5b3df5","options":["#5b3df5","#111111","#e11d74","#0a7a3b"]},"$preview":{"width":1280,"height":1200}}'>
+const PB_P = [
+  { id: 'beanie', name: 'Beanie', price: 18, img: '/_blob/a21d75322d1f2c79c0b493d770e100ba' },
+  { id: 'belt', name: 'Belt', price: 55, img: '/_blob/dbf6bf4993577849550a7cf059cabaac' },
+  { id: 'cap', name: 'Cap', price: 16, img: '/_blob/7bb413bb81c62e7140669f3f245799f6' },
+  { id: 'sunglasses', name: 'Sunglasses', price: 90, img: '/_blob/3b8ae96639edc920d9a59a6c11f5a7d8' },
+  { id: 'tshirt', name: 'T-shirt', price: 18, img: '/_blob/e08619cc92331767f559db4a150cf594' }
+];
+const PB_S = [{ q: 4, d: 10, tag: '' }, { q: 6, d: 15, tag: 'Most popular' }, { q: 12, d: 25, tag: 'Best value' }];
+function pbMoney(n) { return n.toFixed(2) + '৳'; }
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { step: 2, size: 6, box: { beanie: 2, cap: 1, tshirt: 2 } }; }
+  renderVals() {
+    const accent = this.props.accent ?? '#5b3df5';
+    const { step, size, box } = this.state;
+    const sz = PB_S.find((s) => s.q === size);
+    const count = Object.values(box).reduce((a, b) => a + b, 0);
+    const sub = PB_P.reduce((s, p) => s + (box[p.id] || 0) * p.price, 0);
+    const disc = Math.round(sub * sz.d) / 100;
+    const set = (b) => this.setState({ box: b });
+    const filled = [];
+    PB_P.forEach((p) => { for (let i = 0; i < (box[p.id] || 0); i++) filled.push(p); });
+    const slots = [];
+    for (let i = 0; i < size; i++) { const f = filled[i]; slots.push(f ? { img: f.img, name: f.name, bs: 'solid' } : { img: '', name: '', bs: 'dashed' }); }
+    const labels = ['Pick a size', 'Fill your box', 'Review'];
+    return {
+      accent,
+      steps: labels.map((label, i) => { const n = i + 1; const cur = n === step; const done = n < step;
+        return { n: done ? '✓' : n, label, cur: cur ? 'step' : 'false', bg: cur ? accent : 'transparent', fg: cur ? '#fff' : (done ? '#1b1240' : '#7c74a3'),
+          nbg: cur ? 'rgba(255,255,255,.22)' : (done ? '#1b1240' : '#e9e5ff'), nfg: cur || done ? '#fff' : accent, go: () => this.setState({ step: n }) }; }),
+      is1: step === 1, is2: step === 2, is3: step === 3,
+      go1: () => this.setState({ step: 1 }), go2: () => this.setState({ step: 2 }), go3: () => this.setState({ step: 3 }),
+      sizes: PB_S.map((s) => ({ ...s, on: s.q === size, bg: s.q === size ? accent : '#fff', fg: s.q === size ? '#fff' : '#1b1240',
+        pick: () => { const b = {}; let left = s.q; Object.keys(box).forEach((k) => { const take = Math.min(box[k], left); if (take > 0) { b[k] = take; left -= take; } }); this.setState({ size: s.q, box: b }); } })),
+      size, sizeD: sz.d, slots,
+      fillMsg: count < size ? 'Add ' + (size - count) + ' more to fill your box' : 'Your box is full. Nice picks.',
+      full: count === size, notFull: count < size,
+      waitLabel: (size - count) + ' to go',
+      products: PB_P.map((p) => { const qty = box[p.id] || 0; return { ...p, qty, has: qty > 0, empty: qty === 0, priceS: pbMoney(p.price),
+        add: () => { if (count >= size) return; set({ ...box, [p.id]: qty + 1 }); },
+        rem: () => { const b = { ...box }; if (qty <= 1) delete b[p.id]; else b[p.id] = qty - 1; set(b); } }; }),
+      lines: PB_P.filter((p) => box[p.id]).map((p) => ({ ...p, qty: box[p.id], lineS: pbMoney(box[p.id] * p.price) })),
+      subS: pbMoney(sub), discS: pbMoney(disc), totalS: pbMoney(sub - disc)
+    };
+  }
+}
+</script>
+</body>
+</html>

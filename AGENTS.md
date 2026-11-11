@@ -126,3 +126,85 @@ For a PHP 7.4 compatibility run, create the ignored `.wp-env.override.json` with
 ## Definition of done (every phase)
 
 `npm run build`, the lints and every test pass. Plugin Check shows no errors (warnings are explained in PROGRESS). No PHP notices with `WP_DEBUG` on. PROGRESS is updated. The work is committed.
+
+## Redesign
+
+The 1.0 build above is finished. The redesign below is the current work. Where a redesign rule and an earlier rule disagree (for example the admin shell, or which design files are the source of truth), the redesign rule wins. The fixed names, commands, WordPress.org rules and WooCommerce rules above still apply. Redesign progress is logged in `docs/REDESIGN-PROGRESS.md`, not `docs/PROGRESS.md`, and the redesign screen map is `design/REDESIGN.md`.
+
+This repository is an **existing, working WordPress plugin** (a WooCommerce box builder: shoppers fill a box with products and unlock bigger discounts). We are **updating** it to a new UI/UX, not rewriting it. The new design is in `design/`. The work is split into parts in `docs/REDESIGN-PLAN.md`.
+
+### The three rules that matter most
+
+1. **Keep what already exists.** The text domain, plugin slug, main file name, PHP namespace, prefix, constants, option names, post meta keys, order meta keys, custom post type, database tables, REST namespace and routes, block name, shortcode tag and attributes, script and style handles, hook names and admin page slugs **stay exactly as they are**. Part 0 writes them into the "Frozen identifiers" table below. After that, never rename any of them.
+2. **Keep the imports the same.** Use the import style and packages the plugin already uses (for example `import { Button } from '@wordpress/components';`), the same build tool, the same folder layout and the same module names. Add new files beside the old ones. Don't move or rename existing modules unless a part says so.
+3. **Never lose merchant data.** Every existing box, setting, order and analytics row must keep working after an update. Any change to stored data goes through a versioned upgrade routine, as Part 1 describes.
+
+Names that appear in the design copy (for example `productboxes_`, `[productboxes id="12"]`, `/wp-json/productboxes/v1`) are **placeholders**. Always use the real identifiers from the table below.
+
+### How we work
+
+- When asked to "run Part N", read this file, `docs/REDESIGN-PROGRESS.md`, the `## Part N` section of `docs/REDESIGN-PLAN.md`, and every file listed under **Read first**. Do only that part.
+- Start by replying with a short plan: the files you'll change or add, and anything in the part that conflicts with the code as it stands.
+- If the plan and the existing code disagree, follow the existing code's names and data, and record the difference under "Decisions" in `docs/REDESIGN-PROGRESS.md`.
+- Finish every part with its **Done when** checks. Then update `docs/REDESIGN-PROGRESS.md` and commit `Redesign Part N: <title>`.
+- If a check can't run here (no Docker, no browser), run everything else and record what you skipped and why.
+
+### Frozen identifiers (filled in by Part 0, never changed afterwards)
+
+| Thing | Value in this plugin |
+| --- | --- |
+| Plugin name (header) | _Part 0_ |
+| Slug / folder | _Part 0_ |
+| Main file | _Part 0_ |
+| **Text domain** | _Part 0_ |
+| Domain Path | _Part 0_ |
+| PHP namespace / class prefix | _Part 0_ |
+| Global prefix (functions, options, hooks, meta, handles) | _Part 0_ |
+| Constants | _Part 0_ |
+| Custom post type(s) | _Part 0_ |
+| Options | _Part 0_ |
+| Post / order / item meta keys | _Part 0_ |
+| Custom tables | _Part 0_ |
+| REST namespace and routes | _Part 0_ |
+| AJAX / wc-ajax actions | _Part 0_ |
+| Block name(s) | _Part 0_ |
+| Shortcode tag and attributes | _Part 0_ |
+| Admin page slugs | _Part 0_ |
+| Script / style handles | _Part 0_ |
+| JS globals / storage keys | _Part 0_ |
+| Capability used for admin | _Part 0_ |
+| Current version, Requires at least, Requires PHP, WC requires | _Part 0_ |
+
+### Stack rules
+
+- **Admin UI uses the real WordPress React components** from `@wordpress/components`, with `@wordpress/element`, `@wordpress/i18n`, `@wordpress/api-fetch`, `@wordpress/icons`, `@wordpress/data` and `@wordpress/notices`. They are loaded from WordPress through the dependency extraction in `@wordpress/scripts`, never bundled. Enqueue the `wp-components` stylesheet on our admin screens.
+- Wrap every `__experimental*` component in **one file**, `src/admin/components/wp.js` (or whatever path matches the existing layout), so later swaps happen in one place. Pass `__next40pxDefaultSize` and `__nextHasNoMarginBottom` where the component supports them.
+- **Storefront:** keep the front-end stack the plugin already uses. Don't load `@wordpress/components` on the front end.
+- Keep the existing minimum versions unless a part needs a higher one. If it does, say so in PROGRESS and in the readme changelog.
+
+### WordPress.org rules (each one is a rejection if broken)
+
+1. GPL-compatible code and assets. Bundled fonts are SIL OFL: ship the licence files and list them in readme.txt.
+2. Nothing loads from another server: no Google Fonts URL, no CDN, no remote images, no tracking. Template fonts ship as local woff2 files.
+3. Use the libraries WordPress ships (React, `@wordpress/*`). Never bundle them.
+4. Every request that changes state checks the capability and a nonce, sanitizes input and escapes output late. Every SQL query with a variable uses `$wpdb->prepare()`.
+5. Load scripts and styles only with `wp_enqueue_*`, and pass data only with `wp_add_inline_script()`. Admin assets load only on our screens, storefront assets only where a box renders.
+6. Every user-facing string is translatable with **the existing text domain**. JS strings use `wp_set_script_translations()` with that same domain.
+7. Custom CSS from merchants is saved only by users with `unfiltered_html`. It is stripped of tags and printed only through `wp_add_inline_style()`.
+8. The source for everything in `build/` ships in the zip, and readme.txt explains how to build it.
+
+### Design rules
+
+- `design/REDESIGN.md` maps every screen to its source file. Match layout, copy, states and spacing.
+- The admin follows the WordPress editor's look: a full-screen editor with the settings sidebar on the right and a live **iframe** preview in the middle.
+- Storefront templates read every colour, font, radius and size from CSS custom properties, so the merchant's design settings apply without changing any markup.
+- Status always pairs a word with its colour. Focus rings are visible. Touch targets on the storefront are at least 44px. Respect `prefers-reduced-motion`.
+- Copy is in sentence case. Buttons start with a verb. Urgency must be honest: show real end dates and real stock only.
+
+### Definition of done (every part)
+
+- Build, lints and all tests pass.
+- Plugin Check shows no new errors compared with the Part 1 baseline.
+- No PHP notices with `WP_DEBUG` on.
+- Existing boxes still render and still check out correctly.
+- PROGRESS is updated and the work is committed.

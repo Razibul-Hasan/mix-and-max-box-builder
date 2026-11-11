@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Template 06 · Pastel</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wp.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400..800&display=swap">
+<style>
+body{margin:0}
+.t6{font-family:Outfit,system-ui,sans-serif;color:#2d2433}
+.t6 *{box-sizing:border-box}
+.t6 h2,.t6 h3,.t6 p{margin:0}
+.t6 .tile{border-radius:30px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.t6 .tile img{width:100%;aspect-ratio:1/1;object-fit:contain;mix-blend-mode:multiply;display:block}
+.t6 .add{height:46px;border-radius:23px;border:0;background:#fff;color:#2d2433;font:inherit;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 2px 0 rgba(45,36,51,.08)}
+.t6 .qty{height:46px;border-radius:23px;display:flex;align-items:center;justify-content:space-between;color:#fff}
+.t6 .qty button{width:46px;height:46px;border:0;background:transparent;color:#fff;font-size:20px;cursor:pointer;font-family:inherit}
+.t6 .dot{aspect-ratio:1/1;border-radius:50%;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#b8acd6;font-size:13px;font-weight:600}
+.t6 .dot img{width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply}
+</style>
+</helmet>
+<div class="t6" style="width: 1280px; min-height: 1200px; box-sizing: border-box; background: #fff8f3; padding: 56px 64px; display: flex; flex-direction: column; gap: 36px">
+<div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 32px">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<h2 style="font-size: 72px; font-weight: 700; line-height: 0.95; letter-spacing: -0.035em">Pick. Mix.<br><span style="color: {{accent}}">Save more.</span></h2>
+<p style="font-size: 18px; color: #6c6275">The more you pop in your box, the bigger the treat.</p>
+</div>
+<div style="display: flex; gap: 10px"><sc-for list="{{tiers}}" as="t" hint-placeholder-count="3"><span style="height: 44px; padding: 0 18px; border-radius: 22px; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 6px; background: {{t.bg}}; color: {{t.fg}}">{{t.q}} → {{t.d}}% off</span></sc-for></div>
+</div>
+<div style="display: flex; gap: 32px; align-items: flex-start">
+<div style="flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px">
+<sc-for list="{{products}}" as="p" hint-placeholder-count="5">
+<article class="tile" style="background: {{p.tint}}">
+<img src="{{p.img}}" alt="{{p.name}}">
+<div style="display: flex; justify-content: space-between; padding: 0 4px"><b style="font-size: 18px; font-weight: 600">{{p.name}}</b><span style="font-size: 17px">{{p.priceS}}</span></div>
+<sc-if value="{{p.empty}}" hint-placeholder-val="{{true}}"><button type="button" class="add" onClick="{{p.add}}">Add to box</button></sc-if>
+<sc-if value="{{p.has}}" hint-placeholder-val="{{false}}"><div class="qty" style="background: {{accent}}"><button type="button" onClick="{{p.rem}}" aria-label="Remove one {{p.name}}">−</button><b>{{p.qty}} in box</b><button type="button" onClick="{{p.add}}" aria-label="Add one more {{p.name}}">+</button></div></sc-if>
+</article>
+</sc-for>
+</div>
+<aside style="width: 340px; flex: 0 0 340px; background: #efe9ff; border-radius: 34px; padding: 26px; display: flex; flex-direction: column; gap: 18px" aria-label="Your box">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><h3 style="font-size: 24px; font-weight: 700">Your box</h3><span style="font-weight: 600">{{count}}/12</span></div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px"><sc-for list="{{slots}}" as="s" hint-placeholder-count="12"><div class="dot"><sc-if value="{{s.img}}" hint-placeholder-val="{{false}}"><img src="{{s.img}}" alt="{{s.name}}"></sc-if><sc-if value="{{s.empty}}" hint-placeholder-val="{{true}}"><span>{{s.n}}</span></sc-if></div></sc-for></div>
+<div style="display: flex; flex-direction: column; gap: 10px" aria-live="polite"><p style="font-size: 16px">{{msgLead}} <b>{{msgDeal}}</b></p><div style="height: 14px; border-radius: 7px; background: #fff; overflow: hidden; padding: 3px"><div style="height: 100%; width: {{pct}}%; background: {{accent}}; border-radius: 4px"></div></div></div>
+<div style="background: #fff; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px"><div style="display: flex; justify-content: space-between; color: #6c6275"><span>You save</span><b style="color: #1f8a55">{{discS}}</b></div><div style="display: flex; justify-content: space-between; align-items: baseline"><b>Total</b><b style="font-size: 28px">{{totalS}}</b></div></div>
+<sc-if value="{{ready}}" hint-placeholder-val="{{true}}"><button type="button" style="height: 56px; border: 0; border-radius: 28px; background: {{accent}}; color: #fff; font: inherit; font-size: 17px; font-weight: 700; cursor: pointer">Add box to cart</button></sc-if>
+<sc-if value="{{notReady}}" hint-placeholder-val="{{false}}"><button type="button" disabled style="height: 56px; border: 0; border-radius: 28px; background: #ddd4f7; color: #6c6275; font: inherit; font-size: 16px; font-weight: 600">{{ctaWait}}</button></sc-if>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#8b5cf6","options":["#8b5cf6","#e11d74","#0a7a3b","#2b4bff"]},"$preview":{"width":1280,"height":1200}}'>
+const PB_P = [
+  { id: 'beanie', name: 'Beanie', price: 18, img: '/_blob/a21d75322d1f2c79c0b493d770e100ba', tint: '#ffe3d6' },
+  { id: 'belt', name: 'Belt', price: 55, img: '/_blob/dbf6bf4993577849550a7cf059cabaac', tint: '#f6ead9' },
+  { id: 'cap', name: 'Cap', price: 16, img: '/_blob/7bb413bb81c62e7140669f3f245799f6', tint: '#fff1c2' },
+  { id: 'sunglasses', name: 'Sunglasses', price: 90, img: '/_blob/3b8ae96639edc920d9a59a6c11f5a7d8', tint: '#e5ecff' },
+  { id: 'tshirt', name: 'T-shirt', price: 18, img: '/_blob/e08619cc92331767f559db4a150cf594', tint: '#daf3e6' }
+];
+const PB_T = [{ q: 4, d: 10 }, { q: 6, d: 15 }, { q: 12, d: 25 }];
+const PB_CAP = 12, PB_MIN = 4, PB_PER = 3;
+function pbMoney(n) { return n.toFixed(2) + '৳'; }
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { box: { beanie: 2, cap: 1, tshirt: 2 } }; }
+  renderVals() {
+    const accent = this.props.accent ?? '#8b5cf6';
+    const box = this.state.box;
+    const count = Object.values(box).reduce((a, b) => a + b, 0);
+    const sub = PB_P.reduce((s, p) => s + (box[p.id] || 0) * p.price, 0);
+    let tier = null; PB_T.forEach((t) => { if (count >= t.q) tier = t; });
+    const next = PB_T.find((t) => t.q > count);
+    const disc = tier ? Math.round(sub * tier.d) / 100 : 0;
+    const set = (b) => this.setState({ box: b });
+    const filled = [];
+    PB_P.forEach((p) => { for (let i = 0; i < (box[p.id] || 0); i++) filled.push(p); });
+    const slots = [];
+    for (let i = 0; i < PB_CAP; i++) { const f = filled[i]; slots.push(f ? { img: f.img, name: f.name, empty: false, n: i + 1 } : { img: '', name: '', empty: true, n: i + 1 }); }
+    return {
+      accent, count, slots,
+      tiers: PB_T.map((t) => { const hit = count >= t.q; return { ...t, bg: hit ? accent : '#ffffff', fg: hit ? '#fff' : '#2d2433' }; }),
+      products: PB_P.map((p) => { const qty = box[p.id] || 0; return { ...p, qty, has: qty > 0, empty: qty === 0, priceS: pbMoney(p.price),
+        add: () => { if (count >= PB_CAP || qty >= PB_PER) return; set({ ...box, [p.id]: qty + 1 }); },
+        rem: () => { const b = { ...box }; if (qty <= 1) delete b[p.id]; else b[p.id] = qty - 1; set(b); } }; }),
+      msgLead: next ? 'Add ' + (next.q - count) + ' more to get' : 'Best deal unlocked:',
+      msgDeal: next ? next.d + '% off' : '25% off',
+      pct: Math.min(100, (count / PB_CAP) * 100),
+      discS: pbMoney(disc), totalS: pbMoney(sub - disc),
+      ready: count >= PB_MIN, notReady: count < PB_MIN,
+      ctaWait: 'Add ' + (PB_MIN - count) + ' more to continue'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Box editor · Design</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lib/wpc.css">
+<link rel="stylesheet" href="./wp.css">
+<script src="./lib/wpc.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#3858e9}a:hover{color:#2145e6}
+.tpl{display:flex;flex-direction:column;gap:6px;padding:6px;border:1px solid #e0e0e0;border-radius:4px;background:#fff;font:inherit;text-align:left;cursor:pointer;color:#1e1e1e}
+.tpl:hover{border-color:#949494}
+.tpl.sel{border-color:#3858e9;box-shadow:0 0 0 1px #3858e9}
+.mini{height:64px;border-radius:2px;padding:7px;display:flex;flex-direction:column;gap:5px;overflow:hidden}
+.mini i{display:block;border-radius:1px}
+.side-h{height:48px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #e0e0e0}
+.pane{padding:16px;display:flex;flex-direction:column;gap:16px}
+.match{margin:16px;padding:16px;border-radius:4px;background:#f6f7f7;display:flex;flex-direction:column;gap:12px}
+.ed-stage .components-button{color:inherit}
+.pb-steps{display:flex;align-items:center;gap:4px;margin:0 auto}
+</style>
+</helmet>
+<div class="wp" style="min-height: 960px; background: #f0f0f1; display: flex; flex-direction: column">
+<header class="ed-top2" style="gap: 8px">
+<a href="Boxes.dc.html" aria-label="Back to boxes" style="width: 64px; height: 64px; margin-left: -16px; background: #1e1e1e; color: #fff; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7.5 12 3l9 4.5-9 4.5-9-4.5Z"/><path d="M3 7.5v9L12 21l9-4.5v-9M12 12v9"/></svg></a>
+<x-import component-from-global-scope="WPC.IconButton" name="undo" label="Undo"></x-import>
+<x-import component-from-global-scope="WPC.IconButton" name="redo" label="Redo"></x-import>
+<nav class="pb-steps" aria-label="Steps">
+<x-import component-from-global-scope="WPC.IconButton" name="check" href="EditorProducts.dc.html">Products</x-import>
+<x-import component-from-global-scope="WPC.IconButton" name="check" href="EditorDiscounts.dc.html">Discounts</x-import>
+<x-import component-from-global-scope="WPC.Button" variant="secondary" href="EditorDesign.dc.html" aria-current="step">3 · Design</x-import>
+</nav>
+<div style="width: 300px">
+<x-import component-from-global-scope="WPC.ToggleGroupControl" label="Preview size" hide-label-from-vision="{{yes}}" is-block="{{yes}}" value="{{device}}" on-change="{{setDevice}}" __next40px-default-size="{{no}}">
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="desktop" label="Desktop"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="tablet" label="Tablet"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="mobile" label="Phone"></x-import>
+</x-import>
+</div>
+<x-import component-from-global-scope="WPC.IconButton" name="external" href="TplClassic.dc.html" label="Open preview in a new tab"></x-import>
+<x-import component-from-global-scope="WPC.Button" variant="tertiary" on-click="{{save}}">{{saveLabel}}</x-import>
+<x-import component-from-global-scope="WPC.Button" variant="primary" href="Publish.dc.html">Publish</x-import>
+</header>
+<div style="display: flex; flex-wrap: wrap; flex: 1">
+<section class="ed-stage" aria-label="Shopper preview" style="padding-bottom: 28px">
+<sc-if value="{{wide}}" hint-placeholder-val="{{true}}">
+<div class="browser" style="max-width: {{frameW}}px">
+<div class="browser-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="url"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>plugin-dev.local/holiday-treat-box/</span><span class="live-tag">{{tplName}}</span></div>
+<div class="iframe-body" style="height: 790px">
+<sc-if value="{{is.spotlight}}" hint-placeholder-val="{{true}}"><div style="width: 1280px; zoom: {{zoom}}"><dc-import name="TplClassic" accent="{{c.accent}}" btn-text="{{c.btnText}}" bg="{{c.bg}}" surface="{{c.surface}}" text="{{c.text}}" muted="{{c.muted}}" savings="{{c.savings}}" head-font="{{headFont}}" body-font="{{bodyFont}}" head-size="{{headSize}}" head-weight="{{headWeight}}" btn-style="{{btnStyle}}" btn-radius="{{btnRadius}}" btn-size="{{btnSize}}" upper="{{upper}}" ratio="{{ratio}}" fit="{{fit}}" cols="{{cols}}" card-radius="{{cardRadius}}" shadow="{{shadow}}" show-compare="{{showCompare}}" show-badge="{{showBadge}}" panel-side="{{panelSide}}" progress="{{progress}}" slot-look="{{slotLook}}" show-ladder="{{showLadder}}" headline="{{headline}}" intro="{{intro}}" cta="{{cta}}" add-label="{{addLabel}}" hint-size="1280px,1200px"></dc-import></div></sc-if>
+<sc-if value="{{is.clean}}" hint-placeholder-val="{{false}}"><div style="width: 1280px; zoom: {{zoom}}"><dc-import name="TplMinimal" accent="{{c.accent}}" hint-size="1280px,1200px"></dc-import></div></sc-if>
+<sc-if value="{{is.steps}}" hint-placeholder-val="{{false}}"><div style="width: 1280px; zoom: {{zoom}}"><dc-import name="TplSteps" accent="{{c.accent}}" hint-size="1280px,1200px"></dc-import></div></sc-if>
+<sc-if value="{{is.gift}}" hint-placeholder-val="{{false}}"><div style="width: 1280px; zoom: {{zoom}}"><dc-import name="TplGiftBox" hint-size="1280px,1200px"></dc-import></div></sc-if>
+<sc-if value="{{is.bold}}" hint-placeholder-val="{{false}}"><div style="width: 1280px; zoom: {{zoom}}"><dc-import name="TplBold" accent="{{c.accent}}" hint-size="1280px,1200px"></dc-import></div></sc-if>
+<sc-if value="{{is.pastel}}" hint-placeholder-val="{{false}}"><div style="width: 1280px; zoom: {{zoom}}"><dc-import name="TplPastel" accent="{{c.accent}}" hint-size="1280px,1200px"></dc-import></div></sc-if>
+<sc-if value="{{is.editorial}}" hint-placeholder-val="{{false}}"><div style="width: 1280px; zoom: {{zoom}}"><dc-import name="TplEditorial" accent="{{c.accent}}" hint-size="1280px,1200px"></dc-import></div></sc-if>
+<sc-if value="{{is.night}}" hint-placeholder-val="{{false}}"><div style="width: 1280px; zoom: {{zoom}}"><dc-import name="TplNight" hint-size="1280px,1200px"></dc-import></div></sc-if>
+<sc-if value="{{is.split}}" hint-placeholder-val="{{false}}"><div style="width: 1280px; zoom: {{zoom}}"><dc-import name="TplSplit" accent="{{c.accent}}" hint-size="1280px,1200px"></dc-import></div></sc-if>
+<sc-if value="{{is.compact}}" hint-placeholder-val="{{false}}"><div style="display: flex; justify-content: center; background: #f4f4f2"><div style="width: 640px; zoom: {{zoom}}"><dc-import name="TplCompact" accent="{{c.accent}}" hint-size="640px,1200px"></dc-import></div></div></sc-if>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{phone}}" hint-placeholder-val="{{false}}"><div class="phone"><dc-import name="Mobile" accent="{{c.accent}}" hint-size="390px,844px"></dc-import></div></sc-if>
+</section>
+
+<aside style="width: 360px; flex: 0 0 360px; background: #fff; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; height: 896px" aria-label="Box design settings">
+<div style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0">
+<x-import component-from-global-scope="WPC.ToggleGroupControl" label="Sidebar" hide-label-from-vision="{{yes}}" is-block="{{yes}}" value="{{tab}}" on-change="{{setTab}}">
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="template" label="Template"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="style" label="Style"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="content" label="Content"></x-import>
+</x-import>
+</div>
+<div style="flex: 1; overflow-y: auto">
+
+<sc-if value="{{isTemplate}}" hint-placeholder-val="{{false}}">
+<div class="pane">
+<p class="muted">Pick a starting look. Your style settings stay when you switch.</p>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px" role="group" aria-label="Template">
+<sc-for list="{{tpls}}" as="t" hint-placeholder-count="10">
+<button type="button" class="tpl {{t.cls}}" onClick="{{t.pick}}" aria-pressed="{{t.on}}">
+<span class="mini" style="background: {{t.bg}}"><i style="width: 58%; height: 6px; background: {{t.fg}}"></i><i style="width: 34%; height: 4px; background: {{t.fg}}; opacity: .35"></i><span style="display: flex; gap: 3px; flex: 1"><i style="flex: 1; background: {{t.tile}}"></i><i style="flex: 1; background: {{t.tile}}"></i><i style="flex: 1; background: {{t.tile}}"></i><i style="flex: 1.2; background: {{t.acc}}"></i></span></span>
+<span style="display: flex; justify-content: space-between; padding: 0 2px; font-size: 12px"><b style="font-weight: 600">{{t.name}}</b><span class="muted">{{t.n}}</span></span>
+</button>
+</sc-for>
+</div>
+<x-import component-from-global-scope="WPC.Button" variant="secondary" on-click="{{resetStyle}}">Reset style to template defaults</x-import>
+</div>
+</sc-if>
+
+<sc-if value="{{isStyle}}" hint-placeholder-val="{{true}}">
+<div class="match">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><div><b style="font-weight: 600; display: block">Match my site</b><span class="muted" style="font-size: 12px">Active theme: Twenty Twenty-Five</span></div>
+<x-import component-from-global-scope="WPC.Button" variant="secondary" on-click="{{matchTheme}}">Match</x-import></div>
+<x-import component-from-global-scope="WPC.ToggleControl" label="Keep in sync with my theme" help="Colours and fonts update when you change your theme." checked="{{sync}}" on-change="{{setSync}}"></x-import>
+<sc-if value="{{matched}}" hint-placeholder-val="{{false}}"><x-import component-from-global-scope="WPC.Notice" status="success" is-dismissible="{{no}}">Now using your theme’s colours, fonts and button shape.</x-import></sc-if>
+</div>
+<x-import component-from-global-scope="WPC.Panel">
+<x-import component-from-global-scope="WPC.PanelBody" title="Colours" initial-open="{{yes}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<x-import component-from-global-scope="WPC.ItemGroup" is-bordered="{{yes}}" is-separated="{{yes}}" size="small">
+<sc-for list="{{colorItems}}" as="ci" hint-placeholder-count="7">
+<x-import component-from-global-scope="WPC.Item" on-click="{{ci.pick}}">
+<div style="display: flex; align-items: center; gap: 10px; width: 100%"><x-import component-from-global-scope="WPC.ColorIndicator" color-value="{{ci.value}}"></x-import><span style="flex: 1">{{ci.label}}</span><span style="font-size: 11px; color: #757575; text-transform: uppercase">{{ci.value}}</span><sc-if value="{{ci.on}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 600; color: #3858e9">Editing</span></sc-if></div>
+</x-import>
+</sc-for>
+</x-import>
+<div><span class="lbl">{{editingLabel}}</span>
+<x-import component-from-global-scope="WPC.ColorPalette" colors="{{palette}}" value="{{editingValue}}" on-change="{{setColor}}" clearable="{{no}}"></x-import></div>
+</div>
+</x-import>
+<x-import component-from-global-scope="WPC.PanelBody" title="Typography" initial-open="{{no}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<x-import component-from-global-scope="WPC.SelectControl" label="Heading font" value="{{headFont}}" options="{{fontOpts}}" on-change="{{setHeadFont}}"></x-import>
+<x-import component-from-global-scope="WPC.SelectControl" label="Body font" value="{{bodyFont}}" options="{{fontOpts}}" on-change="{{setBodyFont}}"></x-import>
+<x-import component-from-global-scope="WPC.FontSizePicker" font-sizes="{{fontSizes}}" value="{{headSize}}" on-change="{{setHeadSize}}" with-reset="{{no}}"></x-import>
+<x-import component-from-global-scope="WPC.SelectControl" label="Heading weight" value="{{headWeightS}}" options="{{weightOpts}}" on-change="{{setHeadWeight}}"></x-import>
+<x-import component-from-global-scope="WPC.ToggleControl" label="Uppercase button text" checked="{{upper}}" on-change="{{setUpper}}"></x-import>
+</div>
+</x-import>
+<x-import component-from-global-scope="WPC.PanelBody" title="Buttons" initial-open="{{no}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<x-import component-from-global-scope="WPC.ToggleGroupControl" label="Add button style" is-block="{{yes}}" value="{{btnStyle}}" on-change="{{setBtnStyle}}">
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="fill" label="Fill"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="outline" label="Outline"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="soft" label="Soft"></x-import>
+</x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControl" label="Size" is-block="{{yes}}" value="{{btnSize}}" on-change="{{setBtnSize}}">
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="s" label="S"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="m" label="M"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="l" label="L"></x-import>
+</x-import>
+<x-import component-from-global-scope="WPC.RangeControl" label="Corner radius" value="{{btnRadius}}" on-change="{{setBtnRadius}}" min="{{zero}}" max="{{r32}}"></x-import>
+</div>
+</x-import>
+<x-import component-from-global-scope="WPC.PanelBody" title="Product cards" initial-open="{{no}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<x-import component-from-global-scope="WPC.RangeControl" label="Products per row" value="{{cols}}" on-change="{{setCols}}" min="{{two}}" max="{{five}}"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControl" label="Image shape" is-block="{{yes}}" value="{{ratio}}" on-change="{{setRatio}}">
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="1/1" label="Square"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="4/5" label="Portrait"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="4/3" label="Wide"></x-import>
+</x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControl" label="Image fit" is-block="{{yes}}" value="{{fit}}" on-change="{{setFit}}">
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="cover" label="Fill"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="contain" label="Fit"></x-import>
+</x-import>
+<x-import component-from-global-scope="WPC.RangeControl" label="Card corner radius" value="{{cardRadius}}" on-change="{{setCardRadius}}" min="{{zero}}" max="{{r32}}"></x-import>
+<x-import component-from-global-scope="WPC.SelectControl" label="Card shadow" value="{{shadow}}" options="{{shadowOpts}}" on-change="{{setShadow}}"></x-import>
+<x-import component-from-global-scope="WPC.ToggleControl" label="Show compare-at price" checked="{{showCompare}}" on-change="{{setShowCompare}}"></x-import>
+<x-import component-from-global-scope="WPC.ToggleControl" label="Show sale badge" checked="{{showBadge}}" on-change="{{setShowBadge}}"></x-import>
+</div>
+</x-import>
+<x-import component-from-global-scope="WPC.PanelBody" title="Box summary" initial-open="{{no}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<x-import component-from-global-scope="WPC.ToggleGroupControl" label="Where the box sits" is-block="{{yes}}" value="{{panelSide}}" on-change="{{setPanelSide}}">
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="left" label="Left"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="right" label="Right"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="bar" label="Bottom bar"></x-import>
+</x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControl" label="Progress" is-block="{{yes}}" value="{{progress}}" on-change="{{setProgress}}">
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="bar" label="Bar"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="segments" label="Segments"></x-import>
+</x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControl" label="Box slots" is-block="{{yes}}" value="{{slotLook}}" on-change="{{setSlotLook}}">
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="photos" label="Photos"></x-import>
+<x-import component-from-global-scope="WPC.ToggleGroupControlOption" value="numbers" label="Numbers"></x-import>
+</x-import>
+<x-import component-from-global-scope="WPC.ToggleControl" label="Show discount steps at the top" checked="{{showLadder}}" on-change="{{setShowLadder}}"></x-import>
+</div>
+</x-import>
+<x-import component-from-global-scope="WPC.PanelBody" title="Spacing and width" initial-open="{{no}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<x-import component-from-global-scope="WPC.SelectControl" label="Width" value="{{width}}" options="{{widthOpts}}" on-change="{{setWidth}}"></x-import>
+<x-import component-from-global-scope="WPC.BoxControl" label="Padding" values="{{padding}}" on-change="{{setPadding}}"></x-import>
+</div>
+</x-import>
+<x-import component-from-global-scope="WPC.PanelBody" title="Advanced" initial-open="{{no}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<x-import component-from-global-scope="WPC.TextControl" label="Extra CSS class" value="{{cssClass}}" on-change="{{setCssClass}}" help="Separate classes with spaces."></x-import>
+<x-import component-from-global-scope="WPC.TextareaControl" label="Custom CSS" value="{{css}}" on-change="{{setCss}}" help="Applies only to this box." rows="{{four}}"></x-import>
+</div>
+</x-import>
+</x-import>
+</sc-if>
+
+<sc-if value="{{isContent}}" hint-placeholder-val="{{false}}">
+<div class="pane">
+<x-import component-from-global-scope="WPC.TextareaControl" label="Headline" value="{{headline}}" on-change="{{setHeadline}}" rows="{{two}}"></x-import>
+<x-import component-from-global-scope="WPC.TextareaControl" label="Short intro" value="{{intro}}" on-change="{{setIntro}}" rows="{{two}}"></x-import>
+<x-import component-from-global-scope="WPC.TextControl" label="Add button" value="{{addLabel}}" on-change="{{setAddLabel}}"></x-import>
+<x-import component-from-global-scope="WPC.TextControl" label="Cart button" value="{{cta}}" on-change="{{setCta}}"></x-import>
+<x-import component-from-global-scope="WPC.Notice" status="info" is-dismissible="{{no}}">Leave a field empty to use the translated default text.</x-import>
+</div>
+</sc-if>
+</div>
+<div style="padding: 12px 16px; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; gap: 8px">
+<x-import component-from-global-scope="WPC.Button" variant="secondary" href="EditorDiscounts.dc.html">Back</x-import>
+<x-import component-from-global-scope="WPC.Button" variant="primary" href="Publish.dc.html">Continue to publish</x-import>
+</div>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+const TPLS = [
+  { id: 'spotlight', name: 'Spotlight', bg: '#ffffff', fg: '#111111', tile: '#eceef2', acc: '#ff4f1f' },
+  { id: 'clean', name: 'Clean list', bg: '#ffffff', fg: '#111111', tile: '#f1f1f1', acc: '#111111' },
+  { id: 'steps', name: 'Guided steps', bg: '#f6f4ff', fg: '#1b1240', tile: '#ffffff', acc: '#5b3df5' },
+  { id: 'gift', name: 'Gift tray', bg: '#0f3d2e', fg: '#f6efe3', tile: '#1c5442', acc: '#f2c14e' },
+  { id: 'bold', name: 'Color block', bg: '#2b4bff', fg: '#ffffff', tile: '#5a73ff', acc: '#ffe14d' },
+  { id: 'pastel', name: 'Pastel', bg: '#fff8f3', fg: '#2d2433', tile: '#ffe3d3', acc: '#8b5cf6' },
+  { id: 'editorial', name: 'Editorial', bg: '#f5f1ea', fg: '#1a1a1a', tile: '#e6dfd3', acc: '#c2410c' },
+  { id: 'night', name: 'Night', bg: '#0c0c10', fg: '#f4f4f5', tile: '#1c1c23', acc: '#c8ff2e' },
+  { id: 'split', name: 'Split screen', bg: '#ffffff', fg: '#111111', tile: '#ffd9cf', acc: '#ff6b4a' },
+  { id: 'compact', name: 'Compact card', bg: '#f4f4f2', fg: '#111111', tile: '#ffffff', acc: '#e11d74' }
+];
+const DEFAULTS = {
+  colors: { accent: '#ff4f1f', btnText: '#ffffff', bg: '#ffffff', surface: '#f3f4f6', text: '#111111', muted: '#555b66', savings: '#0a7a3b' },
+  headFont: 'Bricolage Grotesque', bodyFont: 'Bricolage Grotesque', headSize: 68, headWeight: 800, upper: false,
+  btnStyle: 'fill', btnSize: 'm', btnRadius: 22, cols: 3, ratio: '1/1', fit: 'cover', cardRadius: 18, shadow: 'none',
+  showCompare: true, showBadge: true, panelSide: 'right', progress: 'bar', slotLook: 'photos', showLadder: true
+};
+const THEME = {
+  colors: { accent: '#111111', btnText: '#ffffff', bg: '#ffffff', surface: '#fbfaf3', text: '#111111', muted: '#686868', savings: '#503aa8' },
+  headFont: 'Manrope', bodyFont: 'Manrope', headSize: 56, headWeight: 600, btnRadius: 32, cardRadius: 8, btnStyle: 'fill'
+};
+const COLOR_LABELS = [['accent', 'Accent and main button'], ['btnText', 'Button text'], ['bg', 'Background'], ['surface', 'Cards and image tiles'], ['text', 'Text'], ['muted', 'Secondary text'], ['savings', 'Savings and sale badge']];
+const PALETTE = [
+  { name: 'Theme · Base', color: '#ffffff' }, { name: 'Theme · Contrast', color: '#111111' }, { name: 'Theme · Accent 1', color: '#ffee58' },
+  { name: 'Theme · Accent 2', color: '#f6cff4' }, { name: 'Theme · Accent 3', color: '#503aa8' }, { name: 'Theme · Accent 4', color: '#686868' },
+  { name: 'Theme · Accent 5', color: '#fbfaf3' }, { name: 'Orange', color: '#ff4f1f' }, { name: 'Green', color: '#0a7a3b' }, { name: 'Grey', color: '#f3f4f6' }
+];
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ tab: 'style', tpl: 'spotlight', device: 'desktop', editing: 'accent', sync: false, matched: false, saved: false,
+      width: 'wide', padding: { top: '56px', right: '64px', bottom: '56px', left: '64px' }, cssClass: '', css: '',
+      headline: 'Build your box,\nsave up to 25%', intro: 'Pick 4 or more treats. Every step up saves you more.', addLabel: 'Add to box', cta: 'Add box to cart' },
+      JSON.parse(JSON.stringify(DEFAULTS)));
+  }
+  renderVals() {
+    const s = this.state;
+    const up = (k) => (v) => this.setState({ [k]: v, saved: false, matched: false });
+    const is = {};
+    TPLS.forEach((t) => { is[t.id] = t.id === s.tpl; });
+    const desk = s.device !== 'mobile';
+    const frameW = s.device === 'tablet' ? 820 : 1040;
+    return {
+      yes: true, no: false, zero: 0, two: 2, four: 4, five: 5, r32: 32,
+      tab: s.tab, setTab: (v) => this.setState({ tab: v || 'style' }),
+      isTemplate: s.tab === 'template', isStyle: s.tab === 'style', isContent: s.tab === 'content',
+      device: s.device, setDevice: (v) => this.setState({ device: v || 'desktop' }),
+      wide: desk, phone: !desk, frameW, zoom: ((frameW - 2) / 1280).toFixed(3),
+      saveLabel: s.saved ? 'Saved' : 'Save draft', save: () => this.setState({ saved: true }),
+      is, tplName: TPLS.find((t) => t.id === s.tpl).name,
+      tpls: TPLS.map((t, i) => ({ ...t, n: String(i + 1).padStart(2, '0'), on: is[t.id], cls: is[t.id] ? 'sel' : '', pick: () => this.setState({ tpl: t.id }) })),
+      resetStyle: () => this.setState(JSON.parse(JSON.stringify(DEFAULTS))),
+      sync: s.sync, setSync: (v) => this.setState({ sync: v }), matched: s.matched,
+      matchTheme: () => this.setState(Object.assign(JSON.parse(JSON.stringify(THEME)), { matched: true })),
+      c: s.colors,
+      colorItems: COLOR_LABELS.map(([k, label]) => ({ label, value: s.colors[k], on: s.editing === k, pick: () => this.setState({ editing: k }) })),
+      editingLabel: (COLOR_LABELS.find((x) => x[0] === s.editing) || COLOR_LABELS[0])[1],
+      editingValue: s.colors[s.editing], palette: PALETTE,
+      setColor: (v) => { if (!v) return; this.setState({ colors: { ...s.colors, [s.editing]: v }, saved: false, matched: false }); },
+      headFont: s.headFont, bodyFont: s.bodyFont, setHeadFont: up('headFont'), setBodyFont: up('bodyFont'),
+      fontOpts: [{ label: 'Theme heading font (Manrope)', value: 'Manrope' }, { label: 'Bricolage Grotesque', value: 'Bricolage Grotesque' }, { label: 'Inter', value: 'Inter' }, { label: 'Fraunces (serif)', value: 'Fraunces' }, { label: 'System font', value: 'System' }],
+      fontSizes: [{ name: 'Small', slug: 's', size: 40 }, { name: 'Medium', slug: 'm', size: 56 }, { name: 'Large', slug: 'l', size: 68 }, { name: 'Extra large', slug: 'xl', size: 84 }],
+      headSize: s.headSize, setHeadSize: (v) => this.setState({ headSize: typeof v === 'number' ? v : (parseInt(v, 10) || 68), saved: false }),
+      headWeight: s.headWeight, headWeightS: String(s.headWeight), setHeadWeight: (v) => this.setState({ headWeight: parseInt(v, 10), saved: false }),
+      weightOpts: [{ label: 'Regular', value: '400' }, { label: 'Medium', value: '500' }, { label: 'Semibold', value: '600' }, { label: 'Bold', value: '700' }, { label: 'Extra bold', value: '800' }],
+      upper: s.upper, setUpper: up('upper'),
+      btnStyle: s.btnStyle, setBtnStyle: up('btnStyle'), btnSize: s.btnSize, setBtnSize: up('btnSize'),
+      btnRadius: s.btnRadius, setBtnRadius: (v) => this.setState({ btnRadius: v ?? 22, saved: false }),
+      cols: s.cols, setCols: (v) => this.setState({ cols: v ?? 3, saved: false }),
+      ratio: s.ratio, setRatio: up('ratio'), fit: s.fit, setFit: up('fit'),
+      cardRadius: s.cardRadius, setCardRadius: (v) => this.setState({ cardRadius: v ?? 18, saved: false }),
+      shadow: s.shadow, setShadow: up('shadow'), shadowOpts: [{ label: 'None', value: 'none' }, { label: 'Soft', value: 'soft' }, { label: 'Strong', value: 'strong' }],
+      showCompare: s.showCompare, setShowCompare: up('showCompare'), showBadge: s.showBadge, setShowBadge: up('showBadge'),
+      panelSide: s.panelSide, setPanelSide: up('panelSide'), progress: s.progress, setProgress: up('progress'),
+      slotLook: s.slotLook, setSlotLook: up('slotLook'), showLadder: s.showLadder, setShowLadder: up('showLadder'),
+      width: s.width, setWidth: up('width'), widthOpts: [{ label: 'Theme content width', value: 'content' }, { label: 'Wide', value: 'wide' }, { label: 'Full width', value: 'full' }],
+      padding: s.padding, setPadding: up('padding'),
+      cssClass: s.cssClass, setCssClass: up('cssClass'), css: s.css, setCss: up('css'),
+      headline: s.headline, setHeadline: up('headline'), intro: s.intro, setIntro: up('intro'),
+      addLabel: s.addLabel, setAddLabel: up('addLabel'), cta: s.cta, setCta: up('cta')
+    };
+  }
+}
+</script>
+</body>
+</html>

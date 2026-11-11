@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ProductBoxes · Analytics</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wp.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#3858e9}a:hover{color:#2145e6}
+</style>
+</helmet>
+<div class="wp" style="min-height: 1350px; background: #f0f0f1; display: flex; flex-direction: column">
+<div class="wpbar"><span style="font-weight: 600">plugin-dev</span><span style="margin-left: auto; color: #c3c4c7">Howdy, admin</span></div>
+<div style="display: flex; flex-wrap: wrap; flex: 1">
+<nav class="wpside" aria-label="WordPress menu">
+<a href="#">Dashboard</a><a href="#">Posts</a><a href="#">Pages</a><a href="#">WooCommerce</a><a href="#">Products</a>
+<a class="on" href="Main.dc.html">ProductBoxes</a>
+<div class="sub"><a href="Main.dc.html">Home</a><a href="Boxes.dc.html">Boxes</a><a class="cur" href="Analytics.dc.html">Analytics</a><a href="Settings.dc.html">Settings</a></div>
+<a href="#">Appearance</a><a href="#">Plugins</a><a href="#">Settings</a>
+</nav>
+<div style="flex: 999 1 560px; min-width: 0">
+<header class="pb-head">
+<div class="pb-logo"><span class="pb-mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7.5 12 3l9 4.5-9 4.5-9-4.5Z"/><path d="M3 7.5v9L12 21l9-4.5v-9M12 12v9"/></svg></span>ProductBoxes</div>
+<nav class="pb-nav" aria-label="ProductBoxes"><a href="Main.dc.html">Home</a><a href="Boxes.dc.html">Boxes</a><a class="cur" href="Analytics.dc.html">Analytics</a><a href="Settings.dc.html">Settings</a></nav>
+<a class="btn btn-ghost" href="#" style="margin-left: auto">Help</a>
+</header>
+<main class="pb-main">
+<div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+<div style="display: flex; flex-direction: column; gap: 4px"><h1 class="pb-title">Analytics</h1><p class="muted">What sells in boxes, and where shoppers stop.</p></div>
+<button type="button" class="btn btn-secondary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button>
+</div>
+<div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+<div class="seg" role="group" aria-label="Period"><button type="button">Today</button><button type="button">7 days</button><button type="button" class="sel">30 days</button><button type="button">90 days</button><button type="button">Custom</button></div>
+<label><span style="position: absolute; left: -9999px">Box</span><select class="input select" style="width: 200px"><option>All boxes</option><option>Holiday treat box</option></select></label>
+<label style="display: flex; align-items: center; gap: 8px"><span class="chk on" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="m5 12 5 5 9-10"/></svg></span>Compare to previous 30 days</label>
+</div>
+<section class="card" aria-label="Key numbers" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr))">
+<div class="stat" style="border-right: 1px solid #f0f0f0"><span class="muted">Box revenue</span><span class="v">184.45৳</span><span class="delta">+184.45৳</span></div>
+<div class="stat" style="border-right: 1px solid #f0f0f0"><span class="muted">Boxes sold</span><span class="v">1</span><span class="delta">+1</span></div>
+<div class="stat" style="border-right: 1px solid #f0f0f0"><span class="muted">Items per box</span><span class="v">6</span><span class="muted" style="font-size: 12px">average</span></div>
+<div class="stat"><span class="muted">Discount given</span><span class="v">32.55৳</span><span class="muted" style="font-size: 12px">15% average</span></div>
+</section>
+<section class="card" aria-labelledby="rev-h">
+<div class="card-h"><div><h2 id="rev-h">Revenue from boxes</h2><span class="muted">Oct 10 to Nov 8, by day</span></div><div style="display: flex; gap: 16px; align-items: center"><span style="display: flex; gap: 6px; align-items: center"><span style="width: 16px; height: 2px; background: #3858e9"></span>This period</span><span style="display: flex; gap: 6px; align-items: center"><span style="width: 16px; height: 0; border-top: 2px dashed #949494"></span>Previous</span></div></div>
+<div style="padding: 24px; display: flex; gap: 12px">
+<div style="display: flex; flex-direction: column; justify-content: space-between; height: 240px; font-size: 12px; color: #757575; text-align: right"><span>200৳</span><span>150৳</span><span>100৳</span><span>50৳</span><span>0৳</span></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 8px">
+<svg viewBox="0 0 1000 240" preserveAspectRatio="none" style="width: 100%; height: 240px; display: block" role="img" aria-label="Revenue was 0 on most days, with 184.45৳ on October 20.">
+<path d="M0 0H1000M0 60H1000M0 120H1000M0 180H1000M0 239H1000" stroke="#f0f0f0" stroke-width="1"/>
+<path d="M0 239H1000" stroke="#949494" stroke-width="2" stroke-dasharray="6 6" fill="none"/>
+<path d="M0 239 L310 239 L345 18 L380 239 L1000 239" stroke="#3858e9" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"/>
+<path d="M310 239 L345 18 L380 239Z" fill="#3858e9" fill-opacity=".08"/>
+</svg>
+<div style="display: flex; justify-content: space-between; font-size: 12px; color: #757575"><span>Oct 10</span><span>Oct 15</span><span>Oct 20</span><span>Oct 25</span><span>Oct 30</span><span>Nov 4</span><span>Nov 8</span></div>
+</div>
+</div>
+</section>
+<div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start">
+<section class="card" style="flex: 1 1 420px; min-width: 0" aria-labelledby="fun-h">
+<div class="card-h"><div><h2 id="fun-h">Shopper journey</h2><span class="muted">Visits that opened a box builder</span></div></div>
+<div class="card-b" style="gap: 16px">
+<div><div style="display: flex; justify-content: space-between"><span>Opened the builder</span><span><b>37</b> <span class="muted">100%</span></span></div><div class="bar" style="margin-top: 6px"><i style="width: 100%"></i></div></div>
+<div><div style="display: flex; justify-content: space-between"><span>Added an item</span><span><b>18</b> <span class="muted">49%</span></span></div><div class="bar" style="margin-top: 6px"><i style="width: 49%"></i></div></div>
+<div><div style="display: flex; justify-content: space-between"><span>Reached a discount</span><span><b>13</b> <span class="muted">35%</span></span></div><div class="bar" style="margin-top: 6px"><i style="width: 35%"></i></div></div>
+<div><div style="display: flex; justify-content: space-between"><span>Added box to cart</span><span><b>9</b> <span class="muted">24%</span></span></div><div class="bar" style="margin-top: 6px"><i style="width: 24%"></i></div></div>
+<div><div style="display: flex; justify-content: space-between"><span>Bought</span><span><b>1</b> <span class="muted">2.7%</span></span></div><div class="bar" style="margin-top: 6px"><i style="width: 3%"></i></div></div>
+<div class="notice" style="margin-top: 4px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3858e9" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/></svg><p>Most shoppers leave between cart and checkout. Turn on cart editing in Settings so they can change a box without starting over.</p></div>
+</div>
+</section>
+<section class="card" style="flex: 1 1 420px; min-width: 0" aria-labelledby="mp-h">
+<div class="card-h"><div><h2 id="mp-h">Most picked products</h2><span class="muted">Times added to a box</span></div></div>
+<div class="card-b" style="gap: 16px">
+<div><div style="display: flex; justify-content: space-between"><span>Polo</span><span>25</span></div><div class="bar" style="margin-top: 6px"><i style="width: 100%"></i></div></div>
+<div><div style="display: flex; justify-content: space-between"><span>Belt</span><span>23</span></div><div class="bar" style="margin-top: 6px"><i style="width: 92%"></i></div></div>
+<div><div style="display: flex; justify-content: space-between"><span>Sunglasses</span><span>22</span></div><div class="bar" style="margin-top: 6px"><i style="width: 88%"></i></div></div>
+<div><div style="display: flex; justify-content: space-between"><span>Beanie</span><span>21</span></div><div class="bar" style="margin-top: 6px"><i style="width: 84%"></i></div></div>
+<div><div style="display: flex; justify-content: space-between"><span>Cap</span><span>17</span></div><div class="bar" style="margin-top: 6px"><i style="width: 68%"></i></div></div>
+<div><div style="display: flex; justify-content: space-between"><span>T-shirt</span><span>16</span></div><div class="bar" style="margin-top: 6px"><i style="width: 64%"></i></div></div>
+</div>
+</section>
+</div>
+<section class="card" aria-labelledby="perf-h">
+<div class="card-h"><h2 id="perf-h">By box</h2></div>
+<div style="overflow-x: auto">
+<table class="tbl">
+<thead><tr><th>Box</th><th class="num">Visits</th><th class="num">Started</th><th class="num">Sold</th><th class="num">Conversion</th><th class="num">Avg. box</th><th class="num">Revenue</th></tr></thead>
+<tbody>
+<tr><td><a href="EditorProducts.dc.html" style="color: #1e1e1e">Holiday treat box</a></td><td class="num">28</td><td class="num">15</td><td class="num">1</td><td class="num">3.6%</td><td class="num">184.45৳</td><td class="num">184.45৳</td></tr>
+<tr><td>Summer mix &amp; match</td><td class="num">6</td><td class="num">3</td><td class="num">0</td><td class="num">—</td><td class="num">—</td><td class="num">0.00৳</td></tr>
+<tr><td><span class="muted">Deleted boxes (3)</span></td><td class="num">3</td><td class="num">0</td><td class="num">0</td><td class="num">—</td><td class="num">—</td><td class="num">0.00৳</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1350}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

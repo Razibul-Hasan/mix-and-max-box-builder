@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Template 01 · Spotlight</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./wp.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400..800&family=Inter:wght@400..800&family=Fraunces:opsz,wght@9..144,400..800&display=swap">
+<style>
+body{margin:0}
+.t1 *{box-sizing:border-box}
+.t1 h2,.t1 h3,.t1 p{margin:0}
+.t1 .qty button{width:44px;height:100%;border:0;background:transparent;color:inherit;font-size:20px;cursor:pointer;font-family:inherit}
+.t1 .slot{aspect-ratio:1/1;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px}
+.t1 .slot img{width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply}
+.t1 .chip{height:38px;padding:0 16px;border-radius:19px;border:1.5px solid rgba(0,0,0,.12);background:transparent;font:inherit;font-size:14px;font-weight:500;cursor:pointer;color:inherit}
+.t1 .chip.sel{background:currentColor}
+.t1 .seg{flex:1;height:10px;border-radius:5px;display:block}
+</style>
+</helmet>
+<div class="t1" style="width: 1280px; min-height: 1200px; box-sizing: border-box; padding: 56px 64px 140px; display: flex; flex-direction: column; gap: 40px; position: relative; background: {{bg}}; color: {{text}}; font-family: {{bodyFF}}">
+<div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 18px">
+<span style="align-self: flex-start; height: 32px; padding: 0 14px; border-radius: 16px; background: {{surface}}; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{accent}}"></span>{{eyebrow}}</span>
+<h2 style="line-height: 0.98; letter-spacing: -0.03em; font-family: {{headFF}}; font-size: {{headSize}}px; font-weight: {{headWeight}}; white-space: pre-line">{{headline}}</h2>
+<p style="font-size: 18px; color: {{muted}}">{{intro}}</p>
+</div>
+<sc-if value="{{showLadder}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: flex-end; gap: 10px" aria-label="Discount steps">
+<sc-for list="{{tiers}}" as="t" hint-placeholder-count="3"><div style="width: 112px; padding: 14px; display: flex; flex-direction: column; justify-content: flex-end; height: {{t.h}}px; border-radius: {{cardRadius}}px; background: {{t.bg}}; color: {{t.fg}}"><b style="font-size: 30px; line-height: 1; font-weight: 800; font-family: {{headFF}}">{{t.d}}%</b><span style="font-size: 13px; font-weight: 500; margin-top: 4px">{{t.q}} items</span></div></sc-for>
+</div>
+</sc-if>
+</div>
+<div style="display: flex; gap: 40px; align-items: flex-start; flex-direction: {{dir}}">
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; gap: 8px"><button type="button" class="chip" style="background: {{text}}; color: {{bg}}; border-color: {{text}}">All</button><button type="button" class="chip">Accessories</button><button type="button" class="chip">T-shirts</button></div>
+<div style="display: grid; gap: 22px; grid-template-columns: repeat({{cols}}, minmax(0, 1fr))">
+<sc-for list="{{products}}" as="p" hint-placeholder-count="5">
+<article style="display: flex; flex-direction: column; gap: 12px">
+<div style="position: relative; overflow: hidden; background: {{surface}}; border-radius: {{cardRadius}}px; box-shadow: {{shadowCss}}"><img src="{{p.img}}" alt="{{p.name}}" style="width: 100%; display: block; mix-blend-mode: multiply; aspect-ratio: {{ratio}}; object-fit: {{fit}}">
+<sc-if value="{{p.badge}}" hint-placeholder-val="{{false}}"><span style="position: absolute; top: 12px; left: 12px; height: 26px; padding: 0 10px; border-radius: 13px; background: {{savings}}; color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center">{{p.save}}</span></sc-if>
+<sc-if value="{{p.has}}" hint-placeholder-val="{{false}}"><span style="position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 50%; background: {{accent}}; color: {{btnText}}; font-weight: 700; display: flex; align-items: center; justify-content: center">{{p.qty}}</span></sc-if></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><b style="font-size: 18px; font-weight: 600; font-family: {{headFF}}">{{p.name}}</b><span style="font-size: 16px; font-weight: 600">{{p.priceS}}<sc-if value="{{p.compare}}" hint-placeholder-val="{{false}}"><s style="font-weight: 400; font-size: 14px; margin-left: 6px; color: {{muted}}">{{p.wasS}}</s></sc-if></span></div>
+<sc-if value="{{p.empty}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{p.add}}" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; height: {{btnH}}px; border-radius: {{btnRadius}}px; background: {{addBg}}; color: {{addFg}}; border: {{addBorder}}; text-transform: {{caseT}}">{{addLabel}}</button></sc-if>
+<sc-if value="{{p.has}}" hint-placeholder-val="{{false}}"><div class="qty" style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: {{btnH}}px; border-radius: {{btnRadius}}px; background: {{accent}}; color: {{btnText}}"><button type="button" onClick="{{p.rem}}" aria-label="Remove one {{p.name}}">−</button><b>{{p.qty}} in box</b><button type="button" onClick="{{p.add}}" aria-label="Add one more {{p.name}}">+</button></div></sc-if>
+</article>
+</sc-for>
+</div>
+</div>
+<sc-if value="{{panel}}" hint-placeholder-val="{{true}}">
+<aside style="width: 360px; flex: 0 0 360px; padding: 26px; display: flex; flex-direction: column; gap: 20px; background: {{bg}}; border-radius: {{panelRadius}}px; box-shadow: 0 24px 60px -24px rgba(17,17,17,.25), 0 0 0 1px rgba(0,0,0,.08)" aria-label="Your box">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><h3 style="font-size: 22px; font-weight: 700; font-family: {{headFF}}">Your box</h3><span style="font-size: 15px; color: {{muted}}"><b style="font-size: 26px; color: {{text}}">{{count}}</b> / 12</span></div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px"><sc-for list="{{slots}}" as="s" hint-placeholder-count="12"><div class="slot" style="border-radius: {{slotRadius}}; background: {{s.bg}}; color: {{s.fg}}"><sc-if value="{{s.photo}}" hint-placeholder-val="{{false}}"><img src="{{s.img}}" alt="{{s.name}}"></sc-if><sc-if value="{{s.label}}" hint-placeholder-val="{{true}}"><span style="font-weight: 600">{{s.n}}</span></sc-if></div></sc-for></div>
+<div style="display: flex; flex-direction: column; gap: 10px" aria-live="polite"><p style="font-size: 15px">{{msgLead}} <b style="color: {{accent}}">{{msgDeal}}</b></p>
+<sc-if value="{{isBar}}" hint-placeholder-val="{{true}}"><div style="height: 10px; border-radius: 5px; overflow: hidden; background: {{surface}}"><div style="height: 100%; border-radius: 5px; width: {{pct}}%; background: {{accent}}"></div></div></sc-if>
+<sc-if value="{{isSeg}}" hint-placeholder-val="{{false}}"><div style="display: flex; gap: 4px"><sc-for list="{{segs}}" as="g" hint-placeholder-count="12"><i class="seg" style="background: {{g.c}}"></i></sc-for></div></sc-if>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; font-size: 15px; color: {{muted}}"><div style="display: flex; justify-content: space-between"><span>Items</span><span>{{subS}}</span></div><div style="display: flex; justify-content: space-between"><span>Box discount</span><span style="font-weight: 600; color: {{savings}}">−{{discS}}</span></div><div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; color: {{text}}"><b style="font-size: 17px">Total</b><b style="font-size: 30px; letter-spacing: -0.02em; font-family: {{headFF}}">{{totalS}}</b></div></div>
+<sc-if value="{{ready}}" hint-placeholder-val="{{true}}"><button type="button" style="height: 56px; border: 0; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer; border-radius: {{btnRadius}}px; background: {{accent}}; color: {{btnText}}; text-transform: {{caseT}}">{{cta}}</button></sc-if>
+<sc-if value="{{notReady}}" hint-placeholder-val="{{false}}"><button type="button" disabled style="height: 56px; border: 0; font-family: inherit; font-size: 16px; font-weight: 600; border-radius: {{btnRadius}}px; background: {{surface}}; color: {{muted}}">{{ctaWait}}</button></sc-if>
+</aside>
+</sc-if>
+</div>
+<sc-if value="{{bar}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; left: 64px; right: 64px; bottom: 28px; padding: 14px 14px 14px 26px; display: flex; align-items: center; gap: 24px; background: {{text}}; color: {{bg}}; border-radius: {{panelRadius}}px; box-shadow: 0 24px 48px -16px rgba(0,0,0,.4)">
+<b style="font-size: 34px; font-family: {{headFF}}">{{count}}<span style="font-size: 16px; opacity: .6">/12</span></b>
+<span style="flex: 1; font-size: 15px">{{msgLead}} <b>{{msgDeal}}</b></span>
+<b style="font-size: 26px; font-family: {{headFF}}">{{totalS}}</b>
+<button type="button" style="height: 54px; padding: 0 26px; border: 0; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; border-radius: {{btnRadius}}px; background: {{accent}}; color: {{btnText}}; text-transform: {{caseT}}">{{cta}}</button>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#ff4f1f"},"bg":{"editor":"color","default":"#ffffff"},"surface":{"editor":"color","default":"#f3f4f6"},"text":{"editor":"color","default":"#111111"},"cols":{"editor":"int","default":3,"min":2,"max":5},"btnRadius":{"editor":"range","default":22,"min":0,"max":32},"panelSide":{"editor":"enum","default":"right","options":["right","left","bar"]},"muted":{"editor":null},"savings":{"editor":null},"btnText":{"editor":null},"headFont":{"editor":null},"bodyFont":{"editor":null},"headSize":{"editor":null},"headWeight":{"editor":null},"btnStyle":{"editor":null},"btnSize":{"editor":null},"upper":{"editor":null},"ratio":{"editor":null},"fit":{"editor":null},"cardRadius":{"editor":null},"shadow":{"editor":null},"showCompare":{"editor":null},"showBadge":{"editor":null},"progress":{"editor":null},"slotLook":{"editor":null},"showLadder":{"editor":null},"headline":{"editor":null},"intro":{"editor":null},"cta":{"editor":null},"addLabel":{"editor":null},"$preview":{"width":1280,"height":1200}}'>
+const PB_P = [
+  { id: 'beanie', name: 'Beanie', price: 18, was: 20, img: '/_blob/a21d75322d1f2c79c0b493d770e100ba' },
+  { id: 'belt', name: 'Belt', price: 55, was: 65, img: '/_blob/dbf6bf4993577849550a7cf059cabaac' },
+  { id: 'cap', name: 'Cap', price: 16, was: 18, img: '/_blob/7bb413bb81c62e7140669f3f245799f6' },
+  { id: 'sunglasses', name: 'Sunglasses', price: 90, was: 0, img: '/_blob/3b8ae96639edc920d9a59a6c11f5a7d8' },
+  { id: 'tshirt', name: 'T-shirt', price: 18, was: 0, img: '/_blob/e08619cc92331767f559db4a150cf594' }
+];
+const PB_T = [{ q: 4, d: 10 }, { q: 6, d: 15 }, { q: 12, d: 25 }];
+const PB_CAP = 12, PB_MIN = 4, PB_PER = 3;
+const FF = { 'Bricolage Grotesque': '"Bricolage Grotesque", system-ui, sans-serif', 'Manrope': 'Manrope, system-ui, sans-serif', 'Inter': 'Inter, system-ui, sans-serif', 'Fraunces': 'Fraunces, Georgia, serif', 'System': 'system-ui, -apple-system, "Segoe UI", sans-serif' };
+const SH = { none: 'none', soft: '0 8px 24px -12px rgba(0,0,0,.25)', strong: '0 18px 40px -14px rgba(0,0,0,.4)' };
+function pbMoney(n) { return n.toFixed(2) + '৳'; }
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { box: { beanie: 2, cap: 1, tshirt: 2 } }; }
+  renderVals() {
+    const P = this.props;
+    const accent = P.accent ?? '#ff4f1f', bg = P.bg ?? '#ffffff', surface = P.surface ?? '#f3f4f6', text = P.text ?? '#111111';
+    const muted = P.muted ?? '#555b66', savings = P.savings ?? '#0a7a3b', btnText = P.btnText ?? '#ffffff';
+    const btnStyle = P.btnStyle ?? 'fill', btnRadius = P.btnRadius ?? 22, side = P.panelSide ?? 'right', progress = P.progress ?? 'bar', slotLook = P.slotLook ?? 'photos';
+    const showCompare = P.showCompare ?? true, showBadge = P.showBadge ?? true;
+    const box = this.state.box;
+    const count = Object.values(box).reduce((a, b) => a + b, 0);
+    const sub = PB_P.reduce((s, p) => s + (box[p.id] || 0) * p.price, 0);
+    let tier = null; PB_T.forEach((t) => { if (count >= t.q) tier = t; });
+    const next = PB_T.find((t) => t.q > count);
+    const disc = tier ? Math.round(sub * tier.d) / 100 : 0;
+    const set = (b) => this.setState({ box: b });
+    const filled = [];
+    PB_P.forEach((p) => { for (let i = 0; i < (box[p.id] || 0); i++) filled.push(p); });
+    const photos = slotLook === 'photos';
+    const slots = [];
+    for (let i = 0; i < PB_CAP; i++) { const f = filled[i];
+      slots.push(f ? { img: f.img, name: f.name, photo: photos, label: !photos, n: i + 1, bg: photos ? surface : accent, fg: btnText } : { img: '', name: '', photo: false, label: true, n: i + 1, bg: surface, fg: muted }); }
+    const segs = [];
+    for (let i = 1; i <= PB_CAP; i++) segs.push({ c: i <= count ? accent : surface });
+    const btnH = { s: 40, m: 46, l: 54 }[P.btnSize ?? 'm'] || 46;
+    const addBg = btnStyle === 'fill' ? text : (btnStyle === 'soft' ? surface : 'transparent');
+    const addFg = btnStyle === 'fill' ? bg : text;
+    const addBorder = btnStyle === 'outline' ? '1.5px solid ' + text : '0';
+    const cardRadius = P.cardRadius ?? 18;
+    return {
+      accent, bg, surface, text, muted, savings, btnText, btnRadius, btnH, addBg, addFg, addBorder, cardRadius,
+      headFF: FF[P.headFont ?? 'Bricolage Grotesque'] || FF['Bricolage Grotesque'], bodyFF: FF[P.bodyFont ?? 'Bricolage Grotesque'] || FF['Bricolage Grotesque'],
+      headSize: P.headSize ?? 68, headWeight: P.headWeight ?? 800, caseT: (P.upper ?? false) ? 'uppercase' : 'none',
+      ratio: P.ratio ?? '1/1', fit: P.fit ?? 'cover', cols: P.cols ?? 3, shadowCss: SH[P.shadow ?? 'none'] || 'none',
+      panelRadius: Math.min(32, cardRadius + 6), slotRadius: photos ? Math.max(4, cardRadius - 6) + 'px' : '50%',
+      dir: side === 'left' ? 'row-reverse' : 'row', panel: side !== 'bar', bar: side === 'bar',
+      isBar: progress === 'bar', isSeg: progress === 'segments',
+      showLadder: P.showLadder ?? true,
+      eyebrow: 'Holiday offer · ends Dec 24',
+      headline: P.headline ?? 'Build your box,\nsave up to 25%',
+      intro: P.intro ?? 'Pick 4 or more treats. Every step up saves you more.',
+      cta: P.cta ?? 'Add box to cart', addLabel: P.addLabel ?? 'Add to box',
+      count, slots, segs,
+      tiers: PB_T.map((t, i) => { const hit = count >= t.q; return { ...t, h: 104 + i * 34, bg: hit ? accent : (i === PB_T.length - 1 ? text : surface), fg: hit ? btnText : (i === PB_T.length - 1 ? bg : text) }; }),
+      products: PB_P.map((p) => { const qty = box[p.id] || 0; return { ...p, qty, has: qty > 0, empty: qty === 0, priceS: pbMoney(p.price), wasS: p.was ? pbMoney(p.was) : '',
+        compare: showCompare && !!p.was, badge: showBadge && !!p.was, save: p.was ? '−' + Math.round((1 - p.price / p.was) * 100) + '%' : '',
+        add: () => { if (count >= PB_CAP || qty >= PB_PER) return; set({ ...box, [p.id]: qty + 1 }); },
+        rem: () => { const b = { ...box }; if (qty <= 1) delete b[p.id]; else b[p.id] = qty - 1; set(b); } }; }),
+      msgLead: next ? 'Add ' + (next.q - count) + ' more to get' : 'Best deal unlocked:',
+      msgDeal: next ? next.d + '% off' : '25% off',
+      pct: Math.min(100, (count / PB_CAP) * 100),
+      subS: pbMoney(sub), discS: pbMoney(disc), totalS: pbMoney(sub - disc),
+      ready: count >= PB_MIN, notReady: count < PB_MIN,
+      ctaWait: 'Add ' + (PB_MIN - count) + ' more to continue'
+    };
+  }
+}
+</script>
+</body>
+</html>
