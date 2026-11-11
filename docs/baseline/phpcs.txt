@@ -1,0 +1,14 @@
+PHPCS baseline — Redesign Part 1 (2026-11-11)
+=============================================
+
+Ruleset: phpcs.xml.dist (WordPress-Extra, WordPress-Docs, PHPCompatibilityWP testVersion 7.4-,
+text domain productboxes-mix-and-match-box-builder, prefixes MixMax\BoxBuilder and mmbb).
+Scope: the whole repository except build/, node_modules/, vendor/, design/ and docs/.
+PHP_CodeSniffer 3.13.6 on PHP 8.2.29.
+
+$ composer run lint        (here: php vendor/bin/phpcs -q --report=summary)
+(no output; exit 0)
+
+Errors: 0   Warnings: 0
+
+Every later part keeps this at zero.

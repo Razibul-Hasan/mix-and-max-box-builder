@@ -1,0 +1,62 @@
+[
+    {
+        "id": 9101,
+        "type": "simple",
+        "name": "Brown butter chip cookie",
+        "status": "publish",
+        "regular_price": "4.50",
+        "sale_price": "",
+        "manage_stock": true,
+        "stock_quantity": 40
+    },
+    {
+        "id": 9102,
+        "type": "simple",
+        "name": "Smoky Earl Grey shortbread",
+        "status": "publish",
+        "regular_price": "5.00",
+        "sale_price": "",
+        "manage_stock": true,
+        "stock_quantity": 40
+    },
+    {
+        "id": 9103,
+        "type": "simple",
+        "name": "Salted caramel brownie",
+        "status": "publish",
+        "regular_price": "6.00",
+        "sale_price": "5.25",
+        "manage_stock": true,
+        "stock_quantity": 25
+    },
+    {
+        "id": 9104,
+        "type": "simple",
+        "name": "Pistachio rose macaron",
+        "status": "publish",
+        "regular_price": "3.75",
+        "sale_price": "",
+        "manage_stock": true,
+        "stock_quantity": 60
+    },
+    {
+        "id": 9105,
+        "type": "simple",
+        "name": "Dark chocolate sea salt bar",
+        "status": "publish",
+        "regular_price": "7.00",
+        "sale_price": "",
+        "manage_stock": true,
+        "stock_quantity": 30
+    },
+    {
+        "id": 9106,
+        "type": "simple",
+        "name": "Gift tin",
+        "status": "publish",
+        "regular_price": "9.00",
+        "sale_price": "",
+        "manage_stock": true,
+        "stock_quantity": 15
+    }
+]

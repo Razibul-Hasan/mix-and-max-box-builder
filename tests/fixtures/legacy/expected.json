@@ -1,0 +1,589 @@
+{
+    "note": "Results the 1.0.0 code gave for the fixtures in this folder. Amounts are integer minor units.",
+    "boxes": {
+        "tiered": {
+            "id": 9201,
+            "status": "active",
+            "config": {
+                "type": "tiered",
+                "box": {
+                    "capacity": 12,
+                    "min_items": 4,
+                    "allow_duplicates": true,
+                    "max_per_product": 6,
+                    "hide_sold_out": false
+                },
+                "tiers": [
+                    {
+                        "qty": 4,
+                        "discount_type": "percent",
+                        "value": 10
+                    },
+                    {
+                        "qty": 6,
+                        "discount_type": "percent",
+                        "value": 15
+                    },
+                    {
+                        "qty": 12,
+                        "discount_type": "percent",
+                        "value": 25
+                    }
+                ],
+                "sizes": [],
+                "bundle": {
+                    "qty": 3,
+                    "price": 0
+                },
+                "products": {
+                    "source": "manual",
+                    "ids": [
+                        9101,
+                        9102,
+                        9103,
+                        9104,
+                        9105
+                    ],
+                    "term_ids": [],
+                    "order": "manual",
+                    "caps": {
+                        "9105": 2
+                    }
+                },
+                "schedule": {
+                    "start": "2026-11-01T00:00:00Z",
+                    "end": null,
+                    "countdown_days": 14,
+                    "countdown_end": "2099-12-24T23:59:00Z"
+                },
+                "extras": {
+                    "gift_message": true,
+                    "gift_wrap": {
+                        "enabled": true,
+                        "fee": 3.5
+                    },
+                    "free_gift": {
+                        "enabled": false,
+                        "product_id": 0,
+                        "min_items": 12
+                    }
+                },
+                "design": {
+                    "layout": "default",
+                    "columns": 0,
+                    "headline": "Build your holiday treat box",
+                    "intro": "Pick your favourites. The more you add, the more you save.",
+                    "sticker": "Save up to 25%",
+                    "cta_label": "Add box to cart",
+                    "show_hero": true,
+                    "show_ladder": true,
+                    "show_stickers": true,
+                    "accent": "max",
+                    "accent_color": "#f04e12",
+                    "theme": "light",
+                    "theme_canvas": "#f5f5f2",
+                    "theme_surface": "#ffffff",
+                    "ladder": "default",
+                    "ladder_top": "#f04e12",
+                    "ladder_top_text": "#141414",
+                    "ladder_near": "#ffd23f",
+                    "ladder_near_text": "#141414",
+                    "ladder_base": "#ffffff",
+                    "ladder_base_text": "#141414",
+                    "countdown": "default",
+                    "countdown_bg": "#ffd23f",
+                    "countdown_text": "#141414"
+                },
+                "placement": {
+                    "page_id": 0
+                },
+                "container_product_id": 9301
+            },
+            "picks": [
+                {
+                    "product_id": 9101,
+                    "variation_id": 0,
+                    "qty": 2
+                },
+                {
+                    "product_id": 9102,
+                    "variation_id": 0,
+                    "qty": 2
+                },
+                {
+                    "product_id": 9103,
+                    "variation_id": 0,
+                    "qty": 2
+                }
+            ],
+            "options": {
+                "gift_wrap": true
+            },
+            "items": [
+                {
+                    "product_id": 9101,
+                    "variation_id": 0,
+                    "qty": 2,
+                    "unit_price_minor": 450
+                },
+                {
+                    "product_id": 9102,
+                    "variation_id": 0,
+                    "qty": 2,
+                    "unit_price_minor": 500
+                },
+                {
+                    "product_id": 9103,
+                    "variation_id": 0,
+                    "qty": 2,
+                    "unit_price_minor": 525
+                }
+            ],
+            "quote": {
+                "valid": true,
+                "errors": [],
+                "count": 6,
+                "subtotal": 2950,
+                "discount": 443,
+                "fee": 350,
+                "total": 2857,
+                "tier": {
+                    "qty": 6,
+                    "discount_type": "percent",
+                    "value": 15
+                },
+                "next": {
+                    "qty": 12,
+                    "needed": 6,
+                    "discount_type": "percent",
+                    "value": 25
+                }
+            },
+            "free_gift": null,
+            "payload": {
+                "keys": [
+                    "id",
+                    "title",
+                    "status",
+                    "preview",
+                    "config",
+                    "view",
+                    "colors",
+                    "settings",
+                    "products",
+                    "freeGift",
+                    "money",
+                    "now",
+                    "cart",
+                    "edit",
+                    "tracking"
+                ],
+                "products": [
+                    {
+                        "id": 9101,
+                        "name": "Brown butter chip cookie",
+                        "price": 450
+                    },
+                    {
+                        "id": 9102,
+                        "name": "Smoky Earl Grey shortbread",
+                        "price": 500
+                    },
+                    {
+                        "id": 9103,
+                        "name": "Salted caramel brownie",
+                        "price": 525
+                    },
+                    {
+                        "id": 9104,
+                        "name": "Pistachio rose macaron",
+                        "price": 375
+                    },
+                    {
+                        "id": 9105,
+                        "name": "Dark chocolate sea salt bar",
+                        "price": 700
+                    }
+                ]
+            }
+        },
+        "fixed": {
+            "id": 9202,
+            "status": "active",
+            "config": {
+                "type": "fixed",
+                "box": {
+                    "capacity": 9,
+                    "min_items": 1,
+                    "allow_duplicates": true,
+                    "max_per_product": 9,
+                    "hide_sold_out": true
+                },
+                "tiers": [],
+                "sizes": [
+                    {
+                        "qty": 3,
+                        "discount_type": "fixed_amount",
+                        "value": 2,
+                        "tag": ""
+                    },
+                    {
+                        "qty": 6,
+                        "discount_type": "box_price",
+                        "value": 24,
+                        "tag": "popular"
+                    },
+                    {
+                        "qty": 9,
+                        "discount_type": "percent",
+                        "value": 20,
+                        "tag": "best_value"
+                    }
+                ],
+                "bundle": {
+                    "qty": 3,
+                    "price": 0
+                },
+                "products": {
+                    "source": "manual",
+                    "ids": [
+                        9101,
+                        9102,
+                        9104
+                    ],
+                    "term_ids": [],
+                    "order": "price",
+                    "caps": []
+                },
+                "schedule": {
+                    "start": null,
+                    "end": null,
+                    "countdown_days": 0,
+                    "countdown_end": null
+                },
+                "extras": {
+                    "gift_message": false,
+                    "gift_wrap": {
+                        "enabled": false,
+                        "fee": 0
+                    },
+                    "free_gift": {
+                        "enabled": true,
+                        "product_id": 9106,
+                        "min_items": 6
+                    }
+                },
+                "design": {
+                    "layout": "bar",
+                    "columns": 3,
+                    "headline": "Pick a size, fill it up",
+                    "intro": "",
+                    "sticker": "",
+                    "cta_label": "",
+                    "show_hero": false,
+                    "show_ladder": true,
+                    "show_stickers": true,
+                    "accent": "custom",
+                    "accent_color": "#0a7d5a",
+                    "theme": "dark",
+                    "theme_canvas": "#f5f5f2",
+                    "theme_surface": "#ffffff",
+                    "ladder": "custom",
+                    "ladder_top": "#0a7d5a",
+                    "ladder_top_text": "#ffffff",
+                    "ladder_near": "#ffd23f",
+                    "ladder_near_text": "#141414",
+                    "ladder_base": "#ffffff",
+                    "ladder_base_text": "#141414",
+                    "countdown": "default",
+                    "countdown_bg": "#ffd23f",
+                    "countdown_text": "#141414"
+                },
+                "placement": {
+                    "page_id": 0
+                },
+                "container_product_id": 9302
+            },
+            "picks": [
+                {
+                    "product_id": 9101,
+                    "variation_id": 0,
+                    "qty": 3
+                },
+                {
+                    "product_id": 9102,
+                    "variation_id": 0,
+                    "qty": 2
+                },
+                {
+                    "product_id": 9104,
+                    "variation_id": 0,
+                    "qty": 1
+                }
+            ],
+            "options": {
+                "size": 6
+            },
+            "items": [
+                {
+                    "product_id": 9101,
+                    "variation_id": 0,
+                    "qty": 3,
+                    "unit_price_minor": 450
+                },
+                {
+                    "product_id": 9102,
+                    "variation_id": 0,
+                    "qty": 2,
+                    "unit_price_minor": 500
+                },
+                {
+                    "product_id": 9104,
+                    "variation_id": 0,
+                    "qty": 1,
+                    "unit_price_minor": 375
+                }
+            ],
+            "quote": {
+                "valid": true,
+                "errors": [],
+                "count": 6,
+                "subtotal": 2725,
+                "discount": 325,
+                "fee": 0,
+                "total": 2400,
+                "tier": {
+                    "qty": 6,
+                    "discount_type": "box_price",
+                    "value": 24
+                },
+                "next": null
+            },
+            "free_gift": {
+                "product_id": 9106,
+                "variation_id": 0,
+                "qty": 1,
+                "name": "Gift tin"
+            },
+            "payload": {
+                "keys": [
+                    "id",
+                    "title",
+                    "status",
+                    "preview",
+                    "config",
+                    "view",
+                    "colors",
+                    "settings",
+                    "products",
+                    "freeGift",
+                    "money",
+                    "now",
+                    "cart",
+                    "edit",
+                    "tracking"
+                ],
+                "products": [
+                    {
+                        "id": 9104,
+                        "name": "Pistachio rose macaron",
+                        "price": 375
+                    },
+                    {
+                        "id": 9101,
+                        "name": "Brown butter chip cookie",
+                        "price": 450
+                    },
+                    {
+                        "id": 9102,
+                        "name": "Smoky Earl Grey shortbread",
+                        "price": 500
+                    }
+                ]
+            }
+        },
+        "bundle": {
+            "id": 9203,
+            "status": "active",
+            "config": {
+                "type": "bundle",
+                "box": {
+                    "capacity": 3,
+                    "min_items": 1,
+                    "allow_duplicates": false,
+                    "max_per_product": 1,
+                    "hide_sold_out": false
+                },
+                "tiers": [],
+                "sizes": [],
+                "bundle": {
+                    "qty": 3,
+                    "price": 12
+                },
+                "products": {
+                    "source": "manual",
+                    "ids": [
+                        9102,
+                        9103,
+                        9104,
+                        9105
+                    ],
+                    "term_ids": [],
+                    "order": "manual",
+                    "caps": []
+                },
+                "schedule": {
+                    "start": null,
+                    "end": null,
+                    "countdown_days": 0,
+                    "countdown_end": null
+                },
+                "extras": {
+                    "gift_message": false,
+                    "gift_wrap": {
+                        "enabled": false,
+                        "fee": 0
+                    },
+                    "free_gift": {
+                        "enabled": false,
+                        "product_id": 0,
+                        "min_items": 3
+                    }
+                },
+                "design": {
+                    "layout": "panel",
+                    "columns": 4,
+                    "headline": "Any 3 for one price",
+                    "intro": "Choose three different treats.",
+                    "sticker": "",
+                    "cta_label": "",
+                    "show_hero": true,
+                    "show_ladder": false,
+                    "show_stickers": false,
+                    "accent": "max",
+                    "accent_color": "#f04e12",
+                    "theme": "custom",
+                    "theme_canvas": "#fff7ec",
+                    "theme_surface": "#ffffff",
+                    "ladder": "default",
+                    "ladder_top": "#f04e12",
+                    "ladder_top_text": "#141414",
+                    "ladder_near": "#ffd23f",
+                    "ladder_near_text": "#141414",
+                    "ladder_base": "#ffffff",
+                    "ladder_base_text": "#141414",
+                    "countdown": "custom",
+                    "countdown_bg": "#141414",
+                    "countdown_text": "#ffffff"
+                },
+                "placement": {
+                    "page_id": 0
+                },
+                "container_product_id": 9303
+            },
+            "picks": [
+                {
+                    "product_id": 9103,
+                    "variation_id": 0,
+                    "qty": 1
+                },
+                {
+                    "product_id": 9104,
+                    "variation_id": 0,
+                    "qty": 1
+                },
+                {
+                    "product_id": 9105,
+                    "variation_id": 0,
+                    "qty": 1
+                }
+            ],
+            "options": [],
+            "items": [
+                {
+                    "product_id": 9103,
+                    "variation_id": 0,
+                    "qty": 1,
+                    "unit_price_minor": 525
+                },
+                {
+                    "product_id": 9104,
+                    "variation_id": 0,
+                    "qty": 1,
+                    "unit_price_minor": 375
+                },
+                {
+                    "product_id": 9105,
+                    "variation_id": 0,
+                    "qty": 1,
+                    "unit_price_minor": 700
+                }
+            ],
+            "quote": {
+                "valid": true,
+                "errors": [],
+                "count": 3,
+                "subtotal": 1600,
+                "discount": 400,
+                "fee": 0,
+                "total": 1200,
+                "tier": {
+                    "qty": 3,
+                    "discount_type": "box_price",
+                    "value": 12
+                },
+                "next": null
+            },
+            "free_gift": null,
+            "payload": {
+                "keys": [
+                    "id",
+                    "title",
+                    "status",
+                    "preview",
+                    "config",
+                    "view",
+                    "colors",
+                    "settings",
+                    "products",
+                    "freeGift",
+                    "money",
+                    "now",
+                    "cart",
+                    "edit",
+                    "tracking"
+                ],
+                "products": [
+                    {
+                        "id": 9102,
+                        "name": "Smoky Earl Grey shortbread",
+                        "price": 500
+                    },
+                    {
+                        "id": 9103,
+                        "name": "Salted caramel brownie",
+                        "price": 525
+                    },
+                    {
+                        "id": 9104,
+                        "name": "Pistachio rose macaron",
+                        "price": 375
+                    },
+                    {
+                        "id": 9105,
+                        "name": "Dark chocolate sea salt bar",
+                        "price": 700
+                    }
+                ]
+            }
+        }
+    },
+    "order": {
+        "cart_contents_total": "28.57",
+        "stock_after": {
+            "9101": 38,
+            "9102": 38,
+            "9103": 23
+        }
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "post": {
+        "ID": 9201,
+        "post_type": "mmbb_campaign",
+        "post_title": "Holiday treat box",
+        "post_status": "publish"
+    },
+    "meta": {
+        "_mmbb_config": "{\"type\":\"tiered\",\"box\":{\"capacity\":12,\"min_items\":4,\"allow_duplicates\":true,\"max_per_product\":6,\"hide_sold_out\":false},\"tiers\":[{\"qty\":4,\"discount_type\":\"percent\",\"value\":10},{\"qty\":6,\"discount_type\":\"percent\",\"value\":15},{\"qty\":12,\"discount_type\":\"percent\",\"value\":25}],\"sizes\":[],\"bundle\":{\"qty\":3,\"price\":0},\"products\":{\"source\":\"manual\",\"ids\":[9101,9102,9103,9104,9105],\"term_ids\":[],\"order\":\"manual\",\"caps\":{\"9105\":2}},\"schedule\":{\"start\":\"2026-11-01T00:00:00Z\",\"end\":null,\"countdown_days\":14,\"countdown_end\":\"2099-12-24T23:59:00Z\"},\"extras\":{\"gift_message\":true,\"gift_wrap\":{\"enabled\":true,\"fee\":3.5},\"free_gift\":{\"enabled\":false,\"product_id\":0,\"min_items\":12}},\"design\":{\"layout\":\"default\",\"columns\":0,\"headline\":\"Build your holiday treat box\",\"intro\":\"Pick your favourites. The more you add, the more you save.\",\"sticker\":\"Save up to 25%\",\"cta_label\":\"Add box to cart\",\"show_hero\":true,\"show_ladder\":true,\"show_stickers\":true,\"accent\":\"max\",\"accent_color\":\"#f04e12\",\"theme\":\"light\",\"theme_canvas\":\"#f5f5f2\",\"theme_surface\":\"#ffffff\",\"ladder\":\"default\",\"ladder_top\":\"#f04e12\",\"ladder_top_text\":\"#141414\",\"ladder_near\":\"#ffd23f\",\"ladder_near_text\":\"#141414\",\"ladder_base\":\"#ffffff\",\"ladder_base_text\":\"#141414\",\"countdown\":\"default\",\"countdown_bg\":\"#ffd23f\",\"countdown_text\":\"#141414\"},\"placement\":{\"page_id\":0},\"container_product_id\":9301}"
+    },
+    "container": {
+        "ID": 9301,
+        "post_type": "product",
+        "post_title": "Holiday treat box",
+        "post_status": "publish",
+        "catalog_visibility": "hidden",
+        "regular_price": "0",
+        "meta": {
+            "_mmbb_campaign_id": 9201
+        }
+    }
+}

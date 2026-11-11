@@ -5,7 +5,7 @@ Updated by the agent at the end of every part.
 | Part | Title | Status | Commit |
 | --- | --- | --- | --- |
 | 0 | Audit and freeze | done | Redesign Part 0: Audit and freeze |
-| 1 | Baseline and safety net | not started | |
+| 1 | Baseline and safety net | done | Redesign Part 1: Baseline and safety net |
 | 2 | Admin foundation | not started | |
 | 3 | Home, Boxes, Create a box | not started | |
 | 4 | Editor shell and iframe preview | not started | |
@@ -38,6 +38,30 @@ Updated by the agent at the end of every part.
 **Checks run:** `docs/AUDIT.md` exists ✅ · no `_Part 0_` left in `AGENTS.md` ✅ · this part changed only `AGENTS.md` and `docs/` ✅
 **Skipped checks (and why):** Build, lint and tests were not run, because no plugin code changed.
 **Open issues:** The working tree still holds uncommitted changes from before the redesign ("Builder shopper preview tidied", 2026-11-08): `docs/PROGRESS.md`, `src/admin/editor/Preview.js`, `PreviewCard.js`, `editor.css` and `tests/js/editor/editor.test.js`. They are not part of any redesign commit. Commit them before Part 1 so its baseline is clean.
+
+### Part 1 — Baseline and safety net (2026-11-11)
+**Done:**
+- Branch `release/2.0.0` cut from `redesign`. The uncommitted "Builder shopper preview tidied" work flagged in Part 0 is committed on its own first ("Tidy the builder shopper preview"), so this part starts clean.
+- **Local environment.** Docker is still not installed, so wp-env cannot start. `tools/native-tests/wp-tests-config.php` runs the integration suite against the WordPress this checkout sits in (the Local site: WordPress 7.1.4, WooCommerce 11.2.2, Plugin Check 2.2.0, PHP 8.2.29) with a separate test database. The exact commands are in `AGENTS.md`, under "Commands → Without Docker". `tools/` is in `.distignore`, so none of it ships.
+- **Baselines** in `docs/baseline/`: `plugin-check.txt` (0 errors, 0 warnings, in place with every category and on the packaged zip), `phpcs.txt` (0 errors, 0 warnings), `build-size.txt` (622 KB `build/`, zip 536,965 bytes).
+- **Legacy fixtures** in `tests/fixtures/legacy/`, exported by running the unchanged 1.0.0 code: three boxes (tiered, fixed sizes using all three discount types, bundle) with their raw `_mmbb_config` and container products, the `mmbb_settings` option, a processing order with a box line and all its meta, and `expected.json` (what 1.0.0 answered). `tests/php/integration/LegacyFixturesTest.php` loads the rows, runs the upgrade as wp-admin would, then checks each box reads back, prices to the cent, renders through the shortcode (with and without overrides) and the block, and adds to the cart at the same total. It also checks the order still shows its discount, contents and gift message, and is not reduced from stock a second time.
+- **Upgrade routine.** `includes/class-upgrades.php` (`MixMax\BoxBuilder\Upgrades`) holds ordered steps keyed by schema version. `Installer::install()` runs the pending ones. That covers activation, `admin_init` through the existing `maybe_upgrade()`, and new network sites. Each step saves `mmbb_db_version` when it finishes, so a failed run resumes at the step that failed. One empty step, `2.0.0`, for Parts 6 and 11. `Installer::DB_VERSION` is `2.0.0`.
+- Tests: `tests/php/unit/UpgradesTest.php` covers ordering, skipping and downgrade, and that the constant matches the newest step. `tests/php/integration/UpgradesTest.php` covers order, the second run doing nothing, the retry after a failure, and a 1.0.0 site upgrading once with its settings and config byte for byte (the second `maybe_upgrade()` runs zero queries). It also checks that the version options are not autoloaded.
+- Pricing parity already existed: `tests/php/unit/PricingTest.php` and `tests/js/pricing.test.js` share `tests/fixtures/pricing-cases.json`. Nothing added.
+
+**Decisions:**
+- No new option. The plan asks for "a stored DB/schema version option with the frozen prefix". That option already exists (`mmbb_db_version`, frozen), so the routine uses it and the `Installer::DB_VERSION` constant. Neither name changed.
+- The schema version jumps from `0.9.0` to `2.0.0` so it lines up with the release. `maybe_upgrade()` already compares both version options, so the jump is what makes every 1.0.0 site run the new steps once.
+- The fixtures use fixed post ids (9101–9303) so the stored references (product ids in the config, `container_product_id`, `_mmbb_campaign_id`) stay valid when loaded. The test inserts each container before its box, because publishing a box without one creates a second container.
+- `LegacyFixturesTest` checks that every value 1.0.0 recorded is still there and allows new keys. Later parts can add config and payload keys without editing the fixtures.
+
+**Frozen identifiers touched:** none. Only the value stored in `mmbb_db_version` moves (0.9.0 → 2.0.0); the note in the Frozen identifiers table says so.
+**Data changes and migration steps:** step `2.0.0` added, and it is empty. It changes no stored data. No table changed, so `dbDelta()` statements are as before. No query was added; the new code only calls `get_option()` and `update_option()`. Version options stay non-autoloaded (tested).
+**Checks run:** build ✅ (622 KB, unchanged) · lint:js ✅ · lint:css ✅ · PHPCS ✅ (0/0) · test:js ✅ (233) · test:unit ✅ (109 tests, 553 assertions) · integration, legacy orders: 190 tests, 7 failures, all from before this part (below) · integration, HPOS: same 7 · legacy fixtures ✅ (15 tests) · upgrade runs twice with no change the second time ✅ · Plugin Check ✅ (0 errors, 0 warnings) · no PHP notices or deprecations in either integration log with `WP_DEBUG` on ✅
+**Skipped checks (and why):** wp-env, `npm run test:php` and container Plugin Check need Docker, which is not installed; the native runs above replace them. Plugin Check's runtime checks were not run, because they load the plugin into a live request and the only site here holds the owner's data. The minimum WordPress 6.6 / WooCommerce 9.0 / PHP 7.4 runtime is still for Part 11; PHPCompatibilityWP 7.4- passes statically.
+**Open issues:**
+- **7 integration tests already fail on the code before this part** (checked by rerunning them with the Part 1 installer change reverted). `PublisherTest` (5 tests) and `RestCampaignsTest::test_publish` build a box from the "holiday" preset with one product. The newer `not_enough_products` validation (min 4 items, one product) rejects it, so the publish route answers 422. `RestCampaignsTest::test_preview` expects the payload keys from before `colors` and `freeGift` were added. These are stale tests, not broken features, and the legacy fixtures publish, price and render fine. Fixing them is outside this part; suggest a short fix commit before Part 4, which changes publish and preview.
+- The Local site runs this checkout. Its `mmbb_db_version` moves to `2.0.0` the next time wp-admin loads. The step is empty, so no data changes.
 
 <!-- Copy for each part:
 

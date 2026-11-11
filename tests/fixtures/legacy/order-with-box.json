@@ -1,0 +1,46 @@
+{
+    "order": {
+        "status": "processing",
+        "currency": "USD",
+        "total": "28.57",
+        "meta": {
+            "_mmbb_has_box": "1"
+        }
+    },
+    "items": [
+        {
+            "name": "Holiday treat box",
+            "product_id": 9301,
+            "variation_id": 0,
+            "quantity": 1,
+            "subtotal": "28.57",
+            "total": "28.57",
+            "meta": [
+                {
+                    "key": "mmbb_box_key",
+                    "value": "42ca086726e7af38059565e96ddbfd8c"
+                },
+                {
+                    "key": "_mmbb_box",
+                    "value": "{\"campaign_id\":9201,\"items\":[{\"product_id\":9101,\"variation_id\":0,\"qty\":2,\"unit_price_minor\":450},{\"product_id\":9102,\"variation_id\":0,\"qty\":2,\"unit_price_minor\":500},{\"product_id\":9103,\"variation_id\":0,\"qty\":2,\"unit_price_minor\":525}],\"size\":0,\"gift\":{\"enabled\":true,\"message\":\"Happy holidays, Sam!\\nLove, Alex\"},\"quote\":{\"valid\":true,\"errors\":[],\"count\":6,\"subtotal\":2950,\"discount\":443,\"fee\":350,\"total\":2857,\"tier\":{\"qty\":6,\"discount_type\":\"percent\",\"value\":15},\"next\":{\"qty\":12,\"needed\":6,\"discount_type\":\"percent\",\"value\":25}},\"free_gift\":null,\"hash\":\"b0874ca272a8501cd385a48b54faec8a\",\"mode\":\"bundle\"}"
+                },
+                {
+                    "key": "Box discount",
+                    "value": "15% (−$4.43)"
+                },
+                {
+                    "key": "Contents",
+                    "value": "2 × Brown butter chip cookie, 2 × Smoky Earl Grey shortbread, 2 × Salted caramel brownie"
+                },
+                {
+                    "key": "Gift message",
+                    "value": "Happy holidays, Sam!\nLove, Alex"
+                },
+                {
+                    "key": "_mmbb_stock_reduced",
+                    "value": "1"
+                }
+            ]
+        }
+    ]
+}

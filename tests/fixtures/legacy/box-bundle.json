@@ -1,0 +1,22 @@
+{
+    "post": {
+        "ID": 9203,
+        "post_type": "mmbb_campaign",
+        "post_title": "Any 3 for 12",
+        "post_status": "publish"
+    },
+    "meta": {
+        "_mmbb_config": "{\"type\":\"bundle\",\"box\":{\"capacity\":3,\"min_items\":1,\"allow_duplicates\":false,\"max_per_product\":1,\"hide_sold_out\":false},\"tiers\":[],\"sizes\":[],\"bundle\":{\"qty\":3,\"price\":12},\"products\":{\"source\":\"manual\",\"ids\":[9102,9103,9104,9105],\"term_ids\":[],\"order\":\"manual\",\"caps\":[]},\"schedule\":{\"start\":null,\"end\":null,\"countdown_days\":0,\"countdown_end\":null},\"extras\":{\"gift_message\":false,\"gift_wrap\":{\"enabled\":false,\"fee\":0},\"free_gift\":{\"enabled\":false,\"product_id\":0,\"min_items\":3}},\"design\":{\"layout\":\"panel\",\"columns\":4,\"headline\":\"Any 3 for one price\",\"intro\":\"Choose three different treats.\",\"sticker\":\"\",\"cta_label\":\"\",\"show_hero\":true,\"show_ladder\":false,\"show_stickers\":false,\"accent\":\"max\",\"accent_color\":\"#f04e12\",\"theme\":\"custom\",\"theme_canvas\":\"#fff7ec\",\"theme_surface\":\"#ffffff\",\"ladder\":\"default\",\"ladder_top\":\"#f04e12\",\"ladder_top_text\":\"#141414\",\"ladder_near\":\"#ffd23f\",\"ladder_near_text\":\"#141414\",\"ladder_base\":\"#ffffff\",\"ladder_base_text\":\"#141414\",\"countdown\":\"custom\",\"countdown_bg\":\"#141414\",\"countdown_text\":\"#ffffff\"},\"placement\":{\"page_id\":0},\"container_product_id\":9303}"
+    },
+    "container": {
+        "ID": 9303,
+        "post_type": "product",
+        "post_title": "Any 3 for 12",
+        "post_status": "publish",
+        "catalog_visibility": "hidden",
+        "regular_price": "0",
+        "meta": {
+            "_mmbb_campaign_id": 9203
+        }
+    }
+}

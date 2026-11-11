@@ -1,0 +1,26 @@
+{
+    "mmbb_settings": {
+        "enabled": true,
+        "default_page_id": 0,
+        "columns": 3,
+        "summary_layout": "bar",
+        "stickers": true,
+        "low_stock": {
+            "enabled": true,
+            "threshold": 3
+        },
+        "unlock_toast": true,
+        "cta_label": "Add my box to the basket",
+        "empty_slot_hint": "Pick a treat",
+        "cart_display": "bundle",
+        "edit_from_cart": true,
+        "allow_coupons": true,
+        "reduce_item_stock": true,
+        "email_list_items": true,
+        "email_gift_message": false,
+        "assets_only_on_builder": true,
+        "analytics_enabled": true,
+        "analytics_retention_days": 180,
+        "delete_data": false
+    }
+}

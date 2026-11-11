@@ -86,6 +86,44 @@ Reference: https://developer.wordpress.org/block-editor/reference-guides/package
 For a PHP 7.4 compatibility run, create the ignored `.wp-env.override.json` with
 `{ "phpVersion": "7.4" }`, then run `npx wp-env start --update`.
 
+### Without Docker (the Local site this checkout lives in)
+
+Docker is not installed on the owner's machine. The checkout sits in a Local site
+(`wp-content/plugins/productboxes-mix-and-match-box-builder`) whose WordPress, WooCommerce and
+Plugin Check are used instead. PHP, WP-CLI and MySQL come with Local; none is on PATH. Start the
+site in Local first (its MySQL listens on 127.0.0.1:10005). `<site id>` is the folder under
+`%APPDATA%\Local\run\` that belongs to this site (its key in `%APPDATA%\Local\sites.json`).
+
+```
+# Git Bash
+PHP="$APPDATA/Local/lightning-services/php-8.2.29+0/bin/win64/php.exe"
+export PHPRC="$APPDATA/Local/run/<site id>/conf/php"        # Local's php.ini, with its extensions
+WPCLI="/c/Program Files (x86)/Local/resources/extraResources/bin/wp-cli/wp-cli.phar"
+SITE="$(cd ../../.. && pwd)"                                   # the WordPress root
+
+"$PHP" vendor/bin/phpcs                                        # composer run lint
+"$PHP" vendor/bin/phpunit --testsuite=unit                     # composer run test:unit
+
+# Integration suite. Uses the separate database mmbb_test, never the site's own (wipes it).
+export WP_TESTS_CONFIG_FILE_PATH="$PWD/tools/native-tests/wp-tests-config.php" MMBB_TEST_SUITE=integration
+"$PHP" vendor/bin/phpunit --testsuite=integration
+MMBB_TEST_HPOS=1 MMBB_TEST_DB_NAME=mmbb_test_hpos "$PHP" vendor/bin/phpunit --testsuite=integration
+"$PHP" vendor/bin/phpunit --testsuite=integration --filter LegacyFixturesTest   # 1.0.0 data still works
+
+# Plugin Check. Copy tools/plugin-check-dev-ignores.php into wp-content/mu-plugins/ first.
+"$PHP" "$WPCLI" --path="$SITE" plugin check productboxes-mix-and-match-box-builder \
+  --include-experimental --include-low-severity-errors --include-low-severity-warnings
+# The same review ruleset on the packaged zip (unpack npm run plugin-zip somewhere first):
+"$PHP" ../plugin-check/vendor/squizlabs/php_codesniffer/bin/phpcs \
+  --standard=../plugin-check/phpcs-rulesets/plugin-review.xml --extensions=php <unpacked folder>
+```
+
+The test databases (`mmbb_test`, `mmbb_test_hpos`) must exist; create them once with Local's
+`mysql.exe` (`CREATE DATABASE mmbb_test`). Override the connection with `MMBB_TEST_DB_NAME`,
+`MMBB_TEST_DB_USER`, `MMBB_TEST_DB_PASSWORD` and `MMBB_TEST_DB_HOST`. PHP warns that
+`php_imagick.dll` is missing on every run; that warning is harmless. Baselines to compare
+against live in `docs/baseline/`.
+
 ## WordPress.org rules (a broken rule means rejection)
 
 1. Everything is GPLv2-or-later compatible. Bundled fonts are SIL OFL: ship the licence files and list them in readme.txt.
@@ -174,7 +212,7 @@ Names that appear in the design copy (for example `productboxes_`, `[productboxe
 | JS globals / storage keys | Globals `window.mmbbAdmin`, `window.mmbbBuilders`, `window.mmbbMoneySettings`, `window.mmbbComponents`. localStorage `mmbb:checklist-dismissed`, `mmbb:editor:<id>`, `mmbb:editor:device`. sessionStorage `mmbb:box:<id>`, `mmbb:analytics-session`, `mmbb:view:<id>` |
 | Hooks fired | Actions `mmbb_campaign_saved`, `mmbb_rollup_daily` (scheduled). Filters `mmbb_campaign_config_defaults`, `mmbb_templates`, `mmbb_ensure_container_product`, `mmbb_pricing_quote`, `mmbb_track_events` |
 | Capability used for admin | `manage_woocommerce` |
-| Current version, Requires at least, Requires PHP, WC requires | 1.0.0 · WordPress 6.6 · PHP 7.4 · WooCommerce 9.0 (DB schema version `0.9.0`) |
+| Current version, Requires at least, Requires PHP, WC requires | 1.0.0 · WordPress 6.6 · PHP 7.4 · WooCommerce 9.0 (DB schema version `0.9.0` in 1.0.0; `Installer::DB_VERSION` is `2.0.0` from Redesign Part 1, and each migration step in `includes/class-upgrades.php` raises it) |
 
 The full inventory, with example values, is in `docs/AUDIT.md`.
 

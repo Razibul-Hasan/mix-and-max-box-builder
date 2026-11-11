@@ -11,8 +11,8 @@ defined( 'ABSPATH' ) || exit;
 
 /** Manage activation, upgrades, new network sites and deactivation. */
 final class Installer {
-	/** Database schema version; bump when the schema registry changes. */
-	const DB_VERSION = '0.9.0';
+	/** Database schema version; bump when the schema registry changes or Upgrades gains a step. */
+	const DB_VERSION = '2.0.0';
 
 	/** Register upgrade and network-site hooks. */
 	public function register() {
@@ -40,7 +40,7 @@ final class Installer {
 		}
 	}
 
-	/** Create registered tables and seed defaults for the current site. */
+	/** Create registered tables, seed defaults and run pending migration steps for the current site. */
 	public static function install() {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		foreach ( self::schema() as $statement ) {
@@ -48,6 +48,8 @@ final class Installer {
 		}
 
 		add_option( 'mmbb_settings', Settings\Settings::defaults(), '', true );
+		// Each step records its own version, so the comparison below only covers a version that has no step.
+		Upgrades::run();
 		if ( version_compare( (string) get_option( 'mmbb_version', '0' ), MMBB_VERSION, '<' ) ) {
 			update_option( 'mmbb_version', MMBB_VERSION, false );
 		}

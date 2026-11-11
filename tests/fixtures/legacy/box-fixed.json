@@ -1,0 +1,22 @@
+{
+    "post": {
+        "ID": 9202,
+        "post_type": "mmbb_campaign",
+        "post_title": "Cookie box in three sizes",
+        "post_status": "publish"
+    },
+    "meta": {
+        "_mmbb_config": "{\"type\":\"fixed\",\"box\":{\"capacity\":9,\"min_items\":1,\"allow_duplicates\":true,\"max_per_product\":9,\"hide_sold_out\":true},\"tiers\":[],\"sizes\":[{\"qty\":3,\"discount_type\":\"fixed_amount\",\"value\":2,\"tag\":\"\"},{\"qty\":6,\"discount_type\":\"box_price\",\"value\":24,\"tag\":\"popular\"},{\"qty\":9,\"discount_type\":\"percent\",\"value\":20,\"tag\":\"best_value\"}],\"bundle\":{\"qty\":3,\"price\":0},\"products\":{\"source\":\"manual\",\"ids\":[9101,9102,9104],\"term_ids\":[],\"order\":\"price\",\"caps\":[]},\"schedule\":{\"start\":null,\"end\":null,\"countdown_days\":0,\"countdown_end\":null},\"extras\":{\"gift_message\":false,\"gift_wrap\":{\"enabled\":false,\"fee\":0},\"free_gift\":{\"enabled\":true,\"product_id\":9106,\"min_items\":6}},\"design\":{\"layout\":\"bar\",\"columns\":3,\"headline\":\"Pick a size, fill it up\",\"intro\":\"\",\"sticker\":\"\",\"cta_label\":\"\",\"show_hero\":false,\"show_ladder\":true,\"show_stickers\":true,\"accent\":\"custom\",\"accent_color\":\"#0a7d5a\",\"theme\":\"dark\",\"theme_canvas\":\"#f5f5f2\",\"theme_surface\":\"#ffffff\",\"ladder\":\"custom\",\"ladder_top\":\"#0a7d5a\",\"ladder_top_text\":\"#ffffff\",\"ladder_near\":\"#ffd23f\",\"ladder_near_text\":\"#141414\",\"ladder_base\":\"#ffffff\",\"ladder_base_text\":\"#141414\",\"countdown\":\"default\",\"countdown_bg\":\"#ffd23f\",\"countdown_text\":\"#141414\"},\"placement\":{\"page_id\":0},\"container_product_id\":9302}"
+    },
+    "container": {
+        "ID": 9302,
+        "post_type": "product",
+        "post_title": "Cookie box in three sizes",
+        "post_status": "publish",
+        "catalog_visibility": "hidden",
+        "regular_price": "0",
+        "meta": {
+            "_mmbb_campaign_id": 9202
+        }
+    }
+}
