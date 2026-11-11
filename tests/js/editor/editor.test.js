@@ -401,6 +401,22 @@ describe( 'campaign editor', () => {
 		);
 	} );
 
+	it( 'switches the shopper preview between desktop and mobile', async () => {
+		window.localStorage.clear();
+		const { container } = open( 'design' );
+		await screen.findByText( 'Shopper preview' );
+		expect(
+			container.querySelector( '[data-device="desktop"]' )
+		).toBeTruthy();
+		fireEvent.click( screen.getByRole( 'radio', { name: 'Mobile' } ) );
+		expect(
+			container.querySelector( '[data-device="mobile"]' )
+		).toBeTruthy();
+		expect( window.localStorage.getItem( 'mmbb:editor:device' ) ).toBe(
+			'mobile'
+		);
+	} );
+
 	it( 'shows an error with a retry when the campaign cannot be loaded', async () => {
 		api.getCampaign.mockRejectedValueOnce( {
 			code: 'mmbb_not_found',

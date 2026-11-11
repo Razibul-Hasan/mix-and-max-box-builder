@@ -22,7 +22,7 @@ import { previewTiers, tierLabel } from './fields';
 import { toNumber } from './state';
 
 const ART = [ 'cookie', 'macaron', 'tea', 'candle', 'chocolate', 'honey' ];
-const TILE_COUNT = 4;
+const TILE_COUNT = 6;
 
 // Stand-ins until the merchant has picked products, so the preview is never empty.
 function sampleProducts() {

@@ -97,9 +97,12 @@
 	gap: var(--space-6);
 }
 
+/* Stays in view under the admin bar and our top bar; scrolls on its own if taller. */
 .mmbb-root .mmbb-editor__side--sticky {
 	position: sticky;
-	top: 88px;
+	top: 108px;
+	max-height: calc(100vh - 124px);
+	overflow-y: auto;
 }
 
 @media (max-width: 960px) {
@@ -110,6 +113,8 @@
 
 	.mmbb-root .mmbb-editor__side--sticky {
 		position: static;
+		max-height: none;
+		overflow: visible;
 	}
 }
 
@@ -364,6 +369,11 @@
 	flex: 1 1 220px;
 }
 
+/* The readout sits on a sunken box, so the empty track needs a darker line. */
+.mmbb-root .mmbb-editor__read .mmbb-tier__track {
+	background: var(--line);
+}
+
 /* Publish */
 .mmbb-root .mmbb-editor__code {
 	display: flex;
@@ -586,7 +596,8 @@
 	display: flex;
 	flex-wrap: wrap;
 	align-items: flex-end;
-	gap: var(--space-4);
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-1) 0;
 }
 
 .mmbb-root .mmbb-preview__copy {
@@ -625,7 +636,7 @@
 	display: flex;
 	align-items: flex-end;
 	gap: var(--space-1);
-	height: 72px;
+	height: 56px;
 	margin: 0;
 	padding: 0;
 	list-style: none;
@@ -664,13 +675,30 @@
 
 .mmbb-root .mmbb-preview__grid {
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 8px;
+}
+
+/* Mobile: a phone-width frame with two tiles a row. */
+.mmbb-root .mmbb-editor__frame[data-device="mobile"] {
+	max-width: 360px;
+	margin: 0 auto;
+}
+
+.mmbb-root .mmbb-editor__frame[data-device="mobile"] .mmbb-preview__grid {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 /* Compact product cards: the preview is a sketch, not the storefront. */
 .mmbb-root .mmbb-preview .mmbb-tile__media {
-	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	aspect-ratio: 4 / 3;
+}
+
+/* The art is square on the storefront; here it fills the shorter tile. */
+.mmbb-root .mmbb-preview .mmbb-tile__media .mmbb-art {
+	min-height: 0;
+	aspect-ratio: auto;
 }
 
 .mmbb-root .mmbb-preview .mmbb-tile__badge {
@@ -723,6 +751,11 @@
 
 .mmbb-root .mmbb-preview .mmbb-tile .mmbb-stepper button {
 	min-width: 32px;
+}
+
+/* Narrow tiles: the label stays inside the button. */
+.mmbb-root .mmbb-preview .mmbb-tile .mmbb-btn {
+	padding: 0 var(--space-2);
 }
 
 /* ---------- Free gift picker ---------- */

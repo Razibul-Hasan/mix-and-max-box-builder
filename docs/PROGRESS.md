@@ -1105,6 +1105,12 @@ phases. This is a tooling scaffold archive, not a submission release.
 **Skipped checks (and why):** Not yet run in WordPress Playground. The `@wp-playground/cli` download was blocked in this session. Run `node tools/blueprint/build.mjs --local`, then `npx @wp-playground/cli@latest server --mount=.:/wordpress/wp-content/plugins/productboxes-mix-and-match-box-builder --blueprint=<printed path>`. Check the storefront, Dashboard, Campaigns and Analytics, and how long the seed step takes under WebAssembly.
 **Open issues:** The WordPress.org blueprint installs the plugin by slug, so Live Preview only works after approval. The GD images rely on Playground's PHP build including GD; without it, products are created without images.
 
+### Builder shopper preview tidied (2026-11-08)
+**Done:** The preview beside each wizard step now matches `design/screens/CampaignEditorPage.png`. It shows three compact tiles a row (six samples) instead of two full-height square tiles. It has a Desktop/Mobile switch (a 360px frame with two tiles a row, remembered in `mmbb:editor:device`). The tier ladder is shorter and sits inside the frame. The sticky column scrolls on its own when it is taller than the screen. The "Shoppers read" bar has a visible track.
+**Decisions:** Product art is square on the storefront; in the preview it fills a 4:3 tile (`aspect-ratio: auto` on `.mmbb-art`), which was what made the tiles so tall.
+**Checks run:** build ✅ · lint:js ✅ · lint:css ✅ · test:js ✅ (233). Screens checked in headless Chromium with the built admin and mocked REST data.
+**Skipped checks (and why):** Composer lint/tests: no PHP changed.
+
 <!-- Copy this block for each phase:
 
 ### Phase N — Title (YYYY-MM-DD)
