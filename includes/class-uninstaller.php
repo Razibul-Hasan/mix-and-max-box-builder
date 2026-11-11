@@ -29,6 +29,9 @@ final class Uninstaller {
 		foreach ( array_keys( (array) get_option( 'mmbb_analytics_transients', array() ) ) as $key ) {
 			delete_transient( $key ); }
 
+		// "Hide checklist" on Home, stored per user.
+		delete_metadata( 'user', 0, 'mmbb_checklist_dismissed', '', true );
+
 		// Uninstall-only cleanup: caching is meaningless and the tables are plugin-owned.
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 

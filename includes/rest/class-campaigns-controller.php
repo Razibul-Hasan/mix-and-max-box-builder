@@ -78,6 +78,12 @@ final class Campaigns_Controller extends Base_Controller {
 							'validate_callback' => array( $this, 'validate_template' ),
 						),
 						'title'    => $this->title_arg(),
+						'type'     => array(
+							'description' => __( 'How the discount works. Used with the blank template to start from that type’s rules.', 'productboxes-mix-and-match-box-builder' ),
+							'type'        => 'string',
+							'enum'        => array_merge( array( '' ), Config::TYPES ),
+							'default'     => '',
+						),
 					),
 				),
 				'schema' => $schema,
@@ -315,7 +321,7 @@ final class Campaigns_Controller extends Base_Controller {
 	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function create_item( $request ) {
-		$campaign = $this->repo->create_from_template( $request['template'], $request['title'] );
+		$campaign = $this->repo->create_from_template( $request['template'], $request['title'], (string) $request['type'] );
 		if ( is_wp_error( $campaign ) ) {
 			return $campaign;
 		}

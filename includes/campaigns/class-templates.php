@@ -166,6 +166,56 @@ final class Templates {
 	}
 
 	/**
+	 * Starting rules for a box created from the "How does the discount work?" choice.
+	 *
+	 * Used only when a box is created with a type and the blank template. The
+	 * merchant changes every number in the editor.
+	 *
+	 * @param string $type Box type: tiered, fixed or bundle.
+	 * @return array Partial config, or an empty array for an unknown type.
+	 */
+	public static function starter( $type ) {
+		$starters = array(
+			'tiered' => array(
+				'type'  => 'tiered',
+				'box'   => array(
+					'capacity'        => 12,
+					'min_items'       => 4,
+					'max_per_product' => 12,
+				),
+				'tiers' => array(
+					self::step( 4, 'percent', 10 ),
+					self::step( 6, 'percent', 15 ),
+				),
+			),
+			'fixed'  => array(
+				'type'  => 'fixed',
+				'box'   => array(
+					'capacity'        => 6,
+					'min_items'       => 6,
+					'max_per_product' => 6,
+				),
+				'sizes' => array(
+					self::step( 6, 'percent', 10 ),
+				),
+			),
+			'bundle' => array(
+				'type'   => 'bundle',
+				'box'    => array(
+					'capacity'        => 3,
+					'min_items'       => 3,
+					'max_per_product' => 3,
+				),
+				'bundle' => array(
+					'qty'   => 3,
+					'price' => 0,
+				),
+			),
+		);
+		return isset( $starters[ $type ] ) ? $starters[ $type ] : array();
+	}
+
+	/**
 	 * One tier or size row.
 	 *
 	 * @param int       $qty   Item count.

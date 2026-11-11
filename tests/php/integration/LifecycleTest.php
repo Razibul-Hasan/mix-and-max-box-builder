@@ -149,6 +149,10 @@ class LifecycleTest extends \WP_UnitTestCase {
 		$order->update_meta_data( 'mmbb_test', 'keep' );
 		$order->save();
 
+		$user = self::factory()->user->create();
+		update_user_meta( $user, 'mmbb_checklist_dismissed', 1 );
+		update_user_meta( $user, 'mmbbXtest', 'keep' );
+
 		Uninstaller::uninstall();
 
 		$this->assertFalse( get_option( 'mmbb_settings', false ) );
@@ -156,6 +160,8 @@ class LifecycleTest extends \WP_UnitTestCase {
 		$this->assertFalse( get_transient( 'mmbb_test' ) );
 		$this->assertSame( 'keep', get_option( 'mmbbXtest' ) );
 		$this->assertSame( 'keep', get_transient( 'mmbbXtest' ) );
+		$this->assertSame( '', get_user_meta( $user, 'mmbb_checklist_dismissed', true ) );
+		$this->assertSame( 'keep', get_user_meta( $user, 'mmbbXtest', true ) );
 		$this->assertNull( get_post( $campaign ) );
 		$this->assertSame( '', get_post_meta( $campaign, '_mmbb_config', true ) );
 		$this->assertNull( get_post( $container->get_id() ) );

@@ -149,11 +149,17 @@ final class Campaign_Repository {
 	 *
 	 * @param string      $template_id Template id; unknown ids behave as the blank template.
 	 * @param string|null $title       Campaign name. Defaults to the template's title.
+	 * @param string      $type        Box type (tiered, fixed, bundle) to start from. Only
+	 *                                 used with the blank template; presets keep their own rules.
 	 * @return array|\WP_Error The new campaign.
 	 */
-	public function create_from_template( $template_id, $title = null ) {
+	public function create_from_template( $template_id, $title = null, $type = '' ) {
 		$template = Templates::get( (string) $template_id );
-		$config   = Config::sanitize( $template && isset( $template['config'] ) ? $template['config'] : array(), self::defaults() );
+		$partial  = $template && isset( $template['config'] ) ? $template['config'] : array();
+		if ( '' !== (string) $type && ( ! $template || 'blank' === $template['id'] ) ) {
+			$partial = Templates::starter( (string) $type );
+		}
+		$config = Config::sanitize( $partial, self::defaults() );
 
 		if ( null === $title || '' === trim( (string) $title ) ) {
 			$title = $template && 'blank' !== $template['id']

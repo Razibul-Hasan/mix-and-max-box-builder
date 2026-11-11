@@ -164,10 +164,32 @@ class RestStoreTest extends \WP_UnitTestCase {
 		$this->assertSame( $data, $this->request( 'GET', 'settings' )->get_data() );
 	}
 
-	/** Setup: test_done is required. */
-	public function test_setup_post_requires_test_done() {
+	/** Setup: a POST must carry test_done or dismissed. */
+	public function test_setup_post_requires_test_done_or_dismissed() {
 		$this->be_manager();
 		$this->assertSame( 400, $this->request( 'POST', 'setup' )->get_status() );
+		$this->assertSame( 400, $this->request( 'POST', 'setup', array( 'dismissed' => 'maybe' ) )->get_status() );
+	}
+
+	/** Setup: hiding the checklist is stored per user and changes nothing else. */
+	public function test_setup_dismissed_is_per_user() {
+		$this->be_manager();
+		$first = get_current_user_id();
+		update_option( 'mmbb_setup_test_done', 0, false );
+		$this->assertFalse( $this->request( 'GET', 'setup' )->get_data()['dismissed'] );
+
+		$response = $this->request( 'POST', 'setup', array( 'dismissed' => true ) );
+		$this->assertSame( 200, $response->get_status() );
+		$this->assertTrue( $response->get_data()['dismissed'] );
+		$this->assertEquals( 1, get_user_meta( $first, 'mmbb_checklist_dismissed', true ) );
+		$this->assertEquals( 0, get_option( 'mmbb_setup_test_done' ) );
+
+		$this->be_manager();
+		$this->assertFalse( $this->request( 'GET', 'setup' )->get_data()['dismissed'] );
+
+		wp_set_current_user( $first );
+		$this->request( 'POST', 'setup', array( 'dismissed' => false ) );
+		$this->assertSame( '', get_user_meta( $first, 'mmbb_checklist_dismissed', true ) );
 	}
 
 	/** Setup: has_campaign flips once a campaign exists. */
@@ -227,6 +249,11 @@ class RestStoreTest extends \WP_UnitTestCase {
 		$this->assertCount( 7, $data['kpis']['revenue']['series'] );
 		$this->assertSame( $data['to'], $data['revenue_series'][6]['date'] );
 		$this->assertSame( $data['from'], $data['revenue_series'][0]['date'] );
+		$this->assertSame(
+			array( 'view', 'started', 'tier_reached', 'add_to_cart', 'purchased' ),
+			array_column( $data['funnel'], 'step' )
+		);
+		$this->assertArrayHasKey( 'items_per_box', $data['kpis'] );
 	}
 
 	/** Analytics: a custom range without dates is rejected. */

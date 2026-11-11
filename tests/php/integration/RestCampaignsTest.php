@@ -182,6 +182,44 @@ class RestCampaignsTest extends \WP_UnitTestCase {
 		$this->assertSame( 'tiered', $data['type'] );
 	}
 
+	/** Create a box: `type` starts a blank draft from that type's rules. */
+	public function test_create_with_type() {
+		$tiered = $this->send(
+			'POST',
+			'/mmbb/v1/campaigns',
+			array(
+				'title' => 'Holiday treat box',
+				'type'  => 'tiered',
+			)
+		)->get_data();
+		$this->assertSame( 'Holiday treat box', $tiered['title'] );
+		$this->assertSame( 'draft', $tiered['status'] );
+		$this->assertSame( 'tiered', $tiered['config']['type'] );
+		$this->assertSame( array( 4, 6 ), array_column( $tiered['config']['tiers'], 'qty' ) );
+
+		$fixed = $this->send( 'POST', '/mmbb/v1/campaigns', array( 'type' => 'fixed' ) )->get_data();
+		$this->assertSame( 'fixed', $fixed['config']['type'] );
+		$this->assertSame( array( 6 ), array_column( $fixed['config']['sizes'], 'qty' ) );
+
+		$bundle = $this->send( 'POST', '/mmbb/v1/campaigns', array( 'type' => 'bundle' ) )->get_data();
+		$this->assertSame( 'bundle', $bundle['config']['type'] );
+		$this->assertSame( 3, $bundle['config']['bundle']['qty'] );
+		$this->assertSame( 3, $bundle['config']['box']['capacity'] );
+
+		// A preset keeps its own rules; the type only applies to the blank template.
+		$preset = $this->send(
+			'POST',
+			'/mmbb/v1/campaigns',
+			array(
+				'template' => 'snack',
+				'type'     => 'tiered',
+			)
+		)->get_data();
+		$this->assertSame( 'bundle', $preset['config']['type'] );
+
+		$this->assertSame( 400, $this->send( 'POST', '/mmbb/v1/campaigns', array( 'type' => 'mystery' ) )->get_status() );
+	}
+
 	/** The list returns items, totals, counts and honours filters. */
 	public function test_list_and_filters() {
 		$this->send( 'POST', '/mmbb/v1/campaigns', array( 'title' => 'Alpha special' ) );

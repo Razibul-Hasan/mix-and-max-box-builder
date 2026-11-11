@@ -93,6 +93,7 @@ class Stats_Controller extends Base_Controller {
 				'top_campaigns'  => $report['campaigns'],
 				'live_campaign'  => $live_stats,
 				'top_products'   => $report['top_products'],
+				'funnel'         => $report['funnel'],
 			)
 		);
 	}
@@ -177,6 +178,16 @@ class Stats_Controller extends Base_Controller {
 				'top_products'   => array(
 					'type'  => 'array',
 					'items' => array( 'type' => 'object' ),
+				),
+				'funnel'         => array(
+					'type'  => 'array',
+					'items' => array(
+						'type'       => 'object',
+						'properties' => array(
+							'step'  => array( 'type' => 'string' ),
+							'count' => array( 'type' => 'integer' ),
+						),
+					),
 				),
 			),
 		);

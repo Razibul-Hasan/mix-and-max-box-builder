@@ -15,6 +15,13 @@ defined( 'ABSPATH' ) || exit;
 /** Reports which setup steps are done. */
 class Setup_Controller extends Base_Controller {
 	/**
+	 * User meta key: the current user hid the checklist on Home.
+	 *
+	 * @var string
+	 */
+	const DISMISSED_META = 'mmbb_checklist_dismissed';
+
+	/**
 	 * Route base.
 	 *
 	 * @var string
@@ -40,7 +47,12 @@ class Setup_Controller extends Base_Controller {
 						'test_done' => array(
 							'description'       => __( 'Whether the test order step is done.', 'productboxes-mix-and-match-box-builder' ),
 							'type'              => 'boolean',
-							'required'          => true,
+							'sanitize_callback' => 'rest_sanitize_request_arg',
+							'validate_callback' => 'rest_validate_request_arg',
+						),
+						'dismissed' => array(
+							'description'       => __( 'Whether the current user hid the setup checklist.', 'productboxes-mix-and-match-box-builder' ),
+							'type'              => 'boolean',
 							'sanitize_callback' => 'rest_sanitize_request_arg',
 							'validate_callback' => 'rest_validate_request_arg',
 						),
@@ -62,13 +74,26 @@ class Setup_Controller extends Base_Controller {
 	}
 
 	/**
-	 * Mark the test order step done or not done.
+	 * Mark the test order step done or not done, and hide or show the checklist
+	 * for the current user. At least one of the two must be sent.
 	 *
 	 * @param \WP_REST_Request $request Request.
-	 * @return \WP_REST_Response
+	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function update_item( $request ) {
-		update_option( 'mmbb_setup_test_done', rest_sanitize_boolean( $request['test_done'] ) ? 1 : 0, false );
+		if ( null === $request['test_done'] && null === $request['dismissed'] ) {
+			return $this->error( 'mmbb_setup_nothing', __( 'Send test_done or dismissed.', 'productboxes-mix-and-match-box-builder' ), 400 );
+		}
+		if ( null !== $request['test_done'] ) {
+			update_option( 'mmbb_setup_test_done', rest_sanitize_boolean( $request['test_done'] ) ? 1 : 0, false );
+		}
+		if ( null !== $request['dismissed'] ) {
+			if ( rest_sanitize_boolean( $request['dismissed'] ) ) {
+				update_user_meta( get_current_user_id(), self::DISMISSED_META, 1 );
+			} else {
+				delete_user_meta( get_current_user_id(), self::DISMISSED_META );
+			}
+		}
 		return rest_ensure_response( $this->payload() );
 	}
 
@@ -126,6 +151,7 @@ class Setup_Controller extends Base_Controller {
 			'steps'        => $steps,
 			'next'         => $next,
 			'complete'     => null === $next,
+			'dismissed'    => (bool) get_user_meta( get_current_user_id(), self::DISMISSED_META, true ),
 		);
 	}
 
@@ -257,6 +283,7 @@ class Setup_Controller extends Base_Controller {
 				),
 				'next'         => array( 'type' => array( 'string', 'null' ) ),
 				'complete'     => array( 'type' => 'boolean' ),
+				'dismissed'    => array( 'type' => 'boolean' ),
 			),
 		);
 		return $this->add_additional_fields_schema( $this->schema );
