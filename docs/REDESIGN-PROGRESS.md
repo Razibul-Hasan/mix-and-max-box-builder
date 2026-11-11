@@ -8,7 +8,7 @@ Updated by the agent at the end of every part.
 | 1 | Baseline and safety net | done | Redesign Part 1: Baseline and safety net |
 | 2 | Admin foundation | done | Redesign Part 2: Admin foundation |
 | 3 | Home, Boxes, Create a box | done | Redesign Part 3: Home, Boxes list and Create a box |
-| 4 | Editor shell and iframe preview | not started | |
+| 4 | Editor shell and iframe preview | done | Redesign Part 4: Editor shell and live iframe preview |
 | 5 | Products and Discounts steps | not started | |
 | 6 | Design settings and Design step | not started | |
 | 7 | Template engine and templates 01–05 | not started | |
@@ -159,7 +159,108 @@ Updated by the agent at the end of every part.
 
 **Open issues:**
 - Open issue 3 (presets) is now visible: no screen offers the five presets. Say whether Part 6 should bring them back as a "Start from" choice, or retire them.
-- The 7 stale integration tests from Part 1 still fail (`PublisherTest`, `RestCampaignsTest::test_publish` and `test_preview`). Part 4 changes publish and preview, so fix them before or in Part 4.
+- The 7 stale integration tests from Part 1 still fail (`PublisherTest`, `RestCampaignsTest::test_publish` and `test_preview`). Part 4 changes publish and preview, so fix them before or in Part 4. *Part 4: fixed.*
+
+### Part 4 — Editor shell and live iframe preview (2026-11-11)
+**Done:**
+- **Full-screen editor** (`src/admin/editor/Editor.js`, rewritten in place; `shell.css`). Same URL, `admin.php?page=mmbb-campaigns&action=edit&id=<id>&step=…`.
+  - `Menu::body_class()` adds `mmbb-is-fullscreen` on that screen only, which hides the admin menu and footer.
+  - The 64px header has:
+    - a dark square back link with the box mark, back to Boxes;
+    - Undo and Redo icon buttons;
+    - the steps `Products · Discounts · Design` (current step `secondary`, the others `tertiary`; a finished step shows a check);
+    - a Desktop / Tablet / Phone `ToggleGroupControl`, kept in the existing `mmbb:editor:device` key;
+    - an open-preview-in-new-tab button;
+    - Save draft / Saved and Publish.
+  - The right sidebar (360px) has a heading, the step's settings and a footer with Back and "Continue to …".
+- **Step mapping.**
+  - Products shows the 1.0 Products form.
+  - Discounts shows Box rules, plus the Basics schedule (`BasicsStep section="schedule"`).
+  - Design shows the Basics name and copy (`section="content"`), plus the 1.0 Design form.
+  - Publish opens the existing publish form in a WordPress `Modal`. The success screen is unchanged and shows under the header.
+  - The old step names in links still work: `basics` → Design, `rules` → Discounts, `publish` → the Publish dialog.
+  - The step forms lost their side column (the old in-page preview, the "At a glance" card and two tip notices). The iframe replaces them, and Parts 5–6 rebuild the forms for the sidebar.
+- **State** (`editor/state.js`, the existing reducer).
+  - Holds the saved copy, the draft, a dirty flag, and undo/redo stacks of up to 50 snapshots.
+  - Typing in one field within a second is one undo step. Discard can be undone. Saving keeps the history.
+  - Autosave (PATCH) runs every 30s while dirty, as before. `beforeunload` warns while dirty. A "Saved" snackbar (`core/notices`, the Part 2 `useSnackbar`) shows after every save.
+- **Draft survives a reload.** The draft and the `modified` time it started from are kept in the existing `mmbb:editor:<id>` key while unsaved.
+  - On load, a draft that still matches the saved box comes back. A snackbar offers "Discard them".
+  - A draft from before a later save is ignored.
+- **Preview endpoint** (`includes/storefront/class-preview.php`, `MixMax\BoxBuilder\Storefront\Preview`, registered after `Storefront`).
+  - **URL.** `Preview::url()` uses the page that shows the box (`Placement::page()`, published only) or `home_url( '/' )`, then adds `mmbb_preview=<id>` and `_wpnonce` (`wp_create_nonce( 'mmbb_preview_<id>' )`). Every campaign response now has `preview_url`.
+  - **Checks.** On `template_redirect` (priority −1, before core's admin bar set-up), the nonce and `manage_woocommerce` are verified, and the box must exist. If any check fails, the args are ignored and the page renders normally.
+  - **Preview mode:**
+    - `show_admin_bar( false )`;
+    - `nocache_headers()`;
+    - `X-Frame-Options: SAMEORIGIN` and `Content-Security-Policy: frame-ancestors 'self'`;
+    - `wp_robots_no_robots`;
+    - `window.mmbbPreview = { boxId, origin }` through `wp_add_inline_script()`;
+    - if the page doesn't hold the box, it is put at the top of the main content once (`the_content`, priority 20). Pages with no content loop get it in `wp_footer`.
+  - **Renderer.** `Renderer::render()` shows the previewed box even when it is a draft or builders are switched off, with a preview payload: no cart, edit or tracking data, so add to cart is off. The wrapper gets `data-mmbb-preview="1"`.
+- **Draft payload.** `POST /campaigns/<id>/preview` takes `{ title, config }`, sanitizes it like a PUT, resolves products without the cache (`Payload::build( …, [ 'fresh' => true ] )`), and stores nothing. It uses the same `manage_woocommerce` permission.
+- **postMessage bridge** (`src/shared/preview-bridge.js`, used by both sides).
+  - `acceptMessage()` drops anything not from the expected origin, not from the expected window, or not one of the three `mmbb:preview:*` types.
+  - Admin side (`editor/usePreviewBridge.js`): waits for `ready`, then on every draft change, debounced 150ms, fetches the draft payload and posts `{ type: 'mmbb:preview:config', boxId, config, payload }` to the iframe with the preview origin as `targetOrigin`. Only the newest answer is sent.
+  - Iframe side (`src/storefront/PreviewHost.js`): mounts only when `window.mmbbPreview` names this box. It posts `ready` and `height`, renders the draft payload, and reapplies the colour variables on the wrapper. It starts the box over only when the rules change, and shows "Preview — checkout is off".
+- **Stage** (`editor/PreviewStage.js`):
+  - dotted grey background, with a browser frame (dots, URL bar, "Preview" tag);
+  - virtual widths: desktop 1280 in a frame up to 1040, tablet 820, both scaled with `transform: scale()`;
+  - phone: 390 × 844 in a 10px phone frame, scaled down only when the stage is too small;
+  - a spinner until `ready`.
+- Tests:
+  - JS: `tests/js/preview-bridge.test.js` (new, 7). It covers origin, window and type filtering, the message shape, and the iframe host ignoring other origins and other boxes. `tests/js/editor/editor.test.js` is rewritten for the new shell (15). It covers undo/redo, save, autosave, `beforeunload`, reload restore, Continue blocking, the Publish dialog, device sizes, and the iframe getting the draft only after `ready` from the right origin. `state.test.js` adds undo/redo, the 50-snapshot cap, coalescing, draft restore and step mapping (48).
+  - PHP: new `tests/php/integration/PreviewTest.php` (10) covers a valid link, logged out, no capability, a bad or other box's nonce, preview mode, draft rendering with no cart, prepending once, a page that already holds the box, the `mmbbPreview` global and the full-screen body class. `RestCampaignsTest` adds the draft preview (sanitized, fresh products, nothing saved), the preview URL (only id and nonce) and the capability check.
+- **The 7 stale integration tests from Part 1 are fixed** (Part 1 and Part 3 suggested doing this before or in this part):
+  - `test_preview` now expects `colors` and `freeGift`.
+  - The publish fixtures allow repeats of their one product and give the holiday preset's countdown an end time (see open issues).
+
+**Decisions:**
+- **The bridge message carries a server-built payload as well as `config`.** The plan's message holds `config`. Products, colours and the free gift are resolved on the server (`Payload`), so a config alone can't show newly picked products or new colours. The editor asks `POST /preview` for the draft's payload and sends both. The iframe never talks to REST itself, and nothing in the URL changes.
+- **The iframe keeps a fixed viewport and scrolls inside itself.** It is not grown to the reported height: many themes use `min-height: 100vh`, which would feed back into the height forever. `height` is still sent and received (`data-content-height` on the frame) for later parts.
+- **Header step buttons move freely; Continue is gated.** Continue checks the current step, as Next did in 1.0. Clicking a step in the header always opens it, like the site editor. Publish still checks every step.
+- **The old step forms are reused in the sidebar, as they are.** Part 5 rebuilds Products and Discounts, and Part 6 rebuilds Design. Their 1.0 cards look heavy at 360px until then.
+- `PreviewCard.js` and `Preview.js` (the 1.0 in-page preview) are no longer imported. They stay on disk, like the Part 3 leftovers, and can be deleted in Part 11. `admin.js` dropped 16 KB because of it.
+- The header has no box title. The design has none; the name is the first field under Design.
+- The save button says "Save draft" for drafts, "Save" for live boxes with changes, and "Saved" when clean. The plan names only "Save draft".
+- "Untitled campaign" is no longer shown: the editor header has no title. The server default name is unchanged (see Part 3).
+
+**Frozen identifiers touched:** none renamed. **New** identifiers, added to the Frozen identifiers table and `docs/AUDIT.md`:
+- query args `mmbb_preview` and `_wpnonce` on storefront URLs, and nonce action `mmbb_preview_<id>`;
+- global `window.mmbbPreview`, and postMessage types `mmbb:preview:config`, `mmbb:preview:ready`, `mmbb:preview:height`;
+- body class `mmbb-is-fullscreen`;
+- the POST method on the existing `/campaigns/<id>/preview` route, and the `preview_url` response field.
+
+The existing `mmbb:editor:<id>` localStorage key now also holds `draft` and `base`; `pageId` is unchanged.
+
+**Data changes and migration steps:** none. Nothing new is stored on the server. The draft preview writes nothing and skips the product transient. No query was added beyond the product lookups `Payload` already makes.
+
+**Checks run:**
+- build ✅ (`build/` 638 KB; `admin.js` 175,095 bytes, −16,391; `admin.css` 44,163; `storefront.js` 51,511, +1,962). The same 2 webpack size warnings as before this part.
+- `admin.asset.php` unchanged (`wp-components`, no React copy). `storefront.asset.php` is still `react-jsx-runtime, wp-element, wp-i18n`, so no `@wordpress/components` on the front end ✅
+- lint:js ✅ · lint:css ✅ · PHPCS ✅ (0/0)
+- test:js ✅ (22 suites, 277 tests) · test:unit ✅ (109)
+- integration, legacy orders ✅ (205 tests, 0 failures, 2 skipped, as before) · integration, HPOS ✅ (the same)
+- legacy fixtures ✅ (inside the integration runs, and again after the last change)
+- no PHP notices or deprecations in either integration log with `WP_DEBUG` on ✅ (only the known `php_imagick.dll` start-up warning)
+- Plugin Check in place ✅ (no errors) · plugin-review PHPCS ruleset on the packaged zip ✅ (zip 572,946 bytes; the new files are in it)
+- `wp i18n make-pot` with the frozen domain ✅ (the same 3 duplicate-comment warnings as before; no new ones)
+- Done when:
+  - "Editing a field updates the iframe within a moment": the draft is sent 150ms after the last change, plus one REST round trip (Jest covers the send).
+  - "Reloading restores the draft" ✅ (Jest).
+  - Undo and redo ✅ (Jest, reducer and header).
+  - "Preview URL logged out shows the normal page" ✅ (`PreviewTest::test_logged_out_is_ignored`, `test_without_capability_is_ignored`, `test_bad_nonce_is_ignored`).
+  - "A message from another origin is ignored" ✅ (bridge unit tests, the iframe host and the editor).
+  - No new Plugin Check errors ✅.
+
+**Skipped checks (and why):**
+- No browser was driven, so the real iframe round trip wasn't watched. Nor were the theme loading inside the frame, the response headers on a live request, the scaling, or the screen against `design/canvas/EditorDesign.dc.html`. Jest has no real iframe loading or layout. The integration suite can't send real headers (CLI). Loading it on the Local site means loading the owner's store.
+- wp-env needs Docker, as in Part 1.
+
+**Open issues:**
+- **The holiday preset can't go live as created.** It turns the countdown on (14 days) with no end date and no "count down to" time, so `countdown_end_required` blocks publishing until one is set. This predates the redesign, and no screen offers the presets since Part 3 (open issue 3). Fix it with the preset decision in Part 6.
+- **A different admin origin breaks the preview.** If wp-admin runs on another origin than the site (for example `FORCE_SSL_ADMIN` with an `http://` home), the `frame-ancestors 'self'` and `SAMEORIGIN` headers stop the frame. The plan asks for those headers, so they stay. Part 11's compatibility pass should check such a site.
+- The 1.0 step forms in the sidebar are dense at 360px. That is expected until Parts 5 and 6.
 
 <!-- Copy for each part:
 

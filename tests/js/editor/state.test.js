@@ -1,11 +1,15 @@
 import {
 	canOpenStep,
+	draftRecord,
 	editorReducer,
+	HISTORY_LIMIT,
 	initEditor,
 	moveItem,
 	payloadFor,
 	setIn,
 	stepForPath,
+	stepFromQuery,
+	storedDraft,
 	toNumber,
 	validateAll,
 	validateStep,
@@ -517,31 +521,199 @@ describe( 'whole-draft validation', () => {
 			} ),
 		} );
 		expect( Object.keys( found ) ).toEqual( [
-			'basics',
 			'products',
-			'rules',
+			'discounts',
+			'design',
 		] );
 	} );
 
 	it( 'opens a step only when every step before it is valid', () => {
 		const good = campaign();
-		expect( canOpenStep( 4, good ) ).toBe( true );
+		expect( canOpenStep( 2, good ) ).toBe( true );
 		const noProducts = {
 			title: 'x',
 			config: config( { products: { ...config().products, ids: [] } } ),
 		};
-		expect( canOpenStep( 1, noProducts ) ).toBe( true );
+		expect( canOpenStep( 0, noProducts ) ).toBe( true );
+		expect( canOpenStep( 1, noProducts ) ).toBe( false );
 		expect( canOpenStep( 2, noProducts ) ).toBe( false );
-		expect( canOpenStep( 4, noProducts ) ).toBe( false );
 	} );
 
 	it( 'maps server paths to steps', () => {
-		expect( stepForPath( 'title' ) ).toBe( 'basics' );
-		expect( stepForPath( 'schedule.end' ) ).toBe( 'basics' );
+		expect( stepForPath( 'title' ) ).toBe( 'design' );
+		expect( stepForPath( 'schedule.end' ) ).toBe( 'discounts' );
 		expect( stepForPath( 'products.ids' ) ).toBe( 'products' );
-		expect( stepForPath( 'tiers.1.qty' ) ).toBe( 'rules' );
-		expect( stepForPath( 'bundle.price' ) ).toBe( 'rules' );
+		expect( stepForPath( 'tiers.1.qty' ) ).toBe( 'discounts' );
+		expect( stepForPath( 'bundle.price' ) ).toBe( 'discounts' );
 		expect( stepForPath( 'design.layout' ) ).toBe( 'design' );
+	} );
+
+	it( 'checks the schedule on Discounts and the name on Design', () => {
+		const late = {
+			title: '',
+			config: config( {
+				schedule: {
+					start: '2026-12-02T00:00:00Z',
+					end: '2026-12-01T00:00:00Z',
+					countdown_days: 0,
+				},
+			} ),
+		};
+		expect( validateStep( 'discounts', late ) ).toHaveProperty( [
+			'schedule.end',
+		] );
+		expect( validateStep( 'design', late ) ).toHaveProperty( 'title' );
+		expect( validateStep( 'products', late ) ).toEqual( {} );
+	} );
+
+	it( 'reads the step from the address, including the 1.0 step names', () => {
+		expect( stepFromQuery( 'products' ) ).toBe( 'products' );
+		expect( stepFromQuery( 'discounts' ) ).toBe( 'discounts' );
+		expect( stepFromQuery( 'design' ) ).toBe( 'design' );
+		expect( stepFromQuery( 'basics' ) ).toBe( 'design' );
+		expect( stepFromQuery( 'rules' ) ).toBe( 'discounts' );
+		expect( stepFromQuery( 'publish' ) ).toBe( 'publish' );
+		expect( stepFromQuery( 'published' ) ).toBe( 'published' );
+		expect( stepFromQuery( null ) ).toBe( 'products' );
+		expect( stepFromQuery( 'nonsense' ) ).toBe( 'products' );
+	} );
+} );
+
+describe( 'undo and redo', () => {
+	const start = () => initEditor( { ...campaign(), modified: 'x' } );
+	const set = ( path, value, time ) => ( {
+		type: 'set',
+		path,
+		value,
+		time,
+	} );
+
+	it( 'undoes and redoes edits, and a new edit clears redo', () => {
+		let state = start();
+		state = editorReducer( state, set( 'box.capacity', 10 ) );
+		state = editorReducer( state, set( 'box.min_items', 2 ) );
+		expect( state.past ).toHaveLength( 2 );
+
+		state = editorReducer( state, { type: 'undo' } );
+		expect( state.draft.config.box.min_items ).toBe( 4 );
+		expect( state.draft.config.box.capacity ).toBe( 10 );
+		expect( state.future ).toHaveLength( 1 );
+
+		state = editorReducer( state, { type: 'undo' } );
+		expect( state.draft.config.box.capacity ).toBe( 12 );
+		expect( state.dirty ).toBe( false );
+
+		state = editorReducer( state, { type: 'redo' } );
+		expect( state.draft.config.box.capacity ).toBe( 10 );
+		expect( state.dirty ).toBe( true );
+
+		state = editorReducer( state, set( 'box.capacity', 8 ) );
+		expect( state.future ).toEqual( [] );
+		expect( editorReducer( state, { type: 'redo' } ) ).toBe( state );
+	} );
+
+	it( 'does nothing with empty stacks or an edit that changes nothing', () => {
+		const state = start();
+		expect( editorReducer( state, { type: 'undo' } ) ).toBe( state );
+		expect( editorReducer( state, { type: 'redo' } ) ).toBe( state );
+		expect( editorReducer( state, set( 'box.capacity', 12 ) ) ).toBe(
+			state
+		);
+	} );
+
+	it( 'groups quick edits to one field into one step', () => {
+		let state = start();
+		state = editorReducer( state, {
+			type: 'title',
+			value: 'H',
+			time: 1000,
+		} );
+		state = editorReducer( state, {
+			type: 'title',
+			value: 'Ho',
+			time: 1400,
+		} );
+		state = editorReducer( state, {
+			type: 'title',
+			value: 'Hol',
+			time: 1800,
+		} );
+		expect( state.past ).toHaveLength( 1 );
+		// Another field, or a pause, starts a new step.
+		state = editorReducer( state, set( 'box.capacity', 9, 1900 ) );
+		state = editorReducer( state, {
+			type: 'title',
+			value: 'Holi',
+			time: 5000,
+		} );
+		expect( state.past ).toHaveLength( 3 );
+		state = editorReducer( state, { type: 'undo' } );
+		state = editorReducer( state, { type: 'undo' } );
+		state = editorReducer( state, { type: 'undo' } );
+		expect( state.draft.title ).toBe( 'Holiday box' );
+	} );
+
+	it( 'keeps at most 50 snapshots', () => {
+		let state = start();
+		for ( let i = 1; i <= HISTORY_LIMIT + 10; i++ ) {
+			state = editorReducer( state, set( 'box.capacity', i ) );
+		}
+		expect( state.past ).toHaveLength( HISTORY_LIMIT );
+		for ( let i = 0; i < HISTORY_LIMIT + 10; i++ ) {
+			state = editorReducer( state, { type: 'undo' } );
+		}
+		expect( state.draft.config.box.capacity ).toBe( 10 );
+		expect( state.future ).toHaveLength( HISTORY_LIMIT );
+	} );
+
+	it( 'can undo a discard, and a save keeps the history', () => {
+		let state = start();
+		state = editorReducer( state, set( 'box.capacity', 6 ) );
+		state = editorReducer( state, { type: 'discard' } );
+		expect( state.dirty ).toBe( false );
+		state = editorReducer( state, { type: 'undo' } );
+		expect( state.draft.config.box.capacity ).toBe( 6 );
+
+		const sent = state.draft;
+		state = editorReducer( state, {
+			type: 'saved',
+			campaign: { title: sent.title, config: sent.config },
+			sent,
+		} );
+		expect( state.dirty ).toBe( false );
+		expect( state.past.length ).toBeGreaterThan( 0 );
+	} );
+} );
+
+describe( 'draft kept in the browser', () => {
+	const box = { ...campaign(), id: 5, modified: '2026-11-11T10:00:00' };
+
+	it( 'restores a draft made on the same save', () => {
+		const draft = { ...campaign(), title: 'Changed' };
+		const raw = draftRecord( 3, draft, box.modified );
+		expect( storedDraft( raw, box ) ).toEqual( draft );
+		expect( JSON.parse( raw ).pageId ).toBe( 3 );
+
+		let state = initEditor( box );
+		state = editorReducer( state, { type: 'restore', draft } );
+		expect( state.dirty ).toBe( true );
+		expect( state.past ).toEqual( [] );
+	} );
+
+	it( 'ignores drafts from an older save, unchanged drafts and junk', () => {
+		const draft = { ...campaign(), title: 'Changed' };
+		expect(
+			storedDraft( draftRecord( 0, draft, 'older' ), box )
+		).toBeNull();
+		expect(
+			storedDraft( draftRecord( 0, campaign(), box.modified ), box )
+		).toBeNull();
+		expect( storedDraft( draftRecord( 0, null, box.modified ), box ) ).toBe(
+			null
+		);
+		expect( storedDraft( 'not json', box ) ).toBeNull();
+		expect( storedDraft( '{"pageId":2}', box ) ).toBeNull();
+		expect( storedDraft( 'null', box ) ).toBeNull();
 	} );
 } );
 

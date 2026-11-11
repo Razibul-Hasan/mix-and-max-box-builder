@@ -32,6 +32,7 @@ final class Plugin {
 			Cart\Order_Boxes::class,
 			Cart\Order_Display::class,
 			Storefront\Storefront::class,
+			Storefront\Preview::class,
 			Analytics\Collector::class,
 			Analytics\Rollup::class,
 			Analytics\Privacy::class,

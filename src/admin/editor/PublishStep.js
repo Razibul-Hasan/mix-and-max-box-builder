@@ -16,14 +16,11 @@ import { useAdmin } from '../context';
 import { scheduleLabel, typeSummary } from '../format';
 import { useRequest } from '../hooks';
 import { useToast } from '../toast';
-import PreviewCard from './PreviewCard';
 
 const STEP_LABELS = () => ( {
-	basics: __( 'Basics', 'productboxes-mix-and-match-box-builder' ),
 	products: __( 'Products', 'productboxes-mix-and-match-box-builder' ),
-	rules: __( 'Box rules', 'productboxes-mix-and-match-box-builder' ),
+	discounts: __( 'Discounts', 'productboxes-mix-and-match-box-builder' ),
 	design: __( 'Design', 'productboxes-mix-and-match-box-builder' ),
-	publish: __( 'Publish', 'productboxes-mix-and-match-box-builder' ),
 } );
 
 function Check( { done } ) {
@@ -50,7 +47,6 @@ export default function PublishStep( {
 	busy,
 	onGoLive,
 	onOpenStep,
-	previewProducts,
 } ) {
 	const { locale, timezone, money, storeUrl } = useAdmin();
 	const formatMoney = useMoney();
@@ -447,7 +443,6 @@ export default function PublishStep( {
 						</span>
 					</div>
 				</Card>
-				<PreviewCard draft={ draft } products={ previewProducts } />
 			</div>
 		</div>
 	);

@@ -41,7 +41,8 @@ final class Payload {
 	 * Build the payload.
 	 *
 	 * @param array $campaign Campaign from the repository.
-	 * @param array $args     { preview: bool, view: array } where `view` holds block or shortcode overrides.
+	 * @param array $args     { preview: bool, view: array, fresh: bool }. `view` holds block or shortcode
+	 *                        overrides; `fresh` skips the product cache (for an unsaved draft).
 	 * @return array
 	 */
 	public static function build( array $campaign, array $args = array() ) {
@@ -67,7 +68,7 @@ final class Payload {
 				'ctaLabel'    => '' !== (string) $config['design']['cta_label'] ? $config['design']['cta_label'] : (string) $settings['cta_label'],
 				'emptyHint'   => (string) $settings['empty_slot_hint'],
 			),
-			'products' => self::products( $campaign, $settings ),
+			'products' => self::products( $campaign, $settings, ! empty( $args['fresh'] ) ),
 			'freeGift' => self::free_gift( $config ),
 			'money'    => Assets::get_money_settings(),
 			'now'      => gmdate( 'Y-m-d\TH:i:s\Z' ),
@@ -187,19 +188,23 @@ final class Payload {
 	 *
 	 * @param array $campaign Campaign from the repository.
 	 * @param array $settings Plugin settings.
+	 * @param bool  $fresh    Skip the cache: an unsaved draft's products differ from the saved list.
 	 * @return array[]
 	 */
-	public static function products( array $campaign, array $settings ) {
-		$low = isset( $settings['low_stock'] ) && is_array( $settings['low_stock'] ) ? $settings['low_stock'] : array();
-		$key = self::TRANSIENT_PREFIX . (int) $campaign['id'] . '_' . (int) get_option( self::GENERATION_OPTION, 0 );
+	public static function products( array $campaign, array $settings, $fresh = false ) {
+		$low       = isset( $settings['low_stock'] ) && is_array( $settings['low_stock'] ) ? $settings['low_stock'] : array();
+		$threshold = ! empty( $low['enabled'] ) ? max( 1, (int) $low['threshold'] ) : 0;
+		if ( $fresh ) {
+			return self::resolve_products( $campaign['config'], $threshold );
+		}
 
+		$key    = self::TRANSIENT_PREFIX . (int) $campaign['id'] . '_' . (int) get_option( self::GENERATION_OPTION, 0 );
 		$cached = get_transient( $key );
 		if ( is_array( $cached ) ) {
 			return $cached;
 		}
 
-		$threshold = ! empty( $low['enabled'] ) ? max( 1, (int) $low['threshold'] ) : 0;
-		$products  = self::resolve_products( $campaign['config'], $threshold );
+		$products = self::resolve_products( $campaign['config'], $threshold );
 		set_transient( $key, $products, self::CACHE_TTL );
 		return $products;
 	}

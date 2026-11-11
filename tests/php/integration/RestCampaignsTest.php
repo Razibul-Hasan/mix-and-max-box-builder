@@ -368,7 +368,20 @@ class RestCampaignsTest extends \WP_UnitTestCase {
 		}
 
 		$valid = $this->make_campaign( 'holiday' );
-		$patch = $this->send( 'PATCH', '/mmbb/v1/campaigns/' . $valid, array( 'config' => array( 'products' => array( 'ids' => array( $this->make_product() ) ) ) ) );
+		$patch = $this->send(
+			'PATCH',
+			'/mmbb/v1/campaigns/' . $valid,
+			array(
+				'config' => array(
+					'products' => array( 'ids' => array( $this->make_product() ) ),
+					'box'      => array(
+						'allow_duplicates' => true,
+						'max_per_product'  => 48,
+					),
+					'schedule' => array( 'countdown_end' => gmdate( 'c', time() + WEEK_IN_SECONDS ) ),
+				),
+			)
+		);
 		$this->assertSame( 200, $patch->get_status() );
 
 		$response = $this->send( 'POST', '/mmbb/v1/campaigns/' . $valid . '/publish', array( 'placement' => 'none' ) );
@@ -381,7 +394,62 @@ class RestCampaignsTest extends \WP_UnitTestCase {
 		$id       = $this->make_campaign();
 		$response = $this->send( 'GET', '/mmbb/v1/campaigns/' . $id . '/preview' );
 		$this->assertSame( 200, $response->get_status() );
-		$this->assertEqualSets( array( 'id', 'title', 'status', 'preview', 'config', 'view', 'settings', 'products', 'money', 'now' ), array_keys( $response->get_data() ) );
+		$this->assertEqualSets( array( 'id', 'title', 'status', 'preview', 'config', 'view', 'colors', 'settings', 'products', 'freeGift', 'money', 'now' ), array_keys( $response->get_data() ) );
+	}
+
+	/** POST previews an unsaved draft: sanitized, fresh products, and nothing stored. */
+	public function test_preview_draft_is_not_saved() {
+		$id     = $this->make_campaign();
+		$before = get_post_meta( $id, '_mmbb_config', true );
+		$one    = $this->make_product();
+		$two    = $this->make_product();
+
+		// Warm the product cache for the saved config first.
+		$this->send( 'GET', '/mmbb/v1/campaigns/' . $id . '/preview' );
+
+		$config                    = $this->repo->find( $id )['config'];
+		$config['products']['ids'] = array( $one, $two );
+		$config['box']['capacity'] = 999;
+		$config['design']['intro'] = '<b>Hello</b> there';
+		$response                  = $this->send(
+			'POST',
+			'/mmbb/v1/campaigns/' . $id . '/preview',
+			array(
+				'title'  => 'Draft <i>name</i>',
+				'config' => $config,
+			)
+		);
+		$this->assertSame( 200, $response->get_status() );
+		$data = $response->get_data();
+		$this->assertTrue( $data['preview'] );
+		$this->assertSame( 'Draft name', $data['title'] );
+		$this->assertSame( 48, $data['config']['box']['capacity'] );
+		$this->assertStringNotContainsString( '<b>', $data['config']['design']['intro'] );
+		$this->assertEqualSets( array( $one, $two ), wp_list_pluck( $data['products'], 'id' ) );
+		$this->assertArrayNotHasKey( 'cart', $data );
+
+		$this->assertSame( $before, get_post_meta( $id, '_mmbb_config', true ) );
+		$this->assertNotSame( 'Draft name', get_the_title( $id ) );
+	}
+
+	/** Every box carries a preview URL with only its id and a nonce for this user. */
+	public function test_preview_url() {
+		$id   = $this->make_campaign();
+		$url  = $this->send( 'GET', '/mmbb/v1/campaigns/' . $id )->get_data()['preview_url'];
+		$args = array();
+		wp_parse_str( (string) wp_parse_url( $url, PHP_URL_QUERY ), $args );
+		$this->assertEqualSets( array( 'mmbb_preview', '_wpnonce' ), array_keys( $args ) );
+		$this->assertSame( (string) $id, $args['mmbb_preview'] );
+		$this->assertSame( 1, wp_verify_nonce( $args['_wpnonce'], 'mmbb_preview_' . $id ) );
+		$this->assertStringStartsWith( home_url( '/' ), $url );
+	}
+
+	/** The draft preview needs the store capability like every admin route. */
+	public function test_preview_draft_needs_capability() {
+		$id = $this->make_campaign();
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		$response = $this->send( 'POST', '/mmbb/v1/campaigns/' . $id . '/preview', array( 'config' => array() ) );
+		$this->assertContains( $response->get_status(), array( 401, 403 ) );
 	}
 
 	/** Bulk actions report one result per id. */

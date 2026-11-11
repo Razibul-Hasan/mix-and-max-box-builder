@@ -4,6 +4,7 @@ import './admin.css';
 import './components/app.css';
 import './components/screens.css';
 import './editor/editor.css';
+import './editor/shell.css';
 
 const mount = document.getElementById( 'mmbb-admin' );
 if ( mount ) {

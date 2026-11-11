@@ -1,148 +1,243 @@
+import { Button, Modal, Notice, Spinner } from '@wordpress/components';
 import {
 	useCallback,
 	useEffect,
+	useMemo,
 	useReducer,
 	useRef,
 	useState,
 } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
+import { check, external, redo, undo } from '@wordpress/icons';
 import { addQueryArgs } from '@wordpress/url';
-import {
-	Badge,
-	Button,
-	Icon,
-	Notice,
-	PageHeader,
-	Steps,
-} from '../../components';
+import { originOf } from '../../shared/preview-bridge';
 import { getCampaign, publishCampaign, saveCampaign } from '../api';
+import { useSnackbar } from '../components';
+import { ToggleGroupControl, ToggleGroupControlOption } from '../components/wp';
 import { useAdmin } from '../context';
-import { statusInfo } from '../format';
 import { errorMessage, readStored, useRequest, writeStored } from '../hooks';
-import Shell from '../Shell';
-import { useToast } from '../toast';
 import BasicsStep from './BasicsStep';
 import DesignStep from './DesignStep';
-import { useMediaQuery, useProductCatalog } from './hooks';
+import { useProductCatalog } from './hooks';
+import PreviewStage from './PreviewStage';
 import ProductsStep from './ProductsStep';
 import PublishedStep from './PublishedStep';
 import PublishStep from './PublishStep';
 import RulesStep from './RulesStep';
 import {
+	draftRecord,
 	editorReducer,
 	initEditor,
 	payloadFor,
 	STEPS,
 	stepForPath,
+	stepFromQuery,
+	storedDraft,
 	validateAll,
 	validateStep,
 } from './state';
 
 const AUTOSAVE_MS = 30000;
+const STORE_DRAFT_MS = 300;
+const DEVICES = [ 'desktop', 'tablet', 'mobile' ];
+const DEVICE_KEY = 'mmbb:editor:device';
 
 const stepLabels = () => ( {
-	basics: __( 'Basics', 'productboxes-mix-and-match-box-builder' ),
 	products: __( 'Products', 'productboxes-mix-and-match-box-builder' ),
-	rules: __( 'Box rules', 'productboxes-mix-and-match-box-builder' ),
+	discounts: __( 'Discounts', 'productboxes-mix-and-match-box-builder' ),
 	design: __( 'Design', 'productboxes-mix-and-match-box-builder' ),
-	publish: __( 'Publish', 'productboxes-mix-and-match-box-builder' ),
 } );
 
-const isStep = ( value ) => STEPS.includes( value ) || value === 'published';
+const sideLabels = () => ( {
+	products: __(
+		'What goes in the box',
+		'productboxes-mix-and-match-box-builder'
+	),
+	discounts: __(
+		'Discounts and rules',
+		'productboxes-mix-and-match-box-builder'
+	),
+	design: __( 'Box design', 'productboxes-mix-and-match-box-builder' ),
+} );
 
-function readStep() {
-	const step = new URLSearchParams( window.location.search ).get( 'step' );
-	return isStep( step ) ? step : 'basics';
+const continueLabels = () => ( {
+	products: __(
+		'Continue to discounts',
+		'productboxes-mix-and-match-box-builder'
+	),
+	discounts: __(
+		'Continue to design',
+		'productboxes-mix-and-match-box-builder'
+	),
+	design: __(
+		'Continue to publish',
+		'productboxes-mix-and-match-box-builder'
+	),
+} );
+
+function readQueryStep() {
+	return stepFromQuery(
+		new URLSearchParams( window.location.search ).get( 'step' )
+	);
 }
 
-// The first step before `target` that still has errors, or null.
-function firstBlocked( target, draft ) {
-	for ( let i = 0; i < target; i++ ) {
-		if ( Object.keys( validateStep( STEPS[ i ], draft ) ).length ) {
-			return STEPS[ i ];
-		}
-	}
-	return null;
+function readRecord( id ) {
+	return readStored( 'mmbb:editor:' + id, 'null' );
 }
 
-function readPage( campaign ) {
-	const fallback = {
-		pageId: campaign.placement.page_id || 0,
-	};
+function readPageId( campaign ) {
 	try {
-		const stored = JSON.parse(
-			readStored( 'mmbb:editor:' + campaign.id, 'null' )
-		);
-		return stored && typeof stored === 'object'
-			? { ...fallback, ...stored }
-			: fallback;
+		const stored = JSON.parse( readRecord( campaign.id ) );
+		if ( stored && Number( stored.pageId ) > 0 ) {
+			return Number( stored.pageId );
+		}
 	} catch ( e ) {
-		return fallback;
+		// Fall back to the saved placement.
 	}
+	return campaign.placement.page_id || 0;
+}
+
+function readDevice() {
+	const stored = readStored( DEVICE_KEY, 'desktop' );
+	return DEVICES.includes( stored ) ? stored : 'desktop';
+}
+
+/**
+ * The box mark from the design, in the dark square that leads back to Boxes.
+ */
+function BackMark() {
+	return (
+		<svg
+			width="24"
+			height="24"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="1.6"
+			aria-hidden="true"
+			focusable="false"
+		>
+			<path d="M3 7.5 12 3l9 4.5-9 4.5-9-4.5Z" />
+			<path d="M3 7.5v9L12 21l9-4.5v-9M12 12v9" />
+		</svg>
+	);
+}
+
+function BackLink( { href } ) {
+	return (
+		<a
+			className="mmbb-ed__back"
+			href={ href }
+			aria-label={ __(
+				'Back to boxes',
+				'productboxes-mix-and-match-box-builder'
+			) }
+		>
+			<BackMark />
+		</a>
+	);
 }
 
 function EditorBody( { initial } ) {
-	const { urls, locale } = useAdmin();
-	const toast = useToast();
-	const compact = useMediaQuery( '(max-width: 600px)' );
+	const { urls } = useAdmin();
+	const snackbar = useSnackbar();
 	const [ meta, setMeta ] = useState( initial );
-	const [ state, dispatch ] = useReducer(
+	const [ state, rawDispatch ] = useReducer(
 		editorReducer,
 		initial,
 		initEditor
 	);
 	const { draft, dirty } = state;
+	// Every edit carries its time, so typing in one field is one undo step.
+	const dispatch = useCallback(
+		( action ) => rawDispatch( { time: Date.now(), ...action } ),
+		[]
+	);
 	const [ saving, setSaving ] = useState( false );
 	const [ saveError, setSaveError ] = useState( '' );
 	const [ busy, setBusy ] = useState( false );
 	const [ attempted, setAttempted ] = useState( {} );
 	const [ serverErrors, setServerErrors ] = useState( [] );
-	const [ rawPage, setRawPage ] = useState( () => readPage( initial ) );
+	const [ pageId, setPageId ] = useState( () => readPageId( initial ) );
+	const [ device, setDevice ] = useState( readDevice );
 
-	// Step from the address, never one the merchant is not allowed to open yet.
-	const [ step, setStep ] = useState( () => {
-		const wanted = readStep();
+	const startStep = useMemo( () => {
+		const wanted = readQueryStep();
 		if ( wanted === 'published' ) {
-			return initial.status === 'draft' ? 'publish' : 'published';
+			return initial.status === 'draft' ? 'design' : 'published';
 		}
-		return firstBlocked( STEPS.indexOf( wanted ), initial ) || wanted;
-	} );
+		return wanted === 'publish' ? 'design' : wanted;
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [] );
+	const [ step, setStep ] = useState( startStep );
+	const [ publishOpen, setPublishOpen ] = useState(
+		() => readQueryStep() === 'publish'
+	);
+	const [ visited, setVisited ] = useState( () =>
+		STEPS.slice( 0, Math.max( 0, STEPS.indexOf( startStep ) ) + 1 )
+	);
 
 	const stateRef = useRef( state );
 	stateRef.current = state;
 	const savingRef = useRef( false );
+	// What the preview page was rendered with; the iframe needs no update until the draft moves.
+	const loadedDraft = useRef( state.saved );
 
-	const page = {
-		pageId: rawPage.pageId,
-		setPageId: ( pageId ) => setRawPage( ( p ) => ( { ...p, pageId } ) ),
-	};
-
-	// Where the builder goes is a browser-side convenience; the server stores it on go-live.
+	// A draft kept from before a reload comes back, with a way to drop it.
 	useEffect( () => {
-		writeStored(
-			'mmbb:editor:' + initial.id,
-			JSON.stringify( {
-				pageId: rawPage.pageId,
-			} )
+		const kept = storedDraft( readRecord( initial.id ), initial );
+		if ( ! kept ) {
+			return;
+		}
+		rawDispatch( { type: 'restore', draft: kept } );
+		snackbar(
+			__(
+				'Your unsaved changes were restored.',
+				'productboxes-mix-and-match-box-builder'
+			),
+			{
+				actions: [
+					{
+						label: __(
+							'Discard them',
+							'productboxes-mix-and-match-box-builder'
+						),
+						onClick: () => rawDispatch( { type: 'discard' } ),
+					},
+				],
+			}
 		);
-	}, [ rawPage, initial.id ] );
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [] );
+
+	// Keep the draft in the browser while it is unsaved, so a reload keeps it.
+	useEffect( () => {
+		const timer = setTimeout( () => {
+			writeStored(
+				'mmbb:editor:' + initial.id,
+				draftRecord( pageId, dirty ? draft : null, meta.modified )
+			);
+		}, STORE_DRAFT_MS );
+		return () => clearTimeout( timer );
+	}, [ draft, dirty, pageId, meta.modified, initial.id ] );
+
+	useEffect( () => {
+		writeStored( DEVICE_KEY, device );
+	}, [ device ] );
 
 	const manualIds =
 		draft.config.products.source === 'manual'
 			? draft.config.products.ids
 			: [];
 	const catalog = useProductCatalog( manualIds );
-	const previewProducts = manualIds
-		.map( ( id ) => catalog.byId[ id ] )
-		.filter( Boolean );
-
-	const hrefFor = ( target ) =>
-		addQueryArgs( meta.edit_url, { step: target } );
 
 	const goTo = useCallback(
 		( target ) => {
 			setStep( target );
 			setServerErrors( [] );
+			setVisited( ( list ) =>
+				list.includes( target ) ? list : [ ...list, target ]
+			);
 			try {
 				window.history.pushState(
 					null,
@@ -152,17 +247,20 @@ function EditorBody( { initial } ) {
 			} catch ( e ) {
 				// The screen has already changed; the address is a convenience.
 			}
-			window.scrollTo( 0, 0 );
 		},
 		[ meta.edit_url ]
 	);
 
 	useEffect( () => {
 		const onPop = () => {
-			const target = readStep();
+			const target = readQueryStep();
+			if ( target === 'publish' ) {
+				setPublishOpen( true );
+				return;
+			}
 			setStep(
 				target === 'published' && meta.status === 'draft'
-					? 'publish'
+					? 'design'
 					: target
 			);
 		};
@@ -183,9 +281,12 @@ function EditorBody( { initial } ) {
 			setSaving( true );
 			return saveCampaign( initial.id, payload, { autosave } )
 				.then( ( campaign ) => {
-					dispatch( { type: 'saved', campaign, sent } );
+					rawDispatch( { type: 'saved', campaign, sent } );
 					setMeta( campaign );
 					setSaveError( '' );
+					snackbar(
+						__( 'Saved', 'productboxes-mix-and-match-box-builder' )
+					);
 					return campaign;
 				} )
 				.catch( ( error ) => {
@@ -193,7 +294,7 @@ function EditorBody( { initial } ) {
 						errorMessage(
 							error,
 							__(
-								'The campaign could not be saved.',
+								'The box could not be saved.',
 								'productboxes-mix-and-match-box-builder'
 							)
 						)
@@ -208,19 +309,8 @@ function EditorBody( { initial } ) {
 					setSaving( false );
 				} );
 		},
-		[ initial.id ]
+		[ initial.id, snackbar ]
 	);
-
-	const saveByHand = ( message ) =>
-		save()
-			.then( ( campaign ) => {
-				if ( campaign ) {
-					toast( message );
-				}
-			} )
-			.catch( () => {
-				// The header shows the error; nothing else to do.
-			} );
 
 	// Autosave every 30 seconds while there are unsaved edits.
 	useEffect( () => {
@@ -234,7 +324,7 @@ function EditorBody( { initial } ) {
 
 	useEffect( () => {
 		if ( ! dirty ) {
-			return;
+			return undefined;
 		}
 		const warn = ( event ) => {
 			event.preventDefault();
@@ -244,11 +334,11 @@ function EditorBody( { initial } ) {
 		return () => window.removeEventListener( 'beforeunload', warn );
 	}, [ dirty ] );
 
-	// After a blocked Next, move focus to the first field with a problem.
+	// After a blocked Continue, move focus to the first field with a problem.
 	useEffect( () => {
 		if ( attempted[ step ] ) {
 			const field = document.querySelector(
-				'#mmbb-admin [aria-invalid="true"]'
+				'.mmbb-ed__side [aria-invalid="true"]'
 			);
 			if ( field ) {
 				field.focus();
@@ -257,20 +347,16 @@ function EditorBody( { initial } ) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [ attempted ] );
 
-	const errors = attempted[ step ] ? validateStep( step, draft ) : {};
+	const labels = stepLabels();
+	const isStep = STEPS.includes( step );
+	const errors =
+		isStep && attempted[ step ] ? validateStep( step, draft ) : {};
 	const problems = validateAll( draft );
 	const index = STEPS.indexOf( step );
-	const labels = stepLabels();
 
-	// Going forward needs every step before the target to be valid.
-	const open = ( target ) => {
-		const blocked = firstBlocked( STEPS.indexOf( target ), draft );
-		if ( blocked ) {
-			setAttempted( ( a ) => ( { ...a, [ blocked ]: true } ) );
-			goTo( blocked );
-			return;
-		}
-		goTo( target );
+	const openPublish = () => {
+		setPublishOpen( true );
+		setServerErrors( [] );
 	};
 
 	const next = () => {
@@ -278,34 +364,32 @@ function EditorBody( { initial } ) {
 			setAttempted( ( a ) => ( { ...a, [ step ]: true } ) );
 			return;
 		}
+		if ( index === STEPS.length - 1 ) {
+			openPublish();
+			return;
+		}
 		goTo( STEPS[ index + 1 ] );
 	};
 
 	const goLive = () => {
-		const found = validateAll( draft );
-		if ( Object.keys( found ).length ) {
-			setAttempted( {
-				basics: true,
-				products: true,
-				rules: true,
-				design: true,
-				publish: true,
-			} );
+		if ( Object.keys( validateAll( draft ) ).length ) {
+			setAttempted( { products: true, discounts: true, design: true } );
 			return;
 		}
 		setBusy( true );
 		setServerErrors( [] );
-		const body = { placement: 'existing_page', page_id: page.pageId };
+		const body = { placement: 'existing_page', page_id: pageId };
 		const saved = dirty ? save() : Promise.resolve( true );
 		saved
 			.then( () => publishCampaign( initial.id, body ) )
 			.then( ( campaign ) => {
 				setMeta( campaign );
-				dispatch( {
+				rawDispatch( {
 					type: 'saved',
 					campaign,
 					sent: stateRef.current.draft,
 				} );
+				setPublishOpen( false );
 				goTo( 'published' );
 			} )
 			.catch( ( error ) => {
@@ -319,11 +403,11 @@ function EditorBody( { initial } ) {
 						} ) );
 					}
 				}
-				toast(
+				snackbar(
 					errorMessage(
 						error,
 						__(
-							'The campaign could not go live.',
+							'The box could not go live.',
 							'productboxes-mix-and-match-box-builder'
 						)
 					)
@@ -332,251 +416,275 @@ function EditorBody( { initial } ) {
 			.finally( () => setBusy( false ) );
 	};
 
-	const status = statusInfo( meta.status );
-	let saveLine;
+	const saveByHand = () =>
+		save().catch( () => {
+			// The sidebar shows the error.
+		} );
+
+	const stepProps = { draft, errors, dispatch, catalog };
+	let side = null;
+	if ( step === 'products' ) {
+		side = <ProductsStep { ...stepProps } />;
+	} else if ( step === 'discounts' ) {
+		side = (
+			<>
+				<RulesStep { ...stepProps } />
+				<BasicsStep { ...stepProps } section="schedule" />
+			</>
+		);
+	} else if ( step === 'design' ) {
+		side = (
+			<>
+				<BasicsStep { ...stepProps } section="content" />
+				<DesignStep { ...stepProps } />
+			</>
+		);
+	}
+
+	const previewUrl = meta.preview_url || initial.preview_url;
+	const origin = originOf( previewUrl, window.location.href );
+	let saveLabel = __( 'Save', 'productboxes-mix-and-match-box-builder' );
 	if ( saving ) {
-		saveLine = __( 'Saving…', 'productboxes-mix-and-match-box-builder' );
-	} else if ( saveError ) {
-		saveLine = __( 'Not saved', 'productboxes-mix-and-match-box-builder' );
-	} else if ( dirty ) {
-		saveLine = __(
-			'Unsaved changes',
+		saveLabel = __( 'Saving…', 'productboxes-mix-and-match-box-builder' );
+	} else if ( ! dirty ) {
+		saveLabel = __( 'Saved', 'productboxes-mix-and-match-box-builder' );
+	} else if ( meta.post_status === 'draft' ) {
+		saveLabel = __(
+			'Save draft',
 			'productboxes-mix-and-match-box-builder'
 		);
-	} else {
-		saveLine = sprintf(
-			/* translators: %s: Time of day, such as 2:30 PM. */
-			__( 'Last saved %s', 'productboxes-mix-and-match-box-builder' ),
-			new Intl.DateTimeFormat( locale, {
-				hour: 'numeric',
-				minute: '2-digit',
-			} ).format( new Date( meta.modified ) )
-		);
-	}
-	const subtitle = saveLine;
-
-	let headerAction = null;
-	if ( meta.post_status === 'draft' ) {
-		headerAction = (
-			<Button
-				variant="ghost"
-				loading={ saving }
-				onClick={ () =>
-					saveByHand(
-						__(
-							'Draft saved',
-							'productboxes-mix-and-match-box-builder'
-						)
-					)
-				}
-			>
-				{ __( 'Save draft', 'productboxes-mix-and-match-box-builder' ) }
-			</Button>
-		);
-	} else if ( meta.placement.page_url ) {
-		headerAction = (
-			<Button
-				icon="eye"
-				href={ meta.placement.page_url }
-				target="_blank"
-				rel="noopener noreferrer"
-			>
-				{ __(
-					'View on store',
-					'productboxes-mix-and-match-box-builder'
-				) }
-			</Button>
-		);
-	}
-
-	const stepProps = {
-		draft,
-		errors,
-		dispatch,
-		catalog,
-		previewProducts,
-	};
-
-	let body;
-	switch ( step ) {
-		case 'products':
-			body = <ProductsStep { ...stepProps } />;
-			break;
-		case 'rules':
-			body = <RulesStep { ...stepProps } />;
-			break;
-		case 'design':
-			body = <DesignStep { ...stepProps } />;
-			break;
-		case 'publish':
-			body = (
-				<PublishStep
-					draft={ draft }
-					campaign={ meta }
-					page={ page }
-					problems={ problems }
-					serverErrors={ serverErrors }
-					busy={ busy }
-					onGoLive={ goLive }
-					previewProducts={ previewProducts }
-					onOpenStep={ ( target ) => {
-						setAttempted( ( a ) => ( { ...a, [ target ]: true } ) );
-						goTo( target );
-					} }
-				/>
-			);
-			break;
-		default:
-			body = <BasicsStep { ...stepProps } />;
 	}
 
 	return (
-		<>
-			{ dirty ? (
-				<div
-					className="mmbb-editor__bar"
-					role="region"
+		<div className="mmbb-ed">
+			<header className="mmbb-ed__top">
+				<BackLink href={ urls.campaigns } />
+				<Button
+					icon={ undo }
+					label={ __(
+						'Undo',
+						'productboxes-mix-and-match-box-builder'
+					) }
+					accessibleWhenDisabled
+					disabled={ ! state.past.length }
+					onClick={ () => rawDispatch( { type: 'undo' } ) }
+					size="compact"
+				/>
+				<Button
+					icon={ redo }
+					label={ __(
+						'Redo',
+						'productboxes-mix-and-match-box-builder'
+					) }
+					accessibleWhenDisabled
+					disabled={ ! state.future.length }
+					onClick={ () => rawDispatch( { type: 'redo' } ) }
+					size="compact"
+				/>
+				<nav
+					className="mmbb-ed__steps"
 					aria-label={ __(
-						'Unsaved changes',
+						'Steps',
 						'productboxes-mix-and-match-box-builder'
 					) }
 				>
-					<span className="mmbb-editor__bar-text">
-						<Icon name="alert" size={ 18 } strokeWidth={ 2 } />
-						{ __(
-							'Unsaved changes',
-							'productboxes-mix-and-match-box-builder'
-						) }
-					</span>
-					<button
-						type="button"
-						className="mmbb-editor__bar-discard"
-						onClick={ () => dispatch( { type: 'discard' } ) }
-					>
-						{ __(
-							'Discard',
-							'productboxes-mix-and-match-box-builder'
-						) }
-					</button>
-					<Button
-						size="sm"
-						variant={ step === 'publish' ? 'secondary' : 'max' }
-						loading={ saving }
-						onClick={ () =>
-							saveByHand(
-								__(
-									'Campaign saved',
-									'productboxes-mix-and-match-box-builder'
-								)
-							)
-						}
-					>
-						{ __(
-							'Save campaign',
-							'productboxes-mix-and-match-box-builder'
-						) }
-					</Button>
-				</div>
-			) : null }
-			<Shell active="campaigns" viewStore wide>
-				{ step === 'published' ? (
-					<PublishedStep campaign={ meta } draft={ draft } />
-				) : (
-					<div className="mmbb-editor">
-						<div className="mmbb-editor__head">
-							<PageHeader
-								title={
-									draft.title ||
-									__(
-										'Untitled campaign',
-										'productboxes-mix-and-match-box-builder'
-									)
-								}
-								subtitle={ subtitle }
-								badge={
-									<Badge tone={ status.tone } dot>
-										{ status.label }
-									</Badge>
-								}
-								backLabel={ __(
-									'Campaigns',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								backHref={ urls.campaigns }
-							/>
-							{ headerAction }
-						</div>
-						{ saveError && ! saving ? (
-							<Notice tone="critical">{ saveError }</Notice>
-						) : null }
-						<div className="mmbb-editor__steps">
-							<Steps
-								compact={ compact }
-								current={ index }
-								steps={ STEPS.map( ( s ) => ( {
-									label: labels[ s ],
-									href: hrefFor( s ),
-								} ) ) }
-								onStep={ ( i ) => open( STEPS[ i ] ) }
-							/>
-						</div>
-						{ body }
-						<div className="mmbb-editor__foot">
+					{ STEPS.map( ( name, i ) => {
+						const current = name === step;
+						const done =
+							! current &&
+							visited.includes( name ) &&
+							! problems[ name ];
+						return (
 							<Button
-								icon="arrowLeft"
-								href={
-									index === 0
-										? urls.newCampaign
-										: hrefFor( STEPS[ index - 1 ] )
-								}
-								onClick={
-									index === 0
-										? undefined
-										: ( event ) => {
-												event.preventDefault();
-												goTo( STEPS[ index - 1 ] );
-										  }
-								}
+								key={ name }
+								variant={ current ? 'secondary' : 'tertiary' }
+								icon={ done ? check : undefined }
+								aria-current={ current ? 'step' : undefined }
+								onClick={ () => goTo( name ) }
+								__next40pxDefaultSize
 							>
-								{ index === 0
-									? __(
-											'Back to templates',
-											'productboxes-mix-and-match-box-builder'
-									  )
-									: __(
-											'Back',
-											'productboxes-mix-and-match-box-builder'
+								{ done
+									? labels[ name ]
+									: sprintf(
+											/* translators: 1: Step number, 2: Step name. */
+											__(
+												'%1$d · %2$s',
+												'productboxes-mix-and-match-box-builder'
+											),
+											i + 1,
+											labels[ name ]
 									  ) }
 							</Button>
-							{ step !== 'publish' ? (
+						);
+					} ) }
+				</nav>
+				<div className="mmbb-ed__device">
+					<ToggleGroupControl
+						label={ __(
+							'Preview size',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						hideLabelFromVision
+						isBlock
+						value={ device }
+						onChange={ ( value ) =>
+							setDevice(
+								DEVICES.includes( value ) ? value : 'desktop'
+							)
+						}
+						__nextHasNoMarginBottom
+						__next40pxDefaultSize
+					>
+						<ToggleGroupControlOption
+							value="desktop"
+							label={ __(
+								'Desktop',
+								'productboxes-mix-and-match-box-builder'
+							) }
+						/>
+						<ToggleGroupControlOption
+							value="tablet"
+							label={ __(
+								'Tablet',
+								'productboxes-mix-and-match-box-builder'
+							) }
+						/>
+						<ToggleGroupControlOption
+							value="mobile"
+							label={ __(
+								'Phone',
+								'productboxes-mix-and-match-box-builder'
+							) }
+						/>
+					</ToggleGroupControl>
+				</div>
+				<Button
+					icon={ external }
+					label={ __(
+						'Open preview in a new tab',
+						'productboxes-mix-and-match-box-builder'
+					) }
+					href={ previewUrl }
+					target="_blank"
+					rel="noopener noreferrer"
+					size="compact"
+				/>
+				<Button
+					variant="tertiary"
+					isBusy={ saving }
+					accessibleWhenDisabled
+					disabled={ saving }
+					onClick={ saveByHand }
+					__next40pxDefaultSize
+				>
+					{ saveLabel }
+				</Button>
+				<Button
+					variant="primary"
+					onClick={ openPublish }
+					__next40pxDefaultSize
+				>
+					{ __(
+						'Publish',
+						'productboxes-mix-and-match-box-builder'
+					) }
+				</Button>
+			</header>
+
+			{ step === 'published' ? (
+				<div className="mmbb-ed__published">
+					<PublishedStep campaign={ meta } draft={ draft } />
+				</div>
+			) : (
+				<div className="mmbb-ed__body">
+					<PreviewStage
+						src={ previewUrl }
+						origin={ origin }
+						boxId={ initial.id }
+						draft={ draft }
+						changed={ draft !== loadedDraft.current }
+						device={ device }
+					/>
+					<aside
+						className="mmbb-ed__side"
+						aria-label={ sideLabels()[ step ] }
+					>
+						<div className="mmbb-ed__side-head">
+							<h2>{ sideLabels()[ step ] }</h2>
+						</div>
+						<div className="mmbb-ed__side-scroll">
+							{ saveError && ! saving ? (
+								<Notice status="error" isDismissible={ false }>
+									{ saveError }
+								</Notice>
+							) : null }
+							{ side }
+						</div>
+						<div className="mmbb-ed__side-foot">
+							{ index > 0 ? (
 								<Button
-									variant="primary"
-									iconRight="arrowRight"
-									onClick={ next }
+									variant="secondary"
+									onClick={ () => goTo( STEPS[ index - 1 ] ) }
+									__next40pxDefaultSize
 								>
-									{ sprintf(
-										/* translators: %s: Name of the next wizard step. */
-										__(
-											'Next: %s',
-											'productboxes-mix-and-match-box-builder'
-										),
-										labels[ STEPS[ index + 1 ] ]
+									{ __(
+										'Back',
+										'productboxes-mix-and-match-box-builder'
 									) }
 								</Button>
-							) : null }
+							) : (
+								<span />
+							) }
+							<Button
+								variant="primary"
+								onClick={ next }
+								__next40pxDefaultSize
+							>
+								{ continueLabels()[ step ] }
+							</Button>
 						</div>
-					</div>
-				) }
-			</Shell>
-		</>
+					</aside>
+				</div>
+			) }
+
+			{ publishOpen ? (
+				<Modal
+					className="mmbb-app-modal mmbb-ed__publish"
+					title={ __(
+						'Publish',
+						'productboxes-mix-and-match-box-builder'
+					) }
+					size="large"
+					onRequestClose={ () => setPublishOpen( false ) }
+				>
+					<PublishStep
+						draft={ draft }
+						campaign={ meta }
+						page={ { pageId, setPageId } }
+						problems={ problems }
+						serverErrors={ serverErrors }
+						busy={ busy }
+						onGoLive={ goLive }
+						onOpenStep={ ( target ) => {
+							setAttempted( ( a ) => ( {
+								...a,
+								[ target ]: true,
+							} ) );
+							setPublishOpen( false );
+							goTo( target );
+						} }
+					/>
+				</Modal>
+			) : null }
+		</div>
 	);
 }
 
 /**
- * The campaign wizard. Loads the campaign, then hands it to the editor.
+ * The full-screen box editor. Loads the box, then hands it to the editor.
  *
  * @param {Object} props
- * @param {number} props.id Campaign id.
+ * @param {number} props.id Box id.
  */
 export default function Editor( { id } ) {
 	const { urls } = useAdmin();
@@ -589,47 +697,39 @@ export default function Editor( { id } ) {
 		return <EditorBody key={ data.id } initial={ data } />;
 	}
 	return (
-		<Shell active="campaigns">
-			{ error ? (
-				<Notice
-					tone="critical"
-					title={ __(
-						'The campaign could not be opened',
-						'productboxes-mix-and-match-box-builder'
-					) }
-					action={
-						<>
-							<Button size="sm" onClick={ reload }>
-								{ __(
-									'Try again',
+		<div className="mmbb-ed">
+			<header className="mmbb-ed__top">
+				<BackLink href={ urls.campaigns } />
+			</header>
+			<div className="mmbb-ed__state">
+				{ error ? (
+					<Notice status="error" isDismissible={ false }>
+						<p>
+							{ errorMessage(
+								error,
+								__(
+									'The box could not be opened.',
 									'productboxes-mix-and-match-box-builder'
-								) }
-							</Button>
-							<Button size="sm" href={ urls.campaigns }>
-								{ __(
-									'Back to campaigns',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							</Button>
-						</>
-					}
-				>
-					{ errorMessage(
-						error,
-						__(
-							'Something went wrong.',
+								)
+							) }
+						</p>
+						<Button variant="secondary" onClick={ reload }>
+							{ __(
+								'Try again',
+								'productboxes-mix-and-match-box-builder'
+							) }
+						</Button>
+					</Notice>
+				) : (
+					<p role="status">
+						<Spinner />
+						{ __(
+							'Loading box…',
 							'productboxes-mix-and-match-box-builder'
-						)
-					) }
-				</Notice>
-			) : (
-				<p className="mmbb-editor__loading" role="status">
-					{ __(
-						'Loading campaign…',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				</p>
-			) }
-		</Shell>
+						) }
+					</p>
+				) }
+			</div>
+		</div>
 	);
 }

@@ -19,7 +19,6 @@ import { toMinor } from '../../shared/pricing';
 import { useAdmin } from '../context';
 import { NumberField, previewTiers, tierLabel } from './fields';
 import GiftProductField from './GiftProductField';
-import PreviewCard from './PreviewCard';
 import { toNumber } from './state';
 
 const MAX_ROWS = 6;
@@ -388,12 +387,7 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 	);
 }
 
-export default function RulesStep( {
-	draft,
-	errors,
-	dispatch,
-	previewProducts,
-} ) {
+export default function RulesStep( { draft, errors, dispatch } ) {
 	const { money } = useAdmin();
 	const { config } = draft;
 	const { box, extras } = config;
@@ -407,362 +401,345 @@ export default function RulesStep( {
 	};
 
 	return (
-		<div className="mmbb-editor__cols">
-			<div className="mmbb-editor__main">
-				<Card
-					title={ __(
-						'Campaign type',
-						'productboxes-mix-and-match-box-builder'
-					) }
-					subtitle={ __(
-						'How the discount works. You can switch any time before the first order.',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				>
-					<div className="mmbb-editor__stack mmbb-editor__stack--tight">
-						<ChoiceCard
-							name="type"
-							value="tiered"
-							selected={ config.type === 'tiered' }
-							onSelect={ pickType }
-							icon="percent"
-							title={ __(
-								'Tiered mix',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							description={ __(
-								'The more items in the box, the bigger the discount. Best for snacks and samplers.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							tag={ __(
-								'Top seller',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						/>
-						<ChoiceCard
-							name="type"
-							value="fixed"
-							selected={ config.type === 'fixed' }
-							onSelect={ pickType }
-							icon="box"
-							title={ __(
-								'Fixed box',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							description={ __(
-								'Shoppers pick a size (4, 6, 12) and fill every slot. Each size has its own price.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						/>
-						<ChoiceCard
-							name="type"
-							value="bundle"
-							selected={ config.type === 'bundle' }
-							onSelect={ pickType }
-							icon="tag"
-							title={ __(
-								'Bundle price',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							description={ __(
-								'Any set number of items for one price, like 5 for 25.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						/>
-					</div>
-				</Card>
+		<div className="mmbb-editor__pane">
+			<Card
+				title={ __(
+					'Campaign type',
+					'productboxes-mix-and-match-box-builder'
+				) }
+				subtitle={ __(
+					'How the discount works. You can switch any time before the first order.',
+					'productboxes-mix-and-match-box-builder'
+				) }
+			>
+				<div className="mmbb-editor__stack mmbb-editor__stack--tight">
+					<ChoiceCard
+						name="type"
+						value="tiered"
+						selected={ config.type === 'tiered' }
+						onSelect={ pickType }
+						icon="percent"
+						title={ __(
+							'Tiered mix',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						description={ __(
+							'The more items in the box, the bigger the discount. Best for snacks and samplers.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						tag={ __(
+							'Top seller',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					/>
+					<ChoiceCard
+						name="type"
+						value="fixed"
+						selected={ config.type === 'fixed' }
+						onSelect={ pickType }
+						icon="box"
+						title={ __(
+							'Fixed box',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						description={ __(
+							'Shoppers pick a size (4, 6, 12) and fill every slot. Each size has its own price.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					/>
+					<ChoiceCard
+						name="type"
+						value="bundle"
+						selected={ config.type === 'bundle' }
+						onSelect={ pickType }
+						icon="tag"
+						title={ __(
+							'Bundle price',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						description={ __(
+							'Any set number of items for one price, like 5 for 25.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					/>
+				</div>
+			</Card>
 
-				<Card
-					title={ __(
-						'Box rules',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				>
-					<div className="mmbb-editor__stack">
-						<div className="mmbb-editor__pair">
+			<Card
+				title={ __(
+					'Box rules',
+					'productboxes-mix-and-match-box-builder'
+				) }
+			>
+				<div className="mmbb-editor__stack">
+					<div className="mmbb-editor__pair">
+						<NumberField
+							label={ __(
+								'Box holds up to',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							suffix={ __(
+								'items',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={ box.capacity }
+							error={ errors[ 'box.capacity' ] }
+							help={
+								errors[ 'box.capacity' ]
+									? undefined
+									: sprintf(
+											/* translators: %s: Number of slots. */
+											__(
+												'Shoppers see %s slots.',
+												'productboxes-mix-and-match-box-builder'
+											),
+											String( box.capacity )
+									  )
+							}
+							onChange={ ( value ) =>
+								set( 'box.capacity', value )
+							}
+						/>
+						{ config.type === 'tiered' ? (
 							<NumberField
 								label={ __(
-									'Box holds up to',
+									'Minimum to check out',
 									'productboxes-mix-and-match-box-builder'
 								) }
 								suffix={ __(
 									'items',
 									'productboxes-mix-and-match-box-builder'
 								) }
-								value={ box.capacity }
-								error={ errors[ 'box.capacity' ] }
+								value={ box.min_items }
+								error={ errors[ 'box.min_items' ] }
 								help={
-									errors[ 'box.capacity' ]
+									errors[ 'box.min_items' ]
 										? undefined
-										: sprintf(
-												/* translators: %s: Number of slots. */
-												__(
-													'Shoppers see %s slots.',
-													'productboxes-mix-and-match-box-builder'
-												),
-												String( box.capacity )
+										: __(
+												'Below this the button stays locked.',
+												'productboxes-mix-and-match-box-builder'
 										  )
 								}
 								onChange={ ( value ) =>
-									set( 'box.capacity', value )
+									set( 'box.min_items', value )
 								}
 							/>
-							{ config.type === 'tiered' ? (
+						) : null }
+					</div>
+					{ config.type === 'bundle' ? (
+						<div className="mmbb-editor__pair">
+							<NumberField
+								label={ __(
+									'Items in the bundle',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								suffix={ __(
+									'items',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								value={ config.bundle.qty }
+								error={ errors[ 'bundle.qty' ] }
+								onChange={ ( value ) =>
+									set( 'bundle.qty', value )
+								}
+							/>
+							<NumberField
+								label={ __(
+									'Bundle price',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								prefix={ moneyPrefix( money ) }
+								value={ config.bundle.price }
+								error={ errors[ 'bundle.price' ] }
+								onChange={ ( value ) =>
+									set( 'bundle.price', value )
+								}
+							/>
+						</div>
+					) : null }
+					<div className="mmbb-editor__stack mmbb-editor__rule">
+						<Toggle
+							label={ __(
+								'Allow the same product twice',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							description={ __(
+								'Limit how many of one product fit in a box.',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							checked={ box.allow_duplicates }
+							onChange={ ( on ) =>
+								set( 'box.allow_duplicates', on )
+							}
+						/>
+						{ box.allow_duplicates ? (
+							<NumberField
+								className="mmbb-editor__narrow"
+								label={ __(
+									'Max of one product',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								suffix={ __(
+									'per box',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								value={ box.max_per_product }
+								error={ errors[ 'box.max_per_product' ] }
+								onChange={ ( value ) =>
+									set( 'box.max_per_product', value )
+								}
+							/>
+						) : null }
+						{ errors[ 'box.allow_duplicates' ] ? (
+							<Notice tone="critical">
+								{ errors[ 'box.allow_duplicates' ] }
+							</Notice>
+						) : null }
+					</div>
+					<div className="mmbb-editor__rule">
+						<Toggle
+							label={ __(
+								'Hide sold-out products',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							description={ __(
+								'Otherwise they show as Sold out and can’t be added.',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							checked={ box.hide_sold_out }
+							onChange={ ( on ) =>
+								set( 'box.hide_sold_out', on )
+							}
+						/>
+					</div>
+				</div>
+			</Card>
+
+			{ config.type === 'tiered' ? (
+				<RowsEditor
+					kind="tiers"
+					draft={ draft }
+					errors={ errors }
+					dispatch={ dispatch }
+				/>
+			) : null }
+			{ config.type === 'fixed' ? (
+				<RowsEditor
+					kind="sizes"
+					draft={ draft }
+					errors={ errors }
+					dispatch={ dispatch }
+				/>
+			) : null }
+
+			<Card
+				title={ __(
+					'Extras',
+					'productboxes-mix-and-match-box-builder'
+				) }
+			>
+				<div className="mmbb-editor__stack">
+					<Toggle
+						label={ __(
+							'Gift message',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						description={ __(
+							'A text box under the box summary. Printed on the packing slip.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						checked={ extras.gift_message }
+						onChange={ ( on ) => set( 'extras.gift_message', on ) }
+					/>
+					<div className="mmbb-editor__pair mmbb-editor__rule">
+						<Toggle
+							label={ __(
+								'Gift wrap',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							description={ __(
+								'Optional paid add-on.',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							checked={ extras.gift_wrap.enabled }
+							onChange={ ( on ) =>
+								set( 'extras.gift_wrap.enabled', on )
+							}
+						/>
+						{ extras.gift_wrap.enabled ? (
+							<NumberField
+								label={ __(
+									'Gift wrap fee',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								prefix={ moneyPrefix( money ) }
+								value={ extras.gift_wrap.fee }
+								error={ errors[ 'extras.gift_wrap.fee' ] }
+								onChange={ ( value ) =>
+									set( 'extras.gift_wrap.fee', value )
+								}
+							/>
+						) : null }
+					</div>
+					<div className="mmbb-editor__stack mmbb-editor__rule">
+						<Toggle
+							label={ __(
+								'Free gift',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							description={ __(
+								'Add a product at no charge once the box has enough items.',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							checked={ extras.free_gift.enabled }
+							onChange={ ( on ) =>
+								set( 'extras.free_gift.enabled', on )
+							}
+						/>
+						{ extras.free_gift.enabled ? (
+							<div className="mmbb-editor__pair">
+								<GiftProductField
+									value={ extras.free_gift.product_id }
+									error={
+										errors[ 'extras.free_gift.product_id' ]
+									}
+									onChange={ ( id ) =>
+										set( 'extras.free_gift.product_id', id )
+									}
+								/>
 								<NumberField
 									label={ __(
-										'Minimum to check out',
+										'Unlocks at',
 										'productboxes-mix-and-match-box-builder'
 									) }
 									suffix={ __(
 										'items',
 										'productboxes-mix-and-match-box-builder'
 									) }
-									value={ box.min_items }
-									error={ errors[ 'box.min_items' ] }
+									value={ extras.free_gift.min_items }
+									error={
+										errors[ 'extras.free_gift.min_items' ]
+									}
 									help={
-										errors[ 'box.min_items' ]
+										errors[ 'extras.free_gift.min_items' ]
 											? undefined
 											: __(
-													'Below this the button stays locked.',
+													'The gift goes in the cart with the box.',
 													'productboxes-mix-and-match-box-builder'
 											  )
 									}
 									onChange={ ( value ) =>
-										set( 'box.min_items', value )
-									}
-								/>
-							) : null }
-						</div>
-						{ config.type === 'bundle' ? (
-							<div className="mmbb-editor__pair">
-								<NumberField
-									label={ __(
-										'Items in the bundle',
-										'productboxes-mix-and-match-box-builder'
-									) }
-									suffix={ __(
-										'items',
-										'productboxes-mix-and-match-box-builder'
-									) }
-									value={ config.bundle.qty }
-									error={ errors[ 'bundle.qty' ] }
-									onChange={ ( value ) =>
-										set( 'bundle.qty', value )
-									}
-								/>
-								<NumberField
-									label={ __(
-										'Bundle price',
-										'productboxes-mix-and-match-box-builder'
-									) }
-									prefix={ moneyPrefix( money ) }
-									value={ config.bundle.price }
-									error={ errors[ 'bundle.price' ] }
-									onChange={ ( value ) =>
-										set( 'bundle.price', value )
+										set(
+											'extras.free_gift.min_items',
+											value
+										)
 									}
 								/>
 							</div>
 						) : null }
-						<div className="mmbb-editor__stack mmbb-editor__rule">
-							<Toggle
-								label={ __(
-									'Allow the same product twice',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								description={ __(
-									'Limit how many of one product fit in a box.',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								checked={ box.allow_duplicates }
-								onChange={ ( on ) =>
-									set( 'box.allow_duplicates', on )
-								}
-							/>
-							{ box.allow_duplicates ? (
-								<NumberField
-									className="mmbb-editor__narrow"
-									label={ __(
-										'Max of one product',
-										'productboxes-mix-and-match-box-builder'
-									) }
-									suffix={ __(
-										'per box',
-										'productboxes-mix-and-match-box-builder'
-									) }
-									value={ box.max_per_product }
-									error={ errors[ 'box.max_per_product' ] }
-									onChange={ ( value ) =>
-										set( 'box.max_per_product', value )
-									}
-								/>
-							) : null }
-							{ errors[ 'box.allow_duplicates' ] ? (
-								<Notice tone="critical">
-									{ errors[ 'box.allow_duplicates' ] }
-								</Notice>
-							) : null }
-						</div>
-						<div className="mmbb-editor__rule">
-							<Toggle
-								label={ __(
-									'Hide sold-out products',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								description={ __(
-									'Otherwise they show as Sold out and can’t be added.',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								checked={ box.hide_sold_out }
-								onChange={ ( on ) =>
-									set( 'box.hide_sold_out', on )
-								}
-							/>
-						</div>
 					</div>
-				</Card>
-
-				{ config.type === 'tiered' ? (
-					<RowsEditor
-						kind="tiers"
-						draft={ draft }
-						errors={ errors }
-						dispatch={ dispatch }
-					/>
-				) : null }
-				{ config.type === 'fixed' ? (
-					<RowsEditor
-						kind="sizes"
-						draft={ draft }
-						errors={ errors }
-						dispatch={ dispatch }
-					/>
-				) : null }
-
-				<Card
-					title={ __(
-						'Extras',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				>
-					<div className="mmbb-editor__stack">
-						<Toggle
-							label={ __(
-								'Gift message',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							description={ __(
-								'A text box under the box summary. Printed on the packing slip.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							checked={ extras.gift_message }
-							onChange={ ( on ) =>
-								set( 'extras.gift_message', on )
-							}
-						/>
-						<div className="mmbb-editor__pair mmbb-editor__rule">
-							<Toggle
-								label={ __(
-									'Gift wrap',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								description={ __(
-									'Optional paid add-on.',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								checked={ extras.gift_wrap.enabled }
-								onChange={ ( on ) =>
-									set( 'extras.gift_wrap.enabled', on )
-								}
-							/>
-							{ extras.gift_wrap.enabled ? (
-								<NumberField
-									label={ __(
-										'Gift wrap fee',
-										'productboxes-mix-and-match-box-builder'
-									) }
-									prefix={ moneyPrefix( money ) }
-									value={ extras.gift_wrap.fee }
-									error={ errors[ 'extras.gift_wrap.fee' ] }
-									onChange={ ( value ) =>
-										set( 'extras.gift_wrap.fee', value )
-									}
-								/>
-							) : null }
-						</div>
-						<div className="mmbb-editor__stack mmbb-editor__rule">
-							<Toggle
-								label={ __(
-									'Free gift',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								description={ __(
-									'Add a product at no charge once the box has enough items.',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								checked={ extras.free_gift.enabled }
-								onChange={ ( on ) =>
-									set( 'extras.free_gift.enabled', on )
-								}
-							/>
-							{ extras.free_gift.enabled ? (
-								<div className="mmbb-editor__pair">
-									<GiftProductField
-										value={ extras.free_gift.product_id }
-										error={
-											errors[
-												'extras.free_gift.product_id'
-											]
-										}
-										onChange={ ( id ) =>
-											set(
-												'extras.free_gift.product_id',
-												id
-											)
-										}
-									/>
-									<NumberField
-										label={ __(
-											'Unlocks at',
-											'productboxes-mix-and-match-box-builder'
-										) }
-										suffix={ __(
-											'items',
-											'productboxes-mix-and-match-box-builder'
-										) }
-										value={ extras.free_gift.min_items }
-										error={
-											errors[
-												'extras.free_gift.min_items'
-											]
-										}
-										help={
-											errors[
-												'extras.free_gift.min_items'
-											]
-												? undefined
-												: __(
-														'The gift goes in the cart with the box.',
-														'productboxes-mix-and-match-box-builder'
-												  )
-										}
-										onChange={ ( value ) =>
-											set(
-												'extras.free_gift.min_items',
-												value
-											)
-										}
-									/>
-								</div>
-							) : null }
-						</div>
-					</div>
-				</Card>
-			</div>
-
-			<div className="mmbb-editor__side mmbb-editor__side--sticky">
-				<PreviewCard draft={ draft } products={ previewProducts } />
-			</div>
+				</div>
+			</Card>
 		</div>
 	);
 }

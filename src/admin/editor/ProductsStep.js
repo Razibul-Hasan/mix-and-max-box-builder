@@ -17,7 +17,6 @@ import {
 import Media from '../../components/Media';
 import { getProducts, getTerms } from '../api';
 import { useDebouncedValue, useRequest, errorMessage } from '../hooks';
-import PreviewCard from './PreviewCard';
 import { moveItem, toNumber } from './state';
 
 const PER_PAGE = 20;
@@ -583,13 +582,7 @@ function ChosenList( { draft, dispatch, byId } ) {
 	);
 }
 
-export default function ProductsStep( {
-	draft,
-	errors,
-	dispatch,
-	catalog,
-	previewProducts,
-} ) {
+export default function ProductsStep( { draft, errors, dispatch, catalog } ) {
 	const { products } = draft.config;
 	const source = products.source;
 
@@ -606,86 +599,68 @@ export default function ProductsStep( {
 	};
 
 	return (
-		<div className="mmbb-editor__cols">
-			<div className="mmbb-editor__main">
-				<SegmentedControl
-					label={ __(
-						'Source',
-						'productboxes-mix-and-match-box-builder'
-					) }
-					options={ [
-						{
-							value: 'manual',
-							label: __(
-								'Pick products',
-								'productboxes-mix-and-match-box-builder'
-							),
-						},
-						{
-							value: 'category',
-							label: __(
-								'By category',
-								'productboxes-mix-and-match-box-builder'
-							),
-						},
-						{
-							value: 'tag',
-							label: __(
-								'By tag',
-								'productboxes-mix-and-match-box-builder'
-							),
-						},
-					] }
-					value={ source }
-					onChange={ pickSource }
-				/>
-				{ source === 'manual' ? (
-					<ProductPicker
-						draft={ draft }
-						errors={ errors }
-						dispatch={ dispatch }
-						remember={ catalog.remember }
-						byId={ catalog.byId }
-					/>
-				) : (
-					<TermPicker
-						draft={ draft }
-						errors={ errors }
-						dispatch={ dispatch }
-						source={ source }
-					/>
+		<div className="mmbb-editor__pane">
+			<SegmentedControl
+				label={ __(
+					'Source',
+					'productboxes-mix-and-match-box-builder'
 				) }
-			</div>
-
-			<div className="mmbb-editor__side mmbb-editor__side--sticky">
-				<PreviewCard draft={ draft } products={ previewProducts } />
-				{ source !== 'manual' ? (
-					<Notice
-						tone="info"
-						title={ __(
-							'Products follow your store',
+				options={ [
+					{
+						value: 'manual',
+						label: __(
+							'Pick products',
 							'productboxes-mix-and-match-box-builder'
-						) }
-					>
-						{ __(
-							'New products added to these terms appear in the box on their own.',
+						),
+					},
+					{
+						value: 'category',
+						label: __(
+							'By category',
 							'productboxes-mix-and-match-box-builder'
-						) }
-					</Notice>
-				) : null }
+						),
+					},
+					{
+						value: 'tag',
+						label: __(
+							'By tag',
+							'productboxes-mix-and-match-box-builder'
+						),
+					},
+				] }
+				value={ source }
+				onChange={ pickSource }
+			/>
+			{ source === 'manual' ? (
+				<ProductPicker
+					draft={ draft }
+					errors={ errors }
+					dispatch={ dispatch }
+					remember={ catalog.remember }
+					byId={ catalog.byId }
+				/>
+			) : (
+				<TermPicker
+					draft={ draft }
+					errors={ errors }
+					dispatch={ dispatch }
+					source={ source }
+				/>
+			) }
+			{ source !== 'manual' ? (
 				<Notice
 					tone="info"
 					title={ __(
-						'Sold-out products hide themselves',
+						'Products follow your store',
 						'productboxes-mix-and-match-box-builder'
 					) }
 				>
 					{ __(
-						'They come back when stock returns. Change this on the next step.',
+						'New products added to these terms appear in the box on their own.',
 						'productboxes-mix-and-match-box-builder'
 					) }
 				</Notice>
-			</div>
+			) : null }
 		</div>
 	);
 }

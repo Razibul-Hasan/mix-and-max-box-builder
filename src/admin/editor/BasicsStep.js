@@ -1,36 +1,32 @@
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import {
-	Badge,
-	Card,
-	Notice,
-	SegmentedControl,
-	TextField,
-	Toggle,
-	useMoney,
-} from '../../components';
+import { Card, SegmentedControl, TextField, Toggle } from '../../components';
 import { useAdmin } from '../context';
-import { tierSummary, typeSummary } from '../format';
-import PreviewCard from './PreviewCard';
 import { localInputToUtc, utcToLocalInput } from './time';
 
 const DEFAULT_COUNTDOWN_DAYS = 7;
 
-export default function BasicsStep( {
-	draft,
-	errors,
-	dispatch,
-	previewProducts,
-} ) {
-	const { timezone, money } = useAdmin();
-	const formatMoney = useMoney();
+/**
+ * The 1.0 Basics fields. The redesigned editor shows the name and copy under
+ * Design (`section="content"`) and the schedule under Discounts
+ * (`section="schedule"`).
+ *
+ * @param {Object} props
+ * @param {Object} props.draft    The draft.
+ * @param {Object} props.errors   Inline errors by path.
+ * @param {Object} props.dispatch Editor dispatch.
+ * @param {string} props.section  content, schedule, or both when left out.
+ */
+export default function BasicsStep( { draft, errors, dispatch, section } ) {
+	const { timezone } = useAdmin();
 	const { config } = draft;
 	const { schedule, design } = config;
 	const [ runs, setRuns ] = useState(
 		schedule.start || schedule.end ? 'between' : 'always'
 	);
 	const set = ( path, value ) => dispatch( { type: 'set', path, value } );
-	const decimals = Number.isInteger( money.decimals ) ? money.decimals : 2;
+	const showContent = section !== 'schedule';
+	const showSchedule = section !== 'content';
 
 	const pickRuns = ( value ) => {
 		setRuns( value );
@@ -42,8 +38,8 @@ export default function BasicsStep( {
 	};
 
 	return (
-		<div className="mmbb-editor__cols">
-			<div className="mmbb-editor__main">
+		<div className="mmbb-editor__pane">
+			{ showContent ? (
 				<Card
 					title={ __(
 						'Campaign',
@@ -100,7 +96,9 @@ export default function BasicsStep( {
 						/>
 					</div>
 				</Card>
+			) : null }
 
+			{ showSchedule ? (
 				<Card
 					title={ __(
 						'Schedule',
@@ -233,46 +231,7 @@ export default function BasicsStep( {
 						</div>
 					</div>
 				</Card>
-			</div>
-
-			<div className="mmbb-editor__side">
-				<PreviewCard draft={ draft } products={ previewProducts } />
-				<Card
-					title={ __(
-						'At a glance',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				>
-					<div className="mmbb-editor__stack">
-						<div className="mmbb-editor__badges">
-							<Badge tone="brand" icon="percent">
-								{ typeSummary( config, formatMoney, decimals ) }
-							</Badge>
-							{ tierSummary( config ) ? (
-								<Badge>{ tierSummary( config ) }</Badge>
-							) : null }
-						</div>
-						<p className="mmbb-editor__note">
-							{ __(
-								'Rules and tiers come from your template. Change them on step 3.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						</p>
-					</div>
-				</Card>
-				<Notice
-					tone="info"
-					title={ __(
-						'Dates follow your store time',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				>
-					{ __(
-						'WordPress › Settings › General sets the time zone.',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				</Notice>
-			</div>
+			) : null }
 		</div>
 	);
 }

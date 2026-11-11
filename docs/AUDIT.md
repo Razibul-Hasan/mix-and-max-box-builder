@@ -254,8 +254,9 @@ A campaign as the repository and REST return it: `{ id, title, post_status, paus
 
 ### Browser storage and JS globals
 
-- Globals: `window.mmbbAdmin`, `window.mmbbBuilders` (payload per instance id `mmbb-1`, `mmbb-2`, …), `window.mmbbMoneySettings`, `window.mmbbComponents`.
-- `localStorage`: `mmbb:checklist-dismissed`, `mmbb:editor:<campaign id>` (unsaved editor draft), `mmbb:editor:device`.
+- Globals: `window.mmbbAdmin`, `window.mmbbBuilders` (payload per instance id `mmbb-1`, `mmbb-2`, …), `window.mmbbMoneySettings`, `window.mmbbComponents`, and from Redesign Part 4 `window.mmbbPreview` (`{ boxId, origin }`, only on a verified editor preview page).
+- postMessage types (Redesign Part 4, editor ↔ preview iframe): `mmbb:preview:config` `{ boxId, config, payload }`, `mmbb:preview:ready`, `mmbb:preview:height` `{ height }`.
+- `localStorage`: `mmbb:checklist-dismissed`, `mmbb:editor:<campaign id>` (`{ pageId }`; from Redesign Part 4 also `draft` and `base`, the unsaved draft and the `modified` time of the save it started from), `mmbb:editor:device`.
 - `sessionStorage`: `mmbb:box:<campaign id>` (the shopper's picks), `mmbb:analytics-session`, `mmbb:view:<campaign id>`.
 - User meta: `mmbb_checklist_dismissed` (Home checklist hidden, per user; added in Redesign Part 3). 1.0 stored no user meta.
 
@@ -277,6 +278,7 @@ Every admin route uses `Base_Controller::permissions_check()`, which requires `m
 | POST | `/campaigns/<id>/duplicate` | |
 | POST | `/campaigns/<id>/publish` | `placement` new_page / existing_page / none, `page_id`, `page_title`, `page_slug` |
 | GET | `/campaigns/<id>/preview` | Storefront payload for the admin preview |
+| POST | `/campaigns/<id>/preview` | Redesign Part 4. Payload for an unsaved draft (`title`, `config`), sanitized like a PUT and never stored |
 | GET | `/products` | `search`, `category`, `tag`, `include`, paging |
 | GET | `/terms` | Product categories and tags |
 | GET | `/pages` | Pages for placement |
@@ -293,7 +295,11 @@ No route uses `__return_true`.
 
 `wc-ajax=mmbb_add_box` (`Add_To_Cart::handle_add`). Nonce action `mmbb_add_box` in the `nonce` field. POST fields: `campaign_id`, `items[]` (`product_id`, `variation_id`, `qty`), `size`, `gift[enabled]`, `gift[message]`, `analytics_session`. Prices from the browser are never read. There are no `wp_ajax_*` actions.
 
-Nonce actions: `mmbb_add_box`, `mmbb_edit_box`, `mmbb_track`, plus `wp_rest`.
+Nonce actions: `mmbb_add_box`, `mmbb_edit_box`, `mmbb_track`, plus `wp_rest`. From Redesign Part 4, `mmbb_preview_<id>` for the editor preview.
+
+### Editor preview (Redesign Part 4)
+
+Storefront URL from `preview_url` in every campaign response: the page that shows the box, else `home_url( '/' )`, plus `mmbb_preview=<id>` and `_wpnonce`. `StorefrontPreview` checks both and `manage_woocommerce` on `template_redirect`; anything else renders the page normally.
 
 ### Shortcode
 
@@ -329,7 +335,7 @@ Scheduled action: `mmbb_rollup_daily` (Action Scheduler, group `mmbb`).
 | Analytics | `admin.php?page=mmbb-analytics` |
 | Settings | `admin.php?page=mmbb-settings` |
 
-Mount point: `<div id="mmbb-admin" class="mmbb-root" data-page="…">`. Body class on our screens: `mmbb-admin-page`. Storefront wrapper: `<div class="mmbb-root mmbb-builder" data-mmbb-id="mmbb-1" data-campaign="12">`.
+Mount point: `<div id="mmbb-admin" class="mmbb-root" data-page="…">`. Body class on our screens: `mmbb-admin-page`; on the box editor also `mmbb-is-fullscreen` (Redesign Part 4). Preview wrapper adds `data-mmbb-preview="1"`. Storefront wrapper: `<div class="mmbb-root mmbb-builder" data-mmbb-id="mmbb-1" data-campaign="12">`.
 
 ## Features today vs redesign
 

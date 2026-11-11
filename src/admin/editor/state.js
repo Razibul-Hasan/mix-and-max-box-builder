@@ -1,6 +1,36 @@
 import { __ } from '@wordpress/i18n';
 
-export const STEPS = [ 'basics', 'products', 'rules', 'design', 'publish' ];
+/** The editor's three steps, in order. Publish is a dialog, not a step. */
+export const STEPS = [ 'products', 'discounts', 'design' ];
+
+/** Most undo snapshots kept. */
+export const HISTORY_LIMIT = 50;
+
+// Edits to the same field closer together than this are one undo step.
+const COALESCE_MS = 1000;
+
+/**
+ * The step for a `step` query arg, including the 1.0 editor's five step names.
+ *
+ * @param {string|null} value Query arg value.
+ * @return {string} products, discounts, design, publish or published.
+ */
+export function stepFromQuery( value ) {
+	switch ( value ) {
+		case 'basics':
+			return 'design';
+		case 'rules':
+			return 'discounts';
+		case 'products':
+		case 'discounts':
+		case 'design':
+		case 'publish':
+		case 'published':
+			return value;
+		default:
+			return 'products';
+	}
+}
 
 const MAX_CAPACITY = 48;
 const MAX_PERCENT = 90;
@@ -86,16 +116,48 @@ function same( a, b ) {
 
 export function initEditor( campaign ) {
 	const copy = snapshot( campaign );
-	return { saved: copy, draft: copy, dirty: false };
+	return {
+		saved: copy,
+		draft: copy,
+		dirty: false,
+		past: [],
+		future: [],
+		lastKey: null,
+		lastAt: 0,
+	};
 }
 
 function withDraft( state, draft ) {
 	return { ...state, draft, dirty: ! same( draft, state.saved ) };
 }
 
+// A change the merchant made: one undo snapshot, unless it continues the last edit.
+function edit( state, draft, key, time ) {
+	if ( same( draft, state.draft ) ) {
+		return state;
+	}
+	const timed = typeof time === 'number';
+	const continues =
+		timed &&
+		key !== null &&
+		key === state.lastKey &&
+		time - state.lastAt < COALESCE_MS;
+	return {
+		...withDraft( state, draft ),
+		past: continues
+			? state.past
+			: [ ...state.past, state.draft ].slice( -HISTORY_LIMIT ),
+		future: [],
+		lastKey: timed ? key : null,
+		lastAt: timed ? time : 0,
+	};
+}
+
 /**
- * The editor's one reducer: the saved copy, the draft the merchant is editing
- * and whether they differ.
+ * The editor's one reducer: the saved copy, the draft the merchant is editing,
+ * whether they differ, and the undo and redo stacks (up to 50 snapshots each).
+ * Edits to the same field within a second are one undo step when the action
+ * carries a `time`.
  *
  * @param {Object} state  Current state.
  * @param {Object} action Action.
@@ -104,23 +166,76 @@ function withDraft( state, draft ) {
 export function editorReducer( state, action ) {
 	switch ( action.type ) {
 		case 'set':
-			return withDraft( state, {
-				...state.draft,
-				config: setIn( state.draft.config, action.path, action.value ),
-			} );
+			return edit(
+				state,
+				{
+					...state.draft,
+					config: setIn(
+						state.draft.config,
+						action.path,
+						action.value
+					),
+				},
+				'set:' + action.path,
+				action.time
+			);
 		case 'title':
-			return withDraft( state, { ...state.draft, title: action.value } );
+			return edit(
+				state,
+				{ ...state.draft, title: action.value },
+				'title',
+				action.time
+			);
 		case 'discard':
-			return { ...state, draft: state.saved, dirty: false };
+			return edit( state, state.saved, null );
+		case 'undo': {
+			if ( ! state.past.length ) {
+				return state;
+			}
+			return {
+				...withDraft( state, state.past[ state.past.length - 1 ] ),
+				past: state.past.slice( 0, -1 ),
+				future: [ state.draft, ...state.future ].slice(
+					0,
+					HISTORY_LIMIT
+				),
+				lastKey: null,
+				lastAt: 0,
+			};
+		}
+		case 'redo': {
+			if ( ! state.future.length ) {
+				return state;
+			}
+			return {
+				...withDraft( state, state.future[ 0 ] ),
+				past: [ ...state.past, state.draft ].slice( -HISTORY_LIMIT ),
+				future: state.future.slice( 1 ),
+				lastKey: null,
+				lastAt: 0,
+			};
+		}
+		case 'restore':
+			// A draft kept in the browser from before a reload.
+			return {
+				...withDraft( state, action.draft ),
+				past: [],
+				future: [],
+				lastKey: null,
+				lastAt: 0,
+			};
 		case 'saved': {
 			// The server's sanitized copy becomes the saved copy. Edits made while the
-			// request was in flight stay in the draft.
+			// request was in flight stay in the draft. Undo history is kept.
 			const saved = snapshot( action.campaign );
 			const untouched = action.sent && same( state.draft, action.sent );
 			return {
+				...state,
 				saved,
 				draft: untouched ? saved : state.draft,
 				dirty: untouched ? false : ! same( state.draft, saved ),
+				lastKey: null,
+				lastAt: 0,
 			};
 		}
 		default:
@@ -131,6 +246,49 @@ export function editorReducer( state, action ) {
 // The payload a save sends.
 export function payloadFor( draft ) {
 	return { title: draft.title, config: draft.config };
+}
+
+/**
+ * The record kept in `mmbb:editor:<id>`: the page picked for publishing and,
+ * while there are unsaved edits, the draft and the save it started from.
+ *
+ * @param {number}      pageId Page picked for publishing.
+ * @param {Object|null} draft  Unsaved draft, or null.
+ * @param {string}      base   `modified` of the saved box the draft started from.
+ * @return {string} JSON.
+ */
+export function draftRecord( pageId, draft, base ) {
+	return JSON.stringify( draft ? { pageId, draft, base } : { pageId } );
+}
+
+/**
+ * The unsaved draft kept in the browser, when it still belongs to the saved box.
+ * A draft made before a later save (here or in another tab) is ignored.
+ *
+ * @param {string} raw      Stored JSON.
+ * @param {Object} campaign Box from the server.
+ * @return {Object|null} Draft ({ title, config }), or null.
+ */
+export function storedDraft( raw, campaign ) {
+	let record;
+	try {
+		record = JSON.parse( raw );
+	} catch ( e ) {
+		return null;
+	}
+	if (
+		! record ||
+		typeof record !== 'object' ||
+		record.base !== campaign.modified ||
+		! record.draft ||
+		typeof record.draft.title !== 'string' ||
+		! record.draft.config ||
+		typeof record.draft.config !== 'object'
+	) {
+		return null;
+	}
+	const draft = { title: record.draft.title, config: record.draft.config };
+	return same( draft, snapshot( campaign ) ) ? null : draft;
 }
 
 // ---- Validation ------------------------------------------------------------
@@ -198,14 +356,21 @@ function validateRows( rows, key, config, errors ) {
 	} );
 }
 
+function titleRules( draft, errors ) {
+	if ( ! draft.title.trim() ) {
+		errors.title = __(
+			'Give the campaign a name.',
+			'productboxes-mix-and-match-box-builder'
+		);
+	}
+}
+
 const RULES = {
 	basics( draft, errors ) {
-		if ( ! draft.title.trim() ) {
-			errors.title = __(
-				'Give the campaign a name.',
-				'productboxes-mix-and-match-box-builder'
-			);
-		}
+		titleRules( draft, errors );
+		RULES.schedule( draft, errors );
+	},
+	schedule( draft, errors ) {
 		const { start, end } = draft.config.schedule;
 		if ( start && end && new Date( end ) <= new Date( start ) ) {
 			errors[ 'schedule.end' ] = __(
@@ -341,14 +506,20 @@ const RULES = {
 			}
 		}
 	},
-	design() {},
+	discounts( draft, errors ) {
+		RULES.schedule( draft, errors );
+		RULES.rules( draft, errors );
+	},
+	design( draft, errors ) {
+		titleRules( draft, errors );
+	},
 	publish() {},
 };
 
 /**
  * Inline errors for one step.
  *
- * @param {string} step  basics, products, rules, design or publish.
+ * @param {string} step  products, discounts or design (or the 1.0 names basics, rules).
  * @param {Object} draft The draft ({ title, config }).
  * @return {Object} Messages keyed by field path. Empty when the step is valid.
  */
@@ -384,16 +555,13 @@ export function validateAll( draft ) {
  * @return {string} Step name.
  */
 export function stepForPath( path ) {
-	if ( path === 'title' || path.indexOf( 'schedule' ) === 0 ) {
-		return 'basics';
+	if ( path === 'title' || path.indexOf( 'design' ) === 0 ) {
+		return 'design';
 	}
 	if ( path.indexOf( 'products' ) === 0 ) {
 		return 'products';
 	}
-	if ( path.indexOf( 'design' ) === 0 ) {
-		return 'design';
-	}
-	return 'rules';
+	return 'discounts';
 }
 
 /**

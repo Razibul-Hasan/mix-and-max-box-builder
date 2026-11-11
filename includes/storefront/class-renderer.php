@@ -31,14 +31,16 @@ final class Renderer {
 	 * @return string HTML that is already escaped.
 	 */
 	public static function render( $campaign_id, array $view = array(), $block_wrapper = false ) {
-		if ( ! Settings::get( 'enabled' ) ) {
+		// The editor's preview shows its box whatever the store settings and the box status say.
+		$preview = Preview::is_preview_of( absint( $campaign_id ) );
+		if ( ! $preview && ! Settings::get( 'enabled' ) ) {
 			return self::notice_for_managers( $campaign_id, __( 'Box builders are disabled in the plugin settings.', 'productboxes-mix-and-match-box-builder' ), false );
 		}
 		$campaign = ( new Campaign_Repository() )->find( absint( $campaign_id ) );
 		if ( ! $campaign ) {
 			return self::notice_for_managers( $campaign_id, __( 'This box builder points to a campaign that no longer exists.', 'productboxes-mix-and-match-box-builder' ), false );
 		}
-		if ( ! Status::is_live( $campaign['status'] ) ) {
+		if ( ! $preview && ! Status::is_live( $campaign['status'] ) ) {
 			return self::notice_for_managers( $campaign['id'], __( 'This campaign is not live, so shoppers see nothing here.', 'productboxes-mix-and-match-box-builder' ), true );
 		}
 		if ( ! Storefront::enqueue() ) {
@@ -47,7 +49,13 @@ final class Renderer {
 
 		++self::$instances;
 		$instance = 'mmbb-' . self::$instances;
-		$payload  = Payload::build( $campaign, array( 'view' => $view ) );
+		$payload  = Payload::build(
+			$campaign,
+			array(
+				'view'    => $view,
+				'preview' => $preview,
+			)
+		);
 
 		wp_add_inline_script(
 			Storefront::HANDLE,
@@ -60,6 +68,9 @@ final class Renderer {
 			'data-mmbb-id'  => $instance,
 			'data-campaign' => (string) $campaign['id'],
 		);
+		if ( $preview ) {
+			$attributes['data-mmbb-preview'] = '1';
+		}
 		if ( $payload['colors']['dark'] ) {
 			$attributes['data-theme'] = 'dark';
 		}

@@ -337,3 +337,16 @@
 		}
 	}
 }
+
+/* Editor preview only: shown inside the iframe so nobody mistakes it for the live page. */
+.mmbb-root .mmbb-preview-note {
+	display: inline-flex;
+	align-items: center;
+	margin: 0 0 var(--space-3);
+	padding: var(--space-1) var(--space-3);
+	border-radius: var(--radius-pill);
+	background: var(--warn-soft);
+	color: var(--warn);
+	font-size: 12px;
+	font-weight: 600;
+}

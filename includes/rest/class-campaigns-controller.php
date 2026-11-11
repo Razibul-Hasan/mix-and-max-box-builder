@@ -17,6 +17,7 @@ use MixMax\BoxBuilder\Campaigns\Publisher;
 use MixMax\BoxBuilder\Campaigns\Status;
 use MixMax\BoxBuilder\Campaigns\Templates;
 use MixMax\BoxBuilder\Storefront\Payload;
+use MixMax\BoxBuilder\Storefront\Preview;
 
 /** List, create, edit, duplicate, publish, preview and bulk-edit campaigns. */
 final class Campaigns_Controller extends Base_Controller {
@@ -225,6 +226,24 @@ final class Campaigns_Controller extends Base_Controller {
 					'methods'             => \WP_REST_Server::READABLE,
 					'callback'            => array( $this, 'preview_item' ),
 					'permission_callback' => $permission,
+				),
+				// The editor's live preview: the payload for an unsaved draft. Nothing is stored.
+				array(
+					'methods'             => \WP_REST_Server::CREATABLE,
+					'callback'            => array( $this, 'preview_item' ),
+					'permission_callback' => $permission,
+					'args'                => array(
+						'title'  => array(
+							'description'       => __( 'Draft box name.', 'productboxes-mix-and-match-box-builder' ),
+							'type'              => 'string',
+							'maxLength'         => 200,
+							'sanitize_callback' => 'sanitize_text_field',
+						),
+						'config' => array(
+							'description' => __( 'Draft config. Sanitized like a save, never stored.', 'productboxes-mix-and-match-box-builder' ),
+							'type'        => 'object',
+						),
+					),
 				),
 				'schema' => array( $this, 'get_preview_schema' ),
 			)
@@ -471,7 +490,29 @@ final class Campaigns_Controller extends Base_Controller {
 		if ( is_wp_error( $campaign ) ) {
 			return $campaign;
 		}
-		return rest_ensure_response( Payload::build( $campaign, array( 'preview' => true ) ) );
+		$fresh = false;
+		if ( 'POST' === $request->get_method() ) {
+			$config = $request['config'];
+			if ( is_array( $config ) ) {
+				// The same sanitizing as a full save (PUT), without writing anything.
+				$container                                  = $campaign['config']['container_product_id'];
+				$campaign['config']                         = Config::sanitize( $config, Campaign_Repository::defaults() );
+				$campaign['config']['container_product_id'] = $container;
+				$fresh                                      = true;
+			}
+			if ( $request->has_param( 'title' ) ) {
+				$campaign['title'] = (string) $request['title'];
+			}
+		}
+		return rest_ensure_response(
+			Payload::build(
+				$campaign,
+				array(
+					'preview' => true,
+					'fresh'   => $fresh,
+				)
+			)
+		);
 	}
 
 	/**
@@ -687,6 +728,13 @@ final class Campaigns_Controller extends Base_Controller {
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => true,
 			),
+			'preview_url' => array(
+				'description' => __( 'Storefront address of the editor preview, with its nonce.', 'productboxes-mix-and-match-box-builder' ),
+				'type'        => 'string',
+				'format'      => 'uri',
+				'context'     => array( 'view', 'edit' ),
+				'readonly'    => true,
+			),
 			'created'     => array(
 				'description' => __( 'Created, UTC.', 'productboxes-mix-and-match-box-builder' ),
 				'type'        => 'string',
@@ -744,6 +792,7 @@ final class Campaigns_Controller extends Base_Controller {
 				isset( $totals[ $campaign['id'] ] ) ? $totals[ $campaign['id'] ] : array()
 			),
 			'edit_url'    => admin_url( 'admin.php?page=mmbb-campaigns&action=edit&id=' . $campaign['id'] ),
+			'preview_url' => Preview::url( $campaign ),
 			'created'     => $campaign['created'],
 			'modified'    => $campaign['modified'],
 		);

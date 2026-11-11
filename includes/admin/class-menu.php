@@ -116,8 +116,26 @@ final class Menu {
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 		if ( $screen && in_array( $screen->id, self::$hooks, true ) ) {
 			$classes .= ' mmbb-admin-page';
+			if ( self::is_editor( $screen->id ) ) {
+				// The box editor fills the screen, like the site editor.
+				$classes .= ' mmbb-is-fullscreen';
+			}
 		}
 		return $classes;
+	}
+
+	/**
+	 * Whether the current request opens the box editor (Boxes, action=edit with an id).
+	 *
+	 * @param string $screen_id Current screen id.
+	 * @return bool
+	 */
+	public static function is_editor( $screen_id ) {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only routing; nothing changes.
+		$action = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : '';
+		$id     = isset( $_GET['id'] ) ? absint( wp_unslash( $_GET['id'] ) ) : 0;
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		return isset( self::$hooks['campaigns'] ) && self::$hooks['campaigns'] === $screen_id && 'edit' === $action && $id > 0;
 	}
 
 	/**
