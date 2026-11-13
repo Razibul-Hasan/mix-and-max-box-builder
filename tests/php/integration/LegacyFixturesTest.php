@@ -199,16 +199,32 @@ class LegacyFixturesTest extends \WP_UnitTestCase {
 		return is_array( $decoded ) ? $decoded : array();
 	}
 
-	/** The upgrade leaves the stored rows byte for byte as 1.0.0 wrote them. */
+	/** The upgrade keeps every legacy value and adds the per-box coupon rule once. */
 	public function test_upgrade_keeps_the_stored_rows() {
 		foreach ( array( 'tiered', 'fixed', 'bundle' ) as $slug ) {
-			$box = $this->fixture( 'box-' . $slug . '.json' );
-			$this->assertSame( $box['meta']['_mmbb_config'], get_post_meta( $box['post']['ID'], '_mmbb_config', true ), $slug );
+			$box    = $this->fixture( 'box-' . $slug . '.json' );
+			$stored = json_decode( get_post_meta( $box['post']['ID'], '_mmbb_config', true ), true );
+			$legacy = json_decode( $box['meta']['_mmbb_config'], true );
+			$this->assert_kept( $legacy, $stored, $slug );
+			$this->assertTrue( $stored['box']['allow_coupons'], $slug );
 			$this->assertSame( $box['post']['post_status'], get_post_status( $box['post']['ID'] ), $slug );
 		}
 		$settings = $this->fixture( 'settings.json' );
 		$this->assertSame( $settings['mmbb_settings'], get_option( Settings::OPTION ) );
 		$this->assertSame( Installer::DB_VERSION, get_option( 'mmbb_db_version' ) );
+	}
+
+	/** Opening and saving a migrated fixture unchanged preserves its config bytes. */
+	public function test_unchanged_fixture_save_is_byte_identical() {
+		$repository = new Campaign_Repository();
+		foreach ( array( 'tiered', 'fixed', 'bundle' ) as $slug ) {
+			$box      = $this->fixture( 'box-' . $slug . '.json' );
+			$id       = $box['post']['ID'];
+			$before   = get_post_meta( $id, '_mmbb_config', true );
+			$campaign = $repository->find( $id );
+			$repository->save( $id, $campaign['config'], $campaign['title'], true );
+			$this->assertSame( $before, get_post_meta( $id, '_mmbb_config', true ), $slug );
+		}
 	}
 
 	/** Every setting 1.0.0 saved reads back with the same value. */

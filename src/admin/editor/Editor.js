@@ -611,6 +611,18 @@ function EditorBody( { initial } ) {
 					>
 						<div className="mmbb-ed__side-head">
 							<h2>{ sideLabels()[ step ] }</h2>
+							{ step === 'products' ? (
+								<p>
+									{ sprintf(
+										/* translators: %d: Number of products picked. */
+										__(
+											'%d products picked. Shoppers see them in this order.',
+											'productboxes-mix-and-match-box-builder'
+										),
+										draft.config.products.ids.length
+									) }
+								</p>
+							) : null }
 						</div>
 						<div className="mmbb-ed__side-scroll">
 							{ saveError && ! saving ? (

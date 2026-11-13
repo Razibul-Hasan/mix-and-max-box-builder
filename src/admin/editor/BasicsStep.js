@@ -1,6 +1,13 @@
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Card, SegmentedControl, TextField, Toggle } from '../../components';
+import {
+	Panel,
+	PanelBody,
+	RadioControl,
+	TextControl,
+	ToggleControl,
+} from '@wordpress/components';
+import { Card, TextField } from '../../components';
 import { useAdmin } from '../context';
 import { localInputToUtc, utcToLocalInput } from './time';
 
@@ -99,138 +106,149 @@ export default function BasicsStep( { draft, errors, dispatch, section } ) {
 			) : null }
 
 			{ showSchedule ? (
-				<Card
-					title={ __(
-						'Schedule',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				>
-					<div className="mmbb-editor__stack">
-						<SegmentedControl
-							label={ __(
-								'Runs',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							options={ [
-								{
-									value: 'always',
-									label: __(
-										'Always on',
-										'productboxes-mix-and-match-box-builder'
-									),
-								},
-								{
-									value: 'between',
-									label: __(
-										'Between dates',
-										'productboxes-mix-and-match-box-builder'
-									),
-								},
-							] }
-							value={ runs }
-							onChange={ pickRuns }
-						/>
-						{ runs === 'between' ? (
-							<div className="mmbb-editor__pair">
-								<TextField
-									type="datetime-local"
-									label={ __(
-										'Starts',
-										'productboxes-mix-and-match-box-builder'
-									) }
-									value={ utcToLocalInput(
-										schedule.start,
-										timezone
-									) }
-									onChange={ ( event ) =>
-										set(
-											'schedule.start',
-											localInputToUtc(
-												event.target.value,
-												timezone
-											)
-										)
-									}
-								/>
-								<TextField
-									type="datetime-local"
-									label={ __(
-										'Ends',
-										'productboxes-mix-and-match-box-builder'
-									) }
-									value={ utcToLocalInput(
-										schedule.end,
-										timezone
-									) }
-									error={ errors[ 'schedule.end' ] }
-									onChange={ ( event ) =>
-										set(
-											'schedule.end',
-											localInputToUtc(
-												event.target.value,
-												timezone
-											)
-										)
-									}
-								/>
-							</div>
-						) : null }
-						<div className="mmbb-editor__rule">
-							<Toggle
+				<Panel>
+					<PanelBody
+						title={ __(
+							'Schedule',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					>
+						<div className="mmbb-editor__stack">
+							<RadioControl
 								label={ __(
-									'Countdown timer',
+									'Runs',
 									'productboxes-mix-and-match-box-builder'
 								) }
-								description={
-									runs === 'between'
-										? __(
-												'Shows above the builder in the last 7 days, counting to the end date above.',
-												'productboxes-mix-and-match-box-builder'
-										  )
-										: __(
-												'Shows above the builder and counts to the time you pick. It hides once that time passes.',
-												'productboxes-mix-and-match-box-builder'
-										  )
-								}
-								checked={ schedule.countdown_days > 0 }
-								onChange={ ( on ) =>
-									set(
-										'schedule.countdown_days',
-										on ? DEFAULT_COUNTDOWN_DAYS : 0
-									)
-								}
+								options={ [
+									{
+										value: 'always',
+										label: __(
+											'Always',
+											'productboxes-mix-and-match-box-builder'
+										),
+									},
+									{
+										value: 'between',
+										label: __(
+											'Between dates',
+											'productboxes-mix-and-match-box-builder'
+										),
+									},
+								] }
+								onChange={ pickRuns }
+								selected={ runs }
 							/>
-							{ runs === 'always' &&
-							schedule.countdown_days > 0 ? (
-								<TextField
-									type="datetime-local"
-									label={ __(
-										'Count down to',
-										'productboxes-mix-and-match-box-builder'
-									) }
-									value={ utcToLocalInput(
-										schedule.countdown_end,
-										timezone
-									) }
-									error={ errors[ 'schedule.countdown_end' ] }
-									help={ __(
-										'The campaign stays on after this. Only the timer stops.',
-										'productboxes-mix-and-match-box-builder'
-									) }
-									onChange={ ( event ) =>
-										set(
-											'schedule.countdown_end',
-											localInputToUtc(
-												event.target.value,
-												timezone
+							{ runs === 'between' ? (
+								<div className="mmbb-editor__pair">
+									<TextControl
+										type="datetime-local"
+										label={ __(
+											'Starts',
+											'productboxes-mix-and-match-box-builder'
+										) }
+										value={ utcToLocalInput(
+											schedule.start,
+											timezone
+										) }
+										__next40pxDefaultSize
+										__nextHasNoMarginBottom
+										onChange={ ( value ) =>
+											set(
+												'schedule.start',
+												localInputToUtc(
+													value,
+													timezone
+												)
 											)
+										}
+									/>
+									<TextControl
+										type="datetime-local"
+										label={ __(
+											'Ends',
+											'productboxes-mix-and-match-box-builder'
+										) }
+										value={ utcToLocalInput(
+											schedule.end,
+											timezone
+										) }
+										error={ errors[ 'schedule.end' ] }
+										__next40pxDefaultSize
+										__nextHasNoMarginBottom
+										onChange={ ( value ) =>
+											set(
+												'schedule.end',
+												localInputToUtc(
+													value,
+													timezone
+												)
+											)
+										}
+									/>
+								</div>
+							) : null }
+							<div className="mmbb-editor__rule">
+								<ToggleControl
+									label={ __(
+										'Countdown timer',
+										'productboxes-mix-and-match-box-builder'
+									) }
+									description={
+										runs === 'between'
+											? __(
+													'Shows above the builder in the last 7 days, counting to the end date above.',
+													'productboxes-mix-and-match-box-builder'
+											  )
+											: __(
+													'Shows above the builder and counts to the time you pick. It hides once that time passes.',
+													'productboxes-mix-and-match-box-builder'
+											  )
+									}
+									checked={ schedule.countdown_days > 0 }
+									onChange={ ( on ) =>
+										set(
+											'schedule.countdown_days',
+											on ? DEFAULT_COUNTDOWN_DAYS : 0
 										)
 									}
+									__nextHasNoMarginBottom
 								/>
-							) : null }
+								{ runs === 'always' &&
+								schedule.countdown_days > 0 ? (
+									<TextControl
+										type="datetime-local"
+										label={ __(
+											'Count down to',
+											'productboxes-mix-and-match-box-builder'
+										) }
+										value={ utcToLocalInput(
+											schedule.countdown_end,
+											timezone
+										) }
+										error={
+											errors[ 'schedule.countdown_end' ]
+										}
+										help={ __(
+											'The campaign stays on after this. Only the timer stops.',
+											'productboxes-mix-and-match-box-builder'
+										) }
+										__next40pxDefaultSize
+										__nextHasNoMarginBottom
+										onChange={ ( value ) =>
+											set(
+												'schedule.countdown_end',
+												localInputToUtc(
+													value,
+													timezone
+												)
+											)
+										}
+									/>
+								) : null }
+							</div>
 						</div>
-					</div>
-				</Card>
+					</PanelBody>
+				</Panel>
 			) : null }
 		</div>
 	);

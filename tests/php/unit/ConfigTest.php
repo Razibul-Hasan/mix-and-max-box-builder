@@ -101,6 +101,14 @@ class ConfigTest extends TestCase {
 		$this->assertSame( 1, $box['min_items'] );
 	}
 
+	/** The per-box coupon switch is a strict boolean and survives partial saves. */
+	public function test_box_coupon_rule() {
+		$config = Config::sanitize( array( 'box' => array( 'allow_coupons' => 'yes' ) ) );
+		$this->assertTrue( $config['box']['allow_coupons'] );
+		$this->assertTrue( Config::sanitize( array(), $config )['box']['allow_coupons'] );
+		$this->assertFalse( Config::sanitize( array( 'box' => array( 'allow_coupons' => 'no' ) ), $config )['box']['allow_coupons'] );
+	}
+
 	/** Lowering the capacity re-clamps what depends on it. */
 	public function test_capacity_reclamps_dependants() {
 		$base   = Config::sanitize(

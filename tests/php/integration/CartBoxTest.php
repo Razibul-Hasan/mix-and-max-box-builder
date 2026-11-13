@@ -422,7 +422,7 @@ class CartBoxTest extends \WP_UnitTestCase {
 		$this->assertSame( 'Happy holidays', $line['mmbb_box']['gift']['message'] );
 	}
 
-	/** Coupons skip box lines unless the merchant allows them. */
+	/** Coupons skip box lines unless this campaign allows them. */
 	public function test_coupons_are_excluded_by_default() {
 		$this->add();
 		$line   = $this->box_line();
@@ -430,7 +430,9 @@ class CartBoxTest extends \WP_UnitTestCase {
 
 		$this->assertFalse( apply_filters( 'woocommerce_coupon_is_valid_for_product', true, $line['data'], $coupon, $line ) );
 
-		Settings::update( array( 'allow_coupons' => true ) );
+		$config                         = $this->campaign['config'];
+		$config['box']['allow_coupons'] = true;
+		$this->campaign                 = $this->repo->save( $this->campaign['id'], $config );
 		$this->assertTrue( apply_filters( 'woocommerce_coupon_is_valid_for_product', true, $line['data'], $coupon, $line ) );
 	}
 

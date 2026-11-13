@@ -1,10 +1,14 @@
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import {
+	Panel,
+	PanelBody,
+	RadioControl,
+	RangeControl,
+} from '@wordpress/components';
+import {
 	Badge,
 	Button,
-	Card,
-	ChoiceCard,
 	Icon,
 	Notice,
 	QuantityStepper,
@@ -17,6 +21,7 @@ import {
 } from '../../components';
 import { toMinor } from '../../shared/pricing';
 import { useAdmin } from '../context';
+import { NumberControl } from '../components/wp';
 import { NumberField, previewTiers, tierLabel } from './fields';
 import GiftProductField from './GiftProductField';
 import { toNumber } from './state';
@@ -103,7 +108,7 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 	const readTiers = previewTiers( rows, formatMoney, convert );
 
 	return (
-		<Card
+		<PanelBody
 			title={
 				isSizes
 					? __(
@@ -115,19 +120,20 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 							'productboxes-mix-and-match-box-builder'
 					  )
 			}
-			subtitle={
-				isSizes
-					? __(
-							'Shoppers pick one size and fill every slot.',
-							'productboxes-mix-and-match-box-builder'
-					  )
-					: __(
-							'Each tier unlocks when the box reaches its item count.',
-							'productboxes-mix-and-match-box-builder'
-					  )
-			}
+			initialOpen
 		>
 			<div className="mmbb-editor__stack">
+				<p className="mmbb-editor__panel-description">
+					{ isSizes
+						? __(
+								'Shoppers pick one size and fill every slot.',
+								'productboxes-mix-and-match-box-builder'
+						  )
+						: __(
+								'Each tier unlocks when the box reaches its item count.',
+								'productboxes-mix-and-match-box-builder'
+						  ) }
+				</p>
 				<SegmentedControl
 					size="sm"
 					label={ __(
@@ -198,7 +204,7 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 												<span>{ index + 1 }</span>
 											</td>
 											<td>
-												<NumberField
+												<NumberControl
 													aria-label={ sprintf(
 														/* translators: %d: Row number. */
 														__(
@@ -212,9 +218,13 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 														'productboxes-mix-and-match-box-builder'
 													) }
 													value={ row.qty }
-													error={
+													help={
 														errors[ base + '.qty' ]
 													}
+													min={ 1 }
+													max={ capacity }
+													__next40pxDefaultSize
+													__nextHasNoMarginBottom
 													onChange={ ( value ) =>
 														set(
 															base + '.qty',
@@ -224,7 +234,7 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 												/>
 											</td>
 											<td>
-												<NumberField
+												<NumberControl
 													aria-label={ sprintf(
 														/* translators: %d: Row number. */
 														__(
@@ -246,11 +256,14 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 															: undefined
 													}
 													value={ row.value }
-													error={
+													help={
 														errors[
 															base + '.value'
 														]
 													}
+													min={ 0 }
+													__next40pxDefaultSize
+													__nextHasNoMarginBottom
 													onChange={ ( value ) =>
 														set(
 															base + '.value',
@@ -383,7 +396,7 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 					</div>
 				) : null }
 			</div>
-		</Card>
+		</PanelBody>
 	);
 }
 
@@ -401,71 +414,56 @@ export default function RulesStep( { draft, errors, dispatch } ) {
 	};
 
 	return (
-		<div className="mmbb-editor__pane">
-			<Card
+		<Panel className="mmbb-editor__pane">
+			<PanelBody
 				title={ __(
 					'Campaign type',
 					'productboxes-mix-and-match-box-builder'
 				) }
-				subtitle={ __(
-					'How the discount works. You can switch any time before the first order.',
-					'productboxes-mix-and-match-box-builder'
-				) }
+				initialOpen
 			>
 				<div className="mmbb-editor__stack mmbb-editor__stack--tight">
-					<ChoiceCard
-						name="type"
-						value="tiered"
-						selected={ config.type === 'tiered' }
-						onSelect={ pickType }
-						icon="percent"
-						title={ __(
-							'Tiered mix',
+					<p className="mmbb-editor__panel-description">
+						{ __(
+							'How the discount works. You can switch any time before the first order.',
 							'productboxes-mix-and-match-box-builder'
 						) }
-						description={ __(
-							'The more items in the box, the bigger the discount. Best for snacks and samplers.',
+					</p>
+					<RadioControl
+						label={ __(
+							'Discount type',
 							'productboxes-mix-and-match-box-builder'
 						) }
-						tag={ __(
-							'Top seller',
-							'productboxes-mix-and-match-box-builder'
-						) }
-					/>
-					<ChoiceCard
-						name="type"
-						value="fixed"
-						selected={ config.type === 'fixed' }
-						onSelect={ pickType }
-						icon="box"
-						title={ __(
-							'Fixed box',
-							'productboxes-mix-and-match-box-builder'
-						) }
-						description={ __(
-							'Shoppers pick a size (4, 6, 12) and fill every slot. Each size has its own price.',
-							'productboxes-mix-and-match-box-builder'
-						) }
-					/>
-					<ChoiceCard
-						name="type"
-						value="bundle"
-						selected={ config.type === 'bundle' }
-						onSelect={ pickType }
-						icon="tag"
-						title={ __(
-							'Bundle price',
-							'productboxes-mix-and-match-box-builder'
-						) }
-						description={ __(
-							'Any set number of items for one price, like 5 for 25.',
-							'productboxes-mix-and-match-box-builder'
-						) }
+						selected={ config.type }
+						onChange={ pickType }
+						options={ [
+							{
+								value: 'tiered',
+								label: __(
+									'Tiered mix',
+									'productboxes-mix-and-match-box-builder'
+								),
+							},
+							{
+								value: 'fixed',
+								label: __(
+									'Fixed box',
+									'productboxes-mix-and-match-box-builder'
+								),
+							},
+							{
+								value: 'bundle',
+								label: __(
+									'Bundle price',
+									'productboxes-mix-and-match-box-builder'
+								),
+							},
+						] }
 					/>
 				</div>
-			</Card>
+			</PanelBody>
 
-			<Card
+			<PanelBody
 				title={ __(
 					'Box rules',
 					'productboxes-mix-and-match-box-builder'
@@ -473,20 +471,17 @@ export default function RulesStep( { draft, errors, dispatch } ) {
 			>
 				<div className="mmbb-editor__stack">
 					<div className="mmbb-editor__pair">
-						<NumberField
+						<RangeControl
 							label={ __(
 								'Box holds up to',
 								'productboxes-mix-and-match-box-builder'
 							) }
-							suffix={ __(
-								'items',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							value={ box.capacity }
-							error={ errors[ 'box.capacity' ] }
+							value={ Number( box.capacity ) }
+							min={ 1 }
+							max={ 48 }
 							help={
 								errors[ 'box.capacity' ]
-									? undefined
+									? errors[ 'box.capacity' ]
 									: sprintf(
 											/* translators: %s: Number of slots. */
 											__(
@@ -499,22 +494,21 @@ export default function RulesStep( { draft, errors, dispatch } ) {
 							onChange={ ( value ) =>
 								set( 'box.capacity', value )
 							}
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
 						/>
 						{ config.type === 'tiered' ? (
-							<NumberField
+							<RangeControl
 								label={ __(
 									'Minimum to check out',
 									'productboxes-mix-and-match-box-builder'
 								) }
-								suffix={ __(
-									'items',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								value={ box.min_items }
-								error={ errors[ 'box.min_items' ] }
+								value={ Number( box.min_items ) }
+								min={ 1 }
+								max={ Number( box.capacity ) || 1 }
 								help={
 									errors[ 'box.min_items' ]
-										? undefined
+										? errors[ 'box.min_items' ]
 										: __(
 												'Below this the button stays locked.',
 												'productboxes-mix-and-match-box-builder'
@@ -523,6 +517,8 @@ export default function RulesStep( { draft, errors, dispatch } ) {
 								onChange={ ( value ) =>
 									set( 'box.min_items', value )
 								}
+								__next40pxDefaultSize
+								__nextHasNoMarginBottom
 							/>
 						) : null }
 					</div>
@@ -612,8 +608,24 @@ export default function RulesStep( { draft, errors, dispatch } ) {
 							}
 						/>
 					</div>
+					<div className="mmbb-editor__rule">
+						<Toggle
+							label={ __(
+								'Allow coupons on this box',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							description={ __(
+								'When off, store coupons do not apply to this box.',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							checked={ box.allow_coupons }
+							onChange={ ( on ) =>
+								set( 'box.allow_coupons', on )
+							}
+						/>
+					</div>
 				</div>
-			</Card>
+			</PanelBody>
 
 			{ config.type === 'tiered' ? (
 				<RowsEditor
@@ -632,7 +644,7 @@ export default function RulesStep( { draft, errors, dispatch } ) {
 				/>
 			) : null }
 
-			<Card
+			<PanelBody
 				title={ __(
 					'Extras',
 					'productboxes-mix-and-match-box-builder'
@@ -739,7 +751,7 @@ export default function RulesStep( { draft, errors, dispatch } ) {
 						) : null }
 					</div>
 				</div>
-			</Card>
-		</div>
+			</PanelBody>
+		</Panel>
 	);
 }

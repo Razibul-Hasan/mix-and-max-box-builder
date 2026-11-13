@@ -598,11 +598,20 @@ final class Cart_Lines {
 	 * @return bool
 	 */
 	public function coupon_valid_for_product( $valid, $product, $coupon, $values = null ) {
-		if ( ! $valid || Settings::get( 'allow_coupons' ) ) {
+		if ( ! $valid ) {
 			return $valid;
 		}
 		if ( is_array( $values ) && ( isset( $values['mmbb_box'] ) || isset( $values['mmbb_parent'] ) ) ) {
-			return false;
+			$box = isset( $values['mmbb_box'] ) && is_array( $values['mmbb_box'] ) ? $values['mmbb_box'] : array();
+			if ( isset( $values['mmbb_parent'] ) && function_exists( 'WC' ) && WC()->cart instanceof \WC_Cart ) {
+				$parent = WC()->cart->get_cart_item( $values['mmbb_parent'] );
+				$box    = isset( $parent['mmbb_box'] ) && is_array( $parent['mmbb_box'] ) ? $parent['mmbb_box'] : array();
+			}
+			$campaign = ! empty( $box['campaign_id'] ) ? ( new Campaign_Repository() )->find( (int) $box['campaign_id'] ) : null;
+			$allowed  = $campaign && isset( $campaign['config']['box']['allow_coupons'] )
+				? (bool) $campaign['config']['box']['allow_coupons']
+				: (bool) Settings::get( 'allow_coupons' );
+			return $allowed;
 		}
 		return $valid;
 	}

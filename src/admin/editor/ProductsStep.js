@@ -1,23 +1,25 @@
 import { useEffect, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import {
+	CheckboxControl,
+	SearchControl,
+	SelectControl,
+} from '@wordpress/components';
+import {
 	Badge,
 	Button,
 	Card,
-	Checkbox,
-	Chips,
 	Icon,
 	Notice,
 	QuantityStepper,
-	SegmentedControl,
 	Tabs,
-	TextField,
 	useMoney,
 } from '../../components';
 import Media from '../../components/Media';
 import { getProducts, getTerms } from '../api';
 import { useDebouncedValue, useRequest, errorMessage } from '../hooks';
 import { moveItem, toNumber } from './state';
+import { ToggleGroupControl, ToggleGroupControlOption } from '../components/wp';
 
 const PER_PAGE = 20;
 const TERM_LIMIT = 100;
@@ -196,31 +198,31 @@ function ProductPicker( { draft, errors, dispatch, remember, byId } ) {
 					</p>
 				) : null }
 				{ view === 'all' ? (
-					<TextField
-						aria-label={ __(
+					<SearchControl
+						label={ __(
 							'Search products',
 							'productboxes-mix-and-match-box-builder'
 						) }
-						prefix="search"
 						placeholder={ __(
 							'Search products by name or SKU',
 							'productboxes-mix-and-match-box-builder'
 						) }
 						value={ search }
-						onChange={ ( event ) =>
-							setSearch( event.target.value )
-						}
+						onChange={ setSearch }
+						__nextHasNoMarginBottom
 					/>
 				) : null }
 				{ view === 'all' && options.length > 1 ? (
-					<Chips
+					<SelectControl
 						label={ __(
 							'Category',
 							'productboxes-mix-and-match-box-builder'
 						) }
 						options={ options }
 						value={ category }
-						onChange={ setCategory }
+						onChange={ ( value ) => setCategory( Number( value ) ) }
+						__next40pxDefaultSize
+						__nextHasNoMarginBottom
 					/>
 				) : null }
 				{ errors[ 'products.ids' ] ? (
@@ -269,11 +271,13 @@ function ProductPicker( { draft, errors, dispatch, remember, byId } ) {
 								key={ product.id }
 								className={ on ? 'is-on' : undefined }
 							>
-								<Checkbox
+								<CheckboxControl
+									label=""
 									aria-label={ pickLabel( on, product.name ) }
 									checked={ on }
 									disabled={ out && ! on }
 									onChange={ () => toggle( product.id ) }
+									__nextHasNoMarginBottom
 								/>
 								<Thumb product={ product } size={ 44 } />
 								<span className="mmbb-editor__grow">
@@ -374,8 +378,8 @@ function TermPicker( { draft, errors, dispatch, source } ) {
 			padding="none"
 		>
 			<div className="mmbb-editor__picker-head">
-				<TextField
-					aria-label={
+				<SearchControl
+					label={
 						isCategory
 							? __(
 									'Search categories',
@@ -386,9 +390,9 @@ function TermPicker( { draft, errors, dispatch, source } ) {
 									'productboxes-mix-and-match-box-builder'
 							  )
 					}
-					prefix="search"
 					value={ search }
-					onChange={ ( event ) => setSearch( event.target.value ) }
+					onChange={ setSearch }
+					__nextHasNoMarginBottom
 				/>
 				{ errors[ 'products.term_ids' ] ? (
 					<Notice tone="critical">
@@ -404,10 +408,12 @@ function TermPicker( { draft, errors, dispatch, source } ) {
 							selected.includes( term.id ) ? 'is-on' : undefined
 						}
 					>
-						<Checkbox
+						<CheckboxControl
+							label=""
 							aria-label={ term.name }
 							checked={ selected.includes( term.id ) }
 							onChange={ () => toggle( term.id ) }
+							__nextHasNoMarginBottom
 						/>
 						<span className="mmbb-editor__grow">
 							<span className="mmbb-cell-title">
@@ -600,37 +606,39 @@ export default function ProductsStep( { draft, errors, dispatch, catalog } ) {
 
 	return (
 		<div className="mmbb-editor__pane">
-			<SegmentedControl
+			<ToggleGroupControl
 				label={ __(
-					'Source',
+					'Choose products by',
 					'productboxes-mix-and-match-box-builder'
 				) }
-				options={ [
-					{
-						value: 'manual',
-						label: __(
-							'Pick products',
-							'productboxes-mix-and-match-box-builder'
-						),
-					},
-					{
-						value: 'category',
-						label: __(
-							'By category',
-							'productboxes-mix-and-match-box-builder'
-						),
-					},
-					{
-						value: 'tag',
-						label: __(
-							'By tag',
-							'productboxes-mix-and-match-box-builder'
-						),
-					},
-				] }
+				isBlock
 				value={ source }
 				onChange={ pickSource }
-			/>
+				__nextHasNoMarginBottom
+				__next40pxDefaultSize
+			>
+				<ToggleGroupControlOption
+					value="manual"
+					label={ __(
+						'Pick',
+						'productboxes-mix-and-match-box-builder'
+					) }
+				/>
+				<ToggleGroupControlOption
+					value="category"
+					label={ __(
+						'Category',
+						'productboxes-mix-and-match-box-builder'
+					) }
+				/>
+				<ToggleGroupControlOption
+					value="tag"
+					label={ __(
+						'Tag',
+						'productboxes-mix-and-match-box-builder'
+					) }
+				/>
+			</ToggleGroupControl>
 			{ source === 'manual' ? (
 				<ProductPicker
 					draft={ draft }
@@ -660,6 +668,23 @@ export default function ProductsStep( { draft, errors, dispatch, catalog } ) {
 						'productboxes-mix-and-match-box-builder'
 					) }
 				</Notice>
+			) : null }
+			{ source === 'manual' && products.ids.length ? (
+				<Button
+					variant="ghost"
+					onClick={ () =>
+						dispatch( {
+							type: 'set',
+							path: 'products.ids',
+							value: [],
+						} )
+					}
+				>
+					{ __(
+						'Clear all',
+						'productboxes-mix-and-match-box-builder'
+					) }
+				</Button>
 			) : null }
 		</div>
 	);

@@ -7,6 +7,10 @@
 
 namespace MixMax\BoxBuilder;
 
+use MixMax\BoxBuilder\Campaigns\Config;
+use MixMax\BoxBuilder\Campaigns\Post_Type;
+use MixMax\BoxBuilder\Settings\Settings;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -32,6 +36,7 @@ final class Upgrades {
 	public static function steps() {
 		return array(
 			'2.0.0' => array( self::class, 'step_2_0_0' ),
+			'2.0.1' => array( self::class, 'step_2_0_1' ),
 		);
 	}
 
@@ -79,5 +84,30 @@ final class Upgrades {
 	 * migration for boxes saved by 1.0.0.
 	 */
 	private static function step_2_0_0() {
+	}
+
+	/**
+	 * 2.0.1: move the store-wide coupon preference onto each existing box.
+	 */
+	private static function step_2_0_1() {
+		$ids = get_posts(
+			array(
+				'post_type'      => Post_Type::NAME,
+				'post_status'    => array( 'draft', 'publish', 'trash' ),
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+			)
+		);
+		foreach ( $ids as $id ) {
+			$raw = get_post_meta( $id, Post_Type::META_CONFIG, true );
+			$old = json_decode( (string) $raw, true );
+			if ( ! is_array( $old ) ) {
+				continue;
+			}
+			$config                         = Config::sanitize( $old );
+			$config['box']['allow_coupons'] = (bool) Settings::get( 'allow_coupons' );
+			update_post_meta( $id, Post_Type::META_CONFIG, wp_slash( wp_json_encode( $config ) ) );
+		}
 	}
 }

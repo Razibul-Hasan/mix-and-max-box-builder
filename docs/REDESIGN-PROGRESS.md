@@ -262,6 +262,20 @@ The existing `mmbb:editor:<id>` localStorage key now also holds `draft` and `bas
 - **A different admin origin breaks the preview.** If wp-admin runs on another origin than the site (for example `FORCE_SSL_ADMIN` with an `http://` home), the `frame-ancestors 'self'` and `SAMEORIGIN` headers stop the frame. The plan asks for those headers, so they stay. Part 11's compatibility pass should check such a site.
 - The 1.0 step forms in the sidebar are dense at 360px. That is expected until Parts 5 and 6.
 
+### Part 5 — Products and Discounts steps (2026-11-14)
+**Done:**
+- Rebuilt the Products sidebar around WordPress `ToggleGroupControl`, debounced `SearchControl`, `SelectControl`, and `CheckboxControl`, while retaining the existing Picked ordering, drag and keyboard buttons, per-product caps, category/tag sources, pagination, stock states, and clear-all action.
+- Reworked Discounts into compact `Panel` / `PanelBody` sections. Campaign type uses `RadioControl`; capacity and minimum use `RangeControl`; tier rows use the wrapped WordPress `NumberControl`; schedule uses WordPress radio, date, and toggle controls. Fixed-size, bundle, fixed-amount, box-price, size tags, gift note, gift wrap, free gift, and the existing countdown-day behavior remain available.
+- Added `box.allow_coupons`. New boxes default off; the Part 6 migration copies the old store-wide choice into existing boxes. Coupon filtering now reads the campaign rule and retains the store-wide setting only as a compatibility fallback for a missing campaign.
+- Inline validation and the existing Continue gate remain server-backed. Added a legacy-fixture integration assertion that an unchanged save is byte-identical after migration.
+
+**Decisions:** Existing richer fields omitted by the mockup were retained. The plan's Pick label maps to the frozen `manual` source value. The separate gift-message and gift-wrap keys remain separate controls. Countdown days remain configurable in stored data rather than being forced to three.
+**Frozen identifiers touched:** none renamed. `box.allow_coupons` is a new key inside the frozen `_mmbb_config` object and is recorded in the audit/progress migration notes.
+**Data changes and migration steps:** Existing boxes receive `box.allow_coupons` from `mmbb_settings.allow_coupons` in migration 2.0.1, implemented with Part 6's design migration.
+**Checks run:** production build ✅ (same two size warnings) · lint:js ✅ · lint:css ✅ · PHPCS ✅ · test:js ✅ (279) · test:unit ✅ (111) · integration ✅ (208, 2 skipped) · HPOS integration ✅ (208, 2 skipped) · legacy fixtures ✅ (16, including byte-identical save) · Plugin Check ✅ (no errors).
+**Skipped checks (and why):** No browser was driven, so the two sidebars were not visually compared in wp-admin against the canvas files. wp-env was unavailable because Docker is not installed; both native Local integration configurations were run instead.
+**Open issues:** none for this part.
+
 <!-- Copy for each part:
 
 ### Part N — Title (YYYY-MM-DD)

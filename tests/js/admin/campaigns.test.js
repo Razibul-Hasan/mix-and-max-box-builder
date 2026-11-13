@@ -385,7 +385,9 @@ describe( 'Boxes list', () => {
 	it( 'shows an error notice with Retry when loading fails', async () => {
 		api.getCampaigns.mockRejectedValueOnce( new Error( 'Nope' ) );
 		render( <App page="campaigns" /> );
-		await screen.findByText( 'Nope' );
+		await screen.findByText( 'Nope', {
+			selector: '.components-notice__content',
+		} );
 		fireEvent.click( screen.getByRole( 'button', { name: 'Retry' } ) );
 		await screen.findByText( 'Holiday Treat Box' );
 	} );

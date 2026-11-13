@@ -60,6 +60,7 @@ final class Config {
 				'allow_duplicates' => true,
 				'max_per_product'  => 12,
 				'hide_sold_out'    => false,
+				'allow_coupons'    => false,
 			),
 			'tiers'                => array(),
 			'sizes'                => array(),
@@ -330,6 +331,7 @@ final class Config {
 			'allow_duplicates' => self::bool( self::pick( $in, 'allow_duplicates', $base['allow_duplicates'] ), $base['allow_duplicates'] ),
 			'max_per_product'  => self::clamp_int( self::pick( $in, 'max_per_product', $base['max_per_product'] ), 1, $capacity ),
 			'hide_sold_out'    => self::bool( self::pick( $in, 'hide_sold_out', $base['hide_sold_out'] ), $base['hide_sold_out'] ),
+			'allow_coupons'    => self::bool( self::pick( $in, 'allow_coupons', $base['allow_coupons'] ), $base['allow_coupons'] ),
 		);
 	}
 
