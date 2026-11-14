@@ -2,6 +2,7 @@
 /vendor/
 /build/
 /design/
+/.wordpress-org/
 *.zip
 /.wp-env.override.json
 /.phpunit.result.cache
