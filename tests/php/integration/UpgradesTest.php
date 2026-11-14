@@ -87,8 +87,12 @@ class UpgradesTest extends \WP_UnitTestCase {
 		global $wpdb;
 		Installer::install();
 		$settings = array(
-			'enabled'       => false,
-			'allow_coupons' => true,
+			'enabled'        => false,
+			'columns'        => 5,
+			'summary_layout' => 'bar',
+			'stickers'       => false,
+			'cta_label'      => 'Add the old way',
+			'allow_coupons'  => true,
 		);
 		update_option( 'mmbb_version', '1.0.0' );
 		update_option( 'mmbb_db_version', '0.9.0' );
@@ -96,6 +100,9 @@ class UpgradesTest extends \WP_UnitTestCase {
 		$campaign = self::factory()->post->create( array( 'post_type' => 'mmbb_campaign' ) );
 		$config   = '{"type":"bundle","design":{"layout":"bar","headline":"Old box"}}';
 		update_post_meta( $campaign, '_mmbb_config', wp_slash( $config ) );
+		$redesigned = self::factory()->post->create( array( 'post_type' => 'mmbb_campaign' ) );
+		$new_config = '{"type":"bundle","box":{"allow_coupons":false},"design":{"template":"night","colors":{"accent":"#abcdef"},"cards":{"columns":2},"summary":{"position":"left","show_ladder":false},"content":{"headline":"New box","cart_label":"Keep this"}}}';
+		update_post_meta( $redesigned, '_mmbb_config', wp_slash( $new_config ) );
 
 		$this->assertSame( 10, has_action( 'admin_init', array( Installer::class, 'maybe_upgrade' ) ) );
 		Installer::maybe_upgrade();
@@ -109,15 +116,33 @@ class UpgradesTest extends \WP_UnitTestCase {
 		$this->assertSame( 'Old box', $decoded['design']['headline'] );
 		$this->assertSame( 'spotlight', $decoded['design']['template'] );
 		$this->assertSame( 'Old box', $decoded['design']['content']['headline'] );
+		$this->assertSame( 5, $decoded['design']['cards']['columns'] );
+		$this->assertSame( 'bar', $decoded['design']['summary']['position'] );
+		$this->assertFalse( $decoded['design']['show_stickers'] );
+		$this->assertSame( 'Add the old way', $decoded['design']['content']['cart_label'] );
 		$this->assertTrue( $decoded['box']['allow_coupons'] );
+
+		$kept = json_decode( get_post_meta( $redesigned, '_mmbb_config', true ), true );
+		$this->assertSame( 'night', $kept['design']['template'] );
+		$this->assertSame( '#abcdef', $kept['design']['colors']['accent'] );
+		$this->assertSame( 2, $kept['design']['cards']['columns'] );
+		$this->assertSame( 'left', $kept['design']['summary']['position'] );
+		$this->assertFalse( $kept['design']['summary']['show_ladder'] );
+		$this->assertSame( 'New box', $kept['design']['content']['headline'] );
+		$this->assertSame( 'Keep this', $kept['design']['content']['cart_label'] );
+		$this->assertFalse( $kept['box']['allow_coupons'] );
 
 		$options = $wpdb->get_results( "SELECT option_name, option_value, autoload FROM {$wpdb->options} WHERE option_name LIKE 'mmbb\_%' ORDER BY option_name", ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Test reads the raw stored rows.
 		$queries = $wpdb->num_queries;
 		Installer::maybe_upgrade();
 		$this->assertSame( $queries, $wpdb->num_queries, 'The second pass runs no query.' );
+
+		// Even if the stored schema marker is rolled back, rerunning both data steps is byte-stable.
+		update_option( 'mmbb_db_version', '2.0.0' );
 		Installer::install();
 		$this->assertSame( $options, $wpdb->get_results( "SELECT option_name, option_value, autoload FROM {$wpdb->options} WHERE option_name LIKE 'mmbb\_%' ORDER BY option_name", ARRAY_A ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Test reads the raw stored rows.
 		$this->assertSame( $upgraded, get_post_meta( $campaign, '_mmbb_config', true ) );
+		$this->assertSame( $kept, json_decode( get_post_meta( $redesigned, '_mmbb_config', true ), true ) );
 	}
 
 	/** The version options are not autoloaded. */

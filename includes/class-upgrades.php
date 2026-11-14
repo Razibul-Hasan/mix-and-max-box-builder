@@ -73,16 +73,28 @@ final class Upgrades {
 		foreach ( self::pending( (string) get_option( self::OPTION, '0' ), array_keys( $steps ) ) as $version ) {
 			call_user_func( $steps[ $version ] );
 			update_option( self::OPTION, $version, false );
+			self::debug_log( sprintf( 'Database upgrade %s completed.', $version ) );
 			$ran[] = $version;
 		}
 		return $ran;
 	}
 
 	/**
+	 * Log a completed step only on sites that explicitly enable WordPress debugging.
+	 *
+	 * @param string $message Debug message without the plugin prefix.
+	 */
+	private static function debug_log( $message ) {
+		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
+			return;
+		}
+		error_log( '[ProductBoxes] ' . $message ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Required debug-only migration record.
+	}
+
+	/**
 	 * 2.0.0: the redesign.
 	 *
-	 * Empty for now. Redesign Part 6 adds the design settings defaults and Part 11 the rest of the
-	 * migration for boxes saved by 1.0.0.
+	 * Reserved as the first redesign schema marker. Later ordered steps migrate the stored data.
 	 */
 	private static function step_2_0_0() {
 	}
@@ -91,7 +103,8 @@ final class Upgrades {
 	 * 2.0.1: move the store-wide coupon preference onto each existing box.
 	 */
 	private static function step_2_0_1() {
-		$ids = get_posts(
+		$allow_coupons = (bool) Settings::get( 'allow_coupons' );
+		$ids           = get_posts(
 			array(
 				'post_type'      => Post_Type::NAME,
 				'post_status'    => array( 'draft', 'publish', 'trash' ),
@@ -106,9 +119,13 @@ final class Upgrades {
 			if ( ! is_array( $old ) ) {
 				continue;
 			}
-			$config                         = Config::sanitize( $old );
-			$config['box']['allow_coupons'] = (bool) Settings::get( 'allow_coupons' );
-			update_post_meta( $id, Post_Type::META_CONFIG, wp_slash( wp_json_encode( $config ) ) );
+			$old_box = isset( $old['box'] ) && is_array( $old['box'] ) ? $old['box'] : array();
+			if ( array_key_exists( 'allow_coupons', $old_box ) ) {
+				continue;
+			}
+			$old['box']                  = $old_box;
+			$old['box']['allow_coupons'] = $allow_coupons;
+			update_post_meta( $id, Post_Type::META_CONFIG, wp_slash( wp_json_encode( $old ) ) );
 		}
 	}
 
@@ -116,7 +133,8 @@ final class Upgrades {
 	 * 2.0.2: map the 1.0 presentation fields into the optional design object.
 	 */
 	private static function step_2_0_2() {
-		$ids = get_posts(
+		$settings = Settings::all();
+		$ids      = get_posts(
 			array(
 				'post_type'      => Post_Type::NAME,
 				'post_status'    => array( 'draft', 'publish', 'trash' ),
@@ -131,18 +149,66 @@ final class Upgrades {
 			if ( ! is_array( $old ) ) {
 				continue;
 			}
-			$legacy                                     = isset( $old['design'] ) && is_array( $old['design'] ) ? $old['design'] : array();
-			$config                                     = Config::sanitize( $old );
-			$config['design']['template']               = 'spotlight';
-			$config['design']['colors']['accent']       = isset( $legacy['accent_color'] ) ? $legacy['accent_color'] : '';
-			$config['design']['colors']['background']   = isset( $legacy['theme_canvas'] ) ? $legacy['theme_canvas'] : '';
-			$config['design']['colors']['surface']      = isset( $legacy['theme_surface'] ) ? $legacy['theme_surface'] : '';
-			$config['design']['cards']['columns']       = ! empty( $legacy['columns'] ) ? (int) $legacy['columns'] : $config['design']['cards']['columns'];
-			$config['design']['summary']['show_ladder'] = isset( $legacy['show_ladder'] ) ? (bool) $legacy['show_ladder'] : true;
-			$config['design']['content']['headline']    = isset( $legacy['headline'] ) ? (string) $legacy['headline'] : '';
-			$config['design']['content']['intro']       = isset( $legacy['intro'] ) ? (string) $legacy['intro'] : '';
-			$config['design']['content']['cart_label']  = isset( $legacy['cta_label'] ) ? (string) $legacy['cta_label'] : '';
+			$legacy = isset( $old['design'] ) && is_array( $old['design'] ) ? $old['design'] : array();
+			$config = Config::sanitize( $old );
+
+			if ( ! array_key_exists( 'template', $legacy ) ) {
+				$config['design']['template'] = 'spotlight';
+			}
+			self::copy_missing( $config['design']['colors'], $legacy, 'colors', 'accent', 'accent_color' );
+			self::copy_missing( $config['design']['colors'], $legacy, 'colors', 'background', 'theme_canvas' );
+			self::copy_missing( $config['design']['colors'], $legacy, 'colors', 'surface', 'theme_surface' );
+
+			$legacy_columns = isset( $legacy['columns'] ) ? (int) $legacy['columns'] : 0;
+			if ( ! self::has_nested( $legacy, 'cards', 'columns' ) ) {
+				$config['design']['cards']['columns'] = in_array( $legacy_columns, Settings::COLUMNS, true ) ? $legacy_columns : (int) $settings['columns'];
+			}
+
+			if ( ! self::has_nested( $legacy, 'summary', 'position' ) ) {
+				$layout                                  = isset( $legacy['layout'] ) && 'default' !== $legacy['layout'] ? $legacy['layout'] : $settings['summary_layout'];
+				$config['design']['summary']['position'] = 'bar' === $layout ? 'bar' : 'right';
+			}
+			if ( ! self::has_nested( $legacy, 'summary', 'show_ladder' ) ) {
+				$config['design']['summary']['show_ladder'] = isset( $legacy['show_ladder'] ) ? (bool) $legacy['show_ladder'] : true;
+			}
+			if ( ! array_key_exists( 'show_stickers', $legacy ) ) {
+				$config['design']['show_stickers'] = ! empty( $settings['stickers'] );
+			}
+
+			self::copy_missing( $config['design']['content'], $legacy, 'content', 'headline', 'headline' );
+			self::copy_missing( $config['design']['content'], $legacy, 'content', 'intro', 'intro' );
+			if ( ! self::has_nested( $legacy, 'content', 'cart_label' ) ) {
+				$config['design']['content']['cart_label'] = ! empty( $legacy['cta_label'] ) ? (string) $legacy['cta_label'] : (string) $settings['cta_label'];
+			}
 			update_post_meta( $id, Post_Type::META_CONFIG, wp_slash( wp_json_encode( $config ) ) );
 		}
+	}
+
+	/**
+	 * Copy one legacy design value into a nested redesign section when no new value exists.
+	 *
+	 * @param array  $target     Nested redesign section, passed by reference.
+	 * @param array  $legacy     Raw design object saved before the redesign.
+	 * @param string $section    Redesign section name.
+	 * @param string $target_key Redesign key.
+	 * @param string $legacy_key Legacy key.
+	 */
+	private static function copy_missing( array &$target, array $legacy, $section, $target_key, $legacy_key ) {
+		if ( self::has_nested( $legacy, $section, $target_key ) ) {
+			return;
+		}
+		$target[ $target_key ] = isset( $legacy[ $legacy_key ] ) ? (string) $legacy[ $legacy_key ] : '';
+	}
+
+	/**
+	 * Whether a raw legacy design object already contains a nested redesign value.
+	 *
+	 * @param array  $design  Raw design object.
+	 * @param string $section Nested section name.
+	 * @param string $key     Value name.
+	 * @return bool
+	 */
+	private static function has_nested( array $design, $section, $key ) {
+		return isset( $design[ $section ] ) && is_array( $design[ $section ] ) && array_key_exists( $key, $design[ $section ] );
 	}
 }

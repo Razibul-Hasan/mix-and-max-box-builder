@@ -42,7 +42,7 @@ function stockBadge( product ) {
 		return (
 			<Badge tone="warning" dot>
 				{ sprintf(
-					/* translators: %d: Units in stock. */
+					/* translators: %d: Number of units in stock. */
 					__(
 						'Only %d left',
 						'productboxes-mix-and-match-box-builder'

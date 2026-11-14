@@ -88,7 +88,7 @@ export default function ProductTile( {
 					<p className="mmbb-tile__stock">
 						<Icon name="flame" size={ 14 } strokeWidth={ 2 } />
 						{ sprintf(
-							/* translators: %d: Number of items. */ _n(
+							/* translators: %d: Number of units in stock. */ _n(
 								'Only %d left',
 								'Only %d left',
 								stock,

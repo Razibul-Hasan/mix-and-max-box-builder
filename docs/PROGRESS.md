@@ -15,10 +15,30 @@ Updated by the agent at the end of every part.
 | 8 | Templates 06–10, phone layout, fonts | done | `7cd57c8` |
 | 9 | Publish flow | done | `41e9800` |
 | 10 | Analytics and Settings | done | `(this commit)` |
-| 11 | Migration, compatibility, hardening | not started | |
+| 11 | Migration, compatibility, hardening | done | `(this commit)` |
 | 12 | Release | not started | |
 
 ## Log
+
+### Part 11 — Migration, compatibility and hardening (2026-11-14)
+
+**Done:** Completed the existing `2.0.1`/`2.0.2` migration path for 1.0.0 data. Every legacy box selects Spotlight, retains every old design key, maps its own legacy presentation first, and otherwise copies the old store-wide columns, summary layout, sticker visibility and cart label into its per-box design. A box that already contains redesign values keeps them unchanged. The coupon migration now adds only its missing key to the raw object, so it cannot manufacture nested defaults before the design migration sees what was genuinely absent. Completed upgrade steps write a concise debug-log line only when `WP_DEBUG` is enabled. The exact 1.0.0 fixtures upgrade, render, price, enter the cart, preserve their order display and settings, and remain byte-identical on a repeat install.
+
+**Hardening review:** Rechecked every `$_GET`, `$_POST`, `$_REQUEST`, `echo`, `$wpdb` call, REST registration and preview path. Request globals are nonce/capability guarded and sanitized; variable SQL is prepared or uses the typed insert/update helpers; every REST route has its intended permission callback; CSV bytes are formula-hardened; preview query nonces/capabilities and postMessage origin/window rejection remain covered. The frozen identifiers are all still present in source and no old name was renamed. External-host scans found no runtime remote assets. Asset and performance integration tests confirm no plugin queries/assets on unrelated pages and a bounded, cached 200-product payload.
+
+**Accessibility and browser review:** In the logged-in Local browser, Settings, Boxes, the full-screen editor and its Twenty Twenty-Five iframe exposed named headings/regions, labeled form controls, the three editor steps, preview-size radios, a named shopper-preview document, storefront product actions, progress/status output and the create-box dialog visually. Jest continues to cover modal focus trapping, Escape/focus return, preview origin checks, all ten templates and every 390px template state. Automated axe inside the authenticated admin pages could not run because the available browser bridge was unavailable and both Puppeteer/Lighthouse were blocked from their local DevTools WebSocket; no credentials or browser profile were copied to work around that boundary. A formal iframe stopwatch was blocked by the same headless-browser limitation; the live iframe rendered and became accessible promptly during the editor check.
+
+**Decisions:** The legacy `summary_layout=both` has no exact equivalent in the redesigned single-summary engine, so migration chooses the Spotlight side panel (`right`) as the closest old appearance; `bar` remains `bar`, and `panel` remains a side panel. The old `mmbb_settings` keys stay stored and readable for the promised compatibility period. The exact current-release install/update scenario is represented by the exported, byte-for-byte 1.0.0 fixtures rather than mutating the owner's live site. Storefront is not installed in this Local site, so no theme was installed or activated merely for this check.
+
+**Frozen identifiers touched:** none. `Installer::DB_VERSION` remains `2.0.2`; the existing steps, options, meta keys, routes, handles, hooks, block and shortcode names are unchanged.
+
+**Data changes and migration steps:** `2.0.1` now preserves an already-present per-box coupon value and changes only a missing `box.allow_coupons`. `2.0.2` adds only missing redesign values after mapping legacy box/store presentation. Both steps are idempotent; invalid JSON is skipped; draft, published and trashed boxes are included; old option and design keys are never removed.
+
+**Checks run:** production build ✅ (same two admin-size warnings; admin entry 254 KiB) · lint:js ✅ · lint:css ✅ · PHPCS/PHPCompatibility 7.4+ ✅ (0 findings) · test:js ✅ (23 suites, 311 tests) · test:unit ✅ (115 tests, 603 assertions) · classic integration ✅ (214 tests, 2 skipped, 2,339 assertions) · HPOS integration ✅ (214 tests, 2 skipped, 2,340 assertions) · exact legacy upgrade fixtures ✅ · `wp i18n make-pot` ✅ (799 entries, 744 JS references, zero warnings) · frozen identifier/security/remote-host sweeps ✅ · release zip ✅ (1,367,217 bytes, 243 entries, no excluded development directories) · packaged Plugin Check review ruleset ✅ (0 findings).
+
+**Skipped checks (and why):** Docker/wp-env is unavailable. Live WP-CLI Plugin Check reached the Local WordPress files but Local's database socket is not available to the standalone XAMPP PHP process, so it returned “Error establishing a database connection”; the packaged review ruleset passed against the release zip, matching the Part 1 baseline method. WordPress 6.6, WooCommerce 9.0, PHP 7.4 and Storefront were not separately available as runtimes; their compatibility is covered by the frozen minimum headers, PHPCompatibility 7.4+ scan, source/API review and the current-stack suites. Authenticated admin axe, Storefront-theme visual testing, a formal sub-two-second iframe measurement and interactive RTL testing remain manual release-lab checks for the reasons above; generated RTL bundles and all logical-direction/scoped CSS remain present.
+
+**Open issues:** No code, migration, security, translation, build, test or packaged-review blocker. Release QA should still run axe and the visual matrix in an environment with an authenticated browser automation channel, Storefront installed, RTL enabled and the minimum-version containers available.
 
 ### Part 10 — Analytics and Settings (2026-11-14)
 
@@ -442,3 +462,16 @@ Questions for the owner from Part 0. The numbers in brackets are the risks in `d
 
 | Environment | Result | Notes |
 | --- | --- | --- |
+| WordPress 6.6 minimum | justified | Separate runtime unavailable without Docker; minimum header unchanged, `wp-phpunit` remains pinned to the 6.6 line, and no newer core requirement was added. |
+| WordPress current (7.1.4 Local) | pass | Full classic/HPOS integration suites and logged-in admin/storefront browser review. |
+| WooCommerce 9.0 minimum | justified | Separate runtime unavailable; minimum header and requirements guard unchanged, and the hardening sweep found no newly introduced later-only API. |
+| WooCommerce current (11.2.2) | pass | Full classic/HPOS suites, including cart, Store API, checkout, order and analytics coverage. |
+| PHP 7.4 minimum | pass (static) | WPCS plus PHPCompatibilityWP `testVersion=7.4-` reports zero findings. |
+| PHP 8.3+ | pass | All PHP suites ran on PHP 8.5.12. |
+| HPOS off | pass | 214 tests, 2 skipped, 2,339 assertions. |
+| HPOS on | pass | 214 tests, 2 skipped, 2,340 assertions. |
+| Classic Cart/Checkout | pass | Classic cart/order hooks and checkout creation run in both integration modes. |
+| Cart/Checkout blocks | pass | Real `/wc/store/v1/cart` integration coverage validates extension data, item grouping and locked quantities; compatibility declaration unchanged. |
+| Twenty Twenty-Five | pass | Live box and editor iframe reviewed in the local browser. |
+| Storefront theme | justified | Theme is not installed in Local; scoped CSS, theme-variable fallbacks and shared renderer tests pass without a theme-specific dependency. |
+| RTL | justified | WordPress-generated admin/components/storefront/token/block RTL bundles ship; no interactive RTL locale was available without changing the owner's site. |

@@ -181,10 +181,10 @@ final class Box_Text {
 		$next = $quote['next'];
 		$left = (int) $next['needed'];
 		if ( 'percent' === $next['discount_type'] ) {
-			/* translators: %s: a percentage, such as 15% */
+			/* translators: %s: Discount value, such as 15% or $5.00. */
 			$reward = sprintf( __( '%s off', 'productboxes-mix-and-match-box-builder' ), self::percent( $next['value'] ) );
 		} elseif ( 'fixed_amount' === $next['discount_type'] ) {
-			/* translators: %s: an amount of money, such as $5.00 */
+			/* translators: %s: Discount value, such as 15% or $5.00. */
 			$reward = sprintf( __( '%s off', 'productboxes-mix-and-match-box-builder' ), self::money( \MixMax\BoxBuilder\Pricing::to_minor( $next['value'], wc_get_price_decimals() ) ) );
 		} else {
 			/* translators: %s: an amount of money, such as $20.00 */

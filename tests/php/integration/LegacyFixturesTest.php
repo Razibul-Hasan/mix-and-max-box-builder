@@ -201,12 +201,21 @@ class LegacyFixturesTest extends \WP_UnitTestCase {
 
 	/** The upgrade keeps every legacy value and adds the per-box coupon rule once. */
 	public function test_upgrade_keeps_the_stored_rows() {
+		$expected_design = array(
+			'tiered' => array( 3, 'bar', true, 'Add box to cart' ),
+			'fixed'  => array( 3, 'bar', true, 'Add my box to the basket' ),
+			'bundle' => array( 4, 'right', false, 'Add my box to the basket' ),
+		);
 		foreach ( array( 'tiered', 'fixed', 'bundle' ) as $slug ) {
 			$box    = $this->fixture( 'box-' . $slug . '.json' );
 			$stored = json_decode( get_post_meta( $box['post']['ID'], '_mmbb_config', true ), true );
 			$legacy = json_decode( $box['meta']['_mmbb_config'], true );
 			$this->assert_kept( $legacy, $stored, $slug );
 			$this->assertSame( 'spotlight', $stored['design']['template'], $slug );
+			$this->assertSame( $expected_design[ $slug ][0], $stored['design']['cards']['columns'], $slug );
+			$this->assertSame( $expected_design[ $slug ][1], $stored['design']['summary']['position'], $slug );
+			$this->assertSame( $expected_design[ $slug ][2], $stored['design']['show_stickers'], $slug );
+			$this->assertSame( $expected_design[ $slug ][3], $stored['design']['content']['cart_label'], $slug );
 			$this->assertTrue( $stored['box']['allow_coupons'], $slug );
 			$this->assertSame( $box['post']['post_status'], get_post_status( $box['post']['ID'] ), $slug );
 		}

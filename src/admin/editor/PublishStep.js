@@ -57,7 +57,7 @@ const PLACEMENTS = [
 function sizeBadge( config ) {
 	if ( config.type === 'bundle' ) {
 		return sprintf(
-			/* translators: %d: Number of items in a box. */
+			/* translators: %d: Number of items. */
 			_n(
 				'%d item',
 				'%d items',
@@ -90,7 +90,7 @@ function discountBadge( config ) {
 		.map( ( row ) => Number( row.value ) );
 	if ( percentages.length === rows.length && percentages.length ) {
 		return sprintf(
-			/* translators: %s: Slash-separated discount percentages. */
+			/* translators: %s: Discount percentage or slash-separated percentages. */
 			__( '%s%% off', 'productboxes-mix-and-match-box-builder' ),
 			percentages.join( ' / ' )
 		);

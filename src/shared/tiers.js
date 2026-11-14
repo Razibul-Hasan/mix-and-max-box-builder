@@ -25,14 +25,14 @@ export function tierLabel( row, formatMoney, toMinor ) {
 	}
 	if ( row.discount_type === 'percent' ) {
 		return sprintf(
-			/* translators: %s: Discount percentage. */
+			/* translators: %s: Discount percentage or slash-separated percentages. */
 			__( '%s%% off', 'productboxes-mix-and-match-box-builder' ),
 			String( value )
 		);
 	}
 	if ( row.discount_type === 'fixed_amount' ) {
 		return sprintf(
-			/* translators: %s: Discount amount with currency. */
+			/* translators: %s: Discount value, such as 15% or $5.00. */
 			__( '%s off', 'productboxes-mix-and-match-box-builder' ),
 			formatMoney( toMinor( value ) )
 		);

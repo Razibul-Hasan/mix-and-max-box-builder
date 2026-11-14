@@ -127,7 +127,7 @@ export function tierSummary( config ) {
 		return '';
 	}
 	return sprintf(
-		/* translators: %s: Percentages joined with slashes, such as 10 / 15 / 25. */
+		/* translators: %s: Discount percentage or slash-separated percentages. */
 		__( '%s%% off', 'productboxes-mix-and-match-box-builder' ),
 		tiers.map( ( t ) => t.value ).join( ' / ' )
 	);
