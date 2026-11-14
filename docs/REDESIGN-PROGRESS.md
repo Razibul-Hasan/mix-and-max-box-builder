@@ -292,6 +292,22 @@ The existing `mmbb:editor:<id>` localStorage key now also holds `draft` and `bas
 **Skipped checks (and why):** No browser was driven, so Match my site was not visually exercised in Twenty Twenty-Five and Storefront, every control was not manually watched in the iframe, and the migrated Spotlight view was not compared on screen. The REST, sanitizer, migration and bridge paths are covered by automated tests. wp-env was unavailable because Docker is not installed; both native Local integration configurations were run instead.
 **Open issues:** The legacy Holiday preset can still create a countdown without an end date when invoked through the API/filter; it remains blocked from publishing until a real date is supplied. The retired presets are no longer exposed by the redesigned UI.
 
+### Part 7 — Template engine and templates 01–05 (2026-11-14)
+**Done:**
+- Added a storefront template engine under `src/storefront/templates/`. `TemplateRenderer` selects Spotlight, Clean list, Guided steps, Gift tray or Color block and falls back to Spotlight. Each template receives the same shared builder UI/state, so product limits, pricing, storage, analytics, cart editing and add-to-cart remain on the existing code path.
+- Added `Template_Styles`, which merges the selected template defaults with sanitized merchant design settings and creates the required `--mmbb-*` variable contract plus compatibility token aliases. `Renderer` emits one instance-scoped rule through `wp_add_inline_style()` and no longer relies on a wrapper style attribute. Draft preview reapplies the same variables and selected template.
+- Style controls now affect storefront colour, font, heading size/weight, button radius/height/style/case, card radius/shadow/columns/ratio/fit, summary side, width and padding. Compare prices and sale badges respect their per-box toggles.
+- Implemented scoped visual treatments for the five canvas references: Spotlight's open hero/ladder/panel; Clean's centred list; Guided steps' fixed-size workflow styling; Gift tray's dark presentation and light box; Color block's saturated banner and overlapping cards. All selectors stay below `.mmbb-root`; no theme reset or remote asset was added.
+- Kept sold-out behavior, tier live regions, 44px controls, panel/bar summaries, fixed-size selection, free gifts, gift wrap/message, errors and checkout on the shared components. Added resolver, inline-style, selection/fallback and five-template behavior tests.
+
+**Decisions:** Template components are deliberately thin semantic frames around one shared functional builder rather than ten copies of cart logic. Clean list ignores column and image-ratio controls on wide screens; Guided steps only exposes the size stage when the campaign is the existing fixed-size type. These intentional exceptions are recorded in `design/REDESIGN.md`.
+**Frozen identifiers touched:** none. The existing storefront handle, block, shortcode, payload route and cart action are unchanged. `styleVars` is a new public preview/storefront payload field, not a stored identifier.
+**Data changes and migration steps:** none. Template defaults are computed at render time and stored campaign data is unchanged.
+**Checks run:** production build ✅ (same two webpack size warnings; storefront entry 70.6 KiB) · lint:js ✅ · lint:css ✅ · PHPCS ✅ · test:js ✅ (23 suites, 285 tests) · test:unit ✅ (113 tests) · integration ✅ (209 tests, 2 skipped; corrected REST payload assertion rerun 36/36) · HPOS integration ✅ (same, corrected assertion rerun 36/36) · Plugin Check ✅ (no errors).
+**Visual comparison notes:** Spotlight follows the reference's headline/ladder/grid/panel structure; Clean switches the grid to restrained rows; Guided steps uses the existing size picker and fill/review flow; Gift uses the dark canvas/light tray contrast; Color block uses an accent banner and raised overlapping cards. The design tokens remain merchant-overridable in every case.
+**Skipped checks (and why):** No browser was driven, so the five templates were not screenshot-diffed in Twenty Twenty-Five and Storefront and checkout was not clicked in a real browser. Automated storefront tests exercise every selector plus the shared add-to-cart path, and the legacy/integration suites exercise rendering and checkout data. wp-env was unavailable because Docker is not installed; native Local tests were used.
+**Open issues:** none for this part.
+
 <!-- Copy for each part:
 
 ### Part N — Title (YYYY-MM-DD)

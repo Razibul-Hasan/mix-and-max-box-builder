@@ -394,7 +394,7 @@ class RestCampaignsTest extends \WP_UnitTestCase {
 		$id       = $this->make_campaign();
 		$response = $this->send( 'GET', '/mmbb/v1/campaigns/' . $id . '/preview' );
 		$this->assertSame( 200, $response->get_status() );
-		$this->assertEqualSets( array( 'id', 'title', 'status', 'preview', 'config', 'view', 'colors', 'settings', 'products', 'freeGift', 'money', 'now' ), array_keys( $response->get_data() ) );
+		$this->assertEqualSets( array( 'id', 'title', 'status', 'preview', 'config', 'view', 'colors', 'styleVars', 'settings', 'products', 'freeGift', 'money', 'now' ), array_keys( $response->get_data() ) );
 	}
 
 	/** POST previews an unsaved draft: sanitized, fresh products, and nothing stored. */

@@ -84,11 +84,15 @@ class StorefrontTest extends \WP_UnitTestCase {
 	/** A live campaign renders the mount point and queues the assets. */
 	public function test_shortcode_renders_mount_point() {
 		$html = do_shortcode( '[mmbb_box id="' . $this->campaign['id'] . '"]' );
-		$this->assertStringContainsString( 'class="mmbb-root mmbb-builder"', $html );
+		$this->assertStringContainsString( 'class="mmbb-root mmbb-builder mmbb-box-', $html );
 		$this->assertStringContainsString( 'data-mmbb-id="mmbb-', $html );
+		$this->assertStringContainsString( 'data-template="spotlight"', $html );
 		$this->assertStringNotContainsString( '<b>box</b>', $html, 'The title is escaped.' );
 		$this->assertTrue( wp_script_is( Storefront::HANDLE, 'enqueued' ) );
 		$this->assertTrue( wp_style_is( Storefront::HANDLE, 'enqueued' ) );
+		$inline = implode( '', (array) wp_styles()->get_data( Storefront::HANDLE, 'after' ) );
+		$this->assertStringContainsString( '--mmbb-accent:#ff4f1f', $inline );
+		$this->assertStringContainsString( '--mmbb-font-heading:', $inline );
 	}
 
 	/** Two builders on one page get two instances and two payloads. */

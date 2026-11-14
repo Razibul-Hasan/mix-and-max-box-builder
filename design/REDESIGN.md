@@ -64,6 +64,14 @@ Each template ships its own defaults. The merchant's design settings override th
 
 All 10 fonts are under the SIL Open Font License. Ship them as local woff2 files (Latin subset, variable where possible) and load a template's fonts only when that template renders and "Use my theme's fonts" is off.
 
+### Template option notes
+
+- Spotlight is the reference template and applies every Style control.
+- Clean list intentionally renders products as rows, so product-card column and image-ratio choices do not change its wide layout.
+- Guided steps uses the campaign's stored size choices for fixed-size campaigns. Other campaign types retain the same products and pricing but do not show a size-selection stage.
+- Gift tray and Color block retain the shared summary-position, progress and slot controls even though their canvas references emphasize one arrangement.
+- Split screen always keeps its coloured box area on the left; the summary-position choice affects the summary within that area rather than swapping the halves.
+
 ## Admin component map (design → `@wordpress/components`)
 
 | UI piece | Component |

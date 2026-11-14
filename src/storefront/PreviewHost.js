@@ -26,12 +26,12 @@ export function rulesKey( payload ) {
 	] );
 }
 
-// Put the payload's colour variables on the builder's wrapper, as the server did.
-function applyColors( element, colors, previous ) {
-	if ( ! element || ! colors ) {
+// Put the payload's design variables on the builder wrapper, as the server did.
+function applyDesign( element, payload, previous ) {
+	if ( ! element || ! payload ) {
 		return {};
 	}
-	const vars = colors.vars || {};
+	const vars = payload.styleVars || payload.colors?.vars || {};
 	Object.keys( previous ).forEach( ( name ) => {
 		if ( ! ( name in vars ) ) {
 			element.style.removeProperty( name );
@@ -40,7 +40,7 @@ function applyColors( element, colors, previous ) {
 	Object.keys( vars ).forEach( ( name ) =>
 		element.style.setProperty( name, vars[ name ] )
 	);
-	if ( colors.dark ) {
+	if ( payload.colors?.dark ) {
 		element.setAttribute( 'data-theme', 'dark' );
 	} else {
 		element.removeAttribute( 'data-theme' );
@@ -59,7 +59,7 @@ function applyColors( element, colors, previous ) {
  */
 export default function PreviewHost( { payload: initial, preview, element } ) {
 	const [ payload, setPayload ] = useState( initial );
-	const colorVars = useRef( ( initial.colors && initial.colors.vars ) || {} );
+	const colorVars = useRef( initial.styleVars || initial.colors?.vars || {} );
 	const parent = window.parent;
 
 	useEffect( () => {
@@ -88,12 +88,12 @@ export default function PreviewHost( { payload: initial, preview, element } ) {
 	}, [ preview.origin, preview.boxId, parent ] );
 
 	useEffect( () => {
-		colorVars.current = applyColors(
-			element,
-			payload.colors,
-			colorVars.current
+		colorVars.current = applyDesign( element, payload, colorVars.current );
+		element?.setAttribute(
+			'data-template',
+			payload.config?.design?.template || 'spotlight'
 		);
-	}, [ element, payload.colors ] );
+	}, [ element, payload ] );
 
 	// The editor sizes its frame to the page.
 	useEffect( () => {

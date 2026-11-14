@@ -51,6 +51,7 @@ final class Payload {
 		$config     = $campaign['config'];
 		$settings   = Settings::all();
 		$design     = self::design( $config['design'] );
+		$style      = Template_Styles::resolve( $design );
 		$colors     = Colors::resolve( $design, Colors::theme_accent() );
 		$color_vars = array(
 			'accent'      => '--max',
@@ -70,23 +71,24 @@ final class Payload {
 		$colors['vars'] = (object) $colors['vars'];
 
 		$payload = array(
-			'id'       => (int) $campaign['id'],
-			'title'    => $campaign['title'],
-			'status'   => $campaign['status'],
-			'preview'  => $preview,
-			'config'   => self::public_config( $config, $design ),
-			'view'     => self::view( $config, $settings, $view ),
-			'colors'   => $colors,
-			'settings' => array(
+			'id'        => (int) $campaign['id'],
+			'title'     => $campaign['title'],
+			'status'    => $campaign['status'],
+			'preview'   => $preview,
+			'config'    => self::public_config( $config, $design ),
+			'view'      => self::view( $config, $settings, $view ),
+			'colors'    => $colors,
+			'styleVars' => (object) $style['vars'],
+			'settings'  => array(
 				'unlockToast' => ! empty( $settings['unlock_toast'] ),
 				'stickers'    => ! empty( $settings['stickers'] ),
 				'ctaLabel'    => '' !== (string) $design['cta_label'] ? $design['cta_label'] : (string) $settings['cta_label'],
 				'emptyHint'   => (string) $settings['empty_slot_hint'],
 			),
-			'products' => self::products( $campaign, $settings, ! empty( $args['fresh'] ) ),
-			'freeGift' => self::free_gift( $config ),
-			'money'    => Assets::get_money_settings(),
-			'now'      => gmdate( 'Y-m-d\TH:i:s\Z' ),
+			'products'  => self::products( $campaign, $settings, ! empty( $args['fresh'] ) ),
+			'freeGift'  => self::free_gift( $config ),
+			'money'     => Assets::get_money_settings(),
+			'now'       => gmdate( 'Y-m-d\TH:i:s\Z' ),
 		);
 
 		if ( ! $preview ) {

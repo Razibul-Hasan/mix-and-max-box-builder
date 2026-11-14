@@ -57,10 +57,14 @@ final class Renderer {
 			)
 		);
 		$advanced = $campaign['config']['design']['advanced'];
+		wp_add_inline_style(
+			Storefront::HANDLE,
+			Template_Styles::rule( self::$instances, (array) $payload['styleVars'] )
+		);
 		if ( '' !== $advanced['custom_css'] ) {
 			wp_add_inline_style(
 				Storefront::HANDLE,
-				'.mmbb-root[data-campaign="' . absint( $campaign['id'] ) . '"] {' . $advanced['custom_css'] . '}'
+				'.mmbb-box-' . self::$instances . ' {' . $advanced['custom_css'] . '}'
 			);
 		}
 
@@ -71,9 +75,11 @@ final class Renderer {
 		);
 
 		$attributes = array(
-			'class'         => trim( 'mmbb-root mmbb-builder ' . $advanced['css_class'] ),
+			'class'         => trim( 'mmbb-root mmbb-builder mmbb-box-' . self::$instances . ' ' . $advanced['css_class'] ),
 			'data-mmbb-id'  => $instance,
 			'data-campaign' => (string) $campaign['id'],
+			'data-template' => $payload['config']['design']['template'],
+			'data-width'    => $payload['config']['design']['spacing']['width'],
 		);
 		if ( $preview ) {
 			$attributes['data-mmbb-preview'] = '1';
@@ -81,11 +87,6 @@ final class Renderer {
 		if ( $payload['colors']['dark'] ) {
 			$attributes['data-theme'] = 'dark';
 		}
-		$vars = (array) $payload['colors']['vars'];
-		if ( $vars ) {
-			$attributes['style'] = Colors::style( $vars );
-		}
-
 		$heading = '' !== (string) $campaign['config']['design']['headline'] ? $campaign['config']['design']['headline'] : $campaign['title'];
 
 		return sprintf(

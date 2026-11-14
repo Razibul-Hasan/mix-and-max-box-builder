@@ -43,6 +43,7 @@ import {
 } from './state';
 import { loadBox, saveBox } from './storage';
 import { track, analyticsSession } from './track';
+import TemplateRenderer from './templates/TemplateRenderer';
 
 const TOAST_MS = 2600;
 
@@ -358,291 +359,316 @@ function BuilderView( { payload, preview, navigate } ) {
 	const step = full ? 2 : 1;
 
 	return (
-		<div
-			ref={ rootRef }
-			className={ `mmbb-builder__inner ${
-				narrow ? 'is-narrow' : 'is-wide'
-			}` }
-			style={ { '--mmbb-columns': columns } }
-		>
-			{ view.showHero ? (
-				<Hero
-					payload={ payload }
-					nowMs={ nowMs }
-					decimals={ decimals }
-				/>
-			) : null }
-
-			{ editing ? (
-				<Notice tone="info">
-					{ __(
-						'You’re editing the box from your cart. Update it when you’re done.',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				</Notice>
-			) : null }
-
-			{ narrow && sizes.length ? (
-				<Steps
-					compact
-					current={ step }
-					steps={ [
-						__(
-							'Pick a size',
-							'productboxes-mix-and-match-box-builder'
-						),
-						__(
-							'Fill your box',
-							'productboxes-mix-and-match-box-builder'
-						),
-						__(
-							'Checkout',
-							'productboxes-mix-and-match-box-builder'
-						),
-					] }
-				/>
-			) : null }
-
+		<TemplateRenderer template={ config.design.template }>
 			<div
-				className={ `mmbb-builder__layout${
-					showPanel && ! narrow ? ' has-panel' : ''
+				ref={ rootRef }
+				className={ `mmbb-builder__inner ${
+					narrow ? 'is-narrow' : 'is-wide'
+				} is-summary-${
+					config.design.summary?.position || 'right'
+				} is-progress-${
+					config.design.summary?.progress || 'bar'
+				} is-slots-${
+					config.design.summary?.slots || 'photos'
+				} is-button-${ config.design.buttons?.style || 'fill' }${
+					config.design.typography?.button_uppercase
+						? ' has-uppercase-buttons'
+						: ''
 				}` }
+				style={ { '--mmbb-columns': columns } }
 			>
-				<div className="mmbb-builder__main">
-					{ sizes.length ? (
-						<div className="mmbb-builder__section">
-							<p className="mmbb-builder__step">
-								{ __(
-									'Step 1',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							</p>
-							<h3 className="mmbb-builder__subhead">
-								{ __(
-									'Pick a box size',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							</h3>
-							<BoxSizePicker
-								name={ `mmbb-size-${ payload.id }` }
-								layout={ narrow ? 'pills' : 'cards' }
-								value={ state.size }
-								onChange={ ( size ) =>
-									dispatch( { type: 'setSize', size } )
-								}
-								sizes={ sizes.map( ( row ) => ( {
-									qty: row.qty,
-									tag: sizeTag( row.tag ),
-									price:
-										row.discount_type === 'box_price' &&
-										row.value > 0
-											? convert( row.value )
-											: undefined,
-									save:
-										row.discount_type === 'box_price'
-											? undefined
-											: tierLabel(
-													row,
-													formatMoney,
-													convert
-											  ),
-								} ) ) }
-							/>
-							<p className="mmbb-builder__step">
-								{ __(
-									'Step 2',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							</p>
-							<h3 className="mmbb-builder__subhead">
-								{ __(
-									'Fill your box',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							</h3>
-						</div>
-					) : null }
+				{ view.showHero ? (
+					<Hero
+						payload={ payload }
+						nowMs={ nowMs }
+						decimals={ decimals }
+					/>
+				) : null }
 
-					<div className="mmbb-builder__filters">
-						{ categories.length > 1 ? (
-							<Chips
-								label={ __(
-									'Category',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								value={ category }
-								onChange={ setCategory }
-								options={ [
-									{
-										value: 'all',
-										label: __(
-											'All',
-											'productboxes-mix-and-match-box-builder'
-										),
-										count: Object.keys( env.products )
-											.length,
-									},
-									...categories,
-								] }
-							/>
-						) : (
-							<span />
+				{ editing ? (
+					<Notice tone="info">
+						{ __(
+							'You’re editing the box from your cart. Update it when you’re done.',
+							'productboxes-mix-and-match-box-builder'
 						) }
-						{ visible.length > 1 ? (
-							<SelectField
-								className="mmbb-builder__sort"
-								aria-label={ __(
-									'Sort products',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								value={ order }
-								onChange={ ( event ) =>
-									setOrder( event.target.value )
-								}
-								options={ [
-									{
-										value: 'default',
-										label: __(
-											'Featured',
-											'productboxes-mix-and-match-box-builder'
-										),
-									},
-									{
-										value: 'price_asc',
-										label: __(
-											'Price: low to high',
-											'productboxes-mix-and-match-box-builder'
-										),
-									},
-									{
-										value: 'price_desc',
-										label: __(
-											'Price: high to low',
-											'productboxes-mix-and-match-box-builder'
-										),
-									},
-									{
-										value: 'name',
-										label: __(
-											'Name',
-											'productboxes-mix-and-match-box-builder'
-										),
-									},
-								] }
-							/>
-						) : null }
-					</div>
+					</Notice>
+				) : null }
 
-					{ visible.length ? (
-						<div className="mmbb-builder__grid">
-							{ visible.map( ( product ) => {
-								const qty = countOf( state.items, product.id );
-								const atLimit =
-									qty >= limitFor( env, product.id );
-								return (
-									<ProductTile
-										key={ product.id }
-										name={ product.name }
-										meta={ product.meta || undefined }
-										price={ product.price }
-										compareAt={
-											product.compare_at || undefined
-										}
-										image={ product.image || undefined }
-										badge={ product.badge || undefined }
-										stock={
-											product.stock === null
+				{ narrow && sizes.length ? (
+					<Steps
+						compact
+						current={ step }
+						steps={ [
+							__(
+								'Pick a size',
+								'productboxes-mix-and-match-box-builder'
+							),
+							__(
+								'Fill your box',
+								'productboxes-mix-and-match-box-builder'
+							),
+							__(
+								'Checkout',
+								'productboxes-mix-and-match-box-builder'
+							),
+						] }
+					/>
+				) : null }
+
+				<div
+					className={ `mmbb-builder__layout${
+						showPanel && ! narrow ? ' has-panel' : ''
+					}` }
+				>
+					<div className="mmbb-builder__main">
+						{ sizes.length ? (
+							<div className="mmbb-builder__section">
+								<p className="mmbb-builder__step">
+									{ __(
+										'Step 1',
+										'productboxes-mix-and-match-box-builder'
+									) }
+								</p>
+								<h3 className="mmbb-builder__subhead">
+									{ __(
+										'Pick a box size',
+										'productboxes-mix-and-match-box-builder'
+									) }
+								</h3>
+								<BoxSizePicker
+									name={ `mmbb-size-${ payload.id }` }
+									layout={ narrow ? 'pills' : 'cards' }
+									value={ state.size }
+									onChange={ ( size ) =>
+										dispatch( { type: 'setSize', size } )
+									}
+									sizes={ sizes.map( ( row ) => ( {
+										qty: row.qty,
+										tag: sizeTag( row.tag ),
+										price:
+											row.discount_type === 'box_price' &&
+											row.value > 0
+												? convert( row.value )
+												: undefined,
+										save:
+											row.discount_type === 'box_price'
 												? undefined
-												: product.stock
-										}
-										qty={ qty }
-										boxFull={ full || atLimit }
-										onAdd={ () => {
-											dispatch( {
-												type: 'add',
-												id: product.id,
-											} );
-											track( 'add_item', {
-												tracking: payload.tracking,
-												campaignId: payload.id,
-												productId: product.id,
-											} );
-										} }
-										onChange={ ( next ) => {
-											dispatch( {
-												type: 'setQty',
-												id: product.id,
-												qty: next,
-											} );
-											if (
-												next > qty &&
-												! full &&
-												! atLimit
-											) {
+												: tierLabel(
+														row,
+														formatMoney,
+														convert
+												  ),
+									} ) ) }
+								/>
+								<p className="mmbb-builder__step">
+									{ __(
+										'Step 2',
+										'productboxes-mix-and-match-box-builder'
+									) }
+								</p>
+								<h3 className="mmbb-builder__subhead">
+									{ __(
+										'Fill your box',
+										'productboxes-mix-and-match-box-builder'
+									) }
+								</h3>
+							</div>
+						) : null }
+
+						<div className="mmbb-builder__filters">
+							{ categories.length > 1 ? (
+								<Chips
+									label={ __(
+										'Category',
+										'productboxes-mix-and-match-box-builder'
+									) }
+									value={ category }
+									onChange={ setCategory }
+									options={ [
+										{
+											value: 'all',
+											label: __(
+												'All',
+												'productboxes-mix-and-match-box-builder'
+											),
+											count: Object.keys( env.products )
+												.length,
+										},
+										...categories,
+									] }
+								/>
+							) : (
+								<span />
+							) }
+							{ visible.length > 1 ? (
+								<SelectField
+									className="mmbb-builder__sort"
+									aria-label={ __(
+										'Sort products',
+										'productboxes-mix-and-match-box-builder'
+									) }
+									value={ order }
+									onChange={ ( event ) =>
+										setOrder( event.target.value )
+									}
+									options={ [
+										{
+											value: 'default',
+											label: __(
+												'Featured',
+												'productboxes-mix-and-match-box-builder'
+											),
+										},
+										{
+											value: 'price_asc',
+											label: __(
+												'Price: low to high',
+												'productboxes-mix-and-match-box-builder'
+											),
+										},
+										{
+											value: 'price_desc',
+											label: __(
+												'Price: high to low',
+												'productboxes-mix-and-match-box-builder'
+											),
+										},
+										{
+											value: 'name',
+											label: __(
+												'Name',
+												'productboxes-mix-and-match-box-builder'
+											),
+										},
+									] }
+								/>
+							) : null }
+						</div>
+
+						{ visible.length ? (
+							<div className="mmbb-builder__grid">
+								{ visible.map( ( product ) => {
+									const qty = countOf(
+										state.items,
+										product.id
+									);
+									const atLimit =
+										qty >= limitFor( env, product.id );
+									return (
+										<ProductTile
+											key={ product.id }
+											name={ product.name }
+											meta={ product.meta || undefined }
+											price={ product.price }
+											compareAt={
+												config.design.cards
+													?.show_compare_price
+													? product.compare_at ||
+													  undefined
+													: undefined
+											}
+											image={ product.image || undefined }
+											badge={
+												config.design.cards
+													?.show_sale_badge
+													? product.badge || undefined
+													: undefined
+											}
+											stock={
+												product.stock === null
+													? undefined
+													: product.stock
+											}
+											qty={ qty }
+											boxFull={ full || atLimit }
+											onAdd={ () => {
+												dispatch( {
+													type: 'add',
+													id: product.id,
+												} );
 												track( 'add_item', {
 													tracking: payload.tracking,
 													campaignId: payload.id,
 													productId: product.id,
 												} );
-											}
-										} }
-									/>
-								);
-							} ) }
-						</div>
-					) : (
-						<p className="mmbb-builder__empty">
-							{ __(
-								'No products to show right now.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						</p>
-					) }
+											} }
+											onChange={ ( next ) => {
+												dispatch( {
+													type: 'setQty',
+													id: product.id,
+													qty: next,
+												} );
+												if (
+													next > qty &&
+													! full &&
+													! atLimit
+												) {
+													track( 'add_item', {
+														tracking:
+															payload.tracking,
+														campaignId: payload.id,
+														productId: product.id,
+													} );
+												}
+											} }
+										/>
+									);
+								} ) }
+							</div>
+						) : (
+							<p className="mmbb-builder__empty">
+								{ __(
+									'No products to show right now.',
+									'productboxes-mix-and-match-box-builder'
+								) }
+							</p>
+						) }
+					</div>
+
+					{ showPanel ? (
+						<div className="mmbb-builder__aside">{ panel }</div>
+					) : null }
 				</div>
 
-				{ showPanel ? (
-					<div className="mmbb-builder__aside">{ panel }</div>
+				{ showBar ? (
+					<div className="mmbb-builder__bar">
+						{ error && ! drawerOpen ? (
+							<div role="alert">
+								<Notice tone="critical">{ error }</Notice>
+							</div>
+						) : null }
+						<BoxSummaryBar
+							size={ capacity }
+							minItems={ minItems }
+							items={ boxItems }
+							tiers={ tiers }
+							total={ total }
+							compareAt={ result.discount > 0 ? subtotal : null }
+							ctaLabel={ ctaLabel }
+							ctaDisabled={ preview }
+							ctaLoading={ busy }
+							onOpen={ () => setDrawerOpen( true ) }
+							onCheckout={ submit }
+						/>
+					</div>
+				) : null }
+
+				{ drawerOpen && showBar ? (
+					<Drawer
+						label={ payload.title }
+						onClose={ () => setDrawerOpen( false ) }
+					>
+						{ panel }
+					</Drawer>
+				) : null }
+
+				{ toast ? (
+					<div className="mmbb-builder__toast">
+						<Toast icon="sparkle">{ toast }</Toast>
+					</div>
 				) : null }
 			</div>
-
-			{ showBar ? (
-				<div className="mmbb-builder__bar">
-					{ error && ! drawerOpen ? (
-						<div role="alert">
-							<Notice tone="critical">{ error }</Notice>
-						</div>
-					) : null }
-					<BoxSummaryBar
-						size={ capacity }
-						minItems={ minItems }
-						items={ boxItems }
-						tiers={ tiers }
-						total={ total }
-						compareAt={ result.discount > 0 ? subtotal : null }
-						ctaLabel={ ctaLabel }
-						ctaDisabled={ preview }
-						ctaLoading={ busy }
-						onOpen={ () => setDrawerOpen( true ) }
-						onCheckout={ submit }
-					/>
-				</div>
-			) : null }
-
-			{ drawerOpen && showBar ? (
-				<Drawer
-					label={ payload.title }
-					onClose={ () => setDrawerOpen( false ) }
-				>
-					{ panel }
-				</Drawer>
-			) : null }
-
-			{ toast ? (
-				<div className="mmbb-builder__toast">
-					<Toast icon="sparkle">{ toast }</Toast>
-				</div>
-			) : null }
-		</div>
+		</TemplateRenderer>
 	);
 }
 

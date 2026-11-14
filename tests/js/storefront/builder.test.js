@@ -125,3 +125,25 @@ it( 'keeps the box across a reload, and stores nothing in preview', () => {
 	fireEvent.click( addButtons()[ 0 ] );
 	expect( window.sessionStorage.getItem( 'mmbb:box:5' ) ).toBeNull();
 } );
+
+it.each( [ 'spotlight', 'clean', 'steps', 'gift', 'bold' ] )(
+	'renders the %s template through the shared builder',
+	( template ) => {
+		const data = payload();
+		data.config.design.template = template;
+		const { container } = render( <Builder payload={ data } preview /> );
+		expect(
+			container.querySelector( `.mmbb-template--${ template }` )
+		).toBeTruthy();
+		expect( addButtons() ).toHaveLength( 2 );
+	}
+);
+
+it( 'falls back to Spotlight for an unknown template', () => {
+	const data = payload();
+	data.config.design.template = 'nope';
+	const { container } = render( <Builder payload={ data } preview /> );
+	expect(
+		container.querySelector( '.mmbb-template--spotlight' )
+	).toBeTruthy();
+} );

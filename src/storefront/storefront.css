@@ -3,12 +3,17 @@
 /* The builder paints its own canvas inside the theme, so it needs room inside that colour. */
 .mmbb-root.mmbb-builder {
 	box-sizing: border-box;
-	max-width: 100%;
+	container-name: mmbb-builder;
+	container-type: inline-size;
+	width: 100%;
+	max-width: 1280px;
+	margin-inline: auto;
 	--mmbb-pad: clamp(var(--space-4), 3vw, var(--space-8));
-	padding: var(--mmbb-pad);
-	border-radius: var(--radius-xl);
-	color: var(--ink);
-	font-family: var(--font-sans);
+	padding: var(--mmbb-pad-top) var(--mmbb-pad-right) var(--mmbb-pad-bottom) var(--mmbb-pad-left);
+	border-radius: var(--mmbb-card-radius);
+	background: var(--mmbb-bg);
+	color: var(--mmbb-text);
+	font-family: var(--mmbb-font-body);
 }
 
 .mmbb-root.mmbb-builder *,
@@ -62,10 +67,10 @@
 
 .mmbb-root .mmbb-hero__headline {
 	margin: 0;
-	font-family: var(--font-display);
-	font-size: var(--display-md-font-size);
+	font-family: var(--mmbb-font-heading);
+	font-size: clamp(36px, 6vw, var(--mmbb-heading-size));
 	line-height: var(--display-md-line-height);
-	font-weight: var(--display-md-font-weight);
+	font-weight: var(--mmbb-heading-weight);
 	letter-spacing: var(--display-md-letter-spacing);
 }
 
@@ -202,7 +207,7 @@
 
 .mmbb-root .mmbb-builder__grid {
 	display: grid;
-	grid-template-columns: repeat(var(--mmbb-columns, 3), minmax(0, 1fr));
+	grid-template-columns: repeat(var(--mmbb-cols, var(--mmbb-columns, 3)), minmax(0, 1fr));
 	gap: var(--space-4);
 }
 
@@ -349,4 +354,167 @@
 	color: var(--warn);
 	font-size: 12px;
 	font-weight: 600;
+}
+
+/* ---------- Redesign template engine ---------- */
+
+.mmbb-root.mmbb-builder[data-width="content"] {
+	max-width: 840px;
+}
+
+.mmbb-root.mmbb-builder[data-width="full"] {
+	width: 100%;
+	max-width: none;
+	border-radius: 0;
+}
+
+.mmbb-root .mmbb-template,
+.mmbb-root .mmbb-template > .mmbb-builder__inner {
+	min-width: 0;
+}
+
+.mmbb-root .mmbb-tile {
+	overflow: hidden;
+	border-radius: var(--mmbb-card-radius);
+	background: var(--mmbb-surface);
+	box-shadow: var(--mmbb-card-shadow);
+}
+
+.mmbb-root .mmbb-tile__media,
+.mmbb-root .mmbb-tile__media img {
+	aspect-ratio: var(--mmbb-ratio);
+}
+
+.mmbb-root .mmbb-tile__media img {
+	object-fit: var(--mmbb-fit);
+}
+
+.mmbb-root .mmbb-template .mmbb-btn,
+.mmbb-root .mmbb-template .mmbb-qty {
+	min-height: max(44px, var(--mmbb-btn-height));
+	border-radius: var(--mmbb-btn-radius);
+}
+
+.mmbb-root .has-uppercase-buttons .mmbb-btn {
+	text-transform: uppercase;
+}
+
+.mmbb-root .is-button-outline .mmbb-tile__action .mmbb-btn {
+	border-color: var(--mmbb-text);
+	background: transparent;
+	color: var(--mmbb-text);
+}
+
+.mmbb-root .is-button-soft .mmbb-tile__action .mmbb-btn {
+	border-color: transparent;
+	background: color-mix(in srgb, var(--mmbb-accent) 14%, var(--mmbb-surface));
+	color: var(--mmbb-text);
+}
+
+.mmbb-root .is-summary-left .mmbb-builder__layout.has-panel {
+	grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+}
+
+.mmbb-root .is-summary-left .mmbb-builder__aside {
+	grid-column: 1;
+	grid-row: 1;
+}
+
+.mmbb-root .is-summary-left .mmbb-builder__main {
+	grid-column: 2;
+}
+
+/* 01 Spotlight: open headline, rising ladder, product grid and floating box. */
+.mmbb-root .mmbb-template--spotlight .mmbb-hero {
+	justify-content: space-between;
+}
+
+.mmbb-root .mmbb-template--spotlight .mmbb-panel {
+	border-radius: calc(var(--mmbb-card-radius) + 6px);
+	box-shadow: 0 24px 60px -24px color-mix(in srgb, var(--mmbb-text) 25%, transparent);
+}
+
+/* 02 Clean list: centred copy, segmented progress and restrained rows. */
+.mmbb-root .mmbb-template--clean {
+	max-width: 900px;
+	margin-inline: auto;
+}
+
+.mmbb-root .mmbb-template--clean .mmbb-hero {
+	justify-content: center;
+	text-align: center;
+}
+
+.mmbb-root .mmbb-template--clean .mmbb-hero__copy {
+	align-items: center;
+}
+
+.mmbb-root .mmbb-template--clean .mmbb-hero__ladder {
+	display: none;
+}
+
+.mmbb-root .mmbb-template--clean .mmbb-builder__grid {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+.mmbb-root .mmbb-template--clean .mmbb-tile {
+	display: grid;
+	grid-template-columns: 112px minmax(0, 1fr) 160px;
+	align-items: center;
+	gap: var(--space-4);
+	padding-block: var(--space-3);
+	border: 0;
+	border-bottom: 1px solid color-mix(in srgb, var(--mmbb-text) 12%, transparent);
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.mmbb-root .mmbb-template--clean .mmbb-tile__media {
+	border-radius: var(--mmbb-card-radius);
+}
+
+/* 03 Guided steps: soft canvas, pill navigation and raised product cards. */
+.mmbb-root .mmbb-template--steps .mmbb-builder__section,
+.mmbb-root .mmbb-template--steps .mmbb-steps {
+	padding: var(--space-3);
+	border-radius: calc(var(--mmbb-card-radius) + 8px);
+	background: var(--mmbb-surface);
+}
+
+.mmbb-root .mmbb-template--steps .mmbb-tile {
+	padding: var(--space-2);
+}
+
+/* 04 Gift tray: dark presentation with a light, prominent box panel. */
+.mmbb-root .mmbb-template--gift .mmbb-hero__headline,
+.mmbb-root .mmbb-template--gift .mmbb-builder__subhead {
+	font-family: var(--mmbb-font-heading);
+}
+
+.mmbb-root .mmbb-template--gift .mmbb-panel {
+	background: var(--mmbb-surface);
+	color: color-mix(in srgb, var(--mmbb-bg) 92%, var(--mmbb-text));
+}
+
+.mmbb-root .mmbb-template--gift .mmbb-builder__layout.has-panel {
+	align-items: start;
+}
+
+/* 05 Color block: a saturated hero and overlapping card deck. */
+.mmbb-root .mmbb-template--bold .mmbb-hero {
+	margin: calc(var(--mmbb-pad-top) * -1) calc(var(--mmbb-pad-right) * -1) 0 calc(var(--mmbb-pad-left) * -1);
+	padding: var(--mmbb-pad-top) var(--mmbb-pad-right) calc(var(--mmbb-pad-bottom) + 80px) var(--mmbb-pad-left);
+	background: var(--mmbb-accent);
+	color: var(--mmbb-button-text);
+}
+
+.mmbb-root .mmbb-template--bold .mmbb-builder__layout {
+	margin-top: -72px;
+}
+
+.mmbb-root .mmbb-template--bold .mmbb-tile {
+	padding: var(--space-2);
+	background: var(--mmbb-surface);
 }

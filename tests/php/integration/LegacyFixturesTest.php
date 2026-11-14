@@ -281,7 +281,7 @@ class LegacyFixturesTest extends \WP_UnitTestCase {
 		wp_set_current_user( 0 );
 
 		$shortcode = do_shortcode( '[mmbb_box id="' . $expected['id'] . '"]' );
-		$this->assertStringContainsString( 'class="mmbb-root mmbb-builder"', $shortcode );
+		$this->assertStringContainsString( 'class="mmbb-root mmbb-builder mmbb-box-', $shortcode );
 		$this->assertStringContainsString( 'data-campaign="' . $expected['id'] . '"', $shortcode );
 		$this->assertTrue( wp_script_is( 'mmbb-storefront', 'enqueued' ) );
 
