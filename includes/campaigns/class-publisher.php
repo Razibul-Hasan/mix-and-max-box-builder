@@ -106,7 +106,7 @@ final class Publisher {
 	 * @return int|\WP_Error Page id.
 	 */
 	private function create_page( $campaign_id, array $args ) {
-		if ( ! current_user_can( 'publish_pages' ) ) {
+		if ( ! current_user_can( 'edit_pages' ) || ! current_user_can( 'publish_pages' ) ) {
 			return new \WP_Error( 'mmbb_cannot_publish_page', __( 'You are not allowed to publish pages.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 403 ) );
 		}
 
@@ -140,7 +140,7 @@ final class Publisher {
 		if ( ! $page || 'page' !== $page->post_type || 'trash' === $page->post_status ) {
 			return new \WP_Error( 'mmbb_invalid_page', __( 'Choose an existing page for the builder.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 400 ) );
 		}
-		if ( ! current_user_can( 'edit_post', $page->ID ) ) {
+		if ( ! current_user_can( 'edit_pages' ) || ! current_user_can( 'edit_post', $page->ID ) ) {
 			return new \WP_Error( 'mmbb_cannot_edit_page', __( 'You are not allowed to edit that page.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 403 ) );
 		}
 

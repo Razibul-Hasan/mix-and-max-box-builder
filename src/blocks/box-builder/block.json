@@ -24,6 +24,11 @@
 		"showHero": {
 			"type": "boolean",
 			"default": true
+		},
+		"template": {
+			"type": "string",
+			"enum": [ "", "spotlight", "clean", "steps", "gift", "bold", "pastel", "editorial", "night", "split", "compact" ],
+			"default": ""
 		}
 	},
 	"supports": {

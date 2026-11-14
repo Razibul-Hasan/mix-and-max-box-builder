@@ -13,12 +13,28 @@ Updated by the agent at the end of every part.
 | 6 | Design settings and Design step | done | `bcb6f8e` |
 | 7 | Template engine and templates 01–05 | done | `121f1e0` |
 | 8 | Templates 06–10, phone layout, fonts | done | `7cd57c8` |
-| 9 | Publish flow | not started | |
+| 9 | Publish flow | done | `(this commit)` |
 | 10 | Analytics and Settings | not started | |
 | 11 | Migration, compatibility, hardening | not started | |
 | 12 | Release | not started | |
 
 ## Log
+
+### Part 9 — Publish flow (2026-11-14)
+
+**Done:** Replaced the old existing-page-only publish content with one WordPress-components modal matching the new flow. It shows size, discount, product and template badges; supports a searchable existing-page selector, sanitized new-page title/address preview, and self-placement with the frozen `[mmbb_box]` shortcode and ProductBoxes Box Builder block name. The modal edits Right away / Pick dates through the existing UTC schedule contract using the store time zone, including the three-day countdown toggle. Publishing now transitions in place to “Your box is live,” with Back to boxes and the live store URL when a page exists. The existing publisher still prepends the frozen block to block/empty pages and shortcode to classic content, while page mutations now explicitly require `edit_pages` and new published pages also require `publish_pages`. Added the optional `template` placement attribute to the existing block and shortcode; omitted or invalid values fall back to the box template, and the block inspector offers all ten templates plus an Edit box link. Existing block names, shortcode tags and attributes remain valid.
+
+**Decisions:** `SelectControl` remains the page picker and is paired with `SearchControl`, because the WordPress 6.6-compatible SelectControl is not itself searchable. “I’ll place it myself” cannot truthfully provide a live builder URL until the merchant places it, so its success state gives block/shortcode guidance and omits View on store; page placements show the required URL and action. The template override changes only the selected presentation template for that placement; merchant style settings and all box/cart data remain shared. New pages use the existing block comment, while existing pages retain the established `has_blocks()` block/classic choice.
+
+**Frozen identifiers touched:** none renamed. The optional `template` attribute is additive on `mmbb/box-builder` and `[mmbb_box]`; all prior attributes and saved markup keep their behavior.
+
+**Data changes and migration steps:** none. Schedules continue to store UTC ISO 8601 values in `_mmbb_config`; placement keeps the existing `placement.page_id`. The template override lives only in post content and does not change campaign storage.
+
+**Checks run:** production build ✅ (same two admin-size warnings; admin entry 267 KiB) · lint:js ✅ · lint:css ✅ · PHPCS ✅ · test:js ✅ (23 suites, 311 tests) · test:unit ✅ (115 tests, 603 assertions) · integration ✅ (212 tests, 2 skipped, 2,304 assertions) · HPOS integration ✅ (212 tests, 2 skipped, 2,305 assertions) · release zip ✅ (873,488 bytes) · packaged Plugin Check review ruleset ✅ (0 findings after the same baseline exclusions for generated `build/` minification and the pre-existing analytics nonce sniff).
+
+**Skipped checks (and why):** Docker/wp-env and WP-CLI are unavailable in this shell, so runtime Plugin Check was replaced by the packaged review ruleset and both native WordPress suites. No live browser was driven through Twenty Twenty-Five and Storefront, so the modal was not screenshot-compared or clicked manually in both themes. Integration coverage publishes through all three choices, asserts block and classic placement byte-for-byte, renders old and template-overridden blocks/shortcodes, and checks scheduled visibility at store-time boundaries.
+
+**Open issues:** none in the implemented Part 9 paths.
 
 ### Part 8 visual repair — purpose-built templates (2026-11-14)
 **Done:** Replaced the Part 8 CSS-only template wrappers with real presentation structure while preserving the shared builder state, pricing, storage and cart actions. Editorial now has its issue header, tier list, numbered magazine grid and left summary; Night has its live-deal heading, progress ring, five-up product deck and glowing summary bar; Split places its heading and box in the coloured left half with products on the right; Compact has its own header, deal badge, tier rail, image controls and light summary; Pastel now has five merchant-variable-derived tints and round tray slots. Narrow layouts collapse Editorial and Split safely, keep every template two-up (Clean remains a list), and use a builder-scoped sticky summary instead of a viewport-wide fixed bar in narrow desktop columns.

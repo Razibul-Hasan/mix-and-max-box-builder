@@ -95,6 +95,20 @@ class StorefrontTest extends \WP_UnitTestCase {
 		$this->assertStringContainsString( '--mmbb-font-heading:', $inline );
 	}
 
+	/** A placement may override only the template; old markup still uses the saved template. */
+	public function test_template_attribute_overrides_shortcode_and_block() {
+		$id = $this->campaign['id'];
+
+		$shortcode = do_shortcode( '[mmbb_box id="' . $id . '" template="night"]' );
+		$this->assertStringContainsString( 'data-template="night"', $shortcode );
+
+		$block = do_blocks( '<!-- wp:mmbb/box-builder {"campaignId":' . $id . ',"template":"compact"} /-->' );
+		$this->assertStringContainsString( 'data-template="compact"', $block );
+
+		$invalid = do_shortcode( '[mmbb_box id="' . $id . '" template="unknown"]' );
+		$this->assertStringContainsString( 'data-template="spotlight"', $invalid );
+	}
+
 	/** Two builders on one page get two instances and two payloads. */
 	public function test_two_builders_get_distinct_instances() {
 		$one = do_shortcode( '[mmbb_box id="' . $this->campaign['id'] . '"]' );

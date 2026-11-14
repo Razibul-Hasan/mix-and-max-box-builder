@@ -26,6 +26,56 @@ const NEW_URL = 'admin.php?page=mmbb-campaigns&action=new';
 const editUrl = ( id ) =>
 	`admin.php?page=mmbb-campaigns&action=edit&id=${ id }`;
 
+const templateOptions = () => [
+	{
+		value: '',
+		label: __(
+			'Use box template',
+			'productboxes-mix-and-match-box-builder'
+		),
+	},
+	{
+		value: 'spotlight',
+		label: __( 'Spotlight', 'productboxes-mix-and-match-box-builder' ),
+	},
+	{
+		value: 'clean',
+		label: __( 'Clean list', 'productboxes-mix-and-match-box-builder' ),
+	},
+	{
+		value: 'steps',
+		label: __( 'Guided steps', 'productboxes-mix-and-match-box-builder' ),
+	},
+	{
+		value: 'gift',
+		label: __( 'Gift tray', 'productboxes-mix-and-match-box-builder' ),
+	},
+	{
+		value: 'bold',
+		label: __( 'Color block', 'productboxes-mix-and-match-box-builder' ),
+	},
+	{
+		value: 'pastel',
+		label: __( 'Pastel', 'productboxes-mix-and-match-box-builder' ),
+	},
+	{
+		value: 'editorial',
+		label: __( 'Editorial', 'productboxes-mix-and-match-box-builder' ),
+	},
+	{
+		value: 'night',
+		label: __( 'Night', 'productboxes-mix-and-match-box-builder' ),
+	},
+	{
+		value: 'split',
+		label: __( 'Split screen', 'productboxes-mix-and-match-box-builder' ),
+	},
+	{
+		value: 'compact',
+		label: __( 'Compact card', 'productboxes-mix-and-match-box-builder' ),
+	},
+];
+
 function typeLabel( type ) {
 	const labels = {
 		tiered: __( 'Tiered mix', 'productboxes-mix-and-match-box-builder' ),
@@ -70,7 +120,7 @@ function usePreview( campaignId ) {
 }
 
 export default function Edit( { attributes, setAttributes } ) {
-	const { campaignId, layout, columns, showHero } = attributes;
+	const { campaignId, layout, columns, showHero, template } = attributes;
 	const campaigns = useCampaigns();
 	const { payload, error } = usePreview( campaignId );
 
@@ -110,17 +160,25 @@ export default function Edit( { attributes, setAttributes } ) {
 		}
 		return {
 			...payload,
+			config: {
+				...payload.config,
+				design: {
+					...payload.config.design,
+					template: template || payload.config.design.template,
+				},
+			},
 			view: {
 				layout: layout !== 'default' ? layout : payload.view.layout,
 				columns: columns > 0 ? columns : payload.view.columns,
 				showHero: showHero && payload.view.showHero,
 			},
 		};
-	}, [ payload, layout, columns, showHero ] );
+	}, [ payload, layout, columns, showHero, template ] );
 
 	const blockProps = useBlockProps( {
 		className: 'mmbb-root mmbb-builder',
 		'data-theme': payload?.colors?.dark ? 'dark' : undefined,
+		'data-template': template || payload?.config?.design?.template,
 		style: payload?.colors?.vars,
 	} );
 
@@ -159,12 +217,25 @@ export default function Edit( { attributes, setAttributes } ) {
 								rel="noreferrer"
 							>
 								{ __(
-									'Edit campaign',
+									'Edit box',
 									'productboxes-mix-and-match-box-builder'
 								) }
 							</a>
 						</p>
 					) : null }
+					<SelectControl
+						__nextHasNoMarginBottom
+						__next40pxDefaultSize
+						label={ __(
+							'Template',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						value={ template || '' }
+						options={ templateOptions() }
+						onChange={ ( value ) =>
+							setAttributes( { template: value } )
+						}
+					/>
 					<ToggleGroupControl
 						__nextHasNoMarginBottom
 						__next40pxDefaultSize

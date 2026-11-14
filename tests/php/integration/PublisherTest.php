@@ -199,6 +199,27 @@ class PublisherTest extends \WP_UnitTestCase {
 		$this->assertSame( 'draft', $this->repo->find( $id )['post_status'] );
 	}
 
+	/** A store manager still needs the page capability before existing content changes. */
+	public function test_existing_page_needs_edit_pages() {
+		$id      = $this->valid_campaign();
+		$page_id = self::factory()->post->create( array( 'post_type' => 'page' ) );
+		$content = get_post( $page_id )->post_content;
+		$user    = self::factory()->user->create( array( 'role' => 'subscriber' ) );
+		get_user_by( 'id', $user )->add_cap( 'manage_woocommerce' );
+		wp_set_current_user( $user );
+
+		$response = $this->publish(
+			$id,
+			array(
+				'placement' => 'existing_page',
+				'page_id'   => $page_id,
+			)
+		);
+		$this->assertSame( 403, $response->get_status() );
+		$this->assertSame( $content, get_post( $page_id )->post_content );
+		$this->assertSame( 'draft', $this->repo->find( $id )['post_status'] );
+	}
+
 	/** The container service runs on publish, and its error stops the publish. */
 	public function test_container_service() {
 		$id = $this->valid_campaign();

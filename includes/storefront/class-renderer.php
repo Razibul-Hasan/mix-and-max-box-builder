@@ -26,7 +26,7 @@ final class Renderer {
 	 * Render one builder.
 	 *
 	 * @param int   $campaign_id   Campaign id.
-	 * @param array $view          Overrides: layout, columns, show_hero.
+	 * @param array $view          Overrides: layout, columns, show_hero, template.
 	 * @param bool  $block_wrapper Whether to take the wrapper attributes from the block supports.
 	 * @return string HTML that is already escaped.
 	 */

@@ -173,6 +173,7 @@ function EditorBody( { initial } ) {
 	const [ publishOpen, setPublishOpen ] = useState(
 		() => readQueryStep() === 'publish'
 	);
+	const [ publishResult, setPublishResult ] = useState( null );
 	const [ visited, setVisited ] = useState( () =>
 		STEPS.slice( 0, Math.max( 0, STEPS.indexOf( startStep ) ) + 1 )
 	);
@@ -355,6 +356,7 @@ function EditorBody( { initial } ) {
 	const index = STEPS.indexOf( step );
 
 	const openPublish = () => {
+		setPublishResult( null );
 		setPublishOpen( true );
 		setServerErrors( [] );
 	};
@@ -371,14 +373,13 @@ function EditorBody( { initial } ) {
 		goTo( STEPS[ index + 1 ] );
 	};
 
-	const goLive = () => {
+	const goLive = ( body ) => {
 		if ( Object.keys( validateAll( draft ) ).length ) {
 			setAttempted( { products: true, discounts: true, design: true } );
 			return;
 		}
 		setBusy( true );
 		setServerErrors( [] );
-		const body = { placement: 'existing_page', page_id: pageId };
 		const saved = dirty ? save() : Promise.resolve( true );
 		saved
 			.then( () => publishCampaign( initial.id, body ) )
@@ -389,8 +390,10 @@ function EditorBody( { initial } ) {
 					campaign,
 					sent: stateRef.current.draft,
 				} );
-				setPublishOpen( false );
-				goTo( 'published' );
+				setPublishResult( campaign );
+				if ( campaign.placement.page_id ) {
+					setPageId( campaign.placement.page_id );
+				}
 			} )
 			.catch( ( error ) => {
 				if ( error && error.data && error.data.errors ) {
@@ -657,30 +660,50 @@ function EditorBody( { initial } ) {
 			{ publishOpen ? (
 				<Modal
 					className="mmbb-app-modal mmbb-ed__publish"
-					title={ __(
-						'Publish',
-						'productboxes-mix-and-match-box-builder'
-					) }
+					title={
+						publishResult
+							? __(
+									'Published',
+									'productboxes-mix-and-match-box-builder'
+							  )
+							: sprintf(
+									/* translators: %s: Box name. */
+									__(
+										'Publish %s',
+										'productboxes-mix-and-match-box-builder'
+									),
+									draft.title
+							  )
+					}
 					size="large"
 					onRequestClose={ () => setPublishOpen( false ) }
 				>
-					<PublishStep
-						draft={ draft }
-						campaign={ meta }
-						page={ { pageId, setPageId } }
-						problems={ problems }
-						serverErrors={ serverErrors }
-						busy={ busy }
-						onGoLive={ goLive }
-						onOpenStep={ ( target ) => {
-							setAttempted( ( a ) => ( {
-								...a,
-								[ target ]: true,
-							} ) );
-							setPublishOpen( false );
-							goTo( target );
-						} }
-					/>
+					{ publishResult ? (
+						<PublishedStep
+							campaign={ publishResult }
+							draft={ draft }
+						/>
+					) : (
+						<PublishStep
+							draft={ draft }
+							campaign={ meta }
+							page={ { pageId, setPageId } }
+							problems={ problems }
+							serverErrors={ serverErrors }
+							busy={ busy }
+							dispatch={ dispatch }
+							onPublish={ goLive }
+							onCancel={ () => setPublishOpen( false ) }
+							onOpenStep={ ( target ) => {
+								setAttempted( ( a ) => ( {
+									...a,
+									[ target ]: true,
+								} ) );
+								setPublishOpen( false );
+								goTo( target );
+							} }
+						/>
+					) }
 				</Modal>
 			) : null }
 		</div>

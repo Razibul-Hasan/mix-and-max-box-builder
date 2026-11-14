@@ -28,6 +28,7 @@ class PageContentTest extends TestCase {
 	/** Detection matches this campaign only. */
 	public function test_contains() {
 		$this->assertTrue( Page_Content::contains( Page_Content::block( 12 ), 12 ) );
+		$this->assertTrue( Page_Content::contains( '<!-- wp:mmbb/box-builder {"campaignId":12,"template":"night"} /-->', 12 ) );
 		$this->assertTrue( Page_Content::contains( 'Hello [mmbb_box id="12"] there', 12 ) );
 		$this->assertTrue( Page_Content::contains( "[mmbb_box id='12']", 12 ) );
 		$this->assertFalse( Page_Content::contains( Page_Content::block( 123 ), 12 ) );

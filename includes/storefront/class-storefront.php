@@ -74,10 +74,11 @@ final class Storefront {
 	public function render_shortcode( $atts ) {
 		$atts = shortcode_atts(
 			array(
-				'id'      => 0,
-				'layout'  => 'default',
-				'columns' => 0,
-				'hero'    => 'true',
+				'id'       => 0,
+				'layout'   => 'default',
+				'columns'  => 0,
+				'hero'     => 'true',
+				'template' => '',
 			),
 			is_array( $atts ) ? $atts : array(),
 			'mmbb_box'
@@ -90,6 +91,7 @@ final class Storefront {
 				'layout'    => in_array( $atts['layout'], Config::LAYOUTS, true ) ? $atts['layout'] : 'default',
 				'columns'   => in_array( $columns, Config::COLUMNS, true ) ? $columns : 0,
 				'show_hero' => false !== filter_var( $atts['hero'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE ),
+				'template'  => in_array( $atts['template'], Config::DESIGN_TEMPLATES, true ) ? $atts['template'] : '',
 			),
 			false
 		);

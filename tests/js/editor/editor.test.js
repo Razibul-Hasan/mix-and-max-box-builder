@@ -407,7 +407,7 @@ describe( 'box editor', () => {
 		).toBeTruthy();
 	} );
 
-	it( 'opens Publish as a dialog, goes live on the chosen page and shows the published screen', async () => {
+	it( 'publishes to an existing page and shows success in the dialog', async () => {
 		api.publishCampaign.mockResolvedValue(
 			campaign(
 				{
@@ -429,16 +429,26 @@ describe( 'box editor', () => {
 		fireEvent.click( screen.getByRole( 'button', { name: 'Publish' } ) );
 		expect( await screen.findByRole( 'dialog' ) ).toBeTruthy();
 		await choosePage();
-		fireEvent.click( screen.getByRole( 'button', { name: /Go live/ } ) );
+		fireEvent.click( screen.getByRole( 'button', { name: 'Publish' } ) );
 
 		await waitFor( () => expect( api.publishCampaign ).toHaveBeenCalled() );
 		expect( api.publishCampaign.mock.calls[ 0 ] ).toEqual( [
 			5,
-			{ placement: 'existing_page', page_id: 22 },
+			{
+				placement: 'existing_page',
+				page_id: 22,
+				page_title: '',
+				page_slug: '',
+			},
 		] );
-		expect( await screen.findByText( 'Holiday box is live' ) ).toBeTruthy();
-		expect( window.location.search ).toContain( 'step=published' );
-		expect( screen.queryByRole( 'dialog' ) ).toBeNull();
+		expect( await screen.findByText( 'Your box is live' ) ).toBeTruthy();
+		expect(
+			screen.getByRole( 'link', { name: 'Back to boxes' } )
+		).toBeTruthy();
+		expect(
+			screen.getByRole( 'link', { name: 'View on store' } )
+		).toBeTruthy();
+		expect( screen.getByRole( 'dialog' ) ).toBeTruthy();
 	} );
 
 	it( 'opens the Publish dialog from step=publish and shows refused validation', async () => {
@@ -458,21 +468,88 @@ describe( 'box editor', () => {
 		} );
 		open( 'publish' );
 		await choosePage();
-		fireEvent.click( screen.getByRole( 'button', { name: /Go live/ } ) );
+		fireEvent.click( screen.getByRole( 'button', { name: 'Publish' } ) );
 		expect(
 			await screen.findByText( 'Add at least one discount tier.' )
 		).toBeTruthy();
-		expect( screen.queryByText( 'Holiday box is live' ) ).toBeNull();
+		expect( screen.queryByText( 'Your box is live' ) ).toBeNull();
 	} );
 
-	it( 'records a test order from the publish checklist', async () => {
+	it( 'creates a page and saves picked dates in the store time zone', async () => {
+		api.publishCampaign.mockResolvedValue(
+			campaign( {
+				status: 'scheduled',
+				post_status: 'publish',
+				placement: {
+					page_id: 41,
+					page_title: 'Build a holiday box',
+					page_url: 'http://localhost/build-a-holiday-box/',
+					method: 'block',
+					shortcode: '[mmbb_box id="5"]',
+				},
+			} )
+		);
 		open( 'publish' );
-		const box = await screen.findByRole( 'checkbox', {
-			name: 'Test order placed',
+		fireEvent.click(
+			await screen.findByRole( 'radio', { name: /Create a new page/ } )
+		);
+		fireEvent.change( screen.getByLabelText( 'Page title' ), {
+			target: { value: 'Build a holiday box' },
 		} );
-		fireEvent.click( box );
+		expect(
+			screen.getByText( 'Address: /build-a-holiday-box/' )
+		).toBeTruthy();
+		fireEvent.click( screen.getByRole( 'radio', { name: 'Pick dates' } ) );
+		fireEvent.change( screen.getByLabelText( 'Starts' ), {
+			target: { value: '2026-12-01T09:00' },
+		} );
+		fireEvent.change( screen.getByLabelText( 'Ends' ), {
+			target: { value: '2026-12-24T23:59' },
+		} );
+		fireEvent.click(
+			screen.getByRole( 'checkbox', {
+				name: 'Show a countdown in the last 3 days',
+			} )
+		);
+		fireEvent.click( screen.getByRole( 'button', { name: 'Publish' } ) );
+
 		await waitFor( () =>
-			expect( api.markTestDone ).toHaveBeenCalledWith( true )
+			expect( api.publishCampaign ).toHaveBeenCalledWith( 5, {
+				placement: 'new_page',
+				page_id: 0,
+				page_title: 'Build a holiday box',
+				page_slug: 'build-a-holiday-box',
+			} )
+		);
+		const saved = api.saveCampaign.mock.calls[ 0 ][ 1 ];
+		expect( saved.config.schedule ).toEqual( {
+			start: '2026-12-01T09:00:00Z',
+			end: '2026-12-24T23:59:00Z',
+			countdown_days: 3,
+			countdown_end: null,
+		} );
+	} );
+
+	it( 'publishes without a page and shows the frozen shortcode and block name', async () => {
+		api.publishCampaign.mockResolvedValue(
+			campaign( { status: 'active', post_status: 'publish' } )
+		);
+		open( 'publish' );
+		fireEvent.click(
+			await screen.findByRole( 'radio', { name: /I’ll place it myself/ } )
+		);
+		expect( screen.getByText( '[mmbb_box id="5"]' ) ).toBeTruthy();
+		expect(
+			screen.getByText( 'Or add the ProductBoxes Box Builder block.' )
+		).toBeTruthy();
+		fireEvent.click( screen.getByRole( 'button', { name: 'Publish' } ) );
+		await waitFor( () =>
+			expect( api.publishCampaign ).toHaveBeenCalledWith( 5, {
+				placement: 'none',
+				page_id: 0,
+				page_title: '',
+				page_slug: '',
+			} )
 		);
 	} );
 

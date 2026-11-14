@@ -1,41 +1,135 @@
-import { useEffect, useState } from '@wordpress/element';
-import { __, _n, sprintf } from '@wordpress/i18n';
 import {
 	Button,
-	Card,
-	Checkbox,
-	Icon,
 	Notice,
-	SelectField,
-	TextField,
-	useMoney,
-} from '../../components';
-import { getPages, getSetup, markTestDone } from '../api';
+	SearchControl,
+	SelectControl,
+	TextControl,
+	ToggleControl,
+} from '@wordpress/components';
+import { useMemo, useState } from '@wordpress/element';
+import { __, _n, sprintf } from '@wordpress/i18n';
+import { cleanForSlug } from '@wordpress/url';
+import { getPages } from '../api';
+import { useSnackbar } from '../components';
 import { copyText } from '../copy-text';
 import { useAdmin } from '../context';
-import { scheduleLabel, typeSummary } from '../format';
 import { useRequest } from '../hooks';
-import { useToast } from '../toast';
+import { TEMPLATES } from './design-defaults';
+import { localInputToUtc, utcToLocalInput } from './time';
+import { ToggleGroupControl, ToggleGroupControlOption } from '../components/wp';
 
-const STEP_LABELS = () => ( {
-	products: __( 'Products', 'productboxes-mix-and-match-box-builder' ),
-	discounts: __( 'Discounts', 'productboxes-mix-and-match-box-builder' ),
-	design: __( 'Design', 'productboxes-mix-and-match-box-builder' ),
-} );
+const PLACEMENTS = [
+	{
+		id: 'existing_page',
+		title: __(
+			'Add to a page I have',
+			'productboxes-mix-and-match-box-builder'
+		),
+		description: __(
+			'It goes at the top of the page.',
+			'productboxes-mix-and-match-box-builder'
+		),
+	},
+	{
+		id: 'new_page',
+		title: __(
+			'Create a new page',
+			'productboxes-mix-and-match-box-builder'
+		),
+		description: __(
+			'We make the page and add the box.',
+			'productboxes-mix-and-match-box-builder'
+		),
+	},
+	{
+		id: 'none',
+		title: __(
+			'I’ll place it myself',
+			'productboxes-mix-and-match-box-builder'
+		),
+		description: __(
+			'Use the ProductBoxes Box Builder block or a shortcode.',
+			'productboxes-mix-and-match-box-builder'
+		),
+	},
+];
 
-function Check( { done } ) {
-	return (
-		<span className={ 'mmbb-editor__tick' + ( done ? ' is-done' : '' ) }>
-			{ done ? (
-				<Icon name="check" size={ 14 } strokeWidth={ 2.75 } />
-			) : null }
-		</span>
+function sizeBadge( config ) {
+	if ( config.type === 'bundle' ) {
+		return sprintf(
+			/* translators: %d: Number of items in a box. */
+			_n(
+				'%d item',
+				'%d items',
+				config.bundle.qty,
+				'productboxes-mix-and-match-box-builder'
+			),
+			config.bundle.qty
+		);
+	}
+	const quantities = (
+		config.type === 'fixed' ? config.sizes : config.tiers
+	).map( ( row ) => Number( row.qty ) );
+	const maximum = quantities.length
+		? Math.max( ...quantities )
+		: config.box.capacity;
+	return sprintf(
+		/* translators: %d: Maximum number of items in a box. */
+		__( 'Up to %d items', 'productboxes-mix-and-match-box-builder' ),
+		maximum
 	);
 }
 
-// Where the checklist, summary and Go live button read the chosen placement.
-export function placementReady( page ) {
-	return page.pageId > 0;
+function discountBadge( config ) {
+	if ( config.type === 'bundle' ) {
+		return __( 'Bundle price', 'productboxes-mix-and-match-box-builder' );
+	}
+	const rows = config.type === 'fixed' ? config.sizes : config.tiers;
+	const percentages = rows
+		.filter( ( row ) => row.discount_type === 'percent' )
+		.map( ( row ) => Number( row.value ) );
+	if ( percentages.length === rows.length && percentages.length ) {
+		return sprintf(
+			/* translators: %s: Slash-separated discount percentages. */
+			__( '%s%% off', 'productboxes-mix-and-match-box-builder' ),
+			percentages.join( ' / ' )
+		);
+	}
+	return sprintf(
+		/* translators: %d: Number of discount tiers or box sizes. */
+		_n(
+			'%d discount',
+			'%d discounts',
+			rows.length,
+			'productboxes-mix-and-match-box-builder'
+		),
+		rows.length
+	);
+}
+
+function Choice( { item, selected, onSelect, children } ) {
+	return (
+		<div className="mmbb-publish__choice-wrap">
+			<button
+				type="button"
+				className={ `mmbb-publish__choice${
+					selected ? ' is-selected' : ''
+				}` }
+				role="radio"
+				aria-checked={ selected }
+				onClick={ onSelect }
+			>
+				<span className="mmbb-publish__radio" aria-hidden="true" />
+				<span>
+					<strong>{ item.title }</strong>
+					<small>{ item.description }</small>
+				</span>
+			</button>
+			{ selected && children ? (
+				<div className="mmbb-publish__choice-detail">{ children }</div>
+			) : null }
+		</div>
+	);
 }
 
 export default function PublishStep( {
@@ -45,40 +139,70 @@ export default function PublishStep( {
 	problems,
 	serverErrors,
 	busy,
-	onGoLive,
+	dispatch,
+	onPublish,
+	onCancel,
 	onOpenStep,
 } ) {
-	const { locale, timezone, money, storeUrl } = useAdmin();
-	const formatMoney = useMoney();
-	const toast = useToast();
+	const { timezone } = useAdmin();
+	const snackbar = useSnackbar();
 	const { config } = draft;
-	const decimals = Number.isInteger( money.decimals ) ? money.decimals : 2;
+	const [ placement, setPlacement ] = useState( 'existing_page' );
 	const [ pageSearch, setPageSearch ] = useState( '' );
-	const [ testDone, setTestDone ] = useState( false );
+	const [ pageTitle, setPageTitle ] = useState( draft.title );
+	const [ timing, setTiming ] = useState(
+		config.schedule.start || config.schedule.end ? 'dates' : 'now'
+	);
 	const pages = useRequest(
 		() => getPages( { search: pageSearch, per_page: 100 } ),
 		[ pageSearch ]
 	);
-	const setup = useRequest( () => getSetup(), [] );
-
-	useEffect( () => {
-		if ( setup.data ) {
-			setTestDone( Boolean( setup.data.test_order ) );
-		}
-	}, [ setup.data ] );
-
-	const labels = STEP_LABELS();
 	const shortcode = campaign.placement.shortcode;
-	const pageList = pages.data || [];
-	const chosen = pageList.find( ( p ) => p.id === page.pageId );
-	const ready = placementReady( page );
-	// Already on the store: the button saves instead of launching.
-	const published = campaign.post_status !== 'draft';
+	const problemSteps = Object.keys( problems );
+	const serverList = serverErrors || [];
+	const productCount =
+		config.products.source === 'manual'
+			? config.products.ids.length
+			: config.products.term_ids.length;
+	const template =
+		TEMPLATES.find( ( item ) => item.id === config.design.template ) ||
+		TEMPLATES[ 0 ];
+	const slug = cleanForSlug( pageTitle ) || 'build-a-box';
+	const ready =
+		placement === 'none' ||
+		( placement === 'existing_page' && page.pageId > 0 ) ||
+		( placement === 'new_page' && pageTitle.trim() !== '' );
 
+	const pageOptions = useMemo(
+		() => [
+			{
+				value: '',
+				label: __(
+					'Choose a page',
+					'productboxes-mix-and-match-box-builder'
+				),
+			},
+			...( pages.data || [] ).map( ( item ) => ( {
+				value: String( item.id ),
+				label: item.title,
+			} ) ),
+		],
+		[ pages.data ]
+	);
+
+	const set = ( path, value ) => dispatch( { type: 'set', path, value } );
+	const chooseTiming = ( value ) => {
+		setTiming( value );
+		if ( value === 'now' ) {
+			set( 'schedule', { ...config.schedule, start: null, end: null } );
+		} else {
+			set( 'schedule.countdown_end', null );
+		}
+	};
 	const copyShortcode = () =>
-		copyText( shortcode ).then( ( ok ) =>
-			toast(
-				ok
+		copyText( shortcode ).then( ( copied ) =>
+			snackbar(
+				copied
 					? __(
 							'Shortcode copied',
 							'productboxes-mix-and-match-box-builder'
@@ -89,360 +213,290 @@ export default function PublishStep( {
 					  )
 			)
 		);
-
-	const changeTested = ( on ) => {
-		setTestDone( on );
-		markTestDone( on ).catch( () => {
-			setTestDone( ! on );
-			toast(
-				__(
-					'That could not be saved.',
-					'productboxes-mix-and-match-box-builder'
-				)
-			);
+	const publish = () =>
+		onPublish( {
+			placement,
+			page_id: placement === 'existing_page' ? page.pageId : 0,
+			page_title: placement === 'new_page' ? pageTitle.trim() : '',
+			page_slug: placement === 'new_page' ? slug : '',
 		} );
-	};
-
-	const placeLine = __(
-		'The block is added to the top of the page you picked.',
-		'productboxes-mix-and-match-box-builder'
-	);
-	const scheduleText = scheduleLabel(
-		{ config, status: 'active' },
-		{ locale, timezone }
-	);
-	const productCount =
-		config.products.source === 'manual' ? config.products.ids.length : 0;
-	const problemSteps = Object.keys( problems );
-	const serverList = serverErrors || [];
 
 	return (
-		<div className="mmbb-editor__cols">
-			<div className="mmbb-editor__main">
-				<Card
-					title={ __(
-						'Where shoppers find it',
+		<div className="mmbb-publish">
+			<div className="mmbb-publish__body">
+				<div
+					className="mmbb-publish__badges"
+					aria-label={ __(
+						'Box summary',
 						'productboxes-mix-and-match-box-builder'
 					) }
 				>
-					<div className="mmbb-editor__stack">
-						<TextField
-							aria-label={ __(
-								'Search pages',
+					<span>{ sizeBadge( config ) }</span>
+					<span>{ discountBadge( config ) }</span>
+					<span>
+						{ sprintf(
+							/* translators: %d: Number of products. */
+							_n(
+								'%d product',
+								'%d products',
+								productCount,
 								'productboxes-mix-and-match-box-builder'
-							) }
-							prefix="search"
-							placeholder={ __(
-								'Search pages',
+							),
+							productCount
+						) }
+					</span>
+					<span>
+						{ sprintf(
+							/* translators: %s: Storefront template name. */
+							__(
+								'%s template',
 								'productboxes-mix-and-match-box-builder'
-							) }
-							value={ pageSearch }
-							onChange={ ( event ) =>
-								setPageSearch( event.target.value )
-							}
-						/>
-						<SelectField
-							label={ __(
-								'Page',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							value={ page.pageId ? String( page.pageId ) : '' }
-							options={ [
-								{
-									value: '',
-									label: __(
-										'Choose a page',
-										'productboxes-mix-and-match-box-builder'
-									),
-								},
-								...pageList.map( ( p ) => ( {
-									value: String( p.id ),
-									label: p.title,
-								} ) ),
-							] }
-							help={
-								chosen && chosen.has_builder
-									? __(
-											'This page already has a builder. Going live adds this campaign’s builder at the top.',
-											'productboxes-mix-and-match-box-builder'
-									  )
-									: __(
-											'The block goes in as the first block. Move it in the editor any time.',
-											'productboxes-mix-and-match-box-builder'
-									  )
-							}
-							onChange={ ( event ) =>
-								page.setPageId(
-									Number( event.target.value ) || 0
-								)
-							}
-						/>
-						<div className="mmbb-editor__stack mmbb-editor__stack--tight mmbb-editor__rule">
-							<span className="mmbb-editor__label">
-								{ __(
-									'Or paste the shortcode anywhere',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							</span>
-							<div className="mmbb-editor__code">
-								<code className="mmbb-code">{ shortcode }</code>
-								<Button
-									size="sm"
-									icon="copy"
-									onClick={ copyShortcode }
-								>
-									{ __(
-										'Copy',
-										'productboxes-mix-and-match-box-builder'
-									) }
-								</Button>
-							</div>
-						</div>
-					</div>
-				</Card>
+							),
+							template.name
+						) }
+					</span>
+				</div>
 
-				<Card
-					title={ __(
-						'Before you go live',
-						'productboxes-mix-and-match-box-builder'
-					) }
-					subtitle={ __(
-						'Two minutes now saves a refund later.',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				>
-					<ul className="mmbb-editor__checks">
-						<li>
-							<Check done={ ready } />
-							<span className="mmbb-editor__grow">
-								<b>
-									{ __(
-										'Builder placed',
-										'productboxes-mix-and-match-box-builder'
-									) }
-								</b>
-								<span className="mmbb-editor__sub">
-									{ ready
-										? placeLine
-										: __(
-												'Choose where the builder goes.',
-												'productboxes-mix-and-match-box-builder'
-										  ) }
-								</span>
-							</span>
-						</li>
-						<li>
-							<Check done />
-							<span className="mmbb-editor__grow">
-								<b>
-									{ __(
-										'Schedule set',
-										'productboxes-mix-and-match-box-builder'
-									) }
-								</b>
-								<span className="mmbb-editor__sub">
-									{ scheduleText }
-								</span>
-							</span>
-						</li>
-						<li className={ testDone ? undefined : 'is-todo' }>
-							<Checkbox
-								aria-label={ __(
-									'Test order placed',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								checked={ testDone }
-								onChange={ changeTested }
-							/>
-							<span className="mmbb-editor__grow">
-								<b>
-									{ __(
-										'Run a test order',
-										'productboxes-mix-and-match-box-builder'
-									) }
-								</b>
-								<span className="mmbb-editor__sub">
-									{ __(
-										'Build a box, check the price and the cart line, then cancel the order.',
-										'productboxes-mix-and-match-box-builder'
-									) }
-								</span>
-							</span>
-							<Button
-								size="sm"
-								icon="external"
-								href={ campaign.placement.page_url || storeUrl }
-								target="_blank"
-								rel="noopener noreferrer"
+				<fieldset className="mmbb-publish__choices">
+					<legend>
+						{ __(
+							'Where should shoppers find it?',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					</legend>
+					<div role="radiogroup">
+						{ PLACEMENTS.map( ( item ) => (
+							<Choice
+								key={ item.id }
+								item={ item }
+								selected={ placement === item.id }
+								onSelect={ () => setPlacement( item.id ) }
 							>
-								{ __(
-									'Open builder',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							</Button>
-						</li>
-					</ul>
-				</Card>
-			</div>
-
-			<div className="mmbb-editor__side">
-				<Card
-					title={ __(
-						'Summary',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				>
-					<div className="mmbb-editor__stack">
-						<dl className="mmbb-editor__summary">
-							<div>
-								<dt>
-									{ __(
-										'Type',
-										'productboxes-mix-and-match-box-builder'
-									) }
-								</dt>
-								<dd>
-									{ typeSummary(
-										config,
-										formatMoney,
-										decimals
-									) }
-								</dd>
-							</div>
-							<div>
-								<dt>
-									{ __(
-										'Products',
-										'productboxes-mix-and-match-box-builder'
-									) }
-								</dt>
-								<dd>
-									{ config.products.source === 'manual'
-										? sprintf(
-												/* translators: %d: Number of products. */
-												_n(
-													'%d product',
-													'%d products',
-													productCount,
-													'productboxes-mix-and-match-box-builder'
-												),
-												productCount
-										  )
-										: sprintf(
-												/* translators: %d: Number of categories or tags. */
-												_n(
-													'%d term',
-													'%d terms',
-													config.products.term_ids
-														.length,
-													'productboxes-mix-and-match-box-builder'
-												),
-												config.products.term_ids.length
-										  ) }
-								</dd>
-							</div>
-							<div>
-								<dt>
-									{ __(
-										'Schedule',
-										'productboxes-mix-and-match-box-builder'
-									) }
-								</dt>
-								<dd>{ scheduleText }</dd>
-							</div>
-							<div>
-								<dt>
-									{ __(
-										'Page',
-										'productboxes-mix-and-match-box-builder'
-									) }
-								</dt>
-								<dd>
-									{ ( chosen && chosen.title ) ||
-										__(
-											'Not chosen yet',
+								{ item.id === 'existing_page' ? (
+									<>
+										<SearchControl
+											label={ __(
+												'Search pages',
+												'productboxes-mix-and-match-box-builder'
+											) }
+											value={ pageSearch }
+											onChange={ setPageSearch }
+											__nextHasNoMarginBottom
+										/>
+										<SelectControl
+											label={ __(
+												'Page',
+												'productboxes-mix-and-match-box-builder'
+											) }
+											hideLabelFromVision
+											value={ String(
+												page.pageId || ''
+											) }
+											options={ pageOptions }
+											onChange={ ( value ) =>
+												page.setPageId(
+													Number( value ) || 0
+												)
+											}
+											__next40pxDefaultSize
+											__nextHasNoMarginBottom
+										/>
+									</>
+								) : null }
+								{ item.id === 'new_page' ? (
+									<TextControl
+										label={ __(
+											'Page title',
 											'productboxes-mix-and-match-box-builder'
 										) }
-								</dd>
-							</div>
-						</dl>
-						{ problemSteps.length || serverList.length ? (
-							<Notice
-								tone="critical"
-								title={ __(
-									'Fix these before going live',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							>
-								<ul className="mmbb-editor__problems">
-									{ problemSteps.map( ( step ) => (
-										<li key={ step }>
-											<Button
-												size="sm"
-												variant="ghost"
-												onClick={ () =>
-													onOpenStep( step )
-												}
-											>
-												{ sprintf(
-													/* translators: %s: Name of a wizard step. */
-													__(
-														'Open %s',
-														'productboxes-mix-and-match-box-builder'
-													),
-													labels[ step ]
-												) }
-											</Button>
-										</li>
-									) ) }
-									{ serverList.map( ( error ) => (
-										<li key={ error.path + error.code }>
-											{ error.message }
-										</li>
-									) ) }
-								</ul>
-							</Notice>
-						) : null }
-						{ ! testDone ? (
-							<Notice tone="warning">
-								{ __(
-									'No test order yet. You can still go live.',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							</Notice>
-						) : null }
-						<Button
-							variant="max"
-							size="lg"
-							fullWidth
-							iconRight="arrowRight"
-							loading={ busy }
-							disabled={ ! ready }
-							onClick={ onGoLive }
-						>
-							{ published
-								? __(
-										'Save changes',
-										'productboxes-mix-and-match-box-builder'
-								  )
-								: __(
-										'Go live',
-										'productboxes-mix-and-match-box-builder'
-								  ) }
-						</Button>
-						<span className="mmbb-editor__fine">
-							{ published
-								? __(
-										'Shoppers see the changes as soon as you save.',
-										'productboxes-mix-and-match-box-builder'
-								  )
-								: __(
-										'Goes live now and switches on at the start date if it’s later.',
-										'productboxes-mix-and-match-box-builder'
-								  ) }
-						</span>
+										value={ pageTitle }
+										onChange={ setPageTitle }
+										help={ sprintf(
+											/* translators: %s: Preview of a page path. */
+											__(
+												'Address: /%s/',
+												'productboxes-mix-and-match-box-builder'
+											),
+											slug
+										) }
+										__next40pxDefaultSize
+										__nextHasNoMarginBottom
+									/>
+								) : null }
+								{ item.id === 'none' ? (
+									<div className="mmbb-publish__shortcode">
+										<code>{ shortcode }</code>
+										<Button
+											variant="secondary"
+											onClick={ copyShortcode }
+											__next40pxDefaultSize
+										>
+											{ __(
+												'Copy',
+												'productboxes-mix-and-match-box-builder'
+											) }
+										</Button>
+										<p>
+											{ __(
+												'Or add the ProductBoxes Box Builder block.',
+												'productboxes-mix-and-match-box-builder'
+											) }
+										</p>
+									</div>
+								) : null }
+							</Choice>
+						) ) }
 					</div>
-				</Card>
+				</fieldset>
+
+				<div className="mmbb-publish__when">
+					<ToggleGroupControl
+						label={ __(
+							'When',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						value={ timing }
+						onChange={ chooseTiming }
+						isBlock
+						__nextHasNoMarginBottom
+						__next40pxDefaultSize
+					>
+						<ToggleGroupControlOption
+							value="now"
+							label={ __(
+								'Right away',
+								'productboxes-mix-and-match-box-builder'
+							) }
+						/>
+						<ToggleGroupControlOption
+							value="dates"
+							label={ __(
+								'Pick dates',
+								'productboxes-mix-and-match-box-builder'
+							) }
+						/>
+					</ToggleGroupControl>
+					{ timing === 'dates' ? (
+						<div className="mmbb-publish__schedule">
+							<TextControl
+								type="datetime-local"
+								label={ __(
+									'Starts',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								value={ utcToLocalInput(
+									config.schedule.start,
+									timezone
+								) }
+								onChange={ ( value ) =>
+									set(
+										'schedule.start',
+										localInputToUtc( value, timezone )
+									)
+								}
+								__next40pxDefaultSize
+								__nextHasNoMarginBottom
+							/>
+							<TextControl
+								type="datetime-local"
+								label={ __(
+									'Ends',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								value={ utcToLocalInput(
+									config.schedule.end,
+									timezone
+								) }
+								onChange={ ( value ) =>
+									set(
+										'schedule.end',
+										localInputToUtc( value, timezone )
+									)
+								}
+								__next40pxDefaultSize
+								__nextHasNoMarginBottom
+							/>
+							<ToggleControl
+								className="mmbb-publish__countdown"
+								label={ __(
+									'Show a countdown in the last 3 days',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								checked={ config.schedule.countdown_days > 0 }
+								onChange={ ( enabled ) =>
+									set(
+										'schedule.countdown_days',
+										enabled ? 3 : 0
+									)
+								}
+								__nextHasNoMarginBottom
+							/>
+							<p className="mmbb-publish__timezone">
+								{ sprintf(
+									/* translators: %s: Store time zone name or UTC offset. */
+									__(
+										'Times use the store time zone: %s.',
+										'productboxes-mix-and-match-box-builder'
+									),
+									timezone
+								) }
+							</p>
+						</div>
+					) : null }
+				</div>
+
+				{ problemSteps.length || serverList.length ? (
+					<Notice status="error" isDismissible={ false }>
+						<p>
+							{ __(
+								'Fix these before publishing:',
+								'productboxes-mix-and-match-box-builder'
+							) }
+						</p>
+						<ul>
+							{ problemSteps.map( ( step ) => (
+								<li key={ step }>
+									<Button
+										variant="link"
+										onClick={ () => onOpenStep( step ) }
+									>
+										{ __(
+											'Open the step with the problem',
+											'productboxes-mix-and-match-box-builder'
+										) }
+									</Button>
+								</li>
+							) ) }
+							{ serverList.map( ( error ) => (
+								<li key={ error.path + error.code }>
+									{ error.message }
+								</li>
+							) ) }
+						</ul>
+					</Notice>
+				) : null }
+			</div>
+
+			<div className="mmbb-publish__footer">
+				<Button
+					variant="tertiary"
+					onClick={ onCancel }
+					__next40pxDefaultSize
+				>
+					{ __( 'Cancel', 'productboxes-mix-and-match-box-builder' ) }
+				</Button>
+				<Button
+					variant="primary"
+					isBusy={ busy }
+					disabled={ busy || ! ready }
+					onClick={ publish }
+					__next40pxDefaultSize
+				>
+					{ __(
+						'Publish',
+						'productboxes-mix-and-match-box-builder'
+					) }
+				</Button>
 			</div>
 		</div>
 	);

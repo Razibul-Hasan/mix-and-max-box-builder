@@ -18,6 +18,7 @@ echo wp_kses_post(
 			'layout'    => isset( $attributes['layout'] ) ? sanitize_key( $attributes['layout'] ) : 'default',
 			'columns'   => $mmbb_columns,
 			'show_hero' => ! isset( $attributes['showHero'] ) || false !== $attributes['showHero'],
+			'template'  => isset( $attributes['template'] ) ? sanitize_key( $attributes['template'] ) : '',
 		),
 		true
 	)

@@ -11,6 +11,7 @@ use MixMax\BoxBuilder\Assets;
 use MixMax\BoxBuilder\Cart\Add_To_Cart;
 use MixMax\BoxBuilder\Cart\Box_Resolver;
 use MixMax\BoxBuilder\Cart\Box_Rules;
+use MixMax\BoxBuilder\Campaigns\Config;
 use MixMax\BoxBuilder\Pricing;
 use MixMax\BoxBuilder\Settings\Settings;
 
@@ -46,11 +47,14 @@ final class Payload {
 	 * @return array
 	 */
 	public static function build( array $campaign, array $args = array() ) {
-		$preview    = ! empty( $args['preview'] );
-		$view       = isset( $args['view'] ) && is_array( $args['view'] ) ? $args['view'] : array();
-		$config     = $campaign['config'];
-		$settings   = Settings::all();
-		$design     = self::design( $config['design'] );
+		$preview  = ! empty( $args['preview'] );
+		$view     = isset( $args['view'] ) && is_array( $args['view'] ) ? $args['view'] : array();
+		$config   = $campaign['config'];
+		$settings = Settings::all();
+		$design   = self::design( $config['design'] );
+		if ( isset( $view['template'] ) && in_array( $view['template'], Config::DESIGN_TEMPLATES, true ) ) {
+			$design['template'] = $view['template'];
+		}
 		$style      = Template_Styles::resolve( $design );
 		$colors     = Colors::resolve( $design, Colors::theme_accent() );
 		$color_vars = array(

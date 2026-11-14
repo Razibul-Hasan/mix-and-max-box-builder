@@ -70,6 +70,16 @@ class StatusTest extends TestCase {
 		$this->assertSame( 'ending_soon', $this->status( array( 'end' => '2026-10-19T12:00:01Z' ) ) );
 	}
 
+	/** UTC values derived from the store wall clock switch visibility at the exact instant. */
+	public function test_schedule_uses_store_time_zone_instants() {
+		$args = array(
+			'start' => '2026-03-08T07:00:00Z', // 03:00 in New York after the DST jump.
+			'zone'  => 'America/New_York',
+		);
+		$this->assertSame( 'scheduled', $this->status( $args + array( 'now' => '2026-03-08T06:59:59Z' ) ) );
+		$this->assertSame( 'active', $this->status( $args + array( 'now' => '2026-03-08T07:00:00Z' ) ) );
+	}
+
 	/** Seven or more days left is plain active. */
 	public function test_ending_soon_threshold() {
 		$this->assertSame( 'ending_soon', $this->status( array( 'end' => '2026-10-26T11:59:59Z' ) ) );
