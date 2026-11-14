@@ -20,6 +20,21 @@ Updated by the agent at the end of every part.
 
 ## Log
 
+### Part 8 visual repair — purpose-built templates (2026-11-14)
+**Done:** Replaced the Part 8 CSS-only template wrappers with real presentation structure while preserving the shared builder state, pricing, storage and cart actions. Editorial now has its issue header, tier list, numbered magazine grid and left summary; Night has its live-deal heading, progress ring, five-up product deck and glowing summary bar; Split places its heading and box in the coloured left half with products on the right; Compact has its own header, deal badge, tier rail, image controls and light summary; Pastel now has five merchant-variable-derived tints and round tray slots. Narrow layouts collapse Editorial and Split safely, keep every template two-up (Clean remains a list), and use a builder-scoped sticky summary instead of a viewport-wide fixed bar in narrow desktop columns.
+
+**Decisions:** Template components receive presentation-only live values (`headline`, `intro`, item count, capacity and formatted tier labels). They do not own or duplicate pricing, cart, persistence or validation. Every colour still comes from the existing sanitized CSS-variable contract; no stored key or identifier changed.
+
+**Frozen identifiers touched:** none.
+
+**Data changes and migration steps:** none.
+
+**Checks run:** production build ✅ (same two admin-size warnings; storefront entry 99.6 KiB) · lint:js ✅ · lint:css ✅ · PHPCS ✅ · test:js ✅ (23 suites, 307 tests) · test:unit ✅ (114 tests, 600 assertions) · integration ✅ (210 tests, 2 skipped, 2,298 assertions) · HPOS integration ✅ (210 tests, 2 skipped, 2,299 assertions) · release zip ✅ · packaged Plugin Check review ruleset ✅ (0 findings).
+
+**Skipped checks (and why):** No live browser was driven in this environment, so pixel-level screenshot comparison and a real Network-panel pass remain manual checks. The five current design PNGs and canvas structures were inspected directly; new DOM tests assert each purpose-built layout and the intended Night/Compact desktop summary behavior.
+
+**Open issues:** none in the implemented Part 8 paths.
+
 ### Parts 0–8 completion recheck (2026-11-14)
 **Done:** Rechecked every Part 0–8 requirement against the implementation and its automated coverage. Restored the required Part 0 audit and baseline evidence after the redesign documentation was reorganized, refilled the frozen identifiers in `AGENTS.md`, and made this file the authoritative redesign progress log. No missing code behavior was found.
 

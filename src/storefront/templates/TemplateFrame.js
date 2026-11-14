@@ -1,5 +1,5 @@
 /**
- * Shared semantic frame. Template-specific structure is supplied by scoped CSS.
+ * Shared semantic frame for templates that use the engine's standard structure.
  *
  * @param {Object} props          Frame props.
  * @param {string} props.slug     Template slug.

@@ -152,6 +152,32 @@ it.each( templateSlugs )(
 	}
 );
 
+it.each( [
+	[ 'editorial', '.mmbb-editorial__intro' ],
+	[ 'night', '.mmbb-night__ring' ],
+	[ 'split', '.mmbb-split__intro' ],
+	[ 'compact', '.mmbb-compact__tiers' ],
+] )( 'renders purpose-built %s template chrome', ( template, selector ) => {
+	const data = payload();
+	data.config.design.template = template;
+	const { container } = render( <Builder payload={ data } preview /> );
+	expect( container.querySelector( selector ) ).toBeTruthy();
+} );
+
+it.each( [ 'night', 'compact' ] )(
+	'uses the designed summary bar for %s at desktop width',
+	( template ) => {
+		const data = payload();
+		data.config.design.template = template;
+		render( <Builder payload={ data } preview /> );
+		expect(
+			screen.getByRole( 'button', {
+				name: /your box, 0 of 3. open details/i,
+			} )
+		).toBeTruthy();
+	}
+);
+
 it.each( templateSlugs )( 'uses the phone summary for %s', ( template ) => {
 	const data = payload();
 	data.config.design.template = template;

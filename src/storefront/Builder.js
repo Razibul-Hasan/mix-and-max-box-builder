@@ -227,9 +227,12 @@ function BuilderView( { payload, preview, navigate } ) {
 			? __( 'Update your box', 'productboxes-mix-and-match-box-builder' )
 			: undefined );
 
-	const forcePanel = config.design.template === 'split';
-	const showPanel = ! narrow && ( forcePanel || view.layout !== 'bar' );
-	const showBar = narrow || ! showPanel;
+	const template = config.design.template || 'spotlight';
+	const forcePanel = [ 'pastel', 'editorial', 'split' ].includes( template );
+	const forceBar = [ 'night', 'compact' ].includes( template );
+	const showPanel =
+		! narrow && ! forceBar && ( forcePanel || view.layout !== 'bar' );
+	const showBar = narrow || forceBar || ! showPanel;
 	const columns = Math.max(
 		2,
 		narrow ? 2 : view.columns - ( showPanel && width < 1100 ? 1 : 0 )
@@ -360,7 +363,16 @@ function BuilderView( { payload, preview, navigate } ) {
 	const step = full ? 2 : 1;
 
 	return (
-		<TemplateRenderer template={ config.design.template }>
+		<TemplateRenderer
+			template={ template }
+			context={ {
+				headline: config.design.headline || payload.title,
+				intro: config.design.intro || '',
+				count,
+				capacity,
+				tiers,
+			} }
+		>
 			<div
 				ref={ rootRef }
 				className={ `mmbb-builder__inner ${
