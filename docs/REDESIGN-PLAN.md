@@ -3,8 +3,8 @@
 This plan updates your **existing** plugin to the new design in 13 parts (0 to 12). Each part is a self-contained prompt: give an agent the part number and it knows what to read, what to change, what must stay the same, and how to prove the part is done.
 
 - **Standing rules** are in `AGENTS.md`. The most important: the text domain, slug, prefix, imports and stored data stay exactly as they are today.
-- **The design** is in `design/`. `design/REDESIGN.md` maps each screen to its file and lists the template defaults and the component map.
-- **Progress** is tracked in `docs/REDESIGN-PROGRESS.md`, which the agent updates after every part.
+- **The design** is in `design/`. Each screen has a rendered picture in `design/screens/<Name>.png` and its source in `design/canvas/<Name>.dc.html`. **Always look at the picture first**; the source gives the exact copy, spacing and states. `design/README.md` maps each screen to its file and lists the template defaults and the component map.
+- **Progress** is tracked in `docs/PROGRESS.md`, which the agent updates after every part.
 
 ---
 
@@ -13,7 +13,7 @@ This plan updates your **existing** plugin to the new design in 13 parts (0 to 1
 ### 1. Set up once
 
 1. Open your plugin's git repository and create a branch: `git checkout -b redesign`.
-2. Unzip this kit **into the repository root**. You get `AGENTS.md`, `CLAUDE.md`, `docs/REDESIGN-PLAN.md`, `docs/REDESIGN-PROGRESS.md` and `design/`.
+2. Unzip this kit **into the repository root**. You get `AGENTS.md`, `CLAUDE.md`, `docs/REDESIGN-PLAN.md`, `docs/PROGRESS.md` and `design/`.
    - If the repo already has an `AGENTS.md` or `CLAUDE.md`, keep yours and paste this kit's content below it under a heading `## Redesign`.
 3. Make sure `design/` and `docs/` are excluded from the release zip. That means `.distignore`, and the `files` field in `package.json` if the plugin uses `wp-scripts plugin-zip`.
 4. Commit: `Redesign kit`.
@@ -30,11 +30,11 @@ Longer form, if the agent drifts:
 
 ```text
 Implement Part {N} of docs/REDESIGN-PLAN.md on the existing plugin.
-1. Read AGENTS.md (especially "Frozen identifiers"), docs/REDESIGN-PROGRESS.md, the "Part {N}" section, and every file under "Read first".
+1. Read AGENTS.md (especially "Frozen identifiers"), docs/PROGRESS.md, the "Part {N}" section, and every file under "Read first".
 2. Reply with a short plan: the files you'll change or add, and anything that conflicts with the current code.
 3. Build it. Keep the text domain, prefix, imports and stored data unchanged. Stay inside this part.
 4. Run every "Done when" check. Fix failures, or record why a check can't run here.
-5. Update docs/REDESIGN-PROGRESS.md and commit "Redesign Part {N}: {title}".
+5. Update docs/PROGRESS.md and commit "Redesign Part {N}: {title}".
 ```
 
 ### 3. Have the other agent review (recommended)
@@ -49,7 +49,7 @@ security (capability + nonce + sanitize + escape), WordPress.org rules, and the 
 Then hand the findings back to the builder:
 
 ```text
-Fix these review findings for Redesign Part {N}, re-run the Done-when checks, update docs/REDESIGN-PROGRESS.md
+Fix these review findings for Redesign Part {N}, re-run the Done-when checks, update docs/PROGRESS.md
 and commit "Redesign Part {N}: review fixes".
 <paste findings>
 ```
@@ -80,7 +80,7 @@ Part 10 can run any time after Part 2.
 
 **Goal:** know exactly what exists before changing anything, and lock every identifier that must never change. **Don't change any plugin code in this part.**
 
-**Read first:** `AGENTS.md`, `design/REDESIGN.md`, `design/before/*.png`, and the whole plugin source (main file, `includes/` or equivalent, `src/`, `package.json`, `composer.json`, `readme.txt`, any `block.json`).
+**Read first** (for every `design/canvas/X.dc.html`, also open `design/screens/X.png`): `AGENTS.md`, `design/README.md`, `design/before/*.png`, and the whole plugin source (main file, `includes/` or equivalent, `src/`, `package.json`, `composer.json`, `readme.txt`, any `block.json`).
 
 **Do:**
 
@@ -95,10 +95,10 @@ Part 10 can run any time after Part 2.
      - the shape of a box/campaign config, with a real JSON example taken from the code or the database;
      - the stored settings.
    - **Interfaces:** REST routes (method, path, permission), AJAX and wc-ajax actions, the shortcode and its attributes, block names and attributes, hooks the plugin fires (`do_action` / `apply_filters`), and admin page slugs.
-   - **Features today vs redesign:** a table with one row per screen in `design/REDESIGN.md`. Columns: what exists now, what changes, what's new, and the data it needs. Flag anything in the design that has no backing data yet, such as free gift, button style or the template slug.
+   - **Features today vs redesign:** a table with one row per screen in `design/README.md`. Columns: what exists now, what changes, what's new, and the data it needs. Flag anything in the design that has no backing data yet, such as free gift, button style or the template slug.
    - **Risks:** places where the new UI needs a data change, and anything that would break existing boxes.
 2. Fill in the **Frozen identifiers** table in `AGENTS.md` from the audit.
-3. List open questions for the owner in `docs/REDESIGN-PROGRESS.md` under "Open issues". Examples: a feature in the design the plugin doesn't have; a minimum WordPress version bump.
+3. List open questions for the owner in `docs/PROGRESS.md` under "Open issues". Examples: a feature in the design the plugin doesn't have; a minimum WordPress version bump.
 
 **Done when:** `docs/AUDIT.md` exists, the Frozen identifiers table has no `_Part 0_` left in it, `git diff` shows no changes outside `AGENTS.md` and `docs/`, and PROGRESS is updated.
 
@@ -110,7 +110,7 @@ Part 10 can run any time after Part 2.
 
 **Goal:** before the UI changes, capture how the plugin behaves today so every later part can prove nothing broke.
 
-**Read first:** `docs/AUDIT.md`, `AGENTS.md`.
+**Read first** (for every `design/canvas/X.dc.html`, also open `design/screens/X.png`): `docs/AUDIT.md`, `AGENTS.md`.
 
 **Build:**
 
@@ -144,12 +144,12 @@ Part 10 can run any time after Part 2.
 
 **Goal:** one admin app shell that every redesigned screen uses, built from the real WordPress components and loaded the WordPress way.
 
-**Read first:**
+**Read first** (for every `design/canvas/X.dc.html`, also open `design/screens/X.png`):
 
 - `design/canvas/Main.dc.html`: the header and nav bar markup, `.pb-head`, `.pb-nav`, `.pb-main`.
 - `design/canvas/wp.css`
 - `design/canvas/lib/components-map.js`
-- `design/REDESIGN.md` → "Admin component map"
+- `design/README.md` → "Admin component map"
 
 **Build:**
 
@@ -204,7 +204,7 @@ Part 10 can run any time after Part 2.
 
 **Goal:** the three entry screens match the design and run on the plugin's existing data and REST routes.
 
-**Read first:** `design/canvas/Main.dc.html`, `design/canvas/Boxes.dc.html`, `design/canvas/NewBox.dc.html`, `design/before/01-dashboard.png`, `design/before/02-campaigns.png`, `docs/AUDIT.md` (REST routes and data).
+**Read first** (for every `design/canvas/X.dc.html`, also open `design/screens/X.png`): `design/canvas/Main.dc.html`, `design/canvas/Boxes.dc.html`, `design/canvas/NewBox.dc.html`, `design/before/01-dashboard.png`, `design/before/02-campaigns.png`, `docs/AUDIT.md` (REST routes and data).
 
 **Build:**
 
@@ -246,7 +246,7 @@ Part 10 can run any time after Part 2.
 
 **Goal:** a full-screen box editor like the WordPress site editor. It has three steps, settings on the right and a **real iframe** of the storefront that updates as the merchant types.
 
-**Read first:**
+**Read first** (for every `design/canvas/X.dc.html`, also open `design/screens/X.png`):
 
 - `design/canvas/EditorDesign.dc.html`: the header, stage and sidebar layout.
 - `design/canvas/wp.css`: `.ed-top2`, `.ed-stage`, `.browser`, `.iframe-body`, `.phone`.
@@ -310,7 +310,7 @@ Part 10 can run any time after Part 2.
 
 **Goal:** steps 1 and 2 match the design and read and write the **existing** box config keys.
 
-**Read first:** `design/canvas/EditorProducts.dc.html`, `design/canvas/EditorDiscounts.dc.html`, `design/before/04-editor-products.png`, `design/before/05-editor-box-rules.png`, `docs/AUDIT.md` (config shape).
+**Read first** (for every `design/canvas/X.dc.html`, also open `design/screens/X.png`): `design/canvas/EditorProducts.dc.html`, `design/canvas/EditorDiscounts.dc.html`, `design/before/04-editor-products.png`, `design/before/05-editor-box-rules.png`, `docs/AUDIT.md` (config shape).
 
 **Build:**
 
@@ -348,7 +348,7 @@ Part 10 can run any time after Part 2.
 
 **Goal:** the merchant can match the box to their site. This part adds a design settings object to the box config, and the Template / Style / Content sidebar that edits it.
 
-**Read first:** `design/canvas/EditorDesign.dc.html` (every control and its options are in the markup and in `renderVals()`), `design/REDESIGN.md` (template defaults), `design/before/06-editor-design.png`.
+**Read first** (for every `design/canvas/X.dc.html`, also open `design/screens/X.png`): `design/canvas/EditorDesign.dc.html` (every control and its options are in the markup and in `renderVals()`), `design/README.md` (template defaults), `design/before/06-editor-design.png`.
 
 **Build:**
 
@@ -382,7 +382,7 @@ Part 10 can run any time after Part 2.
    | `advanced.custom_css` | string, saved only by users with `unfiltered_html`, `wp_strip_all_tags`, 10 KB max |
    | `content.headline`, `content.intro`, `content.add_label`, `content.cart_label` | text (`sanitize_text_field` / `sanitize_textarea_field`), empty = translated default |
 
-   Add a PHP sanitizer with allowlists for every enum, a JS default object per template (from `design/REDESIGN.md`), and the Part 1 migration step that sets `design.template = 'spotlight'` for existing boxes, or maps their old design fields (old layout, accent, theme) to the new keys.
+   Add a PHP sanitizer with allowlists for every enum, a JS default object per template (from `design/README.md`), and the Part 1 migration step that sets `design.template = 'spotlight'` for existing boxes, or maps their old design fields (old layout, accent, theme) to the new keys.
 2. **"Match my site":** add a REST route under the frozen namespace (admin capability) that returns:
    - the theme palette, from `wp_get_global_settings( array( 'color', 'palette' ) )`, merging the `theme`, `default` and `custom` origins;
    - font families, from `wp_get_global_settings( array( 'typography', 'fontFamilies' ) )`;
@@ -431,11 +431,11 @@ Part 10 can run any time after Part 2.
 
 **Goal:** one storefront engine that renders any template from the same box state, with every design setting applied through CSS custom properties.
 
-**Read first:**
+**Read first** (for every `design/canvas/X.dc.html`, also open `design/screens/X.png`):
 
 - `design/canvas/TplClassic.dc.html`: this is the reference for **how settings map to styles**; its `renderVals()` shows every mapping.
 - `TplMinimal.dc.html`, `TplSteps.dc.html`, `TplGiftBox.dc.html`, `TplBold.dc.html`
-- `design/REDESIGN.md` (defaults)
+- `design/README.md` (defaults)
 - `design/before/10-storefront.png`
 
 **Build:**
@@ -455,7 +455,7 @@ Part 10 can run any time after Part 2.
    - add / stepper / remove controls at least 44px;
    - sold-out tiles disabled, or hidden per the rules;
    - the summary position (`left` / `right` / `bar`), progress style and slot style work in every template where it makes sense;
-   - record any template that ignores an option in `design/REDESIGN.md`, for example Split screen always keeps the box on the left.
+   - record any template that ignores an option in `design/README.md`, for example Split screen always keeps the box on the left.
 5. **Theme fit:** all CSS is scoped under the wrapper class with the frozen prefix, with no global resets. The wrapper respects alignwide and alignfull. Test with Twenty Twenty-Five and Storefront.
 
 **WordPress.org checks this part:** no remote fonts or images, styles only through enqueue and `wp_add_inline_style`, and every value escaped with `esc_attr` / `safecss_filter_attr` where it lands in CSS.
@@ -475,7 +475,7 @@ Part 10 can run any time after Part 2.
 
 **Goal:** all ten templates are complete and work on phones, using local fonts only.
 
-**Read first:** `design/canvas/TplPastel.dc.html`, `TplEditorial.dc.html`, `TplNight.dc.html`, `TplSplit.dc.html`, `TplCompact.dc.html`, `Mobile.dc.html`, `design/REDESIGN.md`.
+**Read first** (for every `design/canvas/X.dc.html`, also open `design/screens/X.png`): `design/canvas/TplPastel.dc.html`, `TplEditorial.dc.html`, `TplNight.dc.html`, `TplSplit.dc.html`, `TplCompact.dc.html`, `Mobile.dc.html`, `design/README.md`.
 
 **Build:**
 
@@ -510,7 +510,7 @@ Part 10 can run any time after Part 2.
 
 **Goal:** one clear modal that places the box on the site, schedules it and confirms that it's live.
 
-**Read first:** `design/canvas/Publish.dc.html`, `design/before/07-editor-publish.png`, `docs/AUDIT.md` (block, shortcode, placement data).
+**Read first** (for every `design/canvas/X.dc.html`, also open `design/screens/X.png`): `design/canvas/Publish.dc.html`, `design/before/07-editor-publish.png`, `docs/AUDIT.md` (block, shortcode, placement data).
 
 **Build:**
 
@@ -541,7 +541,7 @@ Part 10 can run any time after Part 2.
 
 **Goal:** both screens look like the design and run on the same data and options as today.
 
-**Read first:** `design/canvas/Analytics.dc.html`, `design/canvas/Settings.dc.html`, `design/before/08-analytics.png`, `design/before/09-settings.png`.
+**Read first** (for every `design/canvas/X.dc.html`, also open `design/screens/X.png`): `design/canvas/Analytics.dc.html`, `design/canvas/Settings.dc.html`, `design/before/08-analytics.png`, `design/before/09-settings.png`.
 
 **Build:**
 
@@ -569,7 +569,7 @@ Part 10 can run any time after Part 2.
 
 **Goal:** updating from the current release is invisible to shoppers and safe for merchants, and the plugin passes review.
 
-**Read first:** `AGENTS.md`, `docs/AUDIT.md`, `docs/baseline/*`, [Detailed plugin guidelines](https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/), [Common issues](https://developer.wordpress.org/plugins/wordpress-org/common-issues/).
+**Read first** (for every `design/canvas/X.dc.html`, also open `design/screens/X.png`): `AGENTS.md`, `docs/AUDIT.md`, `docs/baseline/*`, [Detailed plugin guidelines](https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/), [Common issues](https://developer.wordpress.org/plugins/wordpress-org/common-issues/).
 
 **Do:**
 
@@ -614,7 +614,7 @@ Part 10 can run any time after Part 2.
 
 **Goal:** ship the redesign as an update on WordPress.org.
 
-**Read first:** `docs/REDESIGN-PROGRESS.md`, [How your readme.txt works](https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/), [Plugin assets](https://developer.wordpress.org/plugins/wordpress-org/plugin-assets/), [Using Subversion](https://developer.wordpress.org/plugins/wordpress-org/how-to-use-subversion/).
+**Read first** (for every `design/canvas/X.dc.html`, also open `design/screens/X.png`): `docs/PROGRESS.md`, [How your readme.txt works](https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/), [Plugin assets](https://developer.wordpress.org/plugins/wordpress-org/plugin-assets/), [Using Subversion](https://developer.wordpress.org/plugins/wordpress-org/how-to-use-subversion/).
 
 **Do:**
 

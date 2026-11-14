@@ -5,7 +5,7 @@ Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
 Requires Plugins: woocommerce
-Stable tag: 1.0.0
+Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,7 +17,9 @@ Let shoppers build their own box of WooCommerce products and unlock bigger disco
 
 Use it for gift boxes, snack boxes, sampler packs, bakery boxes, tea and coffee samplers, beauty kits, holiday bundles or any "pick any 6" offer.
 
-Create a campaign in a step-by-step editor, choose which products can go in the box, set the discount rules, and add it to a page with a block or a shortcode. The server calculates every price, so the discount a shopper sees is the discount they pay.
+Create a box in a focused three-step editor: choose products, set discount rules, then design the shopper experience while a real iframe preview shows the box inside your active theme. Publish it to a new or existing page, or place it yourself with the block or shortcode. The server calculates every price, so the discount a shopper sees is the discount they pay.
+
+Start from one of 10 responsive storefront templates: Spotlight, Clean list, Guided steps, Gift tray, Color block, Pastel, Editorial, Night, Split screen or Compact card. Each template shares the same reliable pricing and cart behavior while giving the box a distinct layout, typography and visual character.
 
 Every feature is included. There is no paid version, no locked features and no account to create.
 
@@ -68,7 +70,7 @@ Every feature is included. There is no paid version, no locked features and no a
 
 = How do I put a box builder on a page? =
 
-Publish the campaign and choose a page, or add the ProductBoxes Box Builder block to any page and choose a campaign. You can also use the shortcode `[mmbb_box id="12"]`, which takes the optional attributes `layout` (panel, bar or both), `columns` (3, 4 or 5) and `hero` (true or false).
+Publish the campaign and choose a page, or add the ProductBoxes Box Builder block to any page and choose a campaign. You can also use the shortcode `[mmbb_box id="12"]`, which takes the optional attributes `layout` (panel, bar or both), `columns` (3, 4 or 5), `hero` (true or false) and `template` (one of the 10 template IDs).
 
 = Which campaign types are there? =
 
@@ -84,7 +86,19 @@ Yes. Simple products and individual variations can go in a box.
 
 = Does it work with my theme? =
 
-The builder renders inside your theme's content area with its own scoped styles, so it works with themes that follow WordPress standards. It was tested with Twenty Twenty-Five and Storefront. On narrow screens it switches to two columns, a sticky summary bar and a bottom sheet.
+The builder renders inside your theme's content area with scoped styles and CSS custom properties. In the Design step, choose Match my site to read compatible colors and typography from the active theme, then keep them in sync or use them as a starting point. It was tested with Twenty Twenty-Five and Storefront. On narrow screens it switches to a phone-friendly layout with 44px controls, a sticky summary and a bottom sheet.
+
+= Why is the shopper preview in an iframe? =
+
+The iframe loads the real front end of your site, including the active theme's content width and styles, while keeping the full-screen editor controls separate. Desktop, tablet and phone buttons change the preview width. Draft changes are sent only between your editor and your own preview page; nothing is sent to an external service.
+
+= Who can add custom CSS? =
+
+Only users with WordPress's `unfiltered_html` capability can save custom CSS. ProductBoxes strips HTML tags, stores the CSS with the existing plugin settings and prints it through WordPress's inline-style API. On sites where that capability is restricted, such as many multisite installations, the field is not available.
+
+= Does ProductBoxes load fonts from another server? =
+
+No. The template fonts are bundled as local WOFF2 files and are loaded only when a box uses them. ProductBoxes never requests Google Fonts, a CDN or another font service. You can also choose your theme's typography or the system font stack.
 
 = Does it work with the Cart and Checkout blocks? =
 
@@ -131,21 +145,32 @@ All hooks use the `mmbb_` prefix.
 
 == Screenshots ==
 
-1. Mix-and-match storefront box builder with tiered discount progress.
-2. Gift box builder with selectable box sizes, products, and gift messages.
-3. Fixed-price product bundles: choose any three shirts for one price.
-4. Guided campaign setup with a live shopper preview.
-5. Box rules, item limits, discount tiers, and optional extras.
-6. Customize layout, labels, colors, and storefront appearance.
-7. Analytics dashboard showing revenue, funnel, and product activity.
-8. Campaign management overview with statuses and performance.
+1. Home brings setup tasks, key numbers, box performance and most-picked products together.
+2. Boxes provides searchable statuses, placement links and actions in a compact WordPress-style table.
+3. The Design step combines template, style and content controls with a live iframe preview inside the active theme.
+4. Spotlight uses a bold headline, rising discount ladder, product grid and box panel.
+5. Gift tray presents the chosen products in a warm, slot-based gift-box layout.
+6. Night pairs a dark storefront with a progress ring, product deck and high-contrast summary bar.
+7. The phone layout keeps product controls comfortable and the current box total within reach.
 
 == Changelog ==
+
+= 2.0.0 =
+* Rebuilt the admin experience with a WordPress-style Home screen, searchable Boxes list and focused three-step editor.
+* Added a live, theme-aware iframe preview with desktop, tablet and phone sizes.
+* Added 10 responsive storefront templates with configurable colors, typography, spacing, content and layout.
+* Added a guided publish flow for new pages, existing pages, the Box Builder block and shortcode placement.
+* Redesigned analytics and settings while retaining the existing reports, stored settings and privacy controls.
+* Added local template fonts, accessible mobile summaries, improved keyboard behavior and reduced-motion support.
+* Preserved existing boxes, orders, analytics, hooks, routes, blocks and shortcodes through versioned migrations.
 
 = 1.0.0 =
 * Initial release: tiered, fixed-size and bundle-price box campaigns, storefront builder block and shortcode, classic and block cart and checkout support, order and email details, analytics and settings.
 
 == Upgrade Notice ==
+
+= 2.0.0 =
+Your existing boxes, settings, orders and analytics are kept. Existing boxes are moved to the Spotlight template, with their current colors, layout and display choices carried forward where possible.
 
 = 1.0.0 =
 Initial release.
