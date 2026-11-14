@@ -362,6 +362,22 @@ The existing `mmbb:editor:<id>` localStorage key now also holds `draft` and `bas
 
 **Open issues:** none for this follow-up.
 
+#### Part 4 editor preview width follow-up (2026-11-14)
+
+**Done:** Removed the decorative desktop/tablet browser chrome from the live iframe preview, including the fake address bar, dots, Preview pill, rounded shell and 1040px cap. Desktop now fills the complete center stage and scales its 1280px preview width to that space. Tablet remains an unadorned 820px responsive preview and phone retains the 390px device frame.
+
+**Decisions:** The preview remains a real iframe with the site's theme and page context; only the editor's fake browser decoration was removed. Desktop uses all available stage height and width, while the responsive device choices keep their real virtual widths.
+
+**Frozen identifiers touched:** none.
+
+**Data changes and migration steps:** none.
+
+**Checks run:** production build passed (the same two admin bundle-size warnings) · lint:js passed · lint:css passed · PHPCS passed · test:js passed (23 suites, 310 tests) · test:unit passed (114 tests, 600 assertions).
+
+**Skipped checks (and why):** No data, PHP request or checkout behavior changed, so the already recorded Part 4 integration and Plugin Check results remain applicable.
+
+**Open issues:** none for this follow-up.
+
 <!-- Copy for each part:
 
 ### Part N — Title (YYYY-MM-DD)

@@ -32,7 +32,8 @@ body.mmbb-is-fullscreen #wpbody-content {
 	--mmbb-ed-tag-bg: #fff3d6;
 	--mmbb-ed-phone: #16181d;
 	--mmbb-ed-surface: #fff;
-	--mmbb-ed-font: -apple-system, blinkmacsystemfont, "Segoe UI", roboto, oxygen-sans, ubuntu, cantarell, "Helvetica Neue", sans-serif;
+	--mmbb-ed-font: -apple-system, blinkmacsystemfont, "Segoe UI", roboto,
+		oxygen-sans, ubuntu, cantarell, "Helvetica Neue", sans-serif;
 
 	display: flex;
 	flex-direction: column;
@@ -127,61 +128,10 @@ body.mmbb-is-fullscreen #wpbody-content {
 	background-size: 18px 18px;
 }
 
-.mmbb-ed__browser {
-	max-width: 100%;
-	overflow: hidden;
-	border: 1px solid var(--mmbb-ed-frame-line);
-	border-radius: 12px;
+.mmbb-ed__stage[data-device="desktop"] {
+	align-items: stretch;
+	padding: 0;
 	background: var(--mmbb-ed-surface);
-	box-shadow: 0 24px 60px -20px rgba(20, 24, 40, 0.25), 0 2px 6px rgba(20, 24, 40, 0.06);
-}
-
-.mmbb-ed__browser-bar {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	height: 42px;
-	padding: 0 14px;
-	border-bottom: 1px solid var(--mmbb-ed-stage);
-	background: var(--mmbb-ed-bar);
-}
-
-.mmbb-ed__dots {
-	display: flex;
-	gap: 6px;
-}
-
-.mmbb-ed__dots i {
-	display: block;
-	width: 10px;
-	height: 10px;
-	border-radius: 50%;
-	background: var(--mmbb-ed-frame-line);
-}
-
-.mmbb-ed__url {
-	flex: 1;
-	max-width: 520px;
-	height: 28px;
-	margin: 0 auto;
-	padding: 0 12px;
-	overflow: hidden;
-	border-radius: 14px;
-	background: var(--mmbb-ed-url);
-	color: var(--mmbb-ed-gray-700);
-	font-size: 12px;
-	line-height: 28px;
-	white-space: nowrap;
-	text-overflow: ellipsis;
-}
-
-.mmbb-ed__tag {
-	padding: 2px 8px;
-	border-radius: 10px;
-	background: var(--mmbb-ed-tag-bg);
-	color: var(--mmbb-ed-tag);
-	font-size: 11px;
-	font-weight: 600;
 }
 
 .mmbb-ed__phone {
@@ -302,7 +252,11 @@ body.mmbb-is-fullscreen #wpbody-content {
 	grid-column: 1 / -1;
 	height: 64px;
 	border-radius: 2px;
-	background: linear-gradient(135deg, var(--mmbb-mini-bg) 0 68%, var(--mmbb-mini-accent) 68% 100%);
+	background: linear-gradient(
+		135deg,
+		var(--mmbb-mini-bg) 0 68%,
+		var(--mmbb-mini-accent) 68% 100%
+	);
 	box-shadow: inset 0 6px 0 var(--mmbb-mini-text);
 }
 

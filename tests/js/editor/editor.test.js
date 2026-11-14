@@ -7,6 +7,7 @@ import {
 } from '@testing-library/react';
 import App from '../../../src/admin/App';
 import * as api from '../../../src/admin/api';
+import { frameLayout } from '../../../src/admin/editor/PreviewStage';
 
 jest.mock( '../../../src/admin/api', () => ( {
 	getCampaign: jest.fn(),
@@ -478,7 +479,10 @@ describe( 'box editor', () => {
 	it( 'switches the preview between desktop, tablet and phone and remembers it', async () => {
 		const { container } = open( 'design' );
 		await nameField();
-		expect( container.querySelector( '.mmbb-ed__browser' ) ).toBeTruthy();
+		expect( container.querySelector( '.mmbb-ed__browser' ) ).toBeNull();
+		expect(
+			container.querySelector( '.mmbb-ed__stage' ).dataset.device
+		).toBe( 'desktop' );
 		expect( frame( container ).style.width ).toBe( '1280px' );
 
 		fireEvent.click( screen.getByRole( 'radio', { name: 'Tablet' } ) );
@@ -490,6 +494,14 @@ describe( 'box editor', () => {
 		expect( window.localStorage.getItem( 'mmbb:editor:device' ) ).toBe(
 			'mobile'
 		);
+	} );
+
+	it( 'uses the whole editor stage for the desktop preview', () => {
+		const layout = frameLayout( 'desktop', { width: 1170, height: 800 } );
+		expect( layout.frameWidth ).toBe( 1170 );
+		expect( layout.frameHeight ).toBe( 800 );
+		expect( layout.width ).toBe( 1280 );
+		expect( layout.scale ).toBeCloseTo( 1170 / 1280 );
 	} );
 
 	it( 'sends the draft to the iframe after it says ready, and ignores other origins', async () => {

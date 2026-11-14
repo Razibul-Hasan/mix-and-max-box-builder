@@ -6,11 +6,10 @@ import usePreviewBridge from './usePreviewBridge';
 /** Width each preview size renders at before it is scaled to fit. */
 export const VIRTUAL_WIDTH = { desktop: 1280, tablet: 820, mobile: 390 };
 
-// Largest frame drawn for each size, as in the design.
-const FRAME_WIDTH = { desktop: 1040, tablet: 820 };
+// Tablet keeps its real responsive width. Desktop fills the available stage.
+const FRAME_WIDTH = { tablet: 820 };
 const PHONE_HEIGHT = 844;
 const PHONE_BORDER = 10;
-const BAR_HEIGHT = 42;
 const STAGE_PAD_X = 64;
 const STAGE_PAD_Y = 56;
 
@@ -22,8 +21,15 @@ const STAGE_PAD_Y = 56;
  * @return {Object} { width, height, scale, frameWidth, frameHeight }.
  */
 export function frameLayout( device, stage ) {
-	const roomW = Math.max( 0, ( stage.width || 0 ) - STAGE_PAD_X );
-	const roomH = Math.max( 0, ( stage.height || 0 ) - STAGE_PAD_Y );
+	const framed = device !== 'desktop';
+	const roomW = Math.max(
+		0,
+		( stage.width || 0 ) - ( framed ? STAGE_PAD_X : 0 )
+	);
+	const roomH = Math.max(
+		0,
+		( stage.height || 0 ) - ( framed ? STAGE_PAD_Y : 0 )
+	);
 	if ( device === 'mobile' ) {
 		const outerW = VIRTUAL_WIDTH.mobile + PHONE_BORDER * 2;
 		const outerH = PHONE_HEIGHT + PHONE_BORDER * 2;
@@ -38,12 +44,10 @@ export function frameLayout( device, stage ) {
 		};
 	}
 	const virtual = VIRTUAL_WIDTH[ device ] || VIRTUAL_WIDTH.desktop;
-	const frameWidth = Math.min(
-		FRAME_WIDTH[ device ] || FRAME_WIDTH.desktop,
-		roomW || FRAME_WIDTH.desktop
-	);
-	const scale = Math.min( 1, ( frameWidth - 2 ) / virtual );
-	const frameHeight = Math.max( 320, ( roomH || 790 ) - BAR_HEIGHT );
+	const maximum = FRAME_WIDTH[ device ] || virtual;
+	const frameWidth = Math.min( maximum, roomW || maximum );
+	const scale = Math.min( 1, frameWidth / virtual );
+	const frameHeight = Math.max( 320, roomH || 790 );
 	return {
 		width: virtual,
 		height: Math.round( frameHeight / scale ),
@@ -51,16 +55,6 @@ export function frameLayout( device, stage ) {
 		frameWidth,
 		frameHeight,
 	};
-}
-
-// The address shown in the fake URL bar: host and path, no query.
-function displayUrl( url ) {
-	try {
-		const parsed = new URL( url, window.location.href );
-		return parsed.host + parsed.pathname;
-	} catch ( e ) {
-		return '';
-	}
 }
 
 function useSize( ref ) {
@@ -95,8 +89,8 @@ function useSize( ref ) {
 }
 
 /**
- * The middle of the editor: the real storefront in an iframe, drawn in a browser
- * or phone frame and kept in step with the draft.
+ * The middle of the editor: the real storefront in a full-width iframe or a
+ * phone frame, kept in step with the draft.
  *
  * @param {Object}  props
  * @param {string}  props.src     Preview address (with its nonce).
@@ -169,37 +163,13 @@ export default function PreviewStage( {
 		<section
 			ref={ stageRef }
 			className="mmbb-ed__stage"
+			data-device={ device }
 			aria-label={ __(
 				'Shopper preview',
 				'productboxes-mix-and-match-box-builder'
 			) }
 		>
-			{ phone ? (
-				<div className="mmbb-ed__phone">{ frame }</div>
-			) : (
-				<div
-					className="mmbb-ed__browser"
-					style={ { width: layout.frameWidth } }
-				>
-					<div className="mmbb-ed__browser-bar">
-						<span className="mmbb-ed__dots" aria-hidden="true">
-							<i />
-							<i />
-							<i />
-						</span>
-						<span className="mmbb-ed__url">
-							{ displayUrl( src ) }
-						</span>
-						<span className="mmbb-ed__tag">
-							{ __(
-								'Preview',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						</span>
-					</div>
-					{ frame }
-				</div>
-			) }
+			{ phone ? <div className="mmbb-ed__phone">{ frame }</div> : frame }
 		</section>
 	);
 }
