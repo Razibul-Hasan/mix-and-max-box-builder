@@ -111,6 +111,32 @@ class SettingsAndSchemaTest extends \WP_UnitTestCase {
 		);
 	}
 
+	/** The redesigned screen round-trips visible changes without dropping hidden display defaults. */
+	public function test_rest_round_trip_keeps_the_same_option_and_hidden_keys() {
+		$stored                           = Settings::defaults();
+		$stored['columns']                = 5;
+		$stored['summary_layout']         = 'bar';
+		$stored['low_stock']['enabled']   = false;
+		$stored['low_stock']['threshold'] = 2;
+		update_option( Settings::OPTION, $stored );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		do_action( 'rest_api_init' );
+
+		$get                                 = new \WP_REST_Request( 'GET', '/mmbb/v1/settings' );
+		$payload                             = rest_get_server()->dispatch( $get )->get_data();
+		$payload['default_page_id']          = 12;
+		$payload['cart_display']             = 'items';
+		$payload['analytics_retention_days'] = 120;
+
+		$save = new \WP_REST_Request( 'POST', '/mmbb/v1/settings' );
+		$save->set_body_params( $payload );
+		$response = rest_get_server()->dispatch( $save );
+
+		$this->assertSame( 200, $response->get_status() );
+		$this->assertSame( $payload, $response->get_data() );
+		$this->assertSame( $payload, get_option( Settings::OPTION ) );
+	}
+
 	/** Installing creates both tables with their keys, and running it twice is safe. */
 	public function test_installer_creates_tables() {
 		global $wpdb;

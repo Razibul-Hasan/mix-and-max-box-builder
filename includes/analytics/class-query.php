@@ -207,15 +207,36 @@ final class Query {
 			$row = self::ratios( $row );
 		}
 		unset( $row );
-		$total       = self::ratios( $total );
-		$performance = array();
+		$total         = self::ratios( $total );
+		$performance   = array();
+		$deleted       = self::empty_totals();
+		$deleted_count = 0;
 		foreach ( $campaigns as $id => $values ) {
+			$post = get_post( $id );
+			if ( ! $post ) {
+				++$deleted_count;
+				foreach ( $deleted as $column => $unused ) {
+					$deleted[ $column ] += $values[ $column ];
+				}
+				continue;
+			}
 			$performance[] = array_merge(
 				array(
 					'id'   => $id,
-					'name' => get_the_title( $id ) ? get_the_title( $id ) : __( 'Deleted campaign', 'productboxes-mix-and-match-box-builder' ),
+					'name' => get_the_title( $post ),
 				),
 				self::ratios( $values )
+			);
+		}
+		if ( $deleted_count ) {
+			$performance[] = array_merge(
+				array(
+					'id'      => 0,
+					/* translators: %d: Number of deleted box campaigns represented by this row. */
+					'name'    => sprintf( _n( 'Deleted box (%d)', 'Deleted boxes (%d)', $deleted_count, 'productboxes-mix-and-match-box-builder' ), $deleted_count ),
+					'deleted' => true,
+				),
+				self::ratios( $deleted )
 			);
 		}
 		usort(

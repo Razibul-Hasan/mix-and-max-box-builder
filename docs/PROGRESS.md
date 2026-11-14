@@ -13,12 +13,28 @@ Updated by the agent at the end of every part.
 | 6 | Design settings and Design step | done | `bcb6f8e` |
 | 7 | Template engine and templates 01–05 | done | `121f1e0` |
 | 8 | Templates 06–10, phone layout, fonts | done | `7cd57c8` |
-| 9 | Publish flow | done | `(this commit)` |
-| 10 | Analytics and Settings | not started | |
+| 9 | Publish flow | done | `41e9800` |
+| 10 | Analytics and Settings | done | `(this commit)` |
 | 11 | Migration, compatibility, hardening | not started | |
 | 12 | Release | not started | |
 
 ## Log
+
+### Part 10 — Analytics and Settings (2026-11-14)
+
+**Done:** Rebuilt Analytics to match the new key-numbers, daily revenue, shopper journey, most-picked-products and By box hierarchy. The existing period, box, comparison, custom-date and CSV filters still use the frozen REST routes and return the same totals. The revenue SVG retains its hidden data table. Journey guidance is generated only when the returned steps contain a real drop-off and names the largest measured loss. Deleted campaigns are now combined into one translated “Deleted boxes (n)” row after their counters are summed, so revenue, visits, sales and derived ratios stay intact. Rebuilt Settings as the four one-column cards from the design using WordPress ToggleControl, SelectControl and NumberControl. Save is disabled until the form is dirty and success uses the shared WordPress snackbar. The screen round-trips the complete existing `mmbb_settings` object, including presentation keys intentionally hidden until Part 11.
+
+**Decisions:** The design's placeholder `/wp-json/productboxes/v1` and `productboxes_` developer copy was replaced with the frozen `/wp-json/mmbb/v1` and `mmbb_` identifiers. The old Storefront display and Advanced sections were removed from this screen as specified, but their stored keys are neither deleted nor defaulted during a save. The design's fixed cart-editing tip could be false when that setting is already enabled, so the notice instead reports the largest adjacent journey drop directly from the current filtered data.
+
+**Frozen identifiers touched:** none. Analytics remains on `mmbb/v1/analytics` and `/analytics/export`; Settings remains on `mmbb/v1/settings` and the single `mmbb_settings` option with every existing key preserved.
+
+**Data changes and migration steps:** none. No option, meta or table schema changed. Analytics response presentation now aggregates records whose campaign posts no longer exist; underlying analytics rows and totals are unchanged.
+
+**Checks run:** production build ✅ (same two admin-size warnings; admin entry 254 KiB) · lint:js ✅ · lint:css ✅ · PHPCS ✅ · test:js ✅ (23 suites, 311 tests) · test:unit ✅ (115 tests, 603 assertions) · integration ✅ (214 tests, 2 skipped, 2,314 assertions) · HPOS integration ✅ (214 tests, 2 skipped, 2,315 assertions) · release zip ✅ (1,116,337 bytes) · packaged Plugin Check review ruleset ✅ (0 findings after the same baseline exclusions for generated `build/` minification and the pre-existing analytics nonce sniff).
+
+**Skipped checks (and why):** Docker/wp-env and WP-CLI are unavailable in this shell, so runtime Plugin Check was replaced by the packaged review ruleset and both native WordPress suites. No live browser was driven through wp-admin, so the two screens were not screenshot-compared interactively; the supplied HTML/PNG references were inspected and the responsive, accessible screen structure is covered by component tests.
+
+**Open issues:** none in the implemented Part 10 paths.
 
 ### Part 9 — Publish flow (2026-11-14)
 

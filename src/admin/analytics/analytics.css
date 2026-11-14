@@ -1,23 +1,109 @@
-.mmbb-root .mmbb-analytics-filters {
- display: flex;
- flex-wrap: wrap;
- align-items: center;
- gap: var(--space-3);
- margin-bottom: var(--space-6);
+.mmbb-app .mmbb-analytics-filters {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
 }
 
-.mmbb-root .mmbb-analytics-split {
- display: grid;
- grid-template-columns: repeat(2, minmax(0, 1fr));
- align-items: start;
- gap: var(--space-6);
+.mmbb-app .mmbb-analytics-period {
+	width: 410px;
+	max-width: 100%;
+}
+
+.mmbb-app .mmbb-analytics-filters > .components-base-control {
+	margin: 0;
+}
+
+.mmbb-app .mmbb-analytics-filters > .components-select-control {
+	width: 200px;
+}
+
+.mmbb-app .mmbb-analytics-dates {
+	display: flex;
+	gap: 8px;
+	flex-basis: 100%;
+}
+
+.mmbb-app .mmbb-analytics-dates label {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	font-weight: 500;
+}
+
+.mmbb-app .mmbb-analytics-dates input {
+	min-height: 40px;
+}
+
+.mmbb-app .mmbb-analytics-split {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	align-items: start;
+	gap: 24px;
+}
+
+.mmbb-app .mmbb-analytics-journey,
+.mmbb-app .mmbb-analytics-bars {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.mmbb-app .mmbb-analytics-bar-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.mmbb-app .mmbb-analytics-bar-row > span:last-child {
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.mmbb-app .mmbb-analytics-bar-track {
+	height: 8px;
+	margin-top: 6px;
+	border-radius: 4px;
+	background: var(--mmbb-app-gray-100);
+	overflow: hidden;
+}
+
+.mmbb-app .mmbb-analytics-bar-track i {
+	display: block;
+	height: 100%;
+	border-radius: 4px;
+	background: var(--mmbb-app-accent);
+}
+
+.mmbb-app .mmbb-analytics-journey + .components-notice {
+	margin: 4px 0 0;
+}
+
+.mmbb-app .mmbb-chart {
+	--chart-1: var(--mmbb-app-accent);
+	--chart-muted: var(--mmbb-app-gray-600);
+	--surface: var(--mmbb-app-surface);
+	--ink-muted: var(--mmbb-app-gray-700);
+	--line: var(--mmbb-app-gray-100);
 }
 
 @media (max-width: 900px) {
 
- .mmbb-root .mmbb-analytics-split { grid-template-columns: minmax(0, 1fr); }
+	.mmbb-app .mmbb-analytics-split {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 
-.mmbb-root .mmbb-analytics-filters > .mmbb-field {
- flex: 0 1 220px;
+@media (max-width: 600px) {
+
+	.mmbb-app .mmbb-analytics-period {
+		width: 100%;
+	}
+
+	.mmbb-app .mmbb-analytics-dates {
+		flex-direction: column;
+	}
 }

@@ -44,10 +44,27 @@ const report = {
 			avg_box_value: 1600,
 			revenue: 1600,
 		},
+		{
+			id: 0,
+			name: 'Deleted boxes (2)',
+			deleted: true,
+			views: 3,
+			started: 0,
+			boxes: 0,
+			conversion: 0,
+			avg_box_value: 0,
+			revenue: 0,
+		},
 	],
 };
 beforeEach( () => {
 	jest.clearAllMocks();
+	window.ResizeObserver = class {
+		observe() {}
+		unobserve() {}
+		disconnect() {}
+	};
+	window.scrollTo = jest.fn();
 	window.mmbbAdmin = {
 		page: 'analytics',
 		locale: 'en-US',
@@ -69,11 +86,12 @@ beforeEach( () => {
 
 test( 'renders real report sections and sends the same filters to CSV export', async () => {
 	render( <App page="analytics" /> );
-	expect( await screen.findByText( 'Campaign performance' ) ).toBeTruthy();
-	expect( screen.getByText( 'Most-picked products' ) ).toBeTruthy();
+	expect( await screen.findByText( 'By box' ) ).toBeTruthy();
+	expect( screen.getByText( 'Most picked products' ) ).toBeTruthy();
 	expect( screen.getByText( 'Cookie' ) ).toBeTruthy();
+	expect( screen.getByText( 'Deleted boxes (2)' ) ).toBeTruthy();
 	expect( screen.getAllByText( '$16.00' ).length ).toBeGreaterThan( 0 );
-	fireEvent.change( screen.getByLabelText( 'Campaign' ), {
+	fireEvent.change( screen.getByLabelText( 'Box' ), {
 		target: { value: '12' },
 	} );
 	await waitFor( () =>
@@ -100,7 +118,7 @@ test( 'renders real report sections and sends the same filters to CSV export', a
 
 test( 'custom dates scope requests and comparison can be disabled', async () => {
 	render( <App page="analytics" /> );
-	await screen.findByText( 'Campaign performance' );
+	await screen.findByText( 'By box' );
 	fireEvent.click( screen.getByRole( 'radio', { name: 'Custom' } ) );
 	await screen.findByText( 'Choose a start and end date.' );
 	fireEvent.change( screen.getByLabelText( 'From' ), {

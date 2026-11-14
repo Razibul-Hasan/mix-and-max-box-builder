@@ -32,6 +32,7 @@ const defaults = () => ( {
 
 beforeEach( () => {
 	jest.clearAllMocks();
+	window.scrollTo = jest.fn();
 	window.history.replaceState(
 		null,
 		'',
@@ -62,33 +63,31 @@ beforeEach( () => {
 	);
 } );
 
-test( 'renders all sections and saves the complete settings payload', async () => {
+test( 'renders the four store-wide cards and keeps hidden display defaults on save', async () => {
 	render( <App page="settings" /> );
 
 	expect(
 		await screen.findByRole( 'heading', { name: 'General' } )
 	).toBeTruthy();
 	expect(
-		screen.getByRole( 'heading', { name: 'Storefront display' } )
+		screen.getByRole( 'heading', { name: 'Cart and checkout' } )
 	).toBeTruthy();
 	expect(
-		screen.getByRole( 'heading', { name: 'Cart & checkout' } )
+		screen.getByRole( 'heading', { name: 'Order emails' } )
 	).toBeTruthy();
-	expect( screen.getByRole( 'heading', { name: 'Emails' } ) ).toBeTruthy();
-	expect( screen.getByRole( 'heading', { name: 'Advanced' } ) ).toBeTruthy();
-	expect( screen.getByText( 'Follow WooCommerce ($12.00)' ) ).toBeTruthy();
+	expect(
+		screen.getByRole( 'heading', { name: 'Data and privacy' } )
+	).toBeTruthy();
+	expect( screen.queryByText( 'Storefront display' ) ).toBeNull();
+	expect( screen.queryByText( 'Advanced' ) ).toBeNull();
 
+	const save = screen.getByRole( 'button', { name: 'Save settings' } );
+	expect( save.disabled ).toBe( true );
 	fireEvent.click(
-		screen.getByRole( 'switch', {
-			name: 'Allow coupons on top of box discounts',
-		} )
+		screen.getByRole( 'checkbox', { name: 'Allow coupons on boxes' } )
 	);
-	expect(
-		screen.getByRole( 'region', { name: 'Unsaved changes' } )
-	).toBeTruthy();
-	fireEvent.click(
-		screen.getAllByRole( 'button', { name: 'Save settings' } )[ 0 ]
-	);
+	expect( save.disabled ).toBe( false );
+	fireEvent.click( save );
 
 	await waitFor( () =>
 		expect( api.saveSettings ).toHaveBeenCalledTimes( 1 )
@@ -97,42 +96,51 @@ test( 'renders all sections and saves the complete settings payload', async () =
 		...defaults(),
 		allow_coupons: true,
 	} );
-	expect( await screen.findByText( 'Settings saved' ) ).toBeTruthy();
-	await waitFor( () =>
-		expect(
-			screen.queryByRole( 'region', { name: 'Unsaved changes' } )
-		).toBeNull()
+	expect( api.saveSettings.mock.calls[ 0 ][ 0 ].low_stock ).toEqual( {
+		enabled: true,
+		threshold: 5,
+	} );
+	expect( ( await screen.findAllByText( 'Saved' ) ).length ).toBeGreaterThan(
+		0
 	);
+	await waitFor( () => expect( save.disabled ).toBe( true ) );
 } );
 
-test( 'shows inline validation and does not send invalid settings', async () => {
+test( 'round-trips page, cart and privacy settings through the same payload', async () => {
 	render( <App page="settings" /> );
 	await screen.findByRole( 'heading', { name: 'General' } );
 
-	fireEvent.change( screen.getByLabelText( 'Warn at' ), {
-		target: { value: '0' },
+	fireEvent.change( screen.getByLabelText( 'Main box page' ), {
+		target: { value: '12' },
 	} );
-	fireEvent.click(
-		screen.getAllByRole( 'button', { name: 'Save settings' } )[ 0 ]
-	);
+	fireEvent.click( screen.getByRole( 'radio', { name: /Each item/ } ) );
+	fireEvent.change( screen.getByLabelText( 'Keep detailed analytics for' ), {
+		target: { value: '120' },
+	} );
+	fireEvent.click( screen.getByRole( 'button', { name: 'Save settings' } ) );
 
-	expect(
-		await screen.findByText( 'Enter a whole number from 1 to 100.' )
-	).toBeTruthy();
-	expect( api.saveSettings ).not.toHaveBeenCalled();
+	await waitFor( () =>
+		expect( api.saveSettings ).toHaveBeenCalledTimes( 1 )
+	);
+	expect( api.saveSettings ).toHaveBeenCalledWith( {
+		...defaults(),
+		default_page_id: 12,
+		cart_display: 'items',
+		analytics_retention_days: 120,
+	} );
 } );
 
-test( 'discards unsaved changes', async () => {
+test( 'shows retention validation and does not send invalid settings', async () => {
 	render( <App page="settings" /> );
-	const toggle = await screen.findByRole( 'switch', {
-		name: 'Box builders are live',
-	} );
+	await screen.findByRole( 'heading', { name: 'General' } );
 
-	fireEvent.click( toggle );
-	expect( toggle.getAttribute( 'aria-checked' ) ).toBe( 'false' );
-	fireEvent.click( screen.getByRole( 'button', { name: 'Discard' } ) );
-	expect( toggle.getAttribute( 'aria-checked' ) ).toBe( 'true' );
+	fireEvent.change( screen.getByLabelText( 'Keep detailed analytics for' ), {
+		target: { value: '0' },
+	} );
+	fireEvent.click( screen.getByRole( 'button', { name: 'Save settings' } ) );
+
 	expect(
-		screen.queryByRole( 'region', { name: 'Unsaved changes' } )
-	).toBeNull();
+		await screen.findByText( 'Enter a whole number from 7 to 730.' )
+	).toBeTruthy();
+	expect( api.saveSettings ).not.toHaveBeenCalled();
 } );

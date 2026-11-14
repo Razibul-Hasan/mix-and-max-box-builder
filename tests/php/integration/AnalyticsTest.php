@@ -285,6 +285,48 @@ class AnalyticsTest extends \WP_UnitTestCase {
 		$this->assertSame( 800, $report['series'][0]['previous'] );
 		$this->assertSame( 0, $query->report( '2026-03-01', '2026-03-01', 999999 )['kpis']['boxes']['value'] );
 	}
+
+	/** Deleted campaigns collapse into one row without changing report totals. */
+	public function test_deleted_campaigns_are_aggregated_without_metric_drift() {
+		global $wpdb;
+		$day = wp_date( 'Y-m-d' );
+		foreach ( array( 991001, 991002 ) as $index => $campaign_id ) {
+			$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Fixture rows in an owned table.
+				$wpdb->prefix . 'mmbb_stats_daily',
+				array(
+					'day'         => $day,
+					'campaign_id' => $campaign_id,
+					'views'       => $index + 2,
+					'started'     => $index + 1,
+					'products'    => '{}',
+				)
+			);
+			$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Fixture rows in an owned table.
+				$wpdb->prefix . 'mmbb_purchases',
+				array(
+					'order_id'    => 8800 + $index,
+					'line_id'     => 1,
+					'campaign_id' => $campaign_id,
+					'day'         => $day,
+					'boxes'       => 1,
+					'items'       => 2,
+					'value'       => '10.00',
+					'discount'    => '2.00',
+				)
+			);
+		}
+		Query::bust();
+
+		$report = ( new Query() )->report( $day, $day, 0, false );
+
+		$this->assertSame( 2000, $report['kpis']['revenue']['value'] );
+		$this->assertSame( 2, $report['kpis']['boxes']['value'] );
+		$this->assertCount( 1, $report['campaigns'] );
+		$this->assertSame( 'Deleted boxes (2)', $report['campaigns'][0]['name'] );
+		$this->assertTrue( $report['campaigns'][0]['deleted'] );
+		$this->assertSame( 5, $report['campaigns'][0]['views'] );
+		$this->assertSame( 2000, $report['campaigns'][0]['revenue'] );
+	}
 	/** Items-mode purchases include only children of that header; disabling collection also stops sales. */
 	public function test_items_mode_sales_and_disabled_collection() {
 		$day   = wp_date( 'Y-m-d' );

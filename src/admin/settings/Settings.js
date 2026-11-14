@@ -1,22 +1,17 @@
-import { useEffect, useMemo, useState } from '@wordpress/element';
-import { __, sprintf } from '@wordpress/i18n';
 import {
 	Button,
-	Card,
-	ChoiceCard,
-	Icon,
 	Notice,
-	PageHeader,
-	SegmentedControl,
-	SelectField,
-	TextField,
-	Toggle,
-	useMoney,
-} from '../../components';
+	SelectControl,
+	Spinner,
+	ToggleControl,
+} from '@wordpress/components';
+import { useEffect, useState } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
 import { getPages, getSettings, saveSettings } from '../api';
+import { PageHeader, useSnackbar } from '../components';
+import { NumberControl } from '../components/wp';
 import { errorMessage, useRequest } from '../hooks';
 import Shell from '../Shell';
-import { useToast } from '../toast';
 import './settings.css';
 
 const copy = ( value ) => JSON.parse( JSON.stringify( value ) );
@@ -24,50 +19,43 @@ const same = ( one, two ) => JSON.stringify( one ) === JSON.stringify( two );
 
 export function validateSettings( settings ) {
 	const errors = {};
-	const threshold = Number( settings.low_stock.threshold );
 	const retention = Number( settings.analytics_retention_days );
-	if ( ! Number.isInteger( threshold ) || threshold < 1 || threshold > 100 ) {
-		errors.low_stock = __(
-			'Enter a whole number from 1 to 100.',
-			'productboxes-mix-and-match-box-builder'
-		);
-	}
 	if ( ! Number.isInteger( retention ) || retention < 7 || retention > 730 ) {
 		errors.analytics_retention_days = __(
 			'Enter a whole number from 7 to 730.',
 			'productboxes-mix-and-match-box-builder'
 		);
 	}
-	if ( settings.cta_label.length > 32 ) {
-		errors.cta_label = __(
-			'Use 32 characters or fewer.',
-			'productboxes-mix-and-match-box-builder'
-		);
-	}
-	if ( settings.empty_slot_hint.length > 60 ) {
-		errors.empty_slot_hint = __(
-			'Use 60 characters or fewer.',
-			'productboxes-mix-and-match-box-builder'
-		);
-	}
 	return errors;
 }
 
-function ToggleRow( { setting, change, label, description, disabled } ) {
+function SettingToggle( { checked, onChange, label, help } ) {
 	return (
-		<Toggle
-			label={ label }
-			description={ description }
-			checked={ !! setting }
-			disabled={ disabled }
-			onChange={ change }
-		/>
+		<div className="mmbb-settings__toggle">
+			<ToggleControl
+				__nextHasNoMarginBottom
+				label={ label }
+				help={ help }
+				checked={ !! checked }
+				onChange={ onChange }
+			/>
+		</div>
+	);
+}
+
+function SettingsCard( { id, title, children } ) {
+	return (
+		<section className="mmbb-app-card" aria-labelledby={ id }>
+			<div className="mmbb-app-card__head">
+				<h2 id={ id }>{ title }</h2>
+			</div>
+			{ children }
+		</section>
 	);
 }
 
 export default function Settings() {
-	const toast = useToast();
-	const money = useMoney();
+	const snackbar = useSnackbar();
 	const request = useRequest( () => getSettings(), [] );
 	const pages = useRequest( () => getPages( { per_page: 100 } ), [] );
 	const [ saved, setSaved ] = useState( null );
@@ -75,7 +63,6 @@ export default function Settings() {
 	const [ saving, setSaving ] = useState( false );
 	const [ errors, setErrors ] = useState( {} );
 	const [ saveError, setSaveError ] = useState( '' );
-	const [ active, setActive ] = useState( 'general' );
 
 	useEffect( () => {
 		if ( request.data ) {
@@ -96,100 +83,19 @@ export default function Settings() {
 		return () => window.removeEventListener( 'beforeunload', warn );
 	}, [ dirty ] );
 
-	useEffect( () => {
-		if ( ! window.IntersectionObserver ) {
-			return undefined;
-		}
-		const observer = new window.IntersectionObserver(
-			( entries ) => {
-				const visible = entries
-					.filter( ( entry ) => entry.isIntersecting )
-					.sort(
-						( one, two ) =>
-							one.boundingClientRect.top -
-							two.boundingClientRect.top
-					);
-				if ( visible[ 0 ] ) {
-					setActive( visible[ 0 ].target.id );
-				}
-			},
-			{ rootMargin: '-96px 0px -65% 0px' }
-		);
-		document
-			.querySelectorAll( '.mmbb-settings__section' )
-			.forEach( ( section ) => observer.observe( section ) );
-		return () => observer.disconnect();
-	}, [ draft ] );
-
-	const sections = useMemo(
-		() => [
-			{
-				id: 'general',
-				icon: 'settings',
-				label: __(
-					'General',
-					'productboxes-mix-and-match-box-builder'
-				),
-			},
-			{
-				id: 'display',
-				icon: 'palette',
-				label: __(
-					'Storefront display',
-					'productboxes-mix-and-match-box-builder'
-				),
-			},
-			{
-				id: 'cart',
-				icon: 'cart',
-				label: __(
-					'Cart & checkout',
-					'productboxes-mix-and-match-box-builder'
-				),
-			},
-			{
-				id: 'emails',
-				icon: 'mail',
-				label: __( 'Emails', 'productboxes-mix-and-match-box-builder' ),
-			},
-			{
-				id: 'advanced',
-				icon: 'code',
-				label: __(
-					'Advanced',
-					'productboxes-mix-and-match-box-builder'
-				),
-			},
-		],
-		[]
-	);
-
 	const change = ( key, value ) => {
 		setDraft( ( current ) => ( { ...current, [ key ]: value } ) );
 		setErrors( ( current ) => ( { ...current, [ key ]: undefined } ) );
 		setSaveError( '' );
 	};
-	const changeLowStock = ( key, value ) => {
-		setDraft( ( current ) => ( {
-			...current,
-			low_stock: { ...current.low_stock, [ key ]: value },
-		} ) );
-		setErrors( ( current ) => ( { ...current, low_stock: undefined } ) );
-		setSaveError( '' );
-	};
-	const discard = () => {
-		setDraft( copy( saved ) );
-		setErrors( {} );
-		setSaveError( '' );
-	};
+
 	const save = async () => {
 		const invalid = validateSettings( draft );
 		setErrors( invalid );
 		if ( Object.keys( invalid ).length ) {
-			const first = document.getElementById(
-				'mmbb-setting-' + Object.keys( invalid )[ 0 ]
-			);
-			first?.focus();
+			document
+				.getElementById( 'mmbb-setting-analytics-retention-days' )
+				?.focus();
 			return;
 		}
 		setSaving( true );
@@ -197,21 +103,14 @@ export default function Settings() {
 		const payload = {
 			...draft,
 			default_page_id: Number( draft.default_page_id ),
-			columns: Number( draft.columns ),
 			analytics_retention_days: Number( draft.analytics_retention_days ),
-			low_stock: {
-				...draft.low_stock,
-				threshold: Number( draft.low_stock.threshold ),
-			},
 		};
 		try {
 			const result = await saveSettings( payload );
 			setSaved( copy( result ) );
 			setDraft( copy( result ) );
 			setErrors( {} );
-			toast(
-				__( 'Settings saved', 'productboxes-mix-and-match-box-builder' )
-			);
+			snackbar( __( 'Saved', 'productboxes-mix-and-match-box-builder' ) );
 		} catch ( error ) {
 			setSaveError(
 				errorMessage(
@@ -230,34 +129,27 @@ export default function Settings() {
 	if ( request.loading && ! draft ) {
 		return (
 			<Shell active="settings">
-				<p className="mmbb-settings__loading" role="status">
+				<div className="mmbb-app-loading" role="status">
+					<Spinner />
 					{ __(
-						'Loading settings…',
+						'Loading settings\u2026',
 						'productboxes-mix-and-match-box-builder'
 					) }
-				</p>
+				</div>
 			</Shell>
 		);
 	}
 	if ( request.error && ! draft ) {
 		return (
 			<Shell active="settings">
-				<Notice
-					tone="critical"
-					title={ __(
-						'Could not load settings',
-						'productboxes-mix-and-match-box-builder'
-					) }
-					action={
-						<Button onClick={ request.reload }>
-							{ __(
-								'Try again',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						</Button>
-					}
-				>
+				<Notice status="error" isDismissible={ false }>
 					{ errorMessage( request.error ) }
+					<Button variant="link" onClick={ request.reload }>
+						{ __(
+							'Try again',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					</Button>
 				</Notice>
 			</Shell>
 		);
@@ -268,686 +160,317 @@ export default function Settings() {
 
 	const pageOptions = [
 		{
-			value: 0,
+			value: '0',
 			label: __(
-				'No default page',
+				'No main page',
 				'productboxes-mix-and-match-box-builder'
 			),
 		},
 		...( pages.data || [] ).map( ( page ) => ( {
-			value: page.id,
+			value: String( page.id ),
 			label: page.title,
 		} ) ),
 	];
 	return (
-		<>
-			{ dirty && (
-				<div
-					className="mmbb-settings__bar"
-					role="region"
-					aria-label={ __(
-						'Unsaved changes',
+		<Shell active="settings">
+			<div className="mmbb-app-stack mmbb-settings">
+				<PageHeader
+					title={ __(
+						'Settings',
+						'productboxes-mix-and-match-box-builder'
+					) }
+					description={ __(
+						'Store-wide. Each box sets its own look and discount.',
+						'productboxes-mix-and-match-box-builder'
+					) }
+					actions={
+						<Button
+							__next40pxDefaultSize
+							variant="primary"
+							isBusy={ saving }
+							disabled={ ! dirty || saving }
+							onClick={ save }
+						>
+							{ __(
+								'Save settings',
+								'productboxes-mix-and-match-box-builder'
+							) }
+						</Button>
+					}
+				/>
+				{ saveError ? (
+					<Notice status="error" isDismissible={ false }>
+						{ saveError }
+					</Notice>
+				) : null }
+				<SettingsCard
+					id="mmbb-settings-general"
+					title={ __(
+						'General',
 						'productboxes-mix-and-match-box-builder'
 					) }
 				>
-					<span className="mmbb-settings__bar-text">
-						<Icon name="alert" size={ 18 } strokeWidth={ 2 } />
-						{ __(
-							'Unsaved changes',
+					<SettingToggle
+						checked={ draft.enabled }
+						onChange={ ( value ) => change( 'enabled', value ) }
+						label={ __(
+							'Box builders are on',
 							'productboxes-mix-and-match-box-builder'
 						) }
-					</span>
-					<button
-						type="button"
-						className="mmbb-settings__discard"
-						onClick={ discard }
-					>
-						{ __(
-							'Discard',
-							'productboxes-mix-and-match-box-builder'
-						) }
-					</button>
-					<Button
-						size="sm"
-						variant="secondary"
-						loading={ saving }
-						onClick={ save }
-					>
-						{ __(
-							'Save settings',
-							'productboxes-mix-and-match-box-builder'
-						) }
-					</Button>
-				</div>
-			) }
-			<Shell active="settings">
-				<div className="mmbb-settings__head">
-					<PageHeader
-						title={ __(
-							'Settings',
-							'productboxes-mix-and-match-box-builder'
-						) }
-						subtitle={ __(
-							'Store-wide defaults. Each campaign can override display and cart options.',
+						help={ __(
+							'Turn off to hide every box at once, for example during a stock count.',
 							'productboxes-mix-and-match-box-builder'
 						) }
 					/>
-					<Button
-						variant="primary"
-						disabled={ ! dirty }
-						loading={ saving }
-						onClick={ save }
-					>
-						{ __(
-							'Save settings',
-							'productboxes-mix-and-match-box-builder'
-						) }
-					</Button>
-				</div>
-				{ saveError && <Notice tone="critical">{ saveError }</Notice> }
-				<div className="mmbb-settings__layout">
-					<nav
-						className="mmbb-settings__nav"
-						aria-label={ __(
-							'Settings sections',
-							'productboxes-mix-and-match-box-builder'
-						) }
-					>
-						{ sections.map( ( section ) => (
-							<a
-								key={ section.id }
-								href={ '#' + section.id }
-								className={
-									active === section.id
-										? 'is-active'
-										: undefined
-								}
-								aria-current={
-									active === section.id
-										? 'location'
-										: undefined
-								}
-								onClick={ () => setActive( section.id ) }
-							>
-								<Icon name={ section.icon } size={ 18 } />
-								{ section.label }
-							</a>
-						) ) }
-					</nav>
-					<div className="mmbb-settings__content">
-						<section
-							id="general"
-							className="mmbb-settings__section"
-						>
-							<Card
-								title={ __(
-									'General',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							>
-								<div className="mmbb-settings__stack">
-									<ToggleRow
-										setting={ draft.enabled }
-										change={ ( value ) =>
-											change( 'enabled', value )
+					<div className="mmbb-settings__field">
+						<SelectControl
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+							label={ __(
+								'Main box page',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							help={ __(
+								'Used by “Edit box” links in the cart.',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={ String( draft.default_page_id ) }
+							options={ pageOptions }
+							onChange={ ( value ) =>
+								change( 'default_page_id', value )
+							}
+						/>
+					</div>
+				</SettingsCard>
+				<SettingsCard
+					id="mmbb-settings-cart"
+					title={ __(
+						'Cart and checkout',
+						'productboxes-mix-and-match-box-builder'
+					) }
+				>
+					<fieldset className="mmbb-settings__field mmbb-settings__choices">
+						<legend>
+							{ __(
+								'Show a box in the cart as',
+								'productboxes-mix-and-match-box-builder'
+							) }
+						</legend>
+						<div>
+							{ [
+								[
+									'bundle',
+									__(
+										'One line',
+										'productboxes-mix-and-match-box-builder'
+									),
+									__(
+										'Box name and price, items listed under it.',
+										'productboxes-mix-and-match-box-builder'
+									),
+								],
+								[
+									'items',
+									__(
+										'Each item',
+										'productboxes-mix-and-match-box-builder'
+									),
+									__(
+										'Every item on its own line, grouped.',
+										'productboxes-mix-and-match-box-builder'
+									),
+								],
+							].map( ( option ) => (
+								<label
+									key={ option[ 0 ] }
+									aria-label={ option[ 1 ] }
+									htmlFor={
+										'mmbb-cart-display-' + option[ 0 ]
+									}
+									className={
+										draft.cart_display === option[ 0 ]
+											? 'is-selected'
+											: undefined
+									}
+								>
+									<input
+										id={
+											'mmbb-cart-display-' + option[ 0 ]
 										}
-										label={ __(
-											'Box builders are live',
-											'productboxes-mix-and-match-box-builder'
-										) }
-										description={ __(
-											'Turn off to hide every builder at once, for example during a stock count.',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									/>
-									<div className="mmbb-settings__pair mmbb-settings__rule">
-										<SelectField
-											label={ __(
-												'Default builder page',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											help={ __(
-												'Used by the Build a box menu link and cart editing.',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											value={ draft.default_page_id }
-											onChange={ ( event ) =>
-												change(
-													'default_page_id',
-													Number( event.target.value )
-												)
-											}
-											options={ pageOptions }
-										/>
-										<SelectField
-											label={ __(
-												'Prices',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											help={ __(
-												'The builder follows WooCommerce currency settings.',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											value="woocommerce"
-											disabled
-											options={ [
-												{
-													value: 'woocommerce',
-													label: sprintf(
-														/* translators: %s: An example price in the store currency. */
-														__(
-															'Follow WooCommerce (%s)',
-															'productboxes-mix-and-match-box-builder'
-														),
-														money( 1200 )
-													),
-												},
-											] }
-										/>
-									</div>
-								</div>
-							</Card>
-						</section>
-
-						<section
-							id="display"
-							className="mmbb-settings__section"
-						>
-							<Card
-								title={ __(
-									'Storefront display',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								subtitle={ __(
-									'How the builder looks inside your theme.',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							>
-								<div className="mmbb-settings__stack">
-									<div className="mmbb-settings__pair">
-										<div className="mmbb-settings__control">
-											<span className="mmbb-settings__label">
-												{ __(
-													'Products per row on desktop',
-													'productboxes-mix-and-match-box-builder'
-												) }
-											</span>
-											<SegmentedControl
-												label={ __(
-													'Products per row',
-													'productboxes-mix-and-match-box-builder'
-												) }
-												options={ [ 3, 4, 5 ] }
-												value={ draft.columns }
-												onChange={ ( value ) =>
-													change( 'columns', value )
-												}
-											/>
-										</div>
-										<div className="mmbb-settings__control">
-											<span className="mmbb-settings__label">
-												{ __(
-													'Box summary',
-													'productboxes-mix-and-match-box-builder'
-												) }
-											</span>
-											<SegmentedControl
-												label={ __(
-													'Box summary',
-													'productboxes-mix-and-match-box-builder'
-												) }
-												options={ [
-													{
-														value: 'panel',
-														label: __(
-															'Sidebar',
-															'productboxes-mix-and-match-box-builder'
-														),
-													},
-													{
-														value: 'bar',
-														label: __(
-															'Bottom bar',
-															'productboxes-mix-and-match-box-builder'
-														),
-													},
-													{
-														value: 'both',
-														label: __(
-															'Both',
-															'productboxes-mix-and-match-box-builder'
-														),
-													},
-												] }
-												value={ draft.summary_layout }
-												onChange={ ( value ) =>
-													change(
-														'summary_layout',
-														value
-													)
-												}
-											/>
-											<span className="mmbb-settings__help">
-												{ __(
-													'Phones always get the bottom bar.',
-													'productboxes-mix-and-match-box-builder'
-												) }
-											</span>
-										</div>
-									</div>
-									<div className="mmbb-settings__rule">
-										<ToggleRow
-											setting={ draft.stickers }
-											change={ ( value ) =>
-												change( 'stickers', value )
-											}
-											label={ __(
-												'Savings stickers',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											description={ __(
-												'Yellow Save X% and Best value stickers on sizes and tiles.',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										/>
-									</div>
-									<div className="mmbb-settings__rule mmbb-settings__stack">
-										<ToggleRow
-											setting={ draft.low_stock.enabled }
-											change={ ( value ) =>
-												changeLowStock(
-													'enabled',
-													value
-												)
-											}
-											label={ __(
-												'Low-stock warnings',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											description={ __(
-												'Shows the remaining quantity under the price.',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										/>
-										<TextField
-											id="mmbb-setting-low_stock"
-											className="mmbb-settings__narrow"
-											type="number"
-											min="1"
-											max="100"
-											label={ __(
-												'Warn at',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											suffix={ __(
-												'or fewer',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											value={ draft.low_stock.threshold }
-											error={ errors.low_stock }
-											disabled={
-												! draft.low_stock.enabled
-											}
-											onChange={ ( event ) =>
-												changeLowStock(
-													'threshold',
-													event.target.value
-												)
-											}
-										/>
-									</div>
-									<div className="mmbb-settings__rule">
-										<ToggleRow
-											setting={ draft.unlock_toast }
-											change={ ( value ) =>
-												change( 'unlock_toast', value )
-											}
-											label={ __(
-												'Celebrate unlocked tiers',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											description={ __(
-												'A short toast when the box reaches a new discount.',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										/>
-									</div>
-									<div className="mmbb-settings__pair mmbb-settings__rule">
-										<TextField
-											id="mmbb-setting-cta_label"
-											label={ __(
-												'Add-to-cart button',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											value={ draft.cta_label }
-											maxLength={ 32 }
-											error={ errors.cta_label }
-											placeholder={ __(
-												'Add box to cart',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											onChange={ ( event ) =>
-												change(
-													'cta_label',
-													event.target.value
-												)
-											}
-										/>
-										<TextField
-											id="mmbb-setting-empty_slot_hint"
-											label={ __(
-												'Empty slot hint',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											value={ draft.empty_slot_hint }
-											maxLength={ 60 }
-											error={ errors.empty_slot_hint }
-											placeholder={ __(
-												'Pick an item',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											onChange={ ( event ) =>
-												change(
-													'empty_slot_hint',
-													event.target.value
-												)
-											}
-										/>
-									</div>
-								</div>
-							</Card>
-						</section>
-
-						<section id="cart" className="mmbb-settings__section">
-							<Card
-								title={ __(
-									'Cart & checkout',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							>
-								<div className="mmbb-settings__stack">
-									<div className="mmbb-settings__control">
-										<span className="mmbb-settings__label">
-											{ __(
-												'Show the box in the cart as',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										</span>
-										<div className="mmbb-settings__choices">
-											<ChoiceCard
-												name="cart-display"
-												value="bundle"
-												selected={
-													draft.cart_display ===
-													'bundle'
-												}
-												onSelect={ ( value ) =>
-													change(
-														'cart_display',
-														value
-													)
-												}
-												icon="box"
-												title={ __(
-													'One bundled line',
-													'productboxes-mix-and-match-box-builder'
-												) }
-												description={ __(
-													'Box name, price, and the items listed underneath.',
-													'productboxes-mix-and-match-box-builder'
-												) }
-											/>
-											<ChoiceCard
-												name="cart-display"
-												value="items"
-												selected={
-													draft.cart_display ===
-													'items'
-												}
-												onSelect={ ( value ) =>
-													change(
-														'cart_display',
-														value
-													)
-												}
-												icon="layers"
-												title={ __(
-													'Box plus each item',
-													'productboxes-mix-and-match-box-builder'
-												) }
-												description={ __(
-													'Every item is its own line, grouped under the box.',
-													'productboxes-mix-and-match-box-builder'
-												) }
-											/>
-										</div>
-									</div>
-									<div className="mmbb-settings__rule">
-										<ToggleRow
-											setting={ draft.edit_from_cart }
-											change={ ( value ) =>
-												change(
-													'edit_from_cart',
-													value
-												)
-											}
-											label={ __(
-												'Let shoppers edit the box from the cart',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											description={ __(
-												'Adds an Edit box link that reopens the builder with their picks.',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										/>
-									</div>
-									<div className="mmbb-settings__rule">
-										<ToggleRow
-											setting={ draft.allow_coupons }
-											change={ ( value ) =>
-												change( 'allow_coupons', value )
-											}
-											label={ __(
-												'Allow coupons on top of box discounts',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											description={ __(
-												'Off by default so discounts do not stack by accident.',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										/>
-									</div>
-									<div className="mmbb-settings__rule">
-										<ToggleRow
-											setting={ draft.reduce_item_stock }
-											change={ ( value ) =>
-												change(
-													'reduce_item_stock',
-													value
-												)
-											}
-											label={ __(
-												'Reduce stock for each item',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											description={ __(
-												'Recommended. Keeps WooCommerce inventory accurate.',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										/>
-									</div>
-								</div>
-							</Card>
-						</section>
-
-						<section id="emails" className="mmbb-settings__section">
-							<Card
-								title={ __(
-									'Emails',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								subtitle={ __(
-									'What WooCommerce order emails say about a box.',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							>
-								<div className="mmbb-settings__stack">
-									<ToggleRow
-										setting={ draft.email_list_items }
-										change={ ( value ) =>
-											change( 'email_list_items', value )
+										type="radio"
+										name="mmbb-cart-display"
+										value={ option[ 0 ] }
+										checked={
+											draft.cart_display === option[ 0 ]
 										}
-										label={ __(
-											'List the items in each box',
-											'productboxes-mix-and-match-box-builder'
-										) }
-										description={ __(
-											'Under the box line in order confirmation and invoice emails.',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									/>
-									<div className="mmbb-settings__rule">
-										<ToggleRow
-											setting={ draft.email_gift_message }
-											change={ ( value ) =>
-												change(
-													'email_gift_message',
-													value
-												)
-											}
-											label={ __(
-												'Include the gift message',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											description={ __(
-												'Shown in the admin new-order email, never in customer emails.',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										/>
-									</div>
-								</div>
-							</Card>
-						</section>
-
-						<section
-							id="advanced"
-							className="mmbb-settings__section"
-						>
-							<Card
-								title={ __(
-									'Advanced',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							>
-								<div className="mmbb-settings__stack">
-									<ToggleRow
-										setting={ draft.assets_only_on_builder }
-										change={ ( value ) =>
+										onChange={ () =>
 											change(
-												'assets_only_on_builder',
-												value
+												'cart_display',
+												option[ 0 ]
 											)
 										}
-										label={ __(
-											'Load scripts only on pages with a builder',
-											'productboxes-mix-and-match-box-builder'
-										) }
-										description={ __(
-											'Keeps the rest of your store fast.',
-											'productboxes-mix-and-match-box-builder'
-										) }
 									/>
-									<div className="mmbb-settings__rule mmbb-settings__stack">
-										<ToggleRow
-											setting={ draft.analytics_enabled }
-											change={ ( value ) =>
-												change(
-													'analytics_enabled',
-													value
-												)
-											}
-											label={ __(
-												'Collect builder analytics',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											description={ __(
-												'Anonymous builder activity stays on this site.',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										/>
-										<TextField
-											id="mmbb-setting-analytics_retention_days"
-											className="mmbb-settings__narrow"
-											type="number"
-											min="7"
-											max="730"
-											label={ __(
-												'Keep raw analytics for',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											suffix={ __(
-												'days',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											value={
-												draft.analytics_retention_days
-											}
-											error={
-												errors.analytics_retention_days
-											}
-											disabled={
-												! draft.analytics_enabled
-											}
-											onChange={ ( event ) =>
-												change(
-													'analytics_retention_days',
-													event.target.value
-												)
-											}
-										/>
-									</div>
-									<div className="mmbb-settings__rule">
-										<ToggleRow
-											setting={ draft.delete_data }
-											change={ ( value ) =>
-												change( 'delete_data', value )
-											}
-											label={ __(
-												'Delete all plugin data when uninstalling',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											description={ __(
-												'Campaigns, settings and analytics are removed. Orders are never touched.',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										/>
-									</div>
-									<div className="mmbb-settings__rule">
-										<Notice
-											tone="info"
-											title={ __(
-												'Developers',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										>
-											{ __(
-												'REST routes live under',
-												'productboxes-mix-and-match-box-builder'
-											) }{ ' ' }
-											<code>/wp-json/mmbb/v1</code>.{ ' ' }
-											{ __(
-												'Filters and actions are prefixed',
-												'productboxes-mix-and-match-box-builder'
-											) }{ ' ' }
-											<code>mmbb_</code>.
-										</Notice>
-									</div>
-								</div>
-							</Card>
-						</section>
+									<span>
+										<strong>{ option[ 1 ] }</strong>
+										<small>{ option[ 2 ] }</small>
+									</span>
+								</label>
+							) ) }
+						</div>
+					</fieldset>
+					<SettingToggle
+						checked={ draft.edit_from_cart }
+						onChange={ ( value ) =>
+							change( 'edit_from_cart', value )
+						}
+						label={ __(
+							'Shoppers can edit a box from the cart',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'Adds an “Edit box” link that reopens the builder.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					/>
+					<SettingToggle
+						checked={ draft.allow_coupons }
+						onChange={ ( value ) =>
+							change( 'allow_coupons', value )
+						}
+						label={ __(
+							'Allow coupons on boxes',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'Off, so coupons do not stack on box discounts.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					/>
+					<SettingToggle
+						checked={ draft.reduce_item_stock }
+						onChange={ ( value ) =>
+							change( 'reduce_item_stock', value )
+						}
+						label={ __(
+							'Reduce stock for each item',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'Keeps WooCommerce stock counts right.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					/>
+				</SettingsCard>
+				<SettingsCard
+					id="mmbb-settings-email"
+					title={ __(
+						'Order emails',
+						'productboxes-mix-and-match-box-builder'
+					) }
+				>
+					<SettingToggle
+						checked={ draft.email_list_items }
+						onChange={ ( value ) =>
+							change( 'email_list_items', value )
+						}
+						label={ __(
+							'List the items in each box',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'In order confirmations and invoices.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					/>
+					<SettingToggle
+						checked={ draft.email_gift_message }
+						onChange={ ( value ) =>
+							change( 'email_gift_message', value )
+						}
+						label={ __(
+							'Include the gift note',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'In your new-order email only, never the customer’s.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					/>
+				</SettingsCard>
+				<SettingsCard
+					id="mmbb-settings-data"
+					title={ __(
+						'Data and privacy',
+						'productboxes-mix-and-match-box-builder'
+					) }
+				>
+					<SettingToggle
+						checked={ draft.analytics_enabled }
+						onChange={ ( value ) =>
+							change( 'analytics_enabled', value )
+						}
+						label={ __(
+							'Collect box analytics',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'Anonymous. Stays on this site.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					/>
+					<div className="mmbb-settings__field mmbb-settings__retention">
+						<NumberControl
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+							id="mmbb-setting-analytics-retention-days"
+							label={ __(
+								'Keep detailed analytics for',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							min={ 7 }
+							max={ 730 }
+							suffix={ __(
+								'days',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={ draft.analytics_retention_days }
+							disabled={ ! draft.analytics_enabled }
+							onChange={ ( value ) =>
+								change( 'analytics_retention_days', value )
+							}
+						/>
+						{ errors.analytics_retention_days ? (
+							<p className="mmbb-settings__error" role="alert">
+								{ errors.analytics_retention_days }
+							</p>
+						) : null }
 					</div>
-				</div>
-			</Shell>
-		</>
+					<SettingToggle
+						checked={ draft.delete_data }
+						onChange={ ( value ) => change( 'delete_data', value ) }
+						label={ __(
+							'Delete all ProductBoxes data when I uninstall',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'Boxes, settings and analytics. Orders are never touched.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					/>
+				</SettingsCard>
+				<p className="mmbb-settings__developer">
+					{ __(
+						'Developers: REST routes live under',
+						'productboxes-mix-and-match-box-builder'
+					) }{ ' ' }
+					<code>/wp-json/mmbb/v1</code>.{ ' ' }
+					{ __(
+						'Hooks start with',
+						'productboxes-mix-and-match-box-builder'
+					) }{ ' ' }
+					<code>mmbb_</code>.
+				</p>
+			</div>
+		</Shell>
 	);
 }
