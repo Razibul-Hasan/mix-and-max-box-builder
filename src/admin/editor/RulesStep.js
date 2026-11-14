@@ -106,6 +106,16 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 		},
 	];
 	const readTiers = previewTiers( rows, formatMoney, convert );
+	const quantityHeading = isSizes
+		? __( 'Items', 'productboxes-mix-and-match-box-builder' )
+		: __( 'When the box has', 'productboxes-mix-and-match-box-builder' );
+	const valueHeading =
+		type === 'box_price'
+			? __( 'Price', 'productboxes-mix-and-match-box-builder' )
+			: __( 'Discount', 'productboxes-mix-and-match-box-builder' );
+	const resultHeading = isSizes
+		? __( 'Tag', 'productboxes-mix-and-match-box-builder' )
+		: __( 'Shoppers see', 'productboxes-mix-and-match-box-builder' );
 
 	return (
 		<PanelBody
@@ -153,39 +163,9 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 							<thead>
 								<tr>
 									<th className="mmbb-editor__num" />
-									<th>
-										{ isSizes
-											? __(
-													'Items',
-													'productboxes-mix-and-match-box-builder'
-											  )
-											: __(
-													'When the box has',
-													'productboxes-mix-and-match-box-builder'
-											  ) }
-									</th>
-									<th>
-										{ type === 'box_price'
-											? __(
-													'Price',
-													'productboxes-mix-and-match-box-builder'
-											  )
-											: __(
-													'Discount',
-													'productboxes-mix-and-match-box-builder'
-											  ) }
-									</th>
-									<th>
-										{ isSizes
-											? __(
-													'Tag',
-													'productboxes-mix-and-match-box-builder'
-											  )
-											: __(
-													'Shoppers see',
-													'productboxes-mix-and-match-box-builder'
-											  ) }
-									</th>
+									<th>{ quantityHeading }</th>
+									<th>{ valueHeading }</th>
+									<th>{ resultHeading }</th>
 									<th className="mmbb-editor__act" />
 								</tr>
 							</thead>
@@ -203,7 +183,10 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 											<td className="mmbb-editor__num">
 												<span>{ index + 1 }</span>
 											</td>
-											<td>
+											<td className="mmbb-editor__tier-qty">
+												<span className="mmbb-editor__field-label">
+													{ quantityHeading }
+												</span>
 												<NumberControl
 													aria-label={ sprintf(
 														/* translators: %d: Row number. */
@@ -233,7 +216,10 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 													}
 												/>
 											</td>
-											<td>
+											<td className="mmbb-editor__tier-value">
+												<span className="mmbb-editor__field-label">
+													{ valueHeading }
+												</span>
 												<NumberControl
 													aria-label={ sprintf(
 														/* translators: %d: Row number. */
@@ -272,7 +258,10 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 													}
 												/>
 											</td>
-											<td>
+											<td className="mmbb-editor__tier-result">
+												<span className="mmbb-editor__field-label">
+													{ resultHeading }
+												</span>
 												{ isSizes ? (
 													<SelectField
 														aria-label={ sprintf(

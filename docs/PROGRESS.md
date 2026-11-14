@@ -20,6 +20,16 @@ Updated by the agent at the end of every part.
 
 ## Log
 
+### Responsive discount tier editor fix (2026-11-14)
+
+**Done:** Removed the forced horizontal scrolling from the Discount tiers editor in narrow settings panes. Tier and fixed-size rows now switch from the full table to a container-responsive card layout below 460px: quantity and value stay side by side, the shopper-facing label or size tag moves to a full-width second line, and the remove action remains visible. Compact rows include visible field labels while retaining the existing table headers and control aria-labels for assistive technology. Wider panes keep the original table layout.
+
+**Frozen identifiers and data:** none changed. Tier and size configuration shapes, values, validation and editor actions are unchanged.
+
+**Checks run:** production build passed (the existing two admin bundle-size warnings remain); JS lint passed; CSS lint passed; all 23 JS suites passed (311 tests); PHPCS/PHPCompatibility passed; PHP unit suite passed (115 tests, 603 assertions); classic integration passed (214 tests, 2 skipped, 2,339 assertions); HPOS integration passed (214 tests, 2 skipped, 2,340 assertions).
+
+**Skipped check:** A live Local browser screenshot check could not start because the Windows computer-control approval timed out. No browser state was changed.
+
 ### Part 11 — Migration, compatibility and hardening (2026-11-14)
 
 **Done:** Completed the existing `2.0.1`/`2.0.2` migration path for 1.0.0 data. Every legacy box selects Spotlight, retains every old design key, maps its own legacy presentation first, and otherwise copies the old store-wide columns, summary layout, sticker visibility and cart label into its per-box design. A box that already contains redesign values keeps them unchanged. The coupon migration now adds only its missing key to the raw object, so it cannot manufacture nested defaults before the design migration sees what was genuinely absent. Completed upgrade steps write a concise debug-log line only when `WP_DEBUG` is enabled. The exact 1.0.0 fixtures upgrade, render, price, enter the cart, preserve their order display and settings, and remain byte-identical on a repeat install.

@@ -303,6 +303,7 @@
 
 /* Tier and size tables */
 .mmbb-root .mmbb-editor__scroll {
+	container-type: inline-size;
 	overflow-x: auto;
 }
 
@@ -345,6 +346,89 @@
 .mmbb-root .mmbb-editor__act {
 	width: 40px;
 	padding-right: 0;
+}
+
+.mmbb-root .mmbb-editor__field-label {
+	display: none;
+}
+
+/* Keep every tier control visible when the editor sidebar is narrow. */
+@container (max-width: 459px) {
+
+	.mmbb-root .mmbb-editor__table {
+		display: block;
+		min-width: 0;
+	}
+
+	.mmbb-root .mmbb-editor__table thead {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	.mmbb-root .mmbb-editor__table tbody {
+		display: grid;
+		gap: var(--space-2);
+	}
+
+	.mmbb-root .mmbb-editor__table tbody tr {
+		display: grid;
+		grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr) 40px;
+		grid-template-areas:
+			"number quantity value action"
+			"number result result action";
+		column-gap: var(--space-2);
+		row-gap: var(--space-2);
+		padding: var(--space-3) var(--space-2);
+		border: 1px solid var(--line);
+		border-radius: var(--radius-md);
+	}
+
+	.mmbb-root .mmbb-editor__table td {
+		min-width: 0;
+		padding: 0;
+	}
+
+	.mmbb-root .mmbb-editor__num {
+		grid-area: number;
+	}
+
+	.mmbb-root .mmbb-editor__num span {
+		margin-top: 24px;
+	}
+
+	.mmbb-root .mmbb-editor__tier-qty {
+		grid-area: quantity;
+	}
+
+	.mmbb-root .mmbb-editor__tier-value {
+		grid-area: value;
+	}
+
+	.mmbb-root .mmbb-editor__tier-result {
+		grid-area: result;
+	}
+
+	.mmbb-root .mmbb-editor__act {
+		grid-area: action;
+		width: 40px;
+		padding-top: 22px;
+	}
+
+	.mmbb-root .mmbb-editor__field-label {
+		display: block;
+		margin-bottom: var(--space-1);
+		color: var(--ink-muted);
+		font-size: 12px;
+		line-height: 16px;
+		font-weight: 600;
+	}
 }
 
 .mmbb-root .mmbb-editor__read {
