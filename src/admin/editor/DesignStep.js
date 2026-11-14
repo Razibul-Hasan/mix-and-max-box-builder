@@ -6,6 +6,7 @@ import {
 	Notice,
 	Panel,
 	PanelBody,
+	RadioControl,
 	RangeControl,
 	SelectControl,
 	TextControl,
@@ -247,40 +248,18 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 							'productboxes-mix-and-match-box-builder'
 						) }
 					</p>
-					<div
-						className="mmbb-design__templates"
-						role="group"
-						aria-label={ __(
+					<RadioControl
+						label={ __(
 							'Template',
 							'productboxes-mix-and-match-box-builder'
 						) }
-					>
-						{ TEMPLATES.map( ( item, index ) => (
-							<button
-								key={ item.id }
-								type="button"
-								className="mmbb-design__template"
-								aria-pressed={ design.template === item.id }
-								onClick={ () => set( 'template', item.id ) }
-							>
-								<span
-									className="mmbb-design__mini"
-									style={ {
-										'--mmbb-mini-accent':
-											item.defaults.colors.accent,
-										'--mmbb-mini-bg':
-											item.defaults.colors.background,
-										'--mmbb-mini-text':
-											item.defaults.colors.text,
-									} }
-								/>
-								<span>{ item.name }</span>
-								<small>
-									{ String( index + 1 ).padStart( 2, '0' ) }
-								</small>
-							</button>
-						) ) }
-					</div>
+						selected={ design.template }
+						options={ TEMPLATES.map( ( item ) => ( {
+							value: item.id,
+							label: item.name,
+						} ) ) }
+						onChange={ ( value ) => set( 'template', value ) }
+					/>
 					<Button variant="secondary" onClick={ resetStyle }>
 						{ __(
 							'Reset style to template defaults',

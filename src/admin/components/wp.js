@@ -14,4 +14,7 @@ export {
 	__experimentalItem as Item,
 	__experimentalHStack as HStack,
 	__experimentalVStack as VStack,
+	__experimentalText as Text,
+	__experimentalInputControlPrefixWrapper as InputControlPrefixWrapper,
+	__experimentalInputControlSuffixWrapper as InputControlSuffixWrapper,
 } from '@wordpress/components';

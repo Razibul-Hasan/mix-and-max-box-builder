@@ -1,46 +1,54 @@
 import { useEffect, useState } from '@wordpress/element';
-import { TextField } from '../../components';
-import { toNumber } from './state';
+import { NumberControl } from '../components/wp';
 
 /**
- * A text field for numbers. It keeps what the merchant types (so "1." and an empty
- * box work while editing) and reports a number, or an empty string.
+ * Props for a collapsed PanelBody that opens by itself when one of its fields
+ * has a problem, so a link to the problem always lands on a visible field.
+ *
+ * @param {Object}   errors    Messages keyed by field path.
+ * @param {string[]} prefixes  Field path prefixes that live in this panel.
+ * @param {boolean}  startOpen Whether the panel is open before anything is wrong.
+ * @return {{opened: boolean, onToggle: Function}} Props for PanelBody.
+ */
+export function useOpenOnError( errors, prefixes, startOpen = false ) {
+	const hasError = Object.keys( errors ).some( ( key ) =>
+		prefixes.some( ( prefix ) => key.startsWith( prefix ) )
+	);
+	const [ opened, setOpened ] = useState( startOpen || hasError );
+	useEffect( () => {
+		if ( hasError ) {
+			setOpened( true );
+		}
+	}, [ hasError ] );
+	return { opened, onToggle: () => setOpened( ( open ) => ! open ) };
+}
+
+/**
+ * A number field built on the WordPress NumberControl. It reports a number,
+ * or an empty string when the box is cleared.
  *
  * @param {Object}           props
  * @param {number|string}    props.value    Current value.
  * @param {Function}         props.onChange Receives a number or ''.
- * @param {string|undefined} props.error    Inline error.
+ * @param {string|undefined} props.error    Inline error, shown in place of help.
+ * @param {string|undefined} props.help     Help text.
  */
-export function NumberField( { value, onChange, ...rest } ) {
-	const [ text, setText ] = useState( String( value ?? '' ) );
-
-	// Follow outside changes (Discard, the server's sanitized copy) but not our own typing.
-	useEffect( () => {
-		const typed = toNumber( text );
-		const current = toNumber( value );
-		if (
-			! ( Number.isNaN( typed ) && Number.isNaN( current ) ) &&
-			typed !== current
-		) {
-			setText( String( value ?? '' ) );
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [ value ] );
-
+export function NumberField( { value, onChange, error, help, ...rest } ) {
 	return (
-		<TextField
-			type="text"
-			inputMode="decimal"
-			autoComplete="off"
+		<NumberControl
+			min={ 0 }
 			{ ...rest }
-			value={ text }
-			onChange={ ( event ) => {
-				const raw = event.target.value;
-				setText( raw );
-				if ( raw.trim() === '' ) {
+			value={ value ?? '' }
+			help={ error || help }
+			aria-invalid={ error ? true : undefined }
+			spinControls="none"
+			__next40pxDefaultSize
+			__nextHasNoMarginBottom
+			onChange={ ( next ) => {
+				if ( next === undefined || String( next ).trim() === '' ) {
 					onChange( '' );
-				} else if ( Number.isFinite( Number( raw ) ) ) {
-					onChange( Number( raw ) );
+				} else if ( Number.isFinite( Number( next ) ) ) {
+					onChange( Number( next ) );
 				}
 			} }
 		/>

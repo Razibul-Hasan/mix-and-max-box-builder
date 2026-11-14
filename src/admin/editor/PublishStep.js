@@ -1,6 +1,7 @@
 import {
 	Button,
-	Notice,
+	Icon,
+	RadioControl,
 	SearchControl,
 	SelectControl,
 	TextControl,
@@ -8,6 +9,7 @@ import {
 } from '@wordpress/components';
 import { useMemo, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
+import { caution, chevronRight } from '@wordpress/icons';
 import { cleanForSlug } from '@wordpress/url';
 import { getPages } from '../api';
 import { useSnackbar } from '../components';
@@ -15,8 +17,15 @@ import { copyText } from '../copy-text';
 import { useAdmin } from '../context';
 import { useRequest } from '../hooks';
 import { TEMPLATES } from './design-defaults';
+import { stepForPath } from './state';
 import { localInputToUtc, utcToLocalInput } from './time';
-import { ToggleGroupControl, ToggleGroupControlOption } from '../components/wp';
+import {
+	HStack,
+	Text,
+	ToggleGroupControl,
+	ToggleGroupControlOption,
+	VStack,
+} from '../components/wp';
 
 const PLACEMENTS = [
 	{
@@ -107,30 +116,11 @@ function discountBadge( config ) {
 	);
 }
 
-function Choice( { item, selected, onSelect, children } ) {
-	return (
-		<div className="mmbb-publish__choice-wrap">
-			<button
-				type="button"
-				className={ `mmbb-publish__choice${
-					selected ? ' is-selected' : ''
-				}` }
-				role="radio"
-				aria-checked={ selected }
-				onClick={ onSelect }
-			>
-				<span className="mmbb-publish__radio" aria-hidden="true" />
-				<span>
-					<strong>{ item.title }</strong>
-					<small>{ item.description }</small>
-				</span>
-			</button>
-			{ selected && children ? (
-				<div className="mmbb-publish__choice-detail">{ children }</div>
-			) : null }
-		</div>
-	);
-}
+const STEP_NAMES = () => ( {
+	products: __( 'Products', 'productboxes-mix-and-match-box-builder' ),
+	discounts: __( 'Discounts', 'productboxes-mix-and-match-box-builder' ),
+	design: __( 'Design', 'productboxes-mix-and-match-box-builder' ),
+} );
 
 export default function PublishStep( {
 	draft,
@@ -158,8 +148,23 @@ export default function PublishStep( {
 		[ pageSearch ]
 	);
 	const shortcode = campaign.placement.shortcode;
-	const problemSteps = Object.keys( problems );
 	const serverList = serverErrors || [];
+	const issues = [
+		...Object.keys( problems ).flatMap( ( step ) =>
+			Object.entries( problems[ step ] ).map( ( [ path, message ] ) => ( {
+				key: step + path,
+				step,
+				path,
+				message,
+			} ) )
+		),
+		...serverList.map( ( error ) => ( {
+			key: 'server' + error.path + error.code,
+			step: stepForPath( error.path ),
+			path: error.path,
+			message: error.message,
+		} ) ),
+	];
 	const productCount =
 		config.products.source === 'manual'
 			? config.products.ids.length
@@ -222,19 +227,13 @@ export default function PublishStep( {
 		} );
 
 	return (
-		<div className="mmbb-publish">
-			<div className="mmbb-publish__body">
-				<div
-					className="mmbb-publish__badges"
-					aria-label={ __(
-						'Box summary',
-						'productboxes-mix-and-match-box-builder'
-					) }
-				>
-					<span>{ sizeBadge( config ) }</span>
-					<span>{ discountBadge( config ) }</span>
-					<span>
-						{ sprintf(
+		<VStack spacing={ 0 }>
+			<VStack spacing={ 6 } className="mmbb-publish__body">
+				<Text variant="muted">
+					{ [
+						sizeBadge( config ),
+						discountBadge( config ),
+						sprintf(
 							/* translators: %d: Number of products. */
 							_n(
 								'%d product',
@@ -243,241 +242,289 @@ export default function PublishStep( {
 								'productboxes-mix-and-match-box-builder'
 							),
 							productCount
-						) }
-					</span>
-					<span>
-						{ sprintf(
+						),
+						sprintf(
 							/* translators: %s: Storefront template name. */
 							__(
 								'%s template',
 								'productboxes-mix-and-match-box-builder'
 							),
 							template.name
-						) }
-					</span>
-				</div>
+						),
+					].join( ' · ' ) }
+				</Text>
 
-				<fieldset className="mmbb-publish__choices">
-					<legend>
-						{ __(
-							'Where should shoppers find it?',
-							'productboxes-mix-and-match-box-builder'
-						) }
-					</legend>
-					<div role="radiogroup">
-						{ PLACEMENTS.map( ( item ) => (
-							<Choice
-								key={ item.id }
-								item={ item }
-								selected={ placement === item.id }
-								onSelect={ () => setPlacement( item.id ) }
-							>
-								{ item.id === 'existing_page' ? (
-									<>
-										<SearchControl
-											label={ __(
-												'Search pages',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											value={ pageSearch }
-											onChange={ setPageSearch }
-											__nextHasNoMarginBottom
-										/>
-										<SelectControl
-											label={ __(
-												'Page',
-												'productboxes-mix-and-match-box-builder'
-											) }
-											hideLabelFromVision
-											value={ String(
-												page.pageId || ''
-											) }
-											options={ pageOptions }
-											onChange={ ( value ) =>
-												page.setPageId(
-													Number( value ) || 0
-												)
-											}
-											__next40pxDefaultSize
-											__nextHasNoMarginBottom
-										/>
-									</>
-								) : null }
-								{ item.id === 'new_page' ? (
-									<TextControl
-										label={ __(
-											'Page title',
-											'productboxes-mix-and-match-box-builder'
-										) }
-										value={ pageTitle }
-										onChange={ setPageTitle }
-										help={ sprintf(
-											/* translators: %s: Preview of a page path. */
-											__(
-												'Address: /%s/',
-												'productboxes-mix-and-match-box-builder'
-											),
-											slug
-										) }
-										__next40pxDefaultSize
-										__nextHasNoMarginBottom
-									/>
-								) : null }
-								{ item.id === 'none' ? (
-									<div className="mmbb-publish__shortcode">
-										<code>{ shortcode }</code>
-										<Button
-											variant="secondary"
-											onClick={ copyShortcode }
-											__next40pxDefaultSize
-										>
-											{ __(
-												'Copy',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										</Button>
-										<p>
-											{ __(
-												'Or add the ProductBoxes Box Builder block.',
-												'productboxes-mix-and-match-box-builder'
-											) }
-										</p>
-									</div>
-								) : null }
-							</Choice>
-						) ) }
-					</div>
-				</fieldset>
+				<RadioControl
+					label={ __(
+						'Where should shoppers find it?',
+						'productboxes-mix-and-match-box-builder'
+					) }
+					selected={ placement }
+					onChange={ setPlacement }
+					options={ PLACEMENTS.map( ( item ) => ( {
+						value: item.id,
+						label: item.title,
+						description: item.description,
+					} ) ) }
+				/>
 
-				<div className="mmbb-publish__when">
-					<ToggleGroupControl
+				{ placement === 'existing_page' ? (
+					<VStack spacing={ 3 }>
+						<SearchControl
+							label={ __(
+								'Search pages',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={ pageSearch }
+							onChange={ setPageSearch }
+							__nextHasNoMarginBottom
+						/>
+						<SelectControl
+							label={ __(
+								'Page',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							hideLabelFromVision
+							value={ String( page.pageId || '' ) }
+							options={ pageOptions }
+							onChange={ ( value ) =>
+								page.setPageId( Number( value ) || 0 )
+							}
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+						/>
+					</VStack>
+				) : null }
+				{ placement === 'new_page' ? (
+					<TextControl
 						label={ __(
-							'When',
+							'Page title',
 							'productboxes-mix-and-match-box-builder'
 						) }
-						value={ timing }
-						onChange={ chooseTiming }
-						isBlock
-						__nextHasNoMarginBottom
+						value={ pageTitle }
+						onChange={ setPageTitle }
+						help={ sprintf(
+							/* translators: %s: Preview of a page path. */
+							__(
+								'Address: /%s/',
+								'productboxes-mix-and-match-box-builder'
+							),
+							slug
+						) }
 						__next40pxDefaultSize
-					>
-						<ToggleGroupControlOption
-							value="now"
-							label={ __(
-								'Right away',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						/>
-						<ToggleGroupControlOption
-							value="dates"
-							label={ __(
-								'Pick dates',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						/>
-					</ToggleGroupControl>
-					{ timing === 'dates' ? (
-						<div className="mmbb-publish__schedule">
-							<TextControl
-								type="datetime-local"
-								label={ __(
-									'Starts',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								value={ utcToLocalInput(
-									config.schedule.start,
-									timezone
-								) }
-								onChange={ ( value ) =>
-									set(
-										'schedule.start',
-										localInputToUtc( value, timezone )
-									)
-								}
-								__next40pxDefaultSize
-								__nextHasNoMarginBottom
-							/>
-							<TextControl
-								type="datetime-local"
-								label={ __(
-									'Ends',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								value={ utcToLocalInput(
-									config.schedule.end,
-									timezone
-								) }
-								onChange={ ( value ) =>
-									set(
-										'schedule.end',
-										localInputToUtc( value, timezone )
-									)
-								}
-								__next40pxDefaultSize
-								__nextHasNoMarginBottom
-							/>
-							<ToggleControl
-								className="mmbb-publish__countdown"
-								label={ __(
-									'Show a countdown in the last 3 days',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								checked={ config.schedule.countdown_days > 0 }
-								onChange={ ( enabled ) =>
-									set(
-										'schedule.countdown_days',
-										enabled ? 3 : 0
-									)
-								}
-								__nextHasNoMarginBottom
-							/>
-							<p className="mmbb-publish__timezone">
-								{ sprintf(
-									/* translators: %s: Store time zone name or UTC offset. */
-									__(
-										'Times use the store time zone: %s.',
-										'productboxes-mix-and-match-box-builder'
-									),
-									timezone
-								) }
-							</p>
-						</div>
-					) : null }
-				</div>
-
-				{ problemSteps.length || serverList.length ? (
-					<Notice status="error" isDismissible={ false }>
-						<p>
+						__nextHasNoMarginBottom
+					/>
+				) : null }
+				{ placement === 'none' ? (
+					<VStack spacing={ 3 }>
+						<Text>
+							<code>{ shortcode }</code>
+						</Text>
+						<Text variant="muted">
 							{ __(
-								'Fix these before publishing:',
+								'Or add the ProductBoxes Box Builder block.',
 								'productboxes-mix-and-match-box-builder'
+							) }
+						</Text>
+						<div>
+							<Button
+								variant="secondary"
+								onClick={ copyShortcode }
+								__next40pxDefaultSize
+							>
+								{ __(
+									'Copy shortcode',
+									'productboxes-mix-and-match-box-builder'
+								) }
+							</Button>
+						</div>
+					</VStack>
+				) : null }
+
+				<ToggleGroupControl
+					label={ __(
+						'When',
+						'productboxes-mix-and-match-box-builder'
+					) }
+					value={ timing }
+					onChange={ chooseTiming }
+					isBlock
+					__nextHasNoMarginBottom
+					__next40pxDefaultSize
+				>
+					<ToggleGroupControlOption
+						value="now"
+						label={ __(
+							'Right away',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					/>
+					<ToggleGroupControlOption
+						value="dates"
+						label={ __(
+							'Pick dates',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					/>
+				</ToggleGroupControl>
+				{ timing === 'dates' ? (
+					<VStack spacing={ 4 }>
+						<TextControl
+							type="datetime-local"
+							label={ __(
+								'Starts',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={ utcToLocalInput(
+								config.schedule.start,
+								timezone
+							) }
+							onChange={ ( value ) =>
+								set(
+									'schedule.start',
+									localInputToUtc( value, timezone )
+								)
+							}
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+						/>
+						<TextControl
+							type="datetime-local"
+							label={ __(
+								'Ends',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={ utcToLocalInput(
+								config.schedule.end,
+								timezone
+							) }
+							help={ sprintf(
+								/* translators: %s: Store time zone name or UTC offset. */
+								__(
+									'Times use the store time zone: %s.',
+									'productboxes-mix-and-match-box-builder'
+								),
+								timezone
+							) }
+							onChange={ ( value ) =>
+								set(
+									'schedule.end',
+									localInputToUtc( value, timezone )
+								)
+							}
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+						/>
+					</VStack>
+				) : null }
+				<VStack spacing={ 4 }>
+					<ToggleControl
+						label={
+							timing === 'dates'
+								? __(
+										'Show a countdown in the last 3 days',
+										'productboxes-mix-and-match-box-builder'
+								  )
+								: __(
+										'Show a countdown',
+										'productboxes-mix-and-match-box-builder'
+								  )
+						}
+						checked={ config.schedule.countdown_days > 0 }
+						onChange={ ( enabled ) =>
+							set( 'schedule.countdown_days', enabled ? 3 : 0 )
+						}
+						__nextHasNoMarginBottom
+					/>
+					{ timing === 'now' && config.schedule.countdown_days > 0 ? (
+						<TextControl
+							type="datetime-local"
+							label={ __(
+								'Count down to',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={ utcToLocalInput(
+								config.schedule.countdown_end,
+								timezone
+							) }
+							help={
+								problems.discounts?.[
+									'schedule.countdown_end'
+								] ||
+								__(
+									'The campaign stays on after this. Only the timer stops.',
+									'productboxes-mix-and-match-box-builder'
+								)
+							}
+							onChange={ ( value ) =>
+								set(
+									'schedule.countdown_end',
+									localInputToUtc( value, timezone )
+								)
+							}
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+						/>
+					) : null }
+				</VStack>
+
+				{ issues.length ? (
+					<div className="mmbb-publish__problems" role="alert">
+						<p className="mmbb-publish__problems-title">
+							<Icon icon={ caution } size={ 20 } />
+							{ sprintf(
+								/* translators: %d: Number of problems. */
+								_n(
+									'Fix %d thing before publishing',
+									'Fix %d things before publishing',
+									issues.length,
+									'productboxes-mix-and-match-box-builder'
+								),
+								issues.length
 							) }
 						</p>
-						<ul>
-							{ problemSteps.map( ( step ) => (
-								<li key={ step }>
-									<Button
-										variant="link"
-										onClick={ () => onOpenStep( step ) }
+						<ul className="mmbb-publish__problems-list">
+							{ issues.map( ( issue ) => (
+								<li key={ issue.key }>
+									<button
+										type="button"
+										className="mmbb-publish__problem"
+										onClick={ () =>
+											onOpenStep( issue.step, issue.path )
+										}
 									>
-										{ __(
-											'Open the step with the problem',
-											'productboxes-mix-and-match-box-builder'
-										) }
-									</Button>
-								</li>
-							) ) }
-							{ serverList.map( ( error ) => (
-								<li key={ error.path + error.code }>
-									{ error.message }
+										<span className="mmbb-publish__problem-text">
+											<span className="mmbb-publish__problem-step">
+												{ STEP_NAMES()[ issue.step ] ||
+													issue.step }
+											</span>
+											<span className="mmbb-publish__problem-message">
+												{ issue.message }
+											</span>
+										</span>
+										<span className="mmbb-publish__problem-go">
+											{ __(
+												'Fix it',
+												'productboxes-mix-and-match-box-builder'
+											) }
+											<Icon
+												icon={ chevronRight }
+												size={ 20 }
+											/>
+										</span>
+									</button>
 								</li>
 							) ) }
 						</ul>
-					</Notice>
+					</div>
 				) : null }
-			</div>
+			</VStack>
 
-			<div className="mmbb-publish__footer">
+			<HStack
+				className="mmbb-publish__footer"
+				justify="flex-end"
+				spacing={ 2 }
+			>
 				<Button
 					variant="tertiary"
 					onClick={ onCancel }
@@ -497,7 +544,7 @@ export default function PublishStep( {
 						'productboxes-mix-and-match-box-builder'
 					) }
 				</Button>
-			</div>
-		</div>
+			</HStack>
+		</VStack>
 	);
 }

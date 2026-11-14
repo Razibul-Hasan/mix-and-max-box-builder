@@ -335,18 +335,24 @@ function EditorBody( { initial } ) {
 		return () => window.removeEventListener( 'beforeunload', warn );
 	}, [ dirty ] );
 
-	// After a blocked Continue, move focus to the first field with a problem.
+	// After a blocked Continue, or a jump from the publish dialog, move focus to
+	// the first field with a problem. Wait a frame so panels that open for an
+	// error have rendered their fields.
 	useEffect( () => {
-		if ( attempted[ step ] ) {
+		if ( ! attempted[ step ] ) {
+			return undefined;
+		}
+		const frame = window.requestAnimationFrame( () => {
 			const field = document.querySelector(
-				'.mmbb-ed__side [aria-invalid="true"]'
+				'.mmbb-ed__side [aria-invalid="true"], .mmbb-ed__side [data-mmbb-invalid="true"] input'
 			);
 			if ( field ) {
 				field.focus();
 			}
-		}
+		} );
+		return () => window.cancelAnimationFrame( frame );
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [ attempted ] );
+	}, [ attempted, step ] );
 
 	const labels = stepLabels();
 	const isStep = STEPS.includes( step );

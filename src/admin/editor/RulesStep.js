@@ -1,49 +1,39 @@
-import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import {
+	Button,
+	Card,
+	CardBody,
+	Notice,
 	Panel,
 	PanelBody,
 	RadioControl,
 	RangeControl,
+	SelectControl,
+	ToggleControl,
 } from '@wordpress/components';
-import {
-	Badge,
-	Button,
-	Icon,
-	Notice,
-	QuantityStepper,
-	SegmentedControl,
-	SelectField,
-	Sticker,
-	TierProgress,
-	Toggle,
-	useMoney,
-} from '../../components';
+import { plus, trash } from '@wordpress/icons';
+import { useMoney } from '../../components';
 import { toMinor } from '../../shared/pricing';
 import { useAdmin } from '../context';
-import { NumberControl } from '../components/wp';
-import { NumberField, previewTiers, tierLabel } from './fields';
+import {
+	HStack,
+	InputControlPrefixWrapper,
+	InputControlSuffixWrapper,
+	Text,
+	ToggleGroupControl,
+	ToggleGroupControlOption,
+	VStack,
+} from '../components/wp';
+import { NumberField, tierLabel, useOpenOnError } from './fields';
 import GiftProductField from './GiftProductField';
 import { toNumber } from './state';
 
 const MAX_ROWS = 6;
-
 function moneyPrefix( money ) {
 	return money.symbol || '';
 }
 
-// The last tier is the headline deal, so it gets the sticker.
-function RowLabel( { label, last } ) {
-	return last ? (
-		<Sticker size="sm" tilt>
-			{ label }
-		</Sticker>
-	) : (
-		<Badge tone="brand">{ label }</Badge>
-	);
-}
-
-// The rows of a tier or size table. Tiers and sizes are the same shape; sizes add a tag.
+// The tiers or sizes list: one small card per row.
 function RowsEditor( { kind, draft, errors, dispatch } ) {
 	const { money } = useAdmin();
 	const formatMoney = useMoney();
@@ -56,8 +46,8 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 	const type =
 		( rows[ 0 ] && rows[ 0 ].discount_type ) ||
 		( isSizes ? 'box_price' : 'percent' );
-	const [ readCount, setReadCount ] = useState( 0 );
 
+	const rowsPanel = useOpenOnError( errors, [ kind + '.' ], true );
 	const set = ( path, value ) => dispatch( { type: 'set', path, value } );
 	const setType = ( value ) =>
 		set(
@@ -105,7 +95,6 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 			label: __( 'Box price', 'productboxes-mix-and-match-box-builder' ),
 		},
 	];
-	const readTiers = previewTiers( rows, formatMoney, convert );
 	const quantityHeading = isSizes
 		? __( 'Items', 'productboxes-mix-and-match-box-builder' )
 		: __( 'When the box has', 'productboxes-mix-and-match-box-builder' );
@@ -113,9 +102,6 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 		type === 'box_price'
 			? __( 'Price', 'productboxes-mix-and-match-box-builder' )
 			: __( 'Discount', 'productboxes-mix-and-match-box-builder' );
-	const resultHeading = isSizes
-		? __( 'Tag', 'productboxes-mix-and-match-box-builder' )
-		: __( 'Shoppers see', 'productboxes-mix-and-match-box-builder' );
 
 	return (
 		<PanelBody
@@ -130,10 +116,10 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 							'productboxes-mix-and-match-box-builder'
 					  )
 			}
-			initialOpen
+			{ ...rowsPanel }
 		>
-			<div className="mmbb-editor__stack">
-				<p className="mmbb-editor__panel-description">
+			<VStack spacing={ 4 }>
+				<Text variant="muted">
 					{ isSizes
 						? __(
 								'Shoppers pick one size and fill every slot.',
@@ -143,207 +129,156 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 								'Each tier unlocks when the box reaches its item count.',
 								'productboxes-mix-and-match-box-builder'
 						  ) }
-				</p>
-				<SegmentedControl
-					size="sm"
+				</Text>
+				<ToggleGroupControl
 					label={ __(
 						'Discount type',
 						'productboxes-mix-and-match-box-builder'
 					) }
-					options={ typeOptions }
+					isBlock
 					value={ type }
 					onChange={ setType }
-				/>
+					__nextHasNoMarginBottom
+					__next40pxDefaultSize
+				>
+					{ typeOptions.map( ( option ) => (
+						<ToggleGroupControlOption
+							key={ option.value }
+							value={ option.value }
+							label={ option.label }
+						/>
+					) ) }
+				</ToggleGroupControl>
 				{ errors[ kind ] ? (
-					<Notice tone="critical">{ errors[ kind ] }</Notice>
+					<Notice status="error" isDismissible={ false }>
+						{ errors[ kind ] }
+					</Notice>
 				) : null }
-				{ rows.length ? (
-					<div className="mmbb-editor__scroll">
-						<table className="mmbb-editor__table">
-							<thead>
-								<tr>
-									<th className="mmbb-editor__num" />
-									<th>{ quantityHeading }</th>
-									<th>{ valueHeading }</th>
-									<th>{ resultHeading }</th>
-									<th className="mmbb-editor__act" />
-								</tr>
-							</thead>
-							<tbody>
-								{ rows.map( ( row, index ) => {
-									const base = kind + '.' + index;
-									const isLast = index === rows.length - 1;
-									const label = tierLabel(
-										row,
-										formatMoney,
-										convert
-									);
-									return (
-										<tr key={ index }>
-											<td className="mmbb-editor__num">
-												<span>{ index + 1 }</span>
-											</td>
-											<td className="mmbb-editor__tier-qty">
-												<span className="mmbb-editor__field-label">
-													{ quantityHeading }
-												</span>
-												<NumberControl
-													aria-label={ sprintf(
-														/* translators: %d: Row number. */
-														__(
-															'Row %d items',
-															'productboxes-mix-and-match-box-builder'
-														),
-														index + 1
-													) }
-													suffix={ __(
+				{ rows.map( ( row, index ) => {
+					const base = kind + '.' + index;
+					const label = tierLabel( row, formatMoney, convert );
+					return (
+						<Card key={ index } size="small">
+							<CardBody>
+								<VStack spacing={ 3 }>
+									<HStack alignment="bottom" spacing={ 2 }>
+										<NumberField
+											label={ quantityHeading }
+											suffix={
+												<InputControlSuffixWrapper>
+													{ __(
 														'items',
 														'productboxes-mix-and-match-box-builder'
 													) }
-													value={ row.qty }
-													help={
-														errors[ base + '.qty' ]
-													}
-													min={ 1 }
-													max={ capacity }
-													__next40pxDefaultSize
-													__nextHasNoMarginBottom
-													onChange={ ( value ) =>
-														set(
-															base + '.qty',
-															value
-														)
-													}
-												/>
-											</td>
-											<td className="mmbb-editor__tier-value">
-												<span className="mmbb-editor__field-label">
-													{ valueHeading }
-												</span>
-												<NumberControl
-													aria-label={ sprintf(
-														/* translators: %d: Row number. */
-														__(
-															'Row %d discount',
-															'productboxes-mix-and-match-box-builder'
-														),
-														index + 1
-													) }
-													prefix={
-														type === 'percent'
-															? undefined
-															: moneyPrefix(
-																	money
-															  )
-													}
-													suffix={
-														type === 'percent'
-															? '%'
-															: undefined
-													}
-													value={ row.value }
-													help={
-														errors[
-															base + '.value'
-														]
-													}
-													min={ 0 }
-													__next40pxDefaultSize
-													__nextHasNoMarginBottom
-													onChange={ ( value ) =>
-														set(
-															base + '.value',
-															value
-														)
-													}
-												/>
-											</td>
-											<td className="mmbb-editor__tier-result">
-												<span className="mmbb-editor__field-label">
-													{ resultHeading }
-												</span>
-												{ isSizes ? (
-													<SelectField
-														aria-label={ sprintf(
-															/* translators: %d: Row number. */
-															__(
-																'Row %d tag',
-																'productboxes-mix-and-match-box-builder'
-															),
-															index + 1
-														) }
-														value={ row.tag || '' }
-														options={ [
-															{
-																value: '',
-																label: __(
-																	'No tag',
-																	'productboxes-mix-and-match-box-builder'
-																),
-															},
-															{
-																value: 'popular',
-																label: __(
-																	'Most popular',
-																	'productboxes-mix-and-match-box-builder'
-																),
-															},
-															{
-																value: 'best_value',
-																label: __(
-																	'Best value',
-																	'productboxes-mix-and-match-box-builder'
-																),
-															},
-														] }
-														onChange={ ( event ) =>
-															set(
-																base + '.tag',
-																event.target
-																	.value
-															)
-														}
-													/>
-												) : null }
-												{ ! isSizes && label ? (
-													<RowLabel
-														label={ label }
-														last={ isLast }
-													/>
-												) : null }
-											</td>
-											<td className="mmbb-editor__act">
-												<Button
-													variant="ghost"
-													size="sm"
-													icon="trash"
-													aria-label={ sprintf(
-														/* translators: %d: Row number. */
-														__(
-															'Remove row %d',
-															'productboxes-mix-and-match-box-builder'
-														),
-														index + 1
-													) }
-													onClick={ () =>
-														remove( index )
-													}
-												/>
-											</td>
-										</tr>
-									);
-								} ) }
-							</tbody>
-						</table>
-					</div>
-				) : null }
+												</InputControlSuffixWrapper>
+											}
+											value={ row.qty }
+											error={ errors[ base + '.qty' ] }
+											min={ 1 }
+											max={ capacity }
+											onChange={ ( value ) =>
+												set( base + '.qty', value )
+											}
+										/>
+										<NumberField
+											label={ valueHeading }
+											prefix={
+												type ===
+												'percent' ? undefined : (
+													<InputControlPrefixWrapper>
+														{ moneyPrefix( money ) }
+													</InputControlPrefixWrapper>
+												)
+											}
+											suffix={
+												type === 'percent' ? (
+													<InputControlSuffixWrapper>
+														%
+													</InputControlSuffixWrapper>
+												) : undefined
+											}
+											value={ row.value }
+											error={ errors[ base + '.value' ] }
+											onChange={ ( value ) =>
+												set( base + '.value', value )
+											}
+										/>
+										<Button
+											icon={ trash }
+											isDestructive
+											label={ sprintf(
+												/* translators: %d: Row number. */
+												__(
+													'Remove row %d',
+													'productboxes-mix-and-match-box-builder'
+												),
+												index + 1
+											) }
+											onClick={ () => remove( index ) }
+											__next40pxDefaultSize
+										/>
+									</HStack>
+									{ isSizes ? (
+										<SelectControl
+											label={ __(
+												'Tag',
+												'productboxes-mix-and-match-box-builder'
+											) }
+											value={ row.tag || '' }
+											options={ [
+												{
+													value: '',
+													label: __(
+														'No tag',
+														'productboxes-mix-and-match-box-builder'
+													),
+												},
+												{
+													value: 'popular',
+													label: __(
+														'Most popular',
+														'productboxes-mix-and-match-box-builder'
+													),
+												},
+												{
+													value: 'best_value',
+													label: __(
+														'Best value',
+														'productboxes-mix-and-match-box-builder'
+													),
+												},
+											] }
+											onChange={ ( value ) =>
+												set( base + '.tag', value )
+											}
+											__next40pxDefaultSize
+											__nextHasNoMarginBottom
+										/>
+									) : null }
+									{ ! isSizes && label ? (
+										<Text variant="muted">
+											{ sprintf(
+												/* translators: %s: What shoppers see, such as "10% off". */
+												__(
+													'Shoppers see: %s',
+													'productboxes-mix-and-match-box-builder'
+												),
+												label
+											) }
+										</Text>
+									) : null }
+								</VStack>
+							</CardBody>
+						</Card>
+					);
+				} ) }
 				<div>
 					<Button
-						size="sm"
-						variant="ghost"
-						icon="plus"
+						variant="secondary"
+						icon={ plus }
 						disabled={ rows.length >= MAX_ROWS }
 						onClick={ add }
+						__next40pxDefaultSize
 					>
 						{ isSizes
 							? __(
@@ -356,35 +291,7 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 							  ) }
 					</Button>
 				</div>
-				{ ! isSizes && readTiers.length ? (
-					<div className="mmbb-editor__read">
-						<Icon name="eye" size={ 16 } />
-						<span className="mmbb-editor__read-label">
-							{ __(
-								'Shoppers read:',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						</span>
-						<QuantityStepper
-							size="sm"
-							min={ 0 }
-							max={ capacity }
-							value={ Math.min( readCount, capacity ) }
-							label={ __(
-								'Items in the box',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							onChange={ setReadCount }
-						/>
-						<TierProgress
-							compact
-							count={ Math.min( readCount, capacity ) }
-							tiers={ readTiers }
-							size={ capacity }
-						/>
-					</div>
-				) : null }
-			</div>
+			</VStack>
 		</PanelBody>
 	);
 }
@@ -394,6 +301,9 @@ export default function RulesStep( { draft, errors, dispatch } ) {
 	const { config } = draft;
 	const { box, extras } = config;
 	const set = ( path, value ) => dispatch( { type: 'set', path, value } );
+	// These panels start closed, but open by themselves when a field in them has a problem.
+	const rulesPanel = useOpenOnError( errors, [ 'box.', 'bundle.' ] );
+	const extrasPanel = useOpenOnError( errors, [ 'extras.' ] );
 
 	const pickType = ( type ) => {
 		if ( type === config.type ) {
@@ -401,9 +311,15 @@ export default function RulesStep( { draft, errors, dispatch } ) {
 		}
 		set( 'type', type );
 	};
+	const moneyAffix = ( content ) => (
+		<InputControlPrefixWrapper>{ content }</InputControlPrefixWrapper>
+	);
+	const itemsAffix = ( content ) => (
+		<InputControlSuffixWrapper>{ content }</InputControlSuffixWrapper>
+	);
 
 	return (
-		<Panel className="mmbb-editor__pane">
+		<Panel>
 			<PanelBody
 				title={ __(
 					'Campaign type',
@@ -411,45 +327,41 @@ export default function RulesStep( { draft, errors, dispatch } ) {
 				) }
 				initialOpen
 			>
-				<div className="mmbb-editor__stack mmbb-editor__stack--tight">
-					<p className="mmbb-editor__panel-description">
-						{ __(
-							'How the discount works. You can switch any time before the first order.',
-							'productboxes-mix-and-match-box-builder'
-						) }
-					</p>
-					<RadioControl
-						label={ __(
-							'Discount type',
-							'productboxes-mix-and-match-box-builder'
-						) }
-						selected={ config.type }
-						onChange={ pickType }
-						options={ [
-							{
-								value: 'tiered',
-								label: __(
-									'Tiered mix',
-									'productboxes-mix-and-match-box-builder'
-								),
-							},
-							{
-								value: 'fixed',
-								label: __(
-									'Fixed box',
-									'productboxes-mix-and-match-box-builder'
-								),
-							},
-							{
-								value: 'bundle',
-								label: __(
-									'Bundle price',
-									'productboxes-mix-and-match-box-builder'
-								),
-							},
-						] }
-					/>
-				</div>
+				<RadioControl
+					label={ __(
+						'Discount type',
+						'productboxes-mix-and-match-box-builder'
+					) }
+					help={ __(
+						'How the discount works. You can switch any time before the first order.',
+						'productboxes-mix-and-match-box-builder'
+					) }
+					selected={ config.type }
+					onChange={ pickType }
+					options={ [
+						{
+							value: 'tiered',
+							label: __(
+								'Tiered mix',
+								'productboxes-mix-and-match-box-builder'
+							),
+						},
+						{
+							value: 'fixed',
+							label: __(
+								'Fixed box',
+								'productboxes-mix-and-match-box-builder'
+							),
+						},
+						{
+							value: 'bundle',
+							label: __(
+								'Bundle price',
+								'productboxes-mix-and-match-box-builder'
+							),
+						},
+					] }
+				/>
 			</PanelBody>
 
 			<PanelBody
@@ -457,70 +369,69 @@ export default function RulesStep( { draft, errors, dispatch } ) {
 					'Box rules',
 					'productboxes-mix-and-match-box-builder'
 				) }
+				{ ...rulesPanel }
 			>
-				<div className="mmbb-editor__stack">
-					<div className="mmbb-editor__pair">
+				<VStack spacing={ 5 }>
+					<RangeControl
+						label={ __(
+							'Box holds up to',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						value={ Number( box.capacity ) }
+						min={ 1 }
+						max={ 48 }
+						help={
+							errors[ 'box.capacity' ]
+								? errors[ 'box.capacity' ]
+								: sprintf(
+										/* translators: %s: Number of slots. */
+										__(
+											'Shoppers see %s slots.',
+											'productboxes-mix-and-match-box-builder'
+										),
+										String( box.capacity )
+								  )
+						}
+						onChange={ ( value ) => set( 'box.capacity', value ) }
+						__next40pxDefaultSize
+						__nextHasNoMarginBottom
+					/>
+					{ config.type === 'tiered' ? (
 						<RangeControl
 							label={ __(
-								'Box holds up to',
+								'Minimum to check out',
 								'productboxes-mix-and-match-box-builder'
 							) }
-							value={ Number( box.capacity ) }
+							value={ Number( box.min_items ) }
 							min={ 1 }
-							max={ 48 }
+							max={ Number( box.capacity ) || 1 }
 							help={
-								errors[ 'box.capacity' ]
-									? errors[ 'box.capacity' ]
-									: sprintf(
-											/* translators: %s: Number of slots. */
-											__(
-												'Shoppers see %s slots.',
-												'productboxes-mix-and-match-box-builder'
-											),
-											String( box.capacity )
+								errors[ 'box.min_items' ]
+									? errors[ 'box.min_items' ]
+									: __(
+											'Below this the button stays locked.',
+											'productboxes-mix-and-match-box-builder'
 									  )
 							}
 							onChange={ ( value ) =>
-								set( 'box.capacity', value )
+								set( 'box.min_items', value )
 							}
 							__next40pxDefaultSize
 							__nextHasNoMarginBottom
 						/>
-						{ config.type === 'tiered' ? (
-							<RangeControl
-								label={ __(
-									'Minimum to check out',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								value={ Number( box.min_items ) }
-								min={ 1 }
-								max={ Number( box.capacity ) || 1 }
-								help={
-									errors[ 'box.min_items' ]
-										? errors[ 'box.min_items' ]
-										: __(
-												'Below this the button stays locked.',
-												'productboxes-mix-and-match-box-builder'
-										  )
-								}
-								onChange={ ( value ) =>
-									set( 'box.min_items', value )
-								}
-								__next40pxDefaultSize
-								__nextHasNoMarginBottom
-							/>
-						) : null }
-					</div>
+					) : null }
 					{ config.type === 'bundle' ? (
-						<div className="mmbb-editor__pair">
+						<HStack alignment="top" spacing={ 3 }>
 							<NumberField
 								label={ __(
 									'Items in the bundle',
 									'productboxes-mix-and-match-box-builder'
 								) }
-								suffix={ __(
-									'items',
-									'productboxes-mix-and-match-box-builder'
+								suffix={ itemsAffix(
+									__(
+										'items',
+										'productboxes-mix-and-match-box-builder'
+									)
 								) }
 								value={ config.bundle.qty }
 								error={ errors[ 'bundle.qty' ] }
@@ -533,87 +444,79 @@ export default function RulesStep( { draft, errors, dispatch } ) {
 									'Bundle price',
 									'productboxes-mix-and-match-box-builder'
 								) }
-								prefix={ moneyPrefix( money ) }
+								prefix={ moneyAffix( moneyPrefix( money ) ) }
 								value={ config.bundle.price }
 								error={ errors[ 'bundle.price' ] }
 								onChange={ ( value ) =>
 									set( 'bundle.price', value )
 								}
 							/>
-						</div>
+						</HStack>
 					) : null }
-					<div className="mmbb-editor__stack mmbb-editor__rule">
-						<Toggle
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={ __(
+							'Allow the same product twice',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'Limit how many of one product fit in a box.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						checked={ box.allow_duplicates }
+						onChange={ ( on ) => set( 'box.allow_duplicates', on ) }
+					/>
+					{ box.allow_duplicates ? (
+						<NumberField
 							label={ __(
-								'Allow the same product twice',
+								'Max of one product',
 								'productboxes-mix-and-match-box-builder'
 							) }
-							description={ __(
-								'Limit how many of one product fit in a box.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							checked={ box.allow_duplicates }
-							onChange={ ( on ) =>
-								set( 'box.allow_duplicates', on )
-							}
-						/>
-						{ box.allow_duplicates ? (
-							<NumberField
-								className="mmbb-editor__narrow"
-								label={ __(
-									'Max of one product',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								suffix={ __(
+							suffix={ itemsAffix(
+								__(
 									'per box',
 									'productboxes-mix-and-match-box-builder'
-								) }
-								value={ box.max_per_product }
-								error={ errors[ 'box.max_per_product' ] }
-								onChange={ ( value ) =>
-									set( 'box.max_per_product', value )
-								}
-							/>
-						) : null }
-						{ errors[ 'box.allow_duplicates' ] ? (
-							<Notice tone="critical">
-								{ errors[ 'box.allow_duplicates' ] }
-							</Notice>
-						) : null }
-					</div>
-					<div className="mmbb-editor__rule">
-						<Toggle
-							label={ __(
-								'Hide sold-out products',
-								'productboxes-mix-and-match-box-builder'
+								)
 							) }
-							description={ __(
-								'Otherwise they show as Sold out and can’t be added.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							checked={ box.hide_sold_out }
-							onChange={ ( on ) =>
-								set( 'box.hide_sold_out', on )
+							value={ box.max_per_product }
+							error={ errors[ 'box.max_per_product' ] }
+							onChange={ ( value ) =>
+								set( 'box.max_per_product', value )
 							}
 						/>
-					</div>
-					<div className="mmbb-editor__rule">
-						<Toggle
-							label={ __(
-								'Allow coupons on this box',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							description={ __(
-								'When off, store coupons do not apply to this box.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							checked={ box.allow_coupons }
-							onChange={ ( on ) =>
-								set( 'box.allow_coupons', on )
-							}
-						/>
-					</div>
-				</div>
+					) : null }
+					{ errors[ 'box.allow_duplicates' ] ? (
+						<Notice status="error" isDismissible={ false }>
+							{ errors[ 'box.allow_duplicates' ] }
+						</Notice>
+					) : null }
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={ __(
+							'Hide sold-out products',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'Otherwise they show as Sold out and can’t be added.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						checked={ box.hide_sold_out }
+						onChange={ ( on ) => set( 'box.hide_sold_out', on ) }
+					/>
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={ __(
+							'Allow coupons on this box',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'When off, store coupons do not apply to this box.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						checked={ box.allow_coupons }
+						onChange={ ( on ) => set( 'box.allow_coupons', on ) }
+					/>
+				</VStack>
 			</PanelBody>
 
 			{ config.type === 'tiered' ? (
@@ -638,108 +541,101 @@ export default function RulesStep( { draft, errors, dispatch } ) {
 					'Extras',
 					'productboxes-mix-and-match-box-builder'
 				) }
+				{ ...extrasPanel }
 			>
-				<div className="mmbb-editor__stack">
-					<Toggle
+				<VStack spacing={ 5 }>
+					<ToggleControl
+						__nextHasNoMarginBottom
 						label={ __(
 							'Gift message',
 							'productboxes-mix-and-match-box-builder'
 						) }
-						description={ __(
+						help={ __(
 							'A text box under the box summary. Printed on the packing slip.',
 							'productboxes-mix-and-match-box-builder'
 						) }
 						checked={ extras.gift_message }
 						onChange={ ( on ) => set( 'extras.gift_message', on ) }
 					/>
-					<div className="mmbb-editor__pair mmbb-editor__rule">
-						<Toggle
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={ __(
+							'Gift wrap',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'Optional paid add-on.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						checked={ extras.gift_wrap.enabled }
+						onChange={ ( on ) =>
+							set( 'extras.gift_wrap.enabled', on )
+						}
+					/>
+					{ extras.gift_wrap.enabled ? (
+						<NumberField
 							label={ __(
-								'Gift wrap',
+								'Gift wrap fee',
 								'productboxes-mix-and-match-box-builder'
 							) }
-							description={ __(
-								'Optional paid add-on.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							checked={ extras.gift_wrap.enabled }
-							onChange={ ( on ) =>
-								set( 'extras.gift_wrap.enabled', on )
+							prefix={ moneyAffix( moneyPrefix( money ) ) }
+							value={ extras.gift_wrap.fee }
+							error={ errors[ 'extras.gift_wrap.fee' ] }
+							onChange={ ( value ) =>
+								set( 'extras.gift_wrap.fee', value )
 							}
 						/>
-						{ extras.gift_wrap.enabled ? (
-							<NumberField
-								label={ __(
-									'Gift wrap fee',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								prefix={ moneyPrefix( money ) }
-								value={ extras.gift_wrap.fee }
-								error={ errors[ 'extras.gift_wrap.fee' ] }
-								onChange={ ( value ) =>
-									set( 'extras.gift_wrap.fee', value )
+					) : null }
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={ __(
+							'Free gift',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'Add a product at no charge once the box has enough items.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						checked={ extras.free_gift.enabled }
+						onChange={ ( on ) =>
+							set( 'extras.free_gift.enabled', on )
+						}
+					/>
+					{ extras.free_gift.enabled ? (
+						<>
+							<GiftProductField
+								value={ extras.free_gift.product_id }
+								error={
+									errors[ 'extras.free_gift.product_id' ]
+								}
+								onChange={ ( id ) =>
+									set( 'extras.free_gift.product_id', id )
 								}
 							/>
-						) : null }
-					</div>
-					<div className="mmbb-editor__stack mmbb-editor__rule">
-						<Toggle
-							label={ __(
-								'Free gift',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							description={ __(
-								'Add a product at no charge once the box has enough items.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-							checked={ extras.free_gift.enabled }
-							onChange={ ( on ) =>
-								set( 'extras.free_gift.enabled', on )
-							}
-						/>
-						{ extras.free_gift.enabled ? (
-							<div className="mmbb-editor__pair">
-								<GiftProductField
-									value={ extras.free_gift.product_id }
-									error={
-										errors[ 'extras.free_gift.product_id' ]
-									}
-									onChange={ ( id ) =>
-										set( 'extras.free_gift.product_id', id )
-									}
-								/>
-								<NumberField
-									label={ __(
-										'Unlocks at',
-										'productboxes-mix-and-match-box-builder'
-									) }
-									suffix={ __(
+							<NumberField
+								label={ __(
+									'Unlocks at',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								suffix={ itemsAffix(
+									__(
 										'items',
 										'productboxes-mix-and-match-box-builder'
-									) }
-									value={ extras.free_gift.min_items }
-									error={
-										errors[ 'extras.free_gift.min_items' ]
-									}
-									help={
-										errors[ 'extras.free_gift.min_items' ]
-											? undefined
-											: __(
-													'The gift goes in the cart with the box.',
-													'productboxes-mix-and-match-box-builder'
-											  )
-									}
-									onChange={ ( value ) =>
-										set(
-											'extras.free_gift.min_items',
-											value
-										)
-									}
-								/>
-							</div>
-						) : null }
-					</div>
-				</div>
+									)
+								) }
+								value={ extras.free_gift.min_items }
+								error={ errors[ 'extras.free_gift.min_items' ] }
+								help={ __(
+									'The gift goes in the cart with the box.',
+									'productboxes-mix-and-match-box-builder'
+								) }
+								onChange={ ( value ) =>
+									set( 'extras.free_gift.min_items', value )
+								}
+							/>
+						</>
+					) : null }
+				</VStack>
 			</PanelBody>
 		</Panel>
 	);

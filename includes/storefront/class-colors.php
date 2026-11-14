@@ -225,7 +225,7 @@ final class Colors {
 	 * @param string $b #rrggbb.
 	 * @return float
 	 */
-	private static function contrast( $a, $b ) {
+	public static function contrast( $a, $b ) {
 		$la = self::luminance( $a );
 		$lb = self::luminance( $b );
 		return ( max( $la, $lb ) + 0.05 ) / ( min( $la, $lb ) + 0.05 );
@@ -239,7 +239,7 @@ final class Colors {
 	 * @param string $light      Light ink.
 	 * @return string
 	 */
-	private static function ink_on( $background, $dark, $light ) {
+	public static function ink_on( $background, $dark, $light ) {
 		return self::contrast( $background, $dark ) >= self::contrast( $background, $light ) ? $dark : $light;
 	}
 

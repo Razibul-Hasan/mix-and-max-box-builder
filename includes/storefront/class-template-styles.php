@@ -66,6 +66,12 @@ final class Template_Styles {
 		$body_font  = self::font( self::value( $type, 'body_font', $defaults[7] ), $defaults[7] );
 		$head_slug  = self::font_slug( self::value( $type, 'heading_font', $defaults[6] ), $defaults[6] );
 		$body_slug  = self::font_slug( self::value( $type, 'body_font', $defaults[7] ), $defaults[7] );
+		// Stored and template colours are resolved one key at a time, so a saved page colour can
+		// meet a template text colour that cannot be read on it. Keep every pairing legible.
+		$text       = self::readable( $text, $background, 4.5, $background );
+		$muted      = self::readable( $muted, $background, 3, $background, $text );
+		$on_surface = self::readable( $text, $surface, 4.5, $surface );
+		$on_muted   = self::readable( $muted, $surface, 3, $surface, $on_surface );
 		$btn_size   = self::value( $buttons, 'size', 'm' );
 		$btn_height = array(
 			's' => '40px',
@@ -81,37 +87,39 @@ final class Template_Styles {
 		$padding    = isset( $spacing['padding'] ) && is_array( $spacing['padding'] ) ? $spacing['padding'] : array();
 
 		$vars = array(
-			'--mmbb-accent'         => $accent,
-			'--mmbb-button-text'    => $button,
-			'--mmbb-bg'             => $background,
-			'--mmbb-surface'        => $surface,
-			'--mmbb-text'           => $text,
-			'--mmbb-muted'          => $muted,
-			'--mmbb-savings'        => $savings,
-			'--mmbb-font-heading'   => $head_font,
-			'--mmbb-font-body'      => $body_font,
-			'--mmbb-heading-size'   => (int) self::value( $type, 'heading_size', 68 ) . 'px',
-			'--mmbb-heading-weight' => (int) self::value( $type, 'heading_weight', 800 ),
-			'--mmbb-btn-radius'     => (int) self::value( $buttons, 'radius', 22 ) . 'px',
-			'--mmbb-btn-height'     => isset( $btn_height[ $btn_size ] ) ? $btn_height[ $btn_size ] : $btn_height['m'],
-			'--mmbb-card-radius'    => (int) self::value( $cards, 'radius', 18 ) . 'px',
-			'--mmbb-card-shadow'    => isset( $shadow[ self::value( $cards, 'shadow', 'none' ) ] ) ? $shadow[ self::value( $cards, 'shadow', 'none' ) ] : 'none',
-			'--mmbb-cols'           => (int) self::value( $cards, 'columns', 3 ),
-			'--mmbb-ratio'          => $ratio,
-			'--mmbb-fit'            => self::value( $cards, 'image_fit', 'cover' ),
-			'--mmbb-pad-top'        => self::value( $padding, 'top', '56px' ),
-			'--mmbb-pad-right'      => self::value( $padding, 'right', '64px' ),
-			'--mmbb-pad-bottom'     => self::value( $padding, 'bottom', '56px' ),
-			'--mmbb-pad-left'       => self::value( $padding, 'left', '64px' ),
-			'--max'                 => $accent,
-			'--on-max'              => $button,
-			'--canvas'              => $background,
-			'--surface'             => $surface,
-			'--ink'                 => $text,
-			'--ink-muted'           => $muted,
-			'--max-strong'          => $savings,
-			'--font-display'        => $head_font,
-			'--font-sans'           => $body_font,
+			'--mmbb-accent'           => $accent,
+			'--mmbb-button-text'      => $button,
+			'--mmbb-bg'               => $background,
+			'--mmbb-surface'          => $surface,
+			'--mmbb-text'             => $text,
+			'--mmbb-muted'            => $muted,
+			'--mmbb-on-surface'       => $on_surface,
+			'--mmbb-on-surface-muted' => $on_muted,
+			'--mmbb-savings'          => $savings,
+			'--mmbb-font-heading'     => $head_font,
+			'--mmbb-font-body'        => $body_font,
+			'--mmbb-heading-size'     => (int) self::value( $type, 'heading_size', 68 ) . 'px',
+			'--mmbb-heading-weight'   => (int) self::value( $type, 'heading_weight', 800 ),
+			'--mmbb-btn-radius'       => (int) self::value( $buttons, 'radius', 22 ) . 'px',
+			'--mmbb-btn-height'       => isset( $btn_height[ $btn_size ] ) ? $btn_height[ $btn_size ] : $btn_height['m'],
+			'--mmbb-card-radius'      => (int) self::value( $cards, 'radius', 18 ) . 'px',
+			'--mmbb-card-shadow'      => isset( $shadow[ self::value( $cards, 'shadow', 'none' ) ] ) ? $shadow[ self::value( $cards, 'shadow', 'none' ) ] : 'none',
+			'--mmbb-cols'             => (int) self::value( $cards, 'columns', 3 ),
+			'--mmbb-ratio'            => $ratio,
+			'--mmbb-fit'              => self::value( $cards, 'image_fit', 'cover' ),
+			'--mmbb-pad-top'          => self::value( $padding, 'top', '56px' ),
+			'--mmbb-pad-right'        => self::value( $padding, 'right', '64px' ),
+			'--mmbb-pad-bottom'       => self::value( $padding, 'bottom', '56px' ),
+			'--mmbb-pad-left'         => self::value( $padding, 'left', '64px' ),
+			'--max'                   => $accent,
+			'--on-max'                => $button,
+			'--canvas'                => $background,
+			'--surface'               => $surface,
+			'--ink'                   => $text,
+			'--ink-muted'             => $muted,
+			'--max-strong'            => $savings,
+			'--font-display'          => $head_font,
+			'--font-sans'             => $body_font,
 		);
 
 		return array(
@@ -158,6 +166,26 @@ final class Template_Styles {
 	public static function rule( $instance, array $vars ) {
 		$style = safecss_filter_attr( Colors::style( $vars ) );
 		return '.mmbb-box-' . max( 0, (int) $instance ) . '{' . $style . '}';
+	}
+
+	/**
+	 * A colour that reads on a background, or a readable replacement.
+	 *
+	 * @param string $color      Wanted #rrggbb colour.
+	 * @param string $background #rrggbb it sits on.
+	 * @param float  $minimum    Lowest acceptable contrast ratio.
+	 * @param string $base       #rrggbb the replacement is derived from.
+	 * @param string $strong     Reading colour to soften for muted text, or ''.
+	 * @return string
+	 */
+	private static function readable( $color, $background, $minimum, $base, $strong = '' ) {
+		$hex  = Colors::normalize_hex( $color );
+		$back = Colors::normalize_hex( $background );
+		if ( '' === $hex || '' === $back || Colors::contrast( $hex, $back ) >= $minimum ) {
+			return $color;
+		}
+		$ink = Colors::ink_on( $back, '#111111', '#ffffff' );
+		return '' === $strong ? $ink : Colors::mix( Colors::normalize_hex( $strong ), Colors::normalize_hex( $base ), 0.72 );
 	}
 
 	/**

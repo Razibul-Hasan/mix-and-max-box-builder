@@ -70,7 +70,7 @@
 	margin: 0;
 	font-family: var(--mmbb-font-heading);
 	font-size: clamp(36px, 6vw, var(--mmbb-heading-size));
-	line-height: var(--display-md-line-height);
+	line-height: 1.05;
 	font-weight: var(--mmbb-heading-weight);
 	letter-spacing: var(--display-md-letter-spacing);
 }
@@ -208,9 +208,20 @@
 
 .mmbb-root .mmbb-builder__grid {
 	display: grid;
+
+	/* At most --mmbb-columns per row, fewer when the card would drop under 160px. */
 	grid-template-columns: repeat(
-		var(--mmbb-cols, var(--mmbb-columns, 3)),
-		minmax(0, 1fr)
+		auto-fill,
+		minmax(
+			max(
+				160px,
+				calc(
+					(100% - (var(--mmbb-columns, 3) - 1) * var(--space-4)) /
+						var(--mmbb-columns, 3)
+				)
+			),
+			1fr
+		)
 	);
 	gap: var(--space-4);
 }
@@ -263,6 +274,16 @@
 
 .mmbb-root .is-narrow .mmbb-builder__toast {
 	bottom: calc(var(--space-16) + var(--space-12));
+}
+
+/* Anything drawn on the card colour reads in a colour that is legible on that card. */
+.mmbb-root .mmbb-tile,
+.mmbb-root .mmbb-panel,
+.mmbb-root .mmbb-chip,
+.mmbb-root .mmbb-input {
+	--ink: var(--mmbb-on-surface, var(--mmbb-text));
+	--ink-muted: var(--mmbb-on-surface-muted, var(--mmbb-muted));
+	--on-ink: var(--mmbb-surface);
 }
 
 /* ---------- Bottom sheet ---------- */
@@ -767,20 +788,15 @@
 }
 
 .mmbb-root .mmbb-template--editorial .mmbb-tile__body {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto;
 	padding: var(--space-3) 0 0;
 }
 
 .mmbb-root .mmbb-template--editorial .mmbb-tile__name {
 	font-family: var(--mmbb-font-heading);
-	font-size: 25px;
+	font-size: clamp(20px, 2.2vw, 25px);
+	line-height: 1.15;
 	font-weight: 400;
-}
-
-.mmbb-root .mmbb-template--editorial .mmbb-tile__price {
-	grid-column: 2;
-	grid-row: 1;
+	overflow-wrap: anywhere;
 }
 
 .mmbb-root .mmbb-template--editorial .mmbb-tile__action {
@@ -1032,6 +1048,13 @@
 }
 
 .mmbb-root .mmbb-template--split .mmbb-builder__aside {
+
+	/* On the accent colour, so text follows the button-text colour. */
+	--ink: var(--mmbb-button-text);
+	--ink-muted: color-mix(in srgb, var(--mmbb-button-text) 82%, transparent);
+	--ink-subtle: color-mix(in srgb, var(--mmbb-button-text) 82%, transparent);
+	--line-strong: color-mix(in srgb, var(--mmbb-button-text) 55%, transparent);
+
 	grid-column: 1;
 	grid-row: 2;
 	position: static;
@@ -1051,6 +1074,10 @@
 }
 
 .mmbb-root .mmbb-template--split .mmbb-panel {
+	--ink: var(--mmbb-button-text);
+	--ink-muted: color-mix(in srgb, var(--mmbb-button-text) 82%, transparent);
+	--on-ink: var(--mmbb-accent);
+
 	height: 100%;
 	border: 0;
 	background: transparent;
@@ -1063,10 +1090,17 @@
 }
 
 .mmbb-root .mmbb-template--split .mmbb-panel__sum {
+
+	/* The summary is a light card again, so it takes the card colours back. */
+	--ink: var(--mmbb-on-surface, var(--mmbb-text));
+	--ink-muted: var(--mmbb-on-surface-muted, var(--mmbb-muted));
+
 	margin-top: auto;
+	padding: var(--space-4) var(--space-5);
+	border-top: 0;
 	border-radius: var(--mmbb-card-radius);
 	background: var(--mmbb-surface);
-	color: var(--mmbb-text);
+	color: var(--mmbb-on-surface, var(--mmbb-text));
 }
 
 .mmbb-root .mmbb-template--split .mmbb-tile.is-in-box .mmbb-stepper {

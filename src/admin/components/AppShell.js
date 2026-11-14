@@ -2,6 +2,8 @@ import { Button } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { help } from '@wordpress/icons';
 
+const HIRE_EXPERT_URL = 'https://bestwebexpert.com/';
+
 /**
  * The box mark from the design: an open box drawn in strokes.
  */
@@ -78,6 +80,19 @@ export default function AppShell( {
 				</nav>
 				<div className="mmbb-app__actions">
 					{ actions }
+					{ /* A normal link: no nofollow, so it passes link value. */ }
+					<Button
+						__next40pxDefaultSize
+						variant="tertiary"
+						href={ HIRE_EXPERT_URL }
+						target="_blank"
+						rel="noopener"
+					>
+						{ __(
+							'Hire expert',
+							'productboxes-mix-and-match-box-builder'
+						) }
+					</Button>
 					{ helpUrl ? (
 						<Button
 							__next40pxDefaultSize

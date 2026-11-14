@@ -1,18 +1,16 @@
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { Button, Notice, TextField, useMoney } from '../../components';
+import { Button, Notice, SearchControl } from '@wordpress/components';
+import { useMoney } from '../../components';
 import Media from '../../components/Media';
 import { getProducts } from '../api';
 import { errorMessage, useDebouncedValue, useRequest } from '../hooks';
+import { HStack, Item, ItemGroup, Text, VStack } from '../components/wp';
 
 const PER_PAGE = 6;
-
 function Thumb( { product } ) {
 	return (
-		<span
-			className="mmbb-editor__thumb"
-			style={ { width: 40, height: 40 } }
-		>
+		<span className="mmbb-editor__thumb">
 			<Media image={ product.image } art="cookie" name="" />
 		</span>
 	);
@@ -50,31 +48,31 @@ export default function GiftProductField( { value, error, onChange } ) {
 	if ( value ) {
 		const product = ( picked.data || [] )[ 0 ];
 		return (
-			<div className="mmbb-editor__gift-pick">
-				<span className="mmbb-field__label">
+			<VStack spacing={ 2 }>
+				<Text weight={ 600 }>
 					{ __(
 						'Gift product',
 						'productboxes-mix-and-match-box-builder'
 					) }
-				</span>
-				<div className="mmbb-editor__gift-row">
+				</Text>
+				<HStack spacing={ 3 }>
 					{ product ? <Thumb product={ product } /> : null }
-					<span className="mmbb-editor__grow mmbb-cell-title">
+					<Text weight={ 600 }>
 						{ product
 							? product.name
 							: __(
 									'Loading…',
 									'productboxes-mix-and-match-box-builder'
 							  ) }
-					</span>
-					<Button size="sm" onClick={ () => onChange( 0 ) }>
+					</Text>
+					<Button variant="secondary" onClick={ () => onChange( 0 ) }>
 						{ __(
 							'Change',
 							'productboxes-mix-and-match-box-builder'
 						) }
 					</Button>
-				</div>
-			</div>
+				</HStack>
+			</VStack>
 		);
 	}
 
@@ -84,23 +82,23 @@ export default function GiftProductField( { value, error, onChange } ) {
 	);
 
 	return (
-		<div className="mmbb-editor__gift-pick">
-			<TextField
+		<VStack spacing={ 3 } data-mmbb-invalid={ error ? 'true' : undefined }>
+			<SearchControl
 				label={ __(
 					'Gift product',
 					'productboxes-mix-and-match-box-builder'
 				) }
-				prefix="search"
 				placeholder={ __(
 					'Search products by name or SKU',
 					'productboxes-mix-and-match-box-builder'
 				) }
 				value={ search }
-				error={ error }
-				onChange={ ( event ) => setSearch( event.target.value ) }
+				help={ error }
+				onChange={ setSearch }
+				__nextHasNoMarginBottom
 			/>
 			{ results.error ? (
-				<Notice tone="critical">
+				<Notice status="error" isDismissible={ false }>
 					{ errorMessage(
 						results.error,
 						__(
@@ -110,50 +108,49 @@ export default function GiftProductField( { value, error, onChange } ) {
 					) }
 				</Notice>
 			) : (
-				<ul
-					className="mmbb-editor__gift-list"
-					aria-busy={ results.loading }
-				>
+				<ItemGroup isBordered isSeparated aria-busy={ results.loading }>
 					{ rows.map( ( product ) => (
-						<li key={ product.id }>
-							<Thumb product={ product } />
-							<span className="mmbb-editor__grow">
-								<span className="mmbb-cell-title">
-									{ product.name }
-								</span>
-								<span className="mmbb-cell-meta">
-									{ formatMoney( product.price ) }
-								</span>
-							</span>
-							<Button
-								size="sm"
-								aria-label={ sprintf(
-									/* translators: %s: Product name. */
-									__(
-										'Give away %s',
+						<Item key={ product.id }>
+							<HStack spacing={ 3 }>
+								<Thumb product={ product } />
+								<VStack spacing={ 0 }>
+									<Text weight={ 600 }>{ product.name }</Text>
+									<Text variant="muted">
+										{ formatMoney( product.price ) }
+									</Text>
+								</VStack>
+								<Button
+									variant="secondary"
+									aria-label={ sprintf(
+										/* translators: %s: Product name. */
+										__(
+											'Give away %s',
+											'productboxes-mix-and-match-box-builder'
+										),
+										product.name
+									) }
+									onClick={ () => onChange( product.id ) }
+								>
+									{ __(
+										'Choose',
 										'productboxes-mix-and-match-box-builder'
-									),
-									product.name
-								) }
-								onClick={ () => onChange( product.id ) }
-							>
-								{ __(
-									'Choose',
-									'productboxes-mix-and-match-box-builder'
-								) }
-							</Button>
-						</li>
+									) }
+								</Button>
+							</HStack>
+						</Item>
 					) ) }
 					{ ! results.loading && rows.length === 0 ? (
-						<li className="mmbb-cell-meta">
-							{ __(
-								'No products in stock match.',
-								'productboxes-mix-and-match-box-builder'
-							) }
-						</li>
+						<Item>
+							<Text variant="muted">
+								{ __(
+									'No products in stock match.',
+									'productboxes-mix-and-match-box-builder'
+								) }
+							</Text>
+						</Item>
 					) : null }
-				</ul>
+				</ItemGroup>
 			) }
-		</div>
+		</VStack>
 	);
 }
