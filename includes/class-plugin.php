@@ -31,6 +31,7 @@ final class Plugin {
 			Cart\Cart_Lines::class,
 			Cart\Order_Boxes::class,
 			Cart\Order_Display::class,
+			Compatibility\Compatibility::class,
 			Storefront\Storefront::class,
 			Storefront\Preview::class,
 			Analytics\Collector::class,

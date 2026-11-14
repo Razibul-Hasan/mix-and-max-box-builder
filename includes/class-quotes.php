@@ -14,7 +14,7 @@ final class Quotes {
 	/**
 	 * Quote a box.
 	 *
-	 * @param array $config  Campaign config.
+	 * @param array $config  Campaign config, amounts in the store currency.
 	 * @param array $items   List of { product_id, variation_id, qty, unit_price_minor }.
 	 * @param array $options { size, gift_wrap, decimals }. Decimals default to the store's.
 	 * @return array See Pricing::quote().
@@ -24,13 +24,16 @@ final class Quotes {
 			$options['decimals'] = wc_get_price_decimals();
 		}
 
+		// Product prices are already in the shopper's currency; the campaign's own amounts must be too.
+		$config = Currency::localize_config( $config );
+
 		$quote = Pricing::quote( $config, $items, $options );
 
 		/**
 		 * Filter a box quote. Amounts are integer minor units.
 		 *
 		 * @param array $quote   The quote from the pricing engine.
-		 * @param array $config  Campaign config.
+		 * @param array $config  Campaign config, amounts in the shopper's currency.
 		 * @param array $items   Items in the box.
 		 * @param array $options Quote options.
 		 */

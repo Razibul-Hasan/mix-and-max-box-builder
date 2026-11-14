@@ -12,6 +12,7 @@ use MixMax\BoxBuilder\Cart\Add_To_Cart;
 use MixMax\BoxBuilder\Cart\Box_Resolver;
 use MixMax\BoxBuilder\Cart\Box_Rules;
 use MixMax\BoxBuilder\Campaigns\Config;
+use MixMax\BoxBuilder\Currency;
 use MixMax\BoxBuilder\Pricing;
 use MixMax\BoxBuilder\Settings\Settings;
 
@@ -123,20 +124,23 @@ final class Payload {
 	 */
 	public static function public_config( array $config, array $design = array() ) {
 		$design = $design ? $design : self::design( $config['design'] );
-		return array(
-			'type'     => $config['type'],
-			'box'      => $config['box'],
-			'tiers'    => $config['tiers'],
-			'sizes'    => $config['sizes'],
-			'bundle'   => $config['bundle'],
-			'extras'   => $config['extras'],
-			'design'   => $design,
-			'caps'     => (object) $config['products']['caps'],
-			'schedule' => array(
-				'end'            => $config['schedule']['end'],
-				'countdown_days' => $config['schedule']['countdown_days'],
-				'countdown_end'  => $config['schedule']['countdown_end'],
-			),
+		// The storefront shows and quotes these amounts next to product prices, so they use the shopper's currency.
+		return Currency::localize_config(
+			array(
+				'type'     => $config['type'],
+				'box'      => $config['box'],
+				'tiers'    => $config['tiers'],
+				'sizes'    => $config['sizes'],
+				'bundle'   => $config['bundle'],
+				'extras'   => $config['extras'],
+				'design'   => $design,
+				'caps'     => (object) $config['products']['caps'],
+				'schedule' => array(
+					'end'            => $config['schedule']['end'],
+					'countdown_days' => $config['schedule']['countdown_days'],
+					'countdown_end'  => $config['schedule']['countdown_end'],
+				),
+			)
 		);
 	}
 
@@ -248,7 +252,19 @@ final class Payload {
 			return self::resolve_products( $campaign['config'], $threshold );
 		}
 
-		$key    = self::TRANSIENT_PREFIX . (int) $campaign['id'] . '_' . (int) get_option( self::GENERATION_OPTION, 0 );
+		$key = self::TRANSIENT_PREFIX . (int) $campaign['id'] . '_' . (int) get_option( self::GENERATION_OPTION, 0 );
+
+		/**
+		 * Extra text that makes the cached product list specific to the visitor, such as
+		 * their currency. Product prices are cached in the list, so two visitors who see
+		 * different prices must not share it. Return an empty string to share the list.
+		 *
+		 * @param string $context Empty by default.
+		 */
+		$context = apply_filters( 'mmbb_products_cache_context', '' );
+		if ( is_string( $context ) && '' !== $context ) {
+			$key .= '_' . substr( md5( $context ), 0, 10 );
+		}
 		$cached = get_transient( $key );
 		if ( is_array( $cached ) ) {
 			return $cached;

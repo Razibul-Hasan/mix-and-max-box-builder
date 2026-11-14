@@ -163,6 +163,8 @@ All hooks use the `mmbb_` prefix.
 * Redesigned analytics and settings while retaining the existing reports, stored settings and privacy controls.
 * Added local template fonts, accessible mobile summaries, improved keyboard behavior and reduced-motion support.
 * Preserved existing boxes, orders, analytics, hooks, routes, blocks and shortcodes through versioned migrations.
+* Added WooPayments compatibility: Multi-Currency prices and campaign amounts stay correct, and the hidden box product gets no express checkout button.
+* Added a compatibility layer so support for more plugins and themes can be added in one place.
 
 = 1.0.0 =
 * Initial release: tiered, fixed-size and bundle-price box campaigns, storefront builder block and shortcode, classic and block cart and checkout support, order and email details, analytics and settings.

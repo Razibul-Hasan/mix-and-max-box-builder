@@ -26,6 +26,7 @@ class ClassReferencesTest extends TestCase {
 		return array(
 			'plugin' => array( 'includes/class-plugin.php', 'MixMax\\BoxBuilder' ),
 			'rest'   => array( 'includes/rest/class-rest.php', 'MixMax\\BoxBuilder\\Rest' ),
+			'compat' => array( 'includes/compatibility/class-compatibility.php', 'MixMax\\BoxBuilder\\Compatibility' ),
 		);
 	}
 
