@@ -25,6 +25,22 @@ final class Menu {
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
 		add_filter( 'admin_body_class', array( $this, 'body_class' ) );
+		add_filter( 'plugin_action_links_' . MMBB_BASENAME, array( $this, 'action_links' ) );
+	}
+
+	/**
+	 * Add a Dashboard link to this plugin's row on the Plugins screen.
+	 *
+	 * @param string[] $links Existing action links.
+	 * @return string[]
+	 */
+	public function action_links( $links ) {
+		$dashboard = sprintf(
+			'<a href="%s">%s</a>',
+			esc_url( admin_url( 'admin.php?page=' . self::SLUG ) ),
+			esc_html__( 'Dashboard', 'productboxes-mix-and-match-box-builder' )
+		);
+		return array_merge( array( 'mmbb_dashboard' => $dashboard ), $links );
 	}
 
 	/**
@@ -68,7 +84,7 @@ final class Menu {
 	/** Add the top-level menu and the four pages. */
 	public function add_menu() {
 		$labels = array(
-			'dashboard' => __( 'Home', 'productboxes-mix-and-match-box-builder' ),
+			'dashboard' => __( 'Dashboard','productboxes-mix-and-match-box-builder' ),
 			'campaigns' => __( 'Boxes', 'productboxes-mix-and-match-box-builder' ),
 			'analytics' => __( 'Analytics', 'productboxes-mix-and-match-box-builder' ),
 			'settings'  => __( 'Settings', 'productboxes-mix-and-match-box-builder' ),

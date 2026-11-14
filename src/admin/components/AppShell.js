@@ -1,13 +1,28 @@
-import { Button } from '@wordpress/components';
+import { Icon } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { help } from '@wordpress/icons';
 
-const HIRE_EXPERT_URL = 'https://bestwebexpert.com/';
+const HIRE_EXPERT_URL =
+	'https://bestwebexpert.com/?utm_source=productbox_Plugin&utm_medium=dashboard&utm_campaign=productbox_traffic';
 
 /**
  * The box mark from the design: an open box drawn in strokes.
+ *
+ * @param {Object} props
+ * @param {string} props.src Plugin icon address; the drawn mark shows without it.
  */
-function LogoMark() {
+function LogoMark( { src } ) {
+	if ( src ) {
+		return (
+			<img
+				className="mmbb-app__mark-img"
+				src={ src }
+				alt=""
+				width="28"
+				height="28"
+			/>
+		);
+	}
 	return (
 		<span className="mmbb-app__mark" aria-hidden="true">
 			<svg
@@ -34,6 +49,7 @@ function LogoMark() {
  * @param {string}  props.active   Id of the current nav item.
  * @param {Array}   props.nav      Items: { id, label, href }.
  * @param {string}  props.helpUrl  Address the Help link opens.
+ * @param {string}  props.logoUrl  Plugin icon shown in the header.
  * @param {*}       props.actions  Extra controls shown before Help.
  * @param {boolean} props.wide     Let the content use the full width.
  * @param {*}       props.children Page content.
@@ -42,6 +58,7 @@ export default function AppShell( {
 	active,
 	nav = [],
 	helpUrl,
+	logoUrl,
 	actions,
 	wide = false,
 	children,
@@ -50,7 +67,7 @@ export default function AppShell( {
 		<div className="mmbb-app">
 			<header className="mmbb-app__head">
 				<div className="mmbb-app__logo">
-					<LogoMark />
+					<LogoMark src={ logoUrl } />
 					{ __(
 						'ProductBoxes',
 						'productboxes-mix-and-match-box-builder'
@@ -81,32 +98,29 @@ export default function AppShell( {
 				<div className="mmbb-app__actions">
 					{ actions }
 					{ /* A normal link: no nofollow, so it passes link value. */ }
-					<Button
-						__next40pxDefaultSize
-						variant="tertiary"
+					<a
+						className="mmbb-app__cta"
 						href={ HIRE_EXPERT_URL }
 						target="_blank"
-						rel="noopener"
+						rel="noopener noreferrer"
 					>
 						{ __(
-							'Hire expert',
+							'Get Expert Help',
 							'productboxes-mix-and-match-box-builder'
 						) }
-					</Button>
+					</a>
 					{ helpUrl ? (
-						<Button
-							__next40pxDefaultSize
-							variant="tertiary"
-							icon={ help }
+						<a
 							href={ helpUrl }
 							target="_blank"
 							rel="noopener noreferrer"
 						>
+							<Icon icon={ help } size={ 18 } />
 							{ __(
 								'Help',
 								'productboxes-mix-and-match-box-builder'
 							) }
-						</Button>
+						</a>
 					) : null }
 				</div>
 			</header>

@@ -48,6 +48,7 @@ class PreviewTest extends \WP_UnitTestCase {
 		Preview::reset();
 		remove_filter( 'the_content', array( Preview::class, 'prepend' ), 20 );
 		remove_action( 'wp_footer', array( Preview::class, 'print_fallback' ), 5 );
+		remove_filter( 'template_include', array( Preview::class, 'template' ), 99 );
 		remove_filter( 'wp_robots', 'wp_robots_no_robots' );
 		parent::tear_down();
 	}
@@ -156,6 +157,14 @@ class PreviewTest extends \WP_UnitTestCase {
 		$this->assertStringContainsString( 'data-campaign="' . $this->box . '"', $first );
 		$this->assertLessThan( strpos( $first, 'Hello' ), strpos( $first, 'mmbb-builder' ) );
 		$this->assertStringNotContainsString( 'mmbb-builder', apply_filters( 'the_content', 'Again' ) );
+	}
+
+	/** On the blog home or an archive, the preview shows the box alone. */
+	public function test_listing_uses_box_only_template() {
+		$this->go_to( home_url( '/' ) );
+		Preview::start( $this->box );
+		$this->assertSame( MMBB_PATH . 'includes/storefront/preview-template.php', apply_filters( 'template_include', '/theme/index.php' ) );
+		$this->assertFalse( has_filter( 'the_content', array( Preview::class, 'prepend' ) ) );
 	}
 
 	/** A page that already holds the box is left as it is. */

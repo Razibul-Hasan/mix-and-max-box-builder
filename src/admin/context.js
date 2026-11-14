@@ -8,6 +8,7 @@ const DEFAULTS = {
 	themeAccent: '',
 	adminUrl: '',
 	storeUrl: '/',
+	logoUrl: '',
 	version: '',
 	wcVersion: '',
 	timezone: 'UTC',

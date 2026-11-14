@@ -33,6 +33,8 @@ final class Compatibility {
 			// Plugins.
 			Plugins\Woo_Payments::class,
 			// Themes.
+			Themes\Astra::class,
+			Themes\Blocksy::class,
 		);
 	}
 

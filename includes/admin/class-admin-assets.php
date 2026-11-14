@@ -77,6 +77,7 @@ final class Admin_Assets {
 			'themeAccent' => Colors::theme_accent(),
 			'adminUrl'    => admin_url(),
 			'storeUrl'    => home_url( '/' ),
+			'logoUrl'     => MMBB_URL . 'assets/images/icon-logo.png',
 			'version'     => MMBB_VERSION,
 			'wcVersion'   => defined( 'WC_VERSION' ) ? WC_VERSION : '',
 			'timezone'    => wp_timezone_string(),

@@ -92,7 +92,22 @@
 }
 
 .mmbb-app .mmbb-settings__retention .components-number-control {
-	max-width: 220px;
+	max-width: 180px;
+}
+
+.mmbb-app .mmbb-settings__retention .components-input-control__label {
+	display: block;
+	margin-bottom: 8px;
+	color: var(--mmbb-app-ink);
+	font-size: 13px;
+	font-weight: 500;
+	text-transform: none;
+	line-height: 1.4;
+}
+
+.mmbb-app .mmbb-settings__retention .components-input-control__suffix {
+	color: var(--mmbb-app-gray-700);
+	padding-right: 12px;
 }
 
 .mmbb-app .mmbb-settings__error {

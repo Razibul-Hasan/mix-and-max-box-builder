@@ -342,6 +342,8 @@
 
 .mmbb-app-modal .components-modal__content {
 	padding-bottom: 0;
+	overflow-x: hidden;
+	scrollbar-gutter: stable;
 }
 
 .mmbb-app-modal__form {
@@ -370,8 +372,9 @@
 	display: flex;
 	justify-content: flex-end;
 	gap: 8px;
-	margin: 0 -32px;
-	padding: 16px 32px;
+	box-sizing: border-box;
+	margin: 0 calc(-1 * var(--mmbb-modal-pad, 32px));
+	padding: 16px var(--mmbb-modal-pad, 32px);
 	border-top: 1px solid var(--mmbb-app-gray-100);
 	background: #fff;
 }
@@ -467,5 +470,59 @@
 
 	.mmbb-app-card__table {
 		transition: none;
+	}
+}
+
+/* ---------- Loading skeleton ---------- */
+.mmbb-app-skeleton {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.mmbb-app-skeleton__card {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 20px;
+	background: var(--mmbb-app-surface);
+	border: 1px solid var(--mmbb-app-gray-200);
+	border-radius: 8px;
+}
+
+.mmbb-app-skeleton__bar {
+	display: block;
+	height: 12px;
+	border-radius: 6px;
+	background: linear-gradient(90deg, #ececec 25%, #f6f6f6 50%, #ececec 75%);
+	background-size: 200% 100%;
+	animation: mmbb-skeleton 1.4s ease-in-out infinite;
+}
+
+.mmbb-app-skeleton__bar.is-title {
+	width: 180px;
+	height: 24px;
+}
+
+.mmbb-app-skeleton__bar.is-heading {
+	width: 30%;
+	height: 16px;
+}
+
+.mmbb-app-skeleton__bar.is-short {
+	width: 60%;
+}
+
+@keyframes mmbb-skeleton {
+
+	to {
+		background-position: -200% 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.mmbb-app-skeleton__bar {
+		animation: none;
 	}
 }

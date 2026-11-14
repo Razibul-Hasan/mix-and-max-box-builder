@@ -148,11 +148,32 @@ final class Preview {
 		add_filter( 'wp_robots', 'wp_robots_no_robots' );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue' ) );
 
-		if ( ! self::page_holds_box() ) {
+		if ( self::page_holds_box() ) {
+			return;
+		}
+		if ( is_singular() ) {
 			// After blocks and shortcodes have run, so the builder's markup is left alone.
 			add_filter( 'the_content', array( self::class, 'prepend' ), 20 );
 			add_action( 'wp_footer', array( self::class, 'print_fallback' ), 5 );
+		} else {
+			// The blog, an archive or the home page: show the box alone, not a list of posts.
+			add_filter( 'template_include', array( self::class, 'template' ), 99 );
 		}
+	}
+
+	/**
+	 * Swap the theme's template for the box-only preview page.
+	 *
+	 * @param string $template Template the theme chose.
+	 * @return string
+	 */
+	public static function template( $template ) {
+		return self::$box_id > 0 ? MMBB_PATH . 'includes/storefront/preview-template.php' : $template;
+	}
+
+	/** The preview template prints the box itself, so the fallbacks stay quiet. */
+	public static function mark_printed() {
+		self::$printed = true;
 	}
 
 	/** Load the storefront script and tell it which box it previews and who may talk to it. */
@@ -191,7 +212,8 @@ final class Preview {
 	 * @return string
 	 */
 	public static function prepend( $content ) {
-		if ( self::$printed || ! is_main_query() || ! in_the_loop() ) {
+		// Excerpts run `the_content` too and then strip the markup, which would use up the one chance to print.
+		if ( self::$printed || ! is_main_query() || ! in_the_loop() || doing_filter( 'get_the_excerpt' ) || doing_filter( 'the_excerpt' ) ) {
 			return $content;
 		}
 		self::$printed = true;

@@ -2,14 +2,13 @@ import {
 	Button,
 	Notice,
 	SelectControl,
-	Spinner,
 	ToggleControl,
 } from '@wordpress/components';
 import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getPages, getSettings, saveSettings } from '../api';
-import { PageHeader, useSnackbar } from '../components';
-import { NumberControl } from '../components/wp';
+import { PageHeader, PageSkeleton, useSnackbar } from '../components';
+import { InputControlSuffixWrapper, NumberControl } from '../components/wp';
 import { errorMessage, useRequest } from '../hooks';
 import Shell from '../Shell';
 import './settings.css';
@@ -129,13 +128,13 @@ export default function Settings() {
 	if ( request.loading && ! draft ) {
 		return (
 			<Shell active="settings">
-				<div className="mmbb-app-loading" role="status">
-					<Spinner />
-					{ __(
-						'Loading settings\u2026',
+				<PageSkeleton
+					label={ __(
+						'Loading settings…',
 						'productboxes-mix-and-match-box-builder'
 					) }
-				</div>
+					cards={ 3 }
+				/>
 			</Shell>
 		);
 	}
@@ -429,10 +428,14 @@ export default function Settings() {
 							) }
 							min={ 7 }
 							max={ 730 }
-							suffix={ __(
-								'days',
-								'productboxes-mix-and-match-box-builder'
-							) }
+							suffix={
+								<InputControlSuffixWrapper>
+									{ __(
+										'days',
+										'productboxes-mix-and-match-box-builder'
+									) }
+								</InputControlSuffixWrapper>
+							}
 							value={ draft.analytics_retention_days }
 							disabled={ ! draft.analytics_enabled }
 							onChange={ ( value ) =>

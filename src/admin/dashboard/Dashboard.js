@@ -267,11 +267,11 @@ export default function Dashboard() {
 	);
 
 	return (
-		<Shell active="dashboard" viewStore>
+		<Shell active="dashboard">
 			<div className="mmbb-app-stack">
 				<PageHeader
 					title={ __(
-						'Home',
+						'Dashboard',
 						'productboxes-mix-and-match-box-builder'
 					) }
 					description={ sprintf(
@@ -340,7 +340,7 @@ export default function Dashboard() {
 						{ errorMessage(
 							failed[ 0 ].error,
 							__(
-								'Home could not load.',
+								'Dashboard could not load.',
 								'productboxes-mix-and-match-box-builder'
 							)
 						) }

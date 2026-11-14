@@ -538,7 +538,9 @@
 	color: var(--mmbb-button-text);
 }
 
-.mmbb-root .mmbb-template--bold .mmbb-builder__layout {
+/* Only the box panel rides up over the hero. The step label and size cards stay on the
+   page colour below it, so their text never straddles the colour edge. */
+.mmbb-root .mmbb-template--bold .mmbb-builder__layout.has-panel > .mmbb-builder__aside {
 	margin-top: -72px;
 }
 

@@ -74,6 +74,12 @@
 	color: var(--mmbb-app-surface);
 }
 
+.mmbb-app__mark-img {
+	display: block;
+	width: 28px;
+	height: 28px;
+}
+
 .mmbb-app__nav {
 	display: flex;
 	flex: 1 1 auto;
@@ -84,9 +90,11 @@
 	scrollbar-width: none;
 }
 
-.mmbb-app__nav a {
+.mmbb-app__nav a,
+.mmbb-app__actions a {
 	display: flex;
 	align-items: center;
+	gap: 6px;
 	min-height: 60px;
 	padding: 0 12px;
 	color: var(--mmbb-app-ink);
@@ -96,7 +104,8 @@
 	box-shadow: inset 0 -2px 0 transparent;
 }
 
-.mmbb-app__nav a:hover {
+.mmbb-app__nav a:hover,
+.mmbb-app__actions a:hover {
 	color: var(--mmbb-app-accent);
 }
 
@@ -105,12 +114,14 @@
 	box-shadow: inset 0 -2px 0 var(--mmbb-app-accent);
 }
 
-.mmbb-app__nav a:focus {
+.mmbb-app__nav a:focus,
+.mmbb-app__actions a:focus {
 	outline: none;
 	box-shadow: none;
 }
 
-.mmbb-app__nav a:focus-visible {
+.mmbb-app__nav a:focus-visible,
+.mmbb-app__actions a:focus-visible {
 	box-shadow: inset 0 0 0 2px var(--mmbb-app-accent);
 }
 
@@ -457,4 +468,14 @@ body.folded .mmbb-app__snackbars {
 	.mmbb-app * {
 		transition: none;
 	}
+}
+
+/* The expert-help link stands out from the plain nav links. */
+.mmbb-app__actions a.mmbb-app__cta {
+	color: var(--mmbb-app-accent);
+	font-weight: 600;
+}
+
+.mmbb-app__actions a svg {
+	fill: currentcolor;
 }

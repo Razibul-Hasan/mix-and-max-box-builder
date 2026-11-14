@@ -3,14 +3,19 @@ import {
 	CheckboxControl,
 	Notice,
 	SelectControl,
-	Spinner,
 } from '@wordpress/components';
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { download } from '@wordpress/icons';
 import { LineChart, useMoney } from '../../components';
 import { getAnalytics, exportAnalytics, getCampaigns } from '../api';
-import { DataTable, PageHeader, StatCard, StatGroup } from '../components';
+import {
+	DataTable,
+	PageHeader,
+	PageSkeleton,
+	StatCard,
+	StatGroup,
+} from '../components';
 import { ToggleGroupControl, ToggleGroupControlOption } from '../components/wp';
 import { useAdmin } from '../context';
 import { formatCount, formatPercent, formatShortDate } from '../format';
@@ -397,13 +402,12 @@ export default function Analytics() {
 					</Notice>
 				) : null }
 				{ report.loading ? (
-					<div className="mmbb-app-loading" role="status">
-						<Spinner />
-						{ __(
-							'Loading analytics\u2026',
+					<PageSkeleton
+						label={ __(
+							'Loading analytics…',
 							'productboxes-mix-and-match-box-builder'
 						) }
-					</div>
+					/>
 				) : null }
 				{ ! customReady ? (
 					<p role="status">

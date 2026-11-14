@@ -177,11 +177,11 @@ const loaded = async () => {
 	await screen.findByText( 'Tee trio' );
 };
 
-describe( 'Home', () => {
+describe( 'Dashboard', () => {
 	it( 'shows the key numbers with their change and notes', async () => {
 		await loaded();
 		expect(
-			screen.getByRole( 'heading', { level: 1, name: 'Home' } )
+			screen.getByRole( 'heading', { level: 1, name: 'Dashboard' } )
 		).toBeTruthy();
 		expect(
 			screen.getByText( 'How your boxes did in the last 30 days.' )

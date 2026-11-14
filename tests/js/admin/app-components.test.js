@@ -32,7 +32,7 @@ describe( 'wp.js', () => {
 
 describe( 'AppShell', () => {
 	const nav = [
-		{ id: 'dashboard', label: 'Home', href: 'admin.php?page=mmbb' },
+		{ id: 'dashboard', label: 'Dashboard', href: 'admin.php?page=mmbb' },
 		{
 			id: 'campaigns',
 			label: 'Boxes',
@@ -58,7 +58,7 @@ describe( 'AppShell', () => {
 		expect( boxes.getAttribute( 'aria-current' ) ).toBe( 'page' );
 		expect(
 			within( bar )
-				.getByRole( 'link', { name: 'Home' } )
+				.getByRole( 'link', { name: 'Dashboard' } )
 				.getAttribute( 'aria-current' )
 		).toBeNull();
 		expect(
@@ -84,7 +84,7 @@ describe( 'Shell', () => {
 		const bar = screen.getByRole( 'navigation', { name: 'ProductBoxes' } );
 		const links = within( bar ).getAllByRole( 'link' );
 		expect( links.map( ( a ) => a.textContent ) ).toEqual( [
-			'Home',
+			'Dashboard',
 			'Boxes',
 			'Analytics',
 			'Settings',
@@ -102,13 +102,13 @@ describe( 'PageHeader, StatCard, EmptyState', () => {
 	it( 'renders title, description and actions', () => {
 		render(
 			<PageHeader
-				title="Home"
+				title="Dashboard"
 				description="How your boxes did."
 				actions={ <button type="button">Create box</button> }
 			/>
 		);
 		expect(
-			screen.getByRole( 'heading', { level: 1, name: 'Home' } )
+			screen.getByRole( 'heading', { level: 1, name: 'Dashboard' } )
 		).toBeTruthy();
 		expect( screen.getByText( 'How your boxes did.' ) ).toBeTruthy();
 		expect(

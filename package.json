@@ -7,17 +7,18 @@
 		"node": ">=20.19.0"
 	},
 	"scripts": {
-		"build": "wp-scripts build",
+		"clean": "node -e \"require('fs').rmSync('build',{recursive:true,force:true})\"",
+		"build": "wp-scripts build && node tools/clean-build.mjs",
 		"start": "wp-scripts start",
 		"lint:js": "wp-scripts lint-js src tools tests/js webpack.config.js jest-unit.config.js",
 		"lint:css": "wp-scripts lint-style \"src/**/*.css\"",
 		"format": "wp-scripts format src tools tests/js webpack.config.js jest-unit.config.js package.json",
 		"test:js": "wp-scripts test-unit-js --runInBand",
 		"test:php": "wp-env run tests-cli --env-cwd=wp-content/plugins/productboxes-mix-and-match-box-builder env MMBB_TEST_SUITE=integration vendor/bin/phpunit --testsuite=integration",
-		"plugin-zip": "wp-scripts plugin-zip",
+		"plugin-zip": "npm run clean && npm run build && wp-scripts plugin-zip",
+		"zip": "npm run plugin-zip",
 		"env:start": "wp-env start",
 		"env:stop": "wp-env stop",
-		"tokens": "node tools/build-tokens.mjs",
 		"blueprint": "node tools/blueprint/build.mjs"
 	},
 	"files": [

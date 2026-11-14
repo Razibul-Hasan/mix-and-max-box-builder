@@ -36,7 +36,7 @@ class AdminMenuTest extends \WP_UnitTestCase {
 		$slugs = wp_list_pluck( $submenu['mmbb'], 2 );
 		$this->assertSame( array( 'mmbb', 'mmbb-campaigns', 'mmbb-analytics', 'mmbb-settings' ), $slugs );
 		// Labels follow the redesign (Home, Boxes); the slugs above are frozen.
-		$this->assertSame( array( 'Home', 'Boxes', 'Analytics', 'Settings' ), wp_list_pluck( $submenu['mmbb'], 0 ) );
+		$this->assertSame( array( 'Dashboard','Boxes', 'Analytics', 'Settings' ), wp_list_pluck( $submenu['mmbb'], 0 ) );
 		foreach ( $submenu['mmbb'] as $item ) {
 			$this->assertSame( 'manage_woocommerce', $item[1] );
 		}
