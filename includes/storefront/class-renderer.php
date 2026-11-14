@@ -56,6 +56,13 @@ final class Renderer {
 				'preview' => $preview,
 			)
 		);
+		$advanced = $campaign['config']['design']['advanced'];
+		if ( '' !== $advanced['custom_css'] ) {
+			wp_add_inline_style(
+				Storefront::HANDLE,
+				'.mmbb-root[data-campaign="' . absint( $campaign['id'] ) . '"] {' . $advanced['custom_css'] . '}'
+			);
+		}
 
 		wp_add_inline_script(
 			Storefront::HANDLE,
@@ -64,7 +71,7 @@ final class Renderer {
 		);
 
 		$attributes = array(
-			'class'         => 'mmbb-root mmbb-builder',
+			'class'         => trim( 'mmbb-root mmbb-builder ' . $advanced['css_class'] ),
 			'data-mmbb-id'  => $instance,
 			'data-campaign' => (string) $campaign['id'],
 		);

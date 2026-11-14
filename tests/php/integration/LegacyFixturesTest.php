@@ -206,6 +206,7 @@ class LegacyFixturesTest extends \WP_UnitTestCase {
 			$stored = json_decode( get_post_meta( $box['post']['ID'], '_mmbb_config', true ), true );
 			$legacy = json_decode( $box['meta']['_mmbb_config'], true );
 			$this->assert_kept( $legacy, $stored, $slug );
+			$this->assertSame( 'spotlight', $stored['design']['template'], $slug );
 			$this->assertTrue( $stored['box']['allow_coupons'], $slug );
 			$this->assertSame( $box['post']['post_status'], get_post_status( $box['post']['ID'] ), $slug );
 		}

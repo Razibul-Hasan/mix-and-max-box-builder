@@ -276,6 +276,22 @@ The existing `mmbb:editor:<id>` localStorage key now also holds `draft` and `bas
 **Skipped checks (and why):** No browser was driven, so the two sidebars were not visually compared in wp-admin against the canvas files. wp-env was unavailable because Docker is not installed; both native Local integration configurations were run instead.
 **Open issues:** none for this part.
 
+### Part 6 — Design settings and the Design step (2026-11-14)
+**Done:**
+- Extended the existing `design` object without renaming its 1.0 keys. The optional nested redesign settings cover all ten templates, theme syncing, seven colours, typography, buttons, cards, summary, spacing/width, advanced class/CSS, and content copy. PHP sanitizes every enum, colour or preset reference, CSS length, class, string, and numeric range against an allowlist.
+- Rebuilt the Design sidebar as Template / Style / Content tabs with the ten template choices, reset-to-defaults, theme matching, colour palettes, typography, button/card/summary controls, spacing, width, advanced settings, and content labels. Every edit uses the existing editor draft and iframe bridge.
+- Added the capability-protected read-only `GET /mmbb/v1/theme` route. It returns local theme.json palettes, fonts, sizes, button styles, typography and the theme name, with classic-theme palette and font-size fallbacks. No remote request is made.
+- Custom CSS is limited to 10 KB, stripped of tags, protected on save and preview for users without `unfiltered_html`, and emitted only through `wp_add_inline_style()`. The optional custom class is sanitized into individual HTML classes.
+- Migration `2.0.2` maps existing presentation values into the new nested settings and selects Spotlight without removing the old keys. The migration remains idempotent. Migration `2.0.1` supplies the per-box coupon choice introduced in Part 5.
+- Added PHP sanitizer/upgrade/REST coverage and JavaScript default-normalization/editor coverage. Existing legacy fixtures still save byte-for-byte once migrated.
+
+**Decisions:** The existing string `design.layout` remains untouched; the redesign width and padding live under `design.spacing`. The old five campaign presets remain supported by the frozen filter and REST argument but are retired from the create-box UI; the Template tab is now the merchant-facing starting-look choice. Empty nested values mean “use the selected template default.” Existing richer controls (countdown days, two gift toggles, size tags, extra tier types and legacy colour options) remain available. Figtree remains an allowed local font for compatibility.
+**Frozen identifiers touched:** none renamed. Added the `GET /mmbb/v1/theme` route and raised the existing DB schema version to `2.0.2`; both are recorded in `AGENTS.md` and `docs/AUDIT.md`.
+**Data changes and migration steps:** `2.0.1` copies the store-wide coupon preference into missing `box.allow_coupons`; `2.0.2` adds the nested design defaults/mappings while retaining all legacy fields. Both steps are idempotent and preserve post, option and meta names.
+**Checks run:** production build ✅ (same two webpack size warnings; admin entry 266 KiB) · lint:js ✅ · lint:css ✅ · PHPCS ✅ · test:js ✅ (23 suites, 279 tests) · test:unit ✅ (111 tests) · integration ✅ (209 tests, 2 skipped) · HPOS integration ✅ (209 tests, 2 skipped) · Plugin Check ✅ (no errors).
+**Skipped checks (and why):** No browser was driven, so Match my site was not visually exercised in Twenty Twenty-Five and Storefront, every control was not manually watched in the iframe, and the migrated Spotlight view was not compared on screen. The REST, sanitizer, migration and bridge paths are covered by automated tests. wp-env was unavailable because Docker is not installed; both native Local integration configurations were run instead.
+**Open issues:** The legacy Holiday preset can still create a countdown without an end date when invoked through the API/filter; it remains blocked from publishing until a real date is supplied. The retired presets are no longer exposed by the redesigned UI.
+
 <!-- Copy for each part:
 
 ### Part N — Title (YYYY-MM-DD)
@@ -292,15 +308,15 @@ The existing `mmbb:editor:<id>` localStorage key now also holds `draft` and `bas
 
 Questions for the owner from Part 0. The numbers in brackets are the risks in `docs/AUDIT.md`.
 
-1. **The `design.layout` key (risk 1).** It is a string today and an object in the Part 6 schema. Proposed: keep the old string as it is and store the new width and padding under `design.spacing`.
-2. **Old design keys (risk 2).** Proposed: the Part 6 migration copies `headline`, `intro`, `cta_label`, `columns`, `show_ladder`, accent and theme colours into the new nested keys once, and the old keys stay stored but unused.
-3. **"Template" has two meanings (risk 4).** The five starting presets (Holiday treat box, Build-a-spa kit, Snack pack, Build-a-gift, blank) are not in the new Create a box modal. Keep them somewhere, or retire them? The `mmbb_templates` filter and the `template` REST arg stay either way.
-4. **Coupons per box (risk 5).** The design has "Allow coupons on this box" and also keeps the store-wide setting. Which wins? Proposed: the box setting, defaulting to the store setting.
-5. **Countdown (risk 6).** The design offers only "the last 3 days". Today a merchant picks 0 to 30 days. Keep the number, or fix it at 3 for new boxes?
-6. **Gift wrap and note (risk 7).** One toggle in the design, two separate options today. Proposed: keep both keys and show two toggles.
-7. **Features with no place in the new design:** size tags (popular, best value), fixed-amount and box-price tiers, the sticker text, custom ladder and countdown colours, low-stock notes, the unlock toast, the store-wide button label and empty-slot hint, and "Load assets only on builder pages". Proposed: keep the data and behaviour, and give each a control where it fits; none is removed without your say.
+1. **The `design.layout` key (risk 1).** *Part 6: resolved.* The old string stays; redesign width and padding use `design.spacing`.
+2. **Old design keys (risk 2).** *Part 6: resolved.* Migration `2.0.2` copies their presentation into nested fields and retains every old key.
+3. **"Template" has two meanings (risk 4).** *Part 6: resolved.* The old presets remain API/filter-compatible but are retired from the redesigned UI. The ten visual templates are offered in Design.
+4. **Coupons per box (risk 5).** *Parts 5–6: resolved.* The box choice wins; migration `2.0.1` initializes it from the store setting.
+5. **Countdown (risk 6).** *Part 5: resolved.* The existing configurable 0–30 day value stays.
+6. **Gift wrap and note (risk 7).** *Part 5: resolved.* Both stored keys remain separate controls.
+7. **Features with no place in the new design:** *Parts 5–6: resolved.* Existing data and behaviour remain, with controls retained where applicable.
 8. **Admin menu labels.** The design says Home and Boxes; the menu says Dashboard and Campaigns. Labels are not identifiers. Change them? *Part 2: changed to Home and Boxes per the plan; slugs unchanged. Easy to revert.*
-9. **Figtree.** Today's storefront and admin use it, and it is not in the new font list. Keep shipping it for the Spotlight template?
+9. **Figtree.** *Part 6: resolved.* Keep it as a local compatibility font; Spotlight defaults to Bricolage Grotesque.
 10. **`@wordpress/icons` (risk 9).** It is compiled into our script by `@wordpress/scripts`, not loaded from WordPress, so Part 2's `wp-icons` dependency does not apply. No minimum WordPress bump is needed so far. *Part 2: confirmed, no `wp-icons` handle; icons are tree-shaken into `admin.js`.*
 11. **WP-CLI** is needed for `wp i18n make-pot` (Parts 2 and 11) and was not on PATH here.
 

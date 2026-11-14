@@ -29,6 +29,7 @@ final class Rest {
 			Terms_Controller::class,
 			Pages_Controller::class,
 			Settings_Controller::class,
+			Theme_Controller::class,
 			Setup_Controller::class,
 			Stats_Controller::class,
 			Analytics_Controller::class,

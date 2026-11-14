@@ -375,7 +375,7 @@ final class Campaigns_Controller extends Base_Controller {
 			return $campaign;
 		}
 
-		$config = $request['config'];
+		$config = $this->protect_custom_css( $request['config'], $campaign['config'] );
 		$saved  = $this->repo->save(
 			$campaign['id'],
 			is_array( $config ) ? $config : array(),
@@ -492,7 +492,7 @@ final class Campaigns_Controller extends Base_Controller {
 		}
 		$fresh = false;
 		if ( 'POST' === $request->get_method() ) {
-			$config = $request['config'];
+			$config = $this->protect_custom_css( $request['config'], $campaign['config'] );
 			if ( is_array( $config ) ) {
 				// The same sanitizing as a full save (PUT), without writing anything.
 				$container                                  = $campaign['config']['container_product_id'];
@@ -889,5 +889,26 @@ final class Campaigns_Controller extends Base_Controller {
 				),
 			),
 		);
+	}
+
+	/**
+	 * Users without unfiltered_html may neither add, change nor erase custom CSS.
+	 *
+	 * @param mixed $input Raw submitted config.
+	 * @param array $saved Saved config.
+	 * @return mixed
+	 */
+	private function protect_custom_css( $input, array $saved ) {
+		if ( current_user_can( 'unfiltered_html' ) || ! is_array( $input ) ) {
+			return $input;
+		}
+		if ( ! isset( $input['design'] ) || ! is_array( $input['design'] ) ) {
+			$input['design'] = array();
+		}
+		if ( ! isset( $input['design']['advanced'] ) || ! is_array( $input['design']['advanced'] ) ) {
+			$input['design']['advanced'] = array();
+		}
+		$input['design']['advanced']['custom_css'] = isset( $saved['design']['advanced']['custom_css'] ) ? $saved['design']['advanced']['custom_css'] : '';
+		return $input;
 	}
 }

@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
 /** Manage activation, upgrades, new network sites and deactivation. */
 final class Installer {
 	/** Database schema version; bump when the schema registry changes or Upgrades gains a step. */
-	const DB_VERSION = '2.0.1';
+	const DB_VERSION = '2.0.2';
 
 	/** Register upgrade and network-site hooks. */
 	public function register() {

@@ -103,7 +103,13 @@ class UpgradesTest extends \WP_UnitTestCase {
 		$this->assertSame( Installer::DB_VERSION, get_option( 'mmbb_db_version' ) );
 		$this->assertSame( MMBB_VERSION, get_option( 'mmbb_version' ) );
 		$this->assertSame( $settings, get_option( 'mmbb_settings' ) );
-		$this->assertSame( $config, get_post_meta( $campaign, '_mmbb_config', true ) );
+		$upgraded = get_post_meta( $campaign, '_mmbb_config', true );
+		$decoded  = json_decode( $upgraded, true );
+		$this->assertSame( 'bar', $decoded['design']['layout'] );
+		$this->assertSame( 'Old box', $decoded['design']['headline'] );
+		$this->assertSame( 'spotlight', $decoded['design']['template'] );
+		$this->assertSame( 'Old box', $decoded['design']['content']['headline'] );
+		$this->assertTrue( $decoded['box']['allow_coupons'] );
 
 		$options = $wpdb->get_results( "SELECT option_name, option_value, autoload FROM {$wpdb->options} WHERE option_name LIKE 'mmbb\_%' ORDER BY option_name", ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Test reads the raw stored rows.
 		$queries = $wpdb->num_queries;
@@ -111,7 +117,7 @@ class UpgradesTest extends \WP_UnitTestCase {
 		$this->assertSame( $queries, $wpdb->num_queries, 'The second pass runs no query.' );
 		Installer::install();
 		$this->assertSame( $options, $wpdb->get_results( "SELECT option_name, option_value, autoload FROM {$wpdb->options} WHERE option_name LIKE 'mmbb\_%' ORDER BY option_name", ARRAY_A ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Test reads the raw stored rows.
-		$this->assertSame( $config, get_post_meta( $campaign, '_mmbb_config', true ) );
+		$this->assertSame( $upgraded, get_post_meta( $campaign, '_mmbb_config', true ) );
 	}
 
 	/** The version options are not autoloaded. */

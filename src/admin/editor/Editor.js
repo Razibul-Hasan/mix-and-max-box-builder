@@ -433,12 +433,7 @@ function EditorBody( { initial } ) {
 			</>
 		);
 	} else if ( step === 'design' ) {
-		side = (
-			<>
-				<BasicsStep { ...stepProps } section="content" />
-				<DesignStep { ...stepProps } />
-			</>
-		);
+		side = <DesignStep { ...stepProps } />;
 	}
 
 	const previewUrl = meta.preview_url || initial.preview_url;

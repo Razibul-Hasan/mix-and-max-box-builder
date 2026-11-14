@@ -57,12 +57,28 @@ class RestStoreTest extends \WP_UnitTestCase {
 	public function protected_routes() {
 		return array(
 			'settings get'  => array( 'GET', 'settings' ),
+			'theme get'     => array( 'GET', 'theme' ),
 			'settings post' => array( 'POST', 'settings' ),
 			'setup get'     => array( 'GET', 'setup' ),
 			'setup post'    => array( 'POST', 'setup', array( 'test_done' => true ) ),
 			'stats get'     => array( 'GET', 'stats' ),
 			'analytics get' => array( 'GET', 'analytics' ),
 		);
+	}
+
+	/** Theme tokens are local, capability-protected, and expose CSS permission. */
+	public function test_theme_tokens() {
+		$this->be_manager();
+		$response = $this->request( 'GET', 'theme' );
+		$data     = $response->get_data();
+
+		$this->assertSame( 200, $response->get_status() );
+		$this->assertNotEmpty( $data['name'] );
+		$this->assertIsArray( $data['palette'] );
+		$this->assertIsArray( $data['font_families'] );
+		$this->assertIsArray( $data['font_sizes'] );
+		$this->assertIsArray( $data['button'] );
+		$this->assertTrue( $data['can_custom_css'] );
 	}
 
 	/**

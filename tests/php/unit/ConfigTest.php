@@ -355,6 +355,32 @@ class ConfigTest extends TestCase {
 		$this->assertSame( '#141414', $design['countdown_text'] );
 	}
 
+	/** The redesigned style schema accepts only documented values. */
+	public function test_design_settings_are_sanitized() {
+		$design = Config::sanitize(
+			array(
+				'design' => array(
+					'template' => 'unknown',
+					'colors'   => array(
+						'accent'     => 'red',
+						'background' => 'var(--wp--preset--color--base)',
+					),
+					'buttons'  => array( 'style' => 'glow' ),
+					'advanced' => array(
+						'custom_css' => '</style>' . str_repeat( 'a', 11000 ),
+					),
+				),
+			)
+		)['design'];
+
+		$this->assertSame( 'spotlight', $design['template'] );
+		$this->assertSame( '', $design['colors']['accent'] );
+		$this->assertSame( 'var(--wp--preset--color--base)', $design['colors']['background'] );
+		$this->assertSame( 'fill', $design['buttons']['style'] );
+		$this->assertStringNotContainsString( '</style>', $design['advanced']['custom_css'] );
+		$this->assertLessThanOrEqual( 10240, strlen( $design['advanced']['custom_css'] ) );
+	}
+
 	/** An always-on campaign with a countdown needs its own countdown time to go live. */
 	public function test_countdown_end() {
 		$config = Config::sanitize( array( 'schedule' => array( 'countdown_days' => 7 ) ) );

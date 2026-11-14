@@ -175,7 +175,13 @@ afterEach( () => {
 	jest.useRealTimers();
 } );
 
-const nameField = () => screen.findByLabelText( 'Campaign name' );
+const nameField = async () => {
+	const content = screen.queryByRole( 'button', { name: 'Content' } );
+	if ( content ) {
+		fireEvent.click( content );
+	}
+	return screen.findByLabelText( 'Campaign name' );
+};
 const PREVIEW_ORIGIN = 'http://localhost';
 
 function frame( container ) {

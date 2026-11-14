@@ -129,6 +129,10 @@ export function getSettings() {
 	return apiFetch( { path: BASE + '/settings' } );
 }
 
+export function getTheme() {
+	return apiFetch( { path: BASE + '/theme' } );
+}
+
 export function saveSettings( settings ) {
 	return apiFetch( {
 		path: BASE + '/settings',

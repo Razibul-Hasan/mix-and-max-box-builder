@@ -17,17 +17,19 @@ defined( 'ABSPATH' ) || exit;
  * Money values (fixed amounts, box prices, fees) are store-currency numbers.
  */
 final class Config {
-	const TYPES          = array( 'tiered', 'fixed', 'bundle' );
-	const DISCOUNT_TYPES = array( 'percent', 'fixed_amount', 'box_price' );
-	const SIZE_TAGS      = array( '', 'popular', 'best_value' );
-	const SOURCES        = array( 'manual', 'category', 'tag' );
-	const ORDERS         = array( 'manual', 'bestselling', 'price', 'newest' );
-	const LAYOUTS        = array( 'default', 'panel', 'bar', 'both' );
-	const COLUMNS        = array( 0, 3, 4, 5 );
-	const ACCENTS        = array( 'max', 'theme', 'custom' );
-	const THEMES         = array( 'light', 'dark', 'custom' );
-	const LADDERS        = array( 'default', 'custom' );
-	const COUNTDOWNS     = array( 'default', 'custom' );
+	const TYPES            = array( 'tiered', 'fixed', 'bundle' );
+	const DISCOUNT_TYPES   = array( 'percent', 'fixed_amount', 'box_price' );
+	const SIZE_TAGS        = array( '', 'popular', 'best_value' );
+	const SOURCES          = array( 'manual', 'category', 'tag' );
+	const ORDERS           = array( 'manual', 'bestselling', 'price', 'newest' );
+	const LAYOUTS          = array( 'default', 'panel', 'bar', 'both' );
+	const COLUMNS          = array( 0, 3, 4, 5 );
+	const ACCENTS          = array( 'max', 'theme', 'custom' );
+	const THEMES           = array( 'light', 'dark', 'custom' );
+	const LADDERS          = array( 'default', 'custom' );
+	const COUNTDOWNS       = array( 'default', 'custom' );
+	const DESIGN_TEMPLATES = array( 'spotlight', 'clean', 'steps', 'gift', 'bold', 'pastel', 'editorial', 'night', 'split', 'compact' );
+	const DESIGN_FONTS     = array( 'theme', 'bricolage-grotesque', 'inter-tight', 'plus-jakarta-sans', 'fraunces', 'dm-sans', 'outfit', 'inter', 'space-grotesk', 'figtree', 'system' );
 	/** Discount ladder colours: the top step, the next step to unlock and the other steps. */
 	const LADDER_COLORS = array( 'ladder_top', 'ladder_top_text', 'ladder_near', 'ladder_near_text', 'ladder_base', 'ladder_base_text' );
 
@@ -118,6 +120,55 @@ final class Config {
 				'countdown'        => 'default',
 				'countdown_bg'     => '#ffd23f',
 				'countdown_text'   => '#141414',
+				'template'         => 'spotlight',
+				'sync_theme'       => false,
+				'colors'           => array_fill_keys( array( 'accent', 'button_text', 'background', 'surface', 'text', 'muted', 'savings' ), '' ),
+				'typography'       => array(
+					'heading_font'     => 'theme',
+					'body_font'        => 'theme',
+					'heading_size'     => 68,
+					'heading_weight'   => 800,
+					'button_uppercase' => false,
+				),
+				'buttons'          => array(
+					'style'  => 'fill',
+					'size'   => 'm',
+					'radius' => 22,
+				),
+				'cards'            => array(
+					'columns'            => 3,
+					'image_ratio'        => '1/1',
+					'image_fit'          => 'cover',
+					'radius'             => 18,
+					'shadow'             => 'none',
+					'show_compare_price' => true,
+					'show_sale_badge'    => true,
+				),
+				'summary'          => array(
+					'position'    => 'right',
+					'progress'    => 'bar',
+					'slots'       => 'photos',
+					'show_ladder' => true,
+				),
+				'spacing'          => array(
+					'width'   => 'wide',
+					'padding' => array(
+						'top'    => '56px',
+						'right'  => '64px',
+						'bottom' => '56px',
+						'left'   => '64px',
+					),
+				),
+				'advanced'         => array(
+					'css_class'  => '',
+					'custom_css' => '',
+				),
+				'content'          => array(
+					'headline'   => '',
+					'intro'      => '',
+					'add_label'  => '',
+					'cart_label' => '',
+				),
 			),
 			'placement'            => array(
 				'page_id' => 0,
@@ -467,7 +518,135 @@ final class Config {
 		$out['countdown']      = self::enum( self::pick( $in, 'countdown', $base['countdown'] ), self::COUNTDOWNS, $base['countdown'] );
 		$out['countdown_bg']   = self::hex( $in, 'countdown_bg', $base );
 		$out['countdown_text'] = self::hex( $in, 'countdown_text', $base );
+
+		$out['template']   = self::enum( self::pick( $in, 'template', $base['template'] ), self::DESIGN_TEMPLATES, $base['template'] );
+		$out['sync_theme'] = self::bool( self::pick( $in, 'sync_theme', $base['sync_theme'] ), $base['sync_theme'] );
+
+		$colors = self::section( $in, 'colors' );
+		foreach ( array_keys( $base['colors'] ) as $key ) {
+			$out['colors'][ $key ] = self::design_color( self::pick( $colors, $key, $base['colors'][ $key ] ), $base['colors'][ $key ] );
+		}
+
+		$typography                            = self::section( $in, 'typography' );
+		$out['typography']['heading_font']     = self::font( self::pick( $typography, 'heading_font', $base['typography']['heading_font'] ), $base['typography']['heading_font'] );
+		$out['typography']['body_font']        = self::font( self::pick( $typography, 'body_font', $base['typography']['body_font'] ), $base['typography']['body_font'] );
+		$out['typography']['heading_size']     = self::clamp_int( self::pick( $typography, 'heading_size', $base['typography']['heading_size'] ), 32, 96 );
+		$weight                                = (int) self::pick( $typography, 'heading_weight', $base['typography']['heading_weight'] );
+		$out['typography']['heading_weight']   = in_array( $weight, array( 400, 500, 600, 700, 800 ), true ) ? $weight : $base['typography']['heading_weight'];
+		$out['typography']['button_uppercase'] = self::bool( self::pick( $typography, 'button_uppercase', $base['typography']['button_uppercase'] ), $base['typography']['button_uppercase'] );
+
+		$buttons                  = self::section( $in, 'buttons' );
+		$out['buttons']['style']  = self::enum( self::pick( $buttons, 'style', $base['buttons']['style'] ), array( 'fill', 'outline', 'soft' ), $base['buttons']['style'] );
+		$out['buttons']['size']   = self::enum( self::pick( $buttons, 'size', $base['buttons']['size'] ), array( 's', 'm', 'l' ), $base['buttons']['size'] );
+		$out['buttons']['radius'] = self::clamp_int( self::pick( $buttons, 'radius', $base['buttons']['radius'] ), 0, 32 );
+
+		$cards                              = self::section( $in, 'cards' );
+		$out['cards']['columns']            = self::clamp_int( self::pick( $cards, 'columns', $base['cards']['columns'] ), 2, 5 );
+		$out['cards']['image_ratio']        = self::enum( self::pick( $cards, 'image_ratio', $base['cards']['image_ratio'] ), array( '1/1', '4/5', '4/3' ), $base['cards']['image_ratio'] );
+		$out['cards']['image_fit']          = self::enum( self::pick( $cards, 'image_fit', $base['cards']['image_fit'] ), array( 'cover', 'contain' ), $base['cards']['image_fit'] );
+		$out['cards']['radius']             = self::clamp_int( self::pick( $cards, 'radius', $base['cards']['radius'] ), 0, 32 );
+		$out['cards']['shadow']             = self::enum( self::pick( $cards, 'shadow', $base['cards']['shadow'] ), array( 'none', 'soft', 'strong' ), $base['cards']['shadow'] );
+		$out['cards']['show_compare_price'] = self::bool( self::pick( $cards, 'show_compare_price', $base['cards']['show_compare_price'] ), $base['cards']['show_compare_price'] );
+		$out['cards']['show_sale_badge']    = self::bool( self::pick( $cards, 'show_sale_badge', $base['cards']['show_sale_badge'] ), $base['cards']['show_sale_badge'] );
+
+		$summary                       = self::section( $in, 'summary' );
+		$out['summary']['position']    = self::enum( self::pick( $summary, 'position', $base['summary']['position'] ), array( 'left', 'right', 'bar' ), $base['summary']['position'] );
+		$out['summary']['progress']    = self::enum( self::pick( $summary, 'progress', $base['summary']['progress'] ), array( 'bar', 'segments' ), $base['summary']['progress'] );
+		$out['summary']['slots']       = self::enum( self::pick( $summary, 'slots', $base['summary']['slots'] ), array( 'photos', 'numbers' ), $base['summary']['slots'] );
+		$out['summary']['show_ladder'] = self::bool( self::pick( $summary, 'show_ladder', $base['summary']['show_ladder'] ), $base['summary']['show_ladder'] );
+
+		$spacing                 = self::section( $in, 'spacing' );
+		$out['spacing']['width'] = self::enum( self::pick( $spacing, 'width', $base['spacing']['width'] ), array( 'content', 'wide', 'full' ), $base['spacing']['width'] );
+		$padding                 = self::section( $spacing, 'padding' );
+		foreach ( array( 'top', 'right', 'bottom', 'left' ) as $side ) {
+			$out['spacing']['padding'][ $side ] = self::css_length( self::pick( $padding, $side, $base['spacing']['padding'][ $side ] ), $base['spacing']['padding'][ $side ] );
+		}
+
+		$advanced                      = self::section( $in, 'advanced' );
+		$out['advanced']['css_class']  = self::css_classes( self::pick( $advanced, 'css_class', $base['advanced']['css_class'] ) );
+		$out['advanced']['custom_css'] = self::custom_css( self::pick( $advanced, 'custom_css', $base['advanced']['custom_css'] ) );
+		$content                       = self::section( $in, 'content' );
+		$out['content']['headline']    = self::text( self::pick( $content, 'headline', $base['content']['headline'] ), 120 );
+		$out['content']['intro']       = self::text( self::pick( $content, 'intro', $base['content']['intro'] ), 500 );
+		$out['content']['add_label']   = self::text( self::pick( $content, 'add_label', $base['content']['add_label'] ), 40 );
+		$out['content']['cart_label']  = self::text( self::pick( $content, 'cart_label', $base['content']['cart_label'] ), 40 );
 		return $out;
+	}
+
+	/**
+	 * Sanitize a design colour or WordPress preset reference.
+	 *
+	 * @param mixed  $value    Raw value.
+	 * @param string $fallback Fallback value.
+	 * @return string
+	 */
+	private static function design_color( $value, $fallback ) {
+		if ( '' === $value ) {
+			return '';
+		}
+		$hex = Colors::normalize_hex( $value );
+		if ( '' !== $hex ) {
+			return $hex;
+		}
+		return is_string( $value ) && preg_match( '/^var\(--wp--preset--color--[a-z0-9-]+\)$/', $value ) ? $value : $fallback;
+	}
+
+	/**
+	 * Sanitize a bundled font slug or WordPress preset reference.
+	 *
+	 * @param mixed  $value    Raw value.
+	 * @param string $fallback Fallback value.
+	 * @return string
+	 */
+	private static function font( $value, $fallback ) {
+		if ( is_string( $value ) && preg_match( '/^var\(--wp--preset--font-family--[a-z0-9-]+\)$/', $value ) ) {
+			return $value;
+		}
+		return self::enum( $value, self::DESIGN_FONTS, $fallback );
+	}
+
+	/**
+	 * Sanitize a CSS length used for box padding.
+	 *
+	 * @param mixed  $value    Raw value.
+	 * @param string $fallback Fallback value.
+	 * @return string
+	 */
+	private static function css_length( $value, $fallback ) {
+		return is_string( $value ) && preg_match( '/^(?:0|(?:\d+(?:\.\d+)?)(?:px|rem|em|%|vw))$/', trim( $value ) ) ? trim( $value ) : $fallback;
+	}
+
+	/**
+	 * Sanitize a space-separated class list.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	private static function css_classes( $value ) {
+		$classes = preg_split( '/\s+/', is_scalar( $value ) ? trim( (string) $value ) : '' );
+		$clean   = array();
+		foreach ( $classes as $class ) {
+			$class = preg_replace( '/[^A-Za-z0-9_-]/', '', $class );
+			if ( '' !== $class ) {
+				$clean[] = $class;
+			}
+		}
+		return implode( ' ', array_slice( array_unique( $clean ), 0, 20 ) );
+	}
+
+	/**
+	 * Strip markup and limit campaign custom CSS to 10 KB.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	private static function custom_css( $value ) {
+		$value = is_scalar( $value ) ? strip_tags( (string) $value ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.strip_tags_strip_tags -- Pure class, no WordPress available.
+		if ( preg_match( '/(?:url\s*\(|@import)/i', $value ) ) {
+			return '';
+		}
+		$value = str_replace( array( '{', '}' ), '', $value );
+		return substr( $value, 0, 10240 );
 	}
 
 	/**

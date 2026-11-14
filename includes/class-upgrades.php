@@ -37,6 +37,7 @@ final class Upgrades {
 		return array(
 			'2.0.0' => array( self::class, 'step_2_0_0' ),
 			'2.0.1' => array( self::class, 'step_2_0_1' ),
+			'2.0.2' => array( self::class, 'step_2_0_2' ),
 		);
 	}
 
@@ -107,6 +108,40 @@ final class Upgrades {
 			}
 			$config                         = Config::sanitize( $old );
 			$config['box']['allow_coupons'] = (bool) Settings::get( 'allow_coupons' );
+			update_post_meta( $id, Post_Type::META_CONFIG, wp_slash( wp_json_encode( $config ) ) );
+		}
+	}
+
+	/**
+	 * 2.0.2: map the 1.0 presentation fields into the optional design object.
+	 */
+	private static function step_2_0_2() {
+		$ids = get_posts(
+			array(
+				'post_type'      => Post_Type::NAME,
+				'post_status'    => array( 'draft', 'publish', 'trash' ),
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+			)
+		);
+		foreach ( $ids as $id ) {
+			$raw = get_post_meta( $id, Post_Type::META_CONFIG, true );
+			$old = json_decode( (string) $raw, true );
+			if ( ! is_array( $old ) ) {
+				continue;
+			}
+			$legacy                                     = isset( $old['design'] ) && is_array( $old['design'] ) ? $old['design'] : array();
+			$config                                     = Config::sanitize( $old );
+			$config['design']['template']               = 'spotlight';
+			$config['design']['colors']['accent']       = isset( $legacy['accent_color'] ) ? $legacy['accent_color'] : '';
+			$config['design']['colors']['background']   = isset( $legacy['theme_canvas'] ) ? $legacy['theme_canvas'] : '';
+			$config['design']['colors']['surface']      = isset( $legacy['theme_surface'] ) ? $legacy['theme_surface'] : '';
+			$config['design']['cards']['columns']       = ! empty( $legacy['columns'] ) ? (int) $legacy['columns'] : $config['design']['cards']['columns'];
+			$config['design']['summary']['show_ladder'] = isset( $legacy['show_ladder'] ) ? (bool) $legacy['show_ladder'] : true;
+			$config['design']['content']['headline']    = isset( $legacy['headline'] ) ? (string) $legacy['headline'] : '';
+			$config['design']['content']['intro']       = isset( $legacy['intro'] ) ? (string) $legacy['intro'] : '';
+			$config['design']['content']['cart_label']  = isset( $legacy['cta_label'] ) ? (string) $legacy['cta_label'] : '';
 			update_post_meta( $id, Post_Type::META_CONFIG, wp_slash( wp_json_encode( $config ) ) );
 		}
 	}

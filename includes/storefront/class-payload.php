@@ -46,11 +46,26 @@ final class Payload {
 	 * @return array
 	 */
 	public static function build( array $campaign, array $args = array() ) {
-		$preview  = ! empty( $args['preview'] );
-		$view     = isset( $args['view'] ) && is_array( $args['view'] ) ? $args['view'] : array();
-		$config   = $campaign['config'];
-		$settings = Settings::all();
-		$colors   = Colors::resolve( $config['design'], Colors::theme_accent() );
+		$preview    = ! empty( $args['preview'] );
+		$view       = isset( $args['view'] ) && is_array( $args['view'] ) ? $args['view'] : array();
+		$config     = $campaign['config'];
+		$settings   = Settings::all();
+		$design     = self::design( $config['design'] );
+		$colors     = Colors::resolve( $design, Colors::theme_accent() );
+		$color_vars = array(
+			'accent'      => '--max',
+			'button_text' => '--on-max',
+			'background'  => '--canvas',
+			'surface'     => '--surface',
+			'text'        => '--ink',
+			'muted'       => '--ink-muted',
+			'savings'     => '--max-strong',
+		);
+		foreach ( $color_vars as $key => $property ) {
+			if ( '' !== $design['colors'][ $key ] ) {
+				$colors['vars'][ $property ] = $design['colors'][ $key ];
+			}
+		}
 		// An object, so JSON gets {} rather than [] when nothing is overridden.
 		$colors['vars'] = (object) $colors['vars'];
 
@@ -59,13 +74,13 @@ final class Payload {
 			'title'    => $campaign['title'],
 			'status'   => $campaign['status'],
 			'preview'  => $preview,
-			'config'   => self::public_config( $config ),
+			'config'   => self::public_config( $config, $design ),
 			'view'     => self::view( $config, $settings, $view ),
 			'colors'   => $colors,
 			'settings' => array(
 				'unlockToast' => ! empty( $settings['unlock_toast'] ),
 				'stickers'    => ! empty( $settings['stickers'] ),
-				'ctaLabel'    => '' !== (string) $config['design']['cta_label'] ? $config['design']['cta_label'] : (string) $settings['cta_label'],
+				'ctaLabel'    => '' !== (string) $design['cta_label'] ? $design['cta_label'] : (string) $settings['cta_label'],
 				'emptyHint'   => (string) $settings['empty_slot_hint'],
 			),
 			'products' => self::products( $campaign, $settings, ! empty( $args['fresh'] ) ),
@@ -97,9 +112,11 @@ final class Payload {
 	 * The parts of a config a shopper may see.
 	 *
 	 * @param array $config Campaign config.
+	 * @param array $design Design with the nested settings applied.
 	 * @return array
 	 */
-	public static function public_config( array $config ) {
+	public static function public_config( array $config, array $design = array() ) {
+		$design = $design ? $design : self::design( $config['design'] );
 		return array(
 			'type'     => $config['type'],
 			'box'      => $config['box'],
@@ -107,7 +124,7 @@ final class Payload {
 			'sizes'    => $config['sizes'],
 			'bundle'   => $config['bundle'],
 			'extras'   => $config['extras'],
-			'design'   => $config['design'],
+			'design'   => $design,
 			'caps'     => (object) $config['products']['caps'],
 			'schedule' => array(
 				'end'            => $config['schedule']['end'],
@@ -115,6 +132,33 @@ final class Payload {
 				'countdown_end'  => $config['schedule']['countdown_end'],
 			),
 		);
+	}
+
+	/**
+	 * Apply optional nested design settings to the 1.0 storefront contract.
+	 *
+	 * @param array $design Stored design settings.
+	 * @return array
+	 */
+	private static function design( array $design ) {
+		$content = $design['content'];
+		if ( '' !== $content['headline'] ) {
+			$design['headline'] = $content['headline'];
+		}
+		if ( '' !== $content['intro'] ) {
+			$design['intro'] = $content['intro'];
+		}
+		if ( '' !== $content['cart_label'] ) {
+			$design['cta_label'] = $content['cart_label'];
+		}
+		$design['columns']     = $design['cards']['columns'];
+		$design['show_ladder'] = $design['summary']['show_ladder'];
+		if ( 'bar' === $design['summary']['position'] ) {
+			$design['layout'] = 'bar';
+		} elseif ( in_array( $design['summary']['position'], array( 'left', 'right' ), true ) ) {
+			$design['layout'] = 'panel';
+		}
+		return $design;
 	}
 
 	/**

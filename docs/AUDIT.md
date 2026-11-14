@@ -283,6 +283,7 @@ Every admin route uses `Base_Controller::permissions_check()`, which requires `m
 | GET | `/terms` | Product categories and tags |
 | GET | `/pages` | Pages for placement |
 | GET, POST/PUT/PATCH | `/settings` | Read and update `mmbb_settings` |
+| GET | `/theme` | Redesign Part 6. Local theme palette, fonts, sizes and button styles for “Match my site” |
 | GET, POST | `/setup` | Setup checklist state; mark the test order done; from Redesign Part 3, `dismissed` per user |
 | GET | `/stats` | Dashboard numbers, `range` |
 | GET | `/analytics` | `range` today / 7d / 30d / 90d / custom, `from`, `to`, `campaign`, `compare` |
