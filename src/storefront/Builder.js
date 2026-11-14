@@ -92,7 +92,19 @@ function BuilderView( { payload, preview, navigate } ) {
 
 	const rootRef = useRef( null );
 	const width = useContainerWidth( rootRef );
-	const narrow = width < NARROW_BELOW;
+	const template = config.design.template || 'spotlight';
+	// Compact measures its padded card content, so its desktop reference is
+	// 496px wide inside a 560px shell. Keep that layout until genuinely narrow.
+	const narrow = width < ( template === 'compact' ? 480 : NARROW_BELOW );
+
+	useEffect( () => {
+		const root = rootRef.current?.closest( '.mmbb-builder' );
+		if ( ! root ) {
+			return undefined;
+		}
+		root.classList.toggle( 'is-mmbb-narrow', narrow );
+		return () => root.classList.remove( 'is-mmbb-narrow' );
+	}, [ narrow ] );
 
 	const [ category, setCategory ] = useState( 'all' );
 	const [ order, setOrder ] = useState( 'default' );
@@ -227,7 +239,6 @@ function BuilderView( { payload, preview, navigate } ) {
 			? __( 'Update your box', 'productboxes-mix-and-match-box-builder' )
 			: undefined );
 
-	const template = config.design.template || 'spotlight';
 	const forcePanel = [ 'pastel', 'editorial', 'split' ].includes( template );
 	const forceBar = [ 'night', 'compact' ].includes( template );
 	const showPanel =
@@ -335,6 +346,7 @@ function BuilderView( { payload, preview, navigate } ) {
 
 	const panel = (
 		<BoxPanel
+			variant={ template }
 			size={ capacity }
 			minItems={ minItems }
 			items={ boxItems }
@@ -662,6 +674,7 @@ function BuilderView( { payload, preview, navigate } ) {
 							ctaLoading={ busy }
 							onOpen={ () => setDrawerOpen( true ) }
 							onCheckout={ submit }
+							compactProgress={ template !== 'night' }
 						/>
 					</div>
 				) : null }

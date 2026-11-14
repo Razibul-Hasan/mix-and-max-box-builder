@@ -346,6 +346,22 @@ The existing `mmbb:editor:<id>` localStorage key now also holds `draft` and `bas
 **Skipped checks (and why):** No browser was driven, so a real Network panel was not observed, the templates were not screenshot-diffed against the five canvas files, and checkout was not clicked manually at 390px. Automated URL scans, local-font integration assertions, all-template viewport tests, the shared cart tests and both native integration modes cover the executable paths. wp-env was unavailable because Docker is not installed.
 **Open issues:** none for this part.
 
+#### Part 8 visual fidelity follow-up (2026-11-14)
+
+**Done:** Rechecked Pastel, Editorial, Night, Split and Compact in headless Chrome against the supplied PNG references. Each now has template-specific product, tier and summary composition: Pastel's split headline/tinted cards, Editorial's line-item box, Night's full tier rail and deep summary bar, Split's tier pills/two-panel layout, and Compact's three-column 560px desktop card. Corrected Compact's padded-content breakpoint and the shared narrow-root state. Clean's 390px list reserves a 120px action column while retaining 44px touch targets. Added a local visual harness under `tools/` for repeatable 1280px, 640px and exact-container 390px checks; it is excluded from release packages.
+
+**Decisions:** Responsive state remains based on the existing observed builder width, not the browser viewport. Compact uses a 480px content threshold because its 560px reference shell has 496px of content after padding. Editorial aggregates duplicate items only for presentation; cart state, pricing and stored item rows are unchanged.
+
+**Frozen identifiers touched:** none.
+
+**Data changes and migration steps:** none.
+
+**Checks run:** production build passed (the same two admin bundle-size warnings) · lint:js passed · lint:css passed · PHPCS passed · test:js passed (23 suites, 309 tests) · test:unit passed (114 tests, 600 assertions). The existing Part 8 classic/HPOS integration and Plugin Check results remain applicable because this follow-up changes only React presentation, scoped CSS and tests. Headless Chrome visual checks passed for all five Part 8 desktop references and an exact 390px Clean container.
+
+**Skipped checks (and why):** Checkout was not manually submitted in a live theme during this visual-only follow-up. The shared add-to-cart Jest path, and the classic/HPOS integration runs already recorded for Part 8, remain unchanged.
+
+**Open issues:** none for this follow-up.
+
 <!-- Copy for each part:
 
 ### Part N — Title (YYYY-MM-DD)

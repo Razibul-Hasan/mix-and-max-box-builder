@@ -18,6 +18,7 @@ export default function BoxSummaryBar( {
 	ctaHref,
 	ctaDisabled,
 	ctaLoading,
+	compactProgress = true,
 	ctaLabel = __( 'Add to cart', 'productboxes-mix-and-match-box-builder' ),
 } ) {
 	const formatMoney = useMoney();
@@ -95,7 +96,7 @@ export default function BoxSummaryBar( {
 							count={ count }
 							tiers={ tiers }
 							size={ size }
-							compact
+							compact={ compactProgress }
 							inverse
 						/>
 					</div>

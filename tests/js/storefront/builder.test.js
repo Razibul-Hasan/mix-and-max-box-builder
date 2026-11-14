@@ -178,6 +178,33 @@ it.each( [ 'night', 'compact' ] )(
 	}
 );
 
+it( 'uses editorial line items instead of the shared slot grid', () => {
+	const data = payload();
+	data.config.design.template = 'editorial';
+	const { container } = render( <Builder payload={ data } preview /> );
+	fireEvent.click( addButtons()[ 0 ] );
+	expect( container.querySelector( '.mmbb-panel__lines' ) ).toBeTruthy();
+	expect( container.querySelector( '.mmbb-panel .mmbb-slots' ) ).toBeNull();
+} );
+
+it( 'keeps Compact in its three-column desktop state at 640px', () => {
+	const data = payload();
+	data.config.design.template = 'compact';
+	const oldWidth = window.innerWidth;
+	Object.defineProperty( window, 'innerWidth', {
+		configurable: true,
+		value: 640,
+	} );
+	const { container } = render( <Builder payload={ data } preview /> );
+	expect(
+		container.querySelector( '.mmbb-template--compact .is-wide' )
+	).toBeTruthy();
+	Object.defineProperty( window, 'innerWidth', {
+		configurable: true,
+		value: oldWidth,
+	} );
+} );
+
 it.each( templateSlugs )( 'uses the phone summary for %s', ( template ) => {
 	const data = payload();
 	data.config.design.template = template;
@@ -198,13 +225,21 @@ it.each( templateSlugs )( 'uses the phone summary for %s', ( template ) => {
 	} );
 } );
 
-it( 'uses the sticky summary and drawer at phone width', () => {
+it( 'uses the sticky summary and drawer at phone width', async () => {
 	const oldWidth = window.innerWidth;
 	Object.defineProperty( window, 'innerWidth', {
 		configurable: true,
 		value: 390,
 	} );
-	render( <Builder payload={ payload() } preview /> );
+	const root = document.createElement( 'div' );
+	root.className = 'mmbb-root mmbb-builder';
+	document.body.appendChild( root );
+	const { unmount } = render( <Builder payload={ payload() } preview />, {
+		container: root,
+	} );
+	await waitFor( () =>
+		expect( root.classList.contains( 'is-mmbb-narrow' ) ).toBe( true )
+	);
 	const opener = screen.getByRole( 'button', {
 		name: /your box, 0 of 3. open details/i,
 	} );
@@ -216,6 +251,8 @@ it( 'uses the sticky summary and drawer at phone width', () => {
 	fireEvent.keyDown( document, { key: 'Escape' } );
 	expect( screen.queryByRole( 'dialog' ) ).toBeNull();
 	expect( document.activeElement ).toBe( opener );
+	unmount();
+	root.remove();
 	Object.defineProperty( window, 'innerWidth', {
 		configurable: true,
 		value: oldWidth,

@@ -23,6 +23,7 @@ export default function BoxPanel( {
 	),
 	footnote,
 	children,
+	variant,
 } ) {
 	const formatMoney = useMoney();
 	const count = items.length;
@@ -30,6 +31,15 @@ export default function BoxPanel( {
 		( minItems !== null && minItems !== undefined ? minItems : size ) -
 		count;
 	const savings = subtotal - total;
+	const lines = items.reduce( ( rows, item ) => {
+		const found = rows.find( ( row ) => row.id === item.id );
+		if ( found ) {
+			found.qty += 1;
+			return rows;
+		}
+		rows.push( { ...item, qty: 1 } );
+		return rows;
+	}, [] );
 	return (
 		<aside className="mmbb-panel" aria-label={ title }>
 			<header className="mmbb-panel__head">
@@ -38,8 +48,23 @@ export default function BoxPanel( {
 					{ count }/{ size }
 				</span>
 			</header>
-			<BoxSlots size={ size } items={ items } onRemove={ onRemove } />
-			{ tiers.length ? (
+			{ variant === 'editorial' ? (
+				<ul className="mmbb-panel__lines">
+					{ lines.map( ( item ) => (
+						<li key={ item.id }>
+							<span>
+								{ item.qty } &times; { item.name }
+							</span>
+							<span>
+								{ formatMoney( item.price * item.qty ) }
+							</span>
+						</li>
+					) ) }
+				</ul>
+			) : (
+				<BoxSlots size={ size } items={ items } onRemove={ onRemove } />
+			) }
+			{ tiers.length && variant !== 'editorial' ? (
 				<TierProgress count={ count } tiers={ tiers } size={ size } />
 			) : null }
 			{ children }

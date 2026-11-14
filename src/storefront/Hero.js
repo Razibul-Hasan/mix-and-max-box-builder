@@ -36,6 +36,10 @@ export default function Hero( { payload, nowMs, decimals } ) {
 			? config.tiers.slice().sort( ( a, b ) => a.qty - b.qty )
 			: [];
 	const headline = design.headline || payload.title;
+	const pastelBreak =
+		design.template === 'pastel'
+			? headline.lastIndexOf( '. ', headline.length - 2 )
+			: -1;
 
 	return (
 		<section className="mmbb-hero">
@@ -47,7 +51,18 @@ export default function Hero( { payload, nowMs, decimals } ) {
 						{ design.sticker }
 					</Sticker>
 				) : null }
-				<h2 className="mmbb-hero__headline">{ headline }</h2>
+				<h2 className="mmbb-hero__headline">
+					{ pastelBreak > 0 ? (
+						<>
+							<span>
+								{ headline.slice( 0, pastelBreak + 1 ) }
+							</span>
+							<span>{ headline.slice( pastelBreak + 2 ) }</span>
+						</>
+					) : (
+						headline
+					) }
+				</h2>
 				{ design.intro ? (
 					<p className="mmbb-hero__intro">{ design.intro }</p>
 				) : null }
