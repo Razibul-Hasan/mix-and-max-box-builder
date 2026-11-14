@@ -1,220 +1,246 @@
-=== ProductBoxes - Mix & Match Box Builder for WooCommerce ===
-Contributors: bestwpexpert
-Tags: build your own box, product bundles, mix and match, gift box, bundle discount
-Requires at least: 6.6
-Tested up to: 7.1
-Requires PHP: 7.4
-Requires Plugins: woocommerce
-Stable tag: 2.0.0
-License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+# ProductBoxes – Mix & Match Box Builder for WooCommerce
 
-Let shoppers build their own box of WooCommerce products and unlock bigger discounts as the box fills. Gift boxes, samplers and bundles.
+**Free WooCommerce mix and match box builder, product bundle builder, and build-your-own-box plugin.** Let customers create custom gift boxes, choose their own products, and unlock tiered bundle discounts and fixed-price bundles as they fill the box.
 
-== Description ==
+## Description
 
-**ProductBoxes - Mix & Match Box Builder for WooCommerce** adds a build-your-own-box experience to your store. Shoppers pick products into the slots of a box, watch their savings grow with every item, and add the whole box to the cart in one click. The fuller the box, the bigger the discount, and the next discount is always shown on screen.
+**ProductBoxes – Mix & Match Box Builder for WooCommerce** is a free WooCommerce product bundle plugin that lets shoppers build their own box. Customers pick products from a grid, watch their bulk and tiered discount grow in real time, and add the finished custom box to the cart in one click.
 
-Use it for gift boxes, snack boxes, sampler packs, bakery boxes, tea and coffee samplers, beauty kits, holiday bundles or any "pick any 6" offer.
+Use it to sell gift boxes, gift baskets, snack boxes, clothing bundles, beauty kits, product samplers, bakery boxes, and any custom product assortment, with no coding required. Offer "pick any 3 for $18" bundle deals, fixed-size boxes, or volume discounts that increase with every product added.
 
-Create a box in a focused three-step editor: choose products, set discount rules, then design the shopper experience while a real iframe preview shows the box inside your active theme. Publish it to a new or existing page, or place it yourself with the block or shortcode. The server calculates every price, so the discount a shopper sees is the discount they pay.
+**Try ProductBoxes and preview the live WooCommerce box builder demos:**
 
-Start from one of 10 responsive storefront templates: Spotlight, Clean list, Guided steps, Gift tray, Color block, Pastel, Editorial, Night, Split screen or Compact card. Each template shares the same reliable pricing and cart behavior while giving the box a distinct layout, typography and visual character.
+* **[Explore ProductBoxes - See the Free WooCommerce Box Builder Features](https://bestwebexpert.com/productboxes/)**
+* **[Live Demo: Build Your Own Capsule Wardrobe Box - Watch Discounts Grow](https://bestwebexpert.com/capsule-wardrobe-box/)**
+* **[Live Demo: Gift Box Builder - Pick Products, Add Wrap and a Gift Message](https://bestwebexpert.com/gift-box-builder/)**
+* **[Live Demo: Mix & Match Shirt Bundle - Pick Any 3 for One Price](https://bestwebexpert.com/shirt-bundle/)**
 
-Every feature is included. There is no paid version, no locked features and no account to create.
+**Watch the ProductBoxes demo video:**
 
-= Campaign types =
+https://www.youtube.com/watch?v=7tlm_BwW9jI
 
-* **Tiered discount:** the discount grows with the number of items, for example 10% off 3 items, 15% off 5 and 25% off 12.
-* **Fixed box size:** shoppers choose a box of 6, 12 or 24, and each size has its own discount or box price.
-* **Bundle price:** one fixed price for a box of an exact number of items.
+### Why Choose ProductBoxes for WooCommerce Bundles?
 
-= Campaign options =
+- **Increase average order value:** Encourage bigger carts with tiered discounts, volume pricing, and "buy more, save more" bundle offers.
+- **Sell custom boxes and gift sets:** Give shoppers a guided build-your-own-box experience instead of a static product bundle.
+- **100% free:** Every feature is included. No premium version, no subscriptions, no external services.
+- **Fast and privacy-friendly:** All scripts, styles, and fonts are bundled locally, with no CDN, telemetry, or license checks.
 
-* Add products by hand, by category or by tag. Simple products and variations are supported.
-* Optional gift wrap fee and gift message.
-* Per-product limit inside a box.
-* Start and end dates, with a countdown that only appears when a real end date is set.
-* Sold-out items are shown as sold out and cannot be picked, or can be hidden.
+### Key Features
 
-= For shoppers =
+- **Build Your Own Box (Custom Box Builder):** Let customers select products from a customizable product grid and create their own WooCommerce box.
+- **Mix and Match Products:** Support simple products and individual product variations in the same box.
+- **Tiered Bundle Discounts:** Reward customers with bigger percentage or fixed discounts as their boxes fill, like quantity and bulk discounts.
+- **Fixed-Size Boxes:** Create small, medium, and large boxes with different sizes and pricing.
+- **Fixed-Price Bundles:** Offer deals like pick any 3 products for $18 or any 5 for one set price.
+- **Gift Box Builder:** Add optional gift wrapping and personalized gift messages to custom gift boxes.
+- **10 Storefront Templates:** Choose from Spotlight, Clean list, Guided steps, Gift tray, Color block, Pastel, Editorial, Night, Split screen, and Compact card.
+- **Live Storefront Preview:** Preview designs inside your active WordPress theme on desktop, tablet, and mobile.
+- **Flexible Product Selection:** Add products manually or by WooCommerce category and tag.
+- **Live Discount Progress:** Display current savings and the next discount milestone with a progress bar.
+- **Mobile-Friendly Design:** Sticky summaries, responsive layouts, and mobile bottom sheets.
+- **Cart Editing:** Let customers edit their custom boxes directly from the cart.
+- **WooCommerce Integration:** Works with classic cart and checkout, WooCommerce Cart and Checkout blocks, and HPOS.
+- **Inventory Management:** Automatically manage stock for products inside boxes.
+- **Store Analytics:** Track box views, product picks, conversions, revenue, and discounts.
+- **Gutenberg Block and Shortcode:** Place the box builder on any page with the block editor or a shortcode.
 
-* A storefront builder with product grid, category filter, sorting, and a box panel or sticky summary bar.
-* A mobile-friendly bottom sheet on phones.
-* Edit a box from the cart.
-* Works with the classic cart and checkout and with the Cart and Checkout blocks.
+All features are free. No premium version, subscriptions, or external services.
 
-= For store owners =
+## Use Cases
 
-* Dashboard, campaign list, analytics (views, picks, conversion, revenue, discount given, top products) and settings.
-* Box contents, discount and gift message are saved on the order and shown on order screens and in emails.
-* Stock is reduced for every item inside a box when the order is paid.
-* Compatible with High-Performance Order Storage (HPOS) and the Cart and Checkout blocks.
-* Analytics stay in your own database. No external services.
+ProductBoxes works for any store that wants to sell mix and match bundles or build-your-own-box products:
 
-= Requirements =
+- **Gift boxes and gift baskets:** Holiday, birthday, corporate, and hamper-style custom gift boxes with gift wrap and a gift message.
+- **Food and bakery boxes:** Snack boxes, cookie boxes, candy boxes, coffee and tea samplers, and chocolate assortments.
+- **Clothing and fashion bundles:** Capsule wardrobe boxes, "pick any 3 shirts" bundles, and accessory sets.
+- **Beauty and skincare kits:** Custom skincare sets, makeup kits, and sample boxes.
+- **Product samplers:** Let customers try a mix of products at one bundle price.
 
-* WordPress 6.6 or later
-* WooCommerce 9.0 or later
-* PHP 7.4 or later
+## Campaign Types
 
-== Installation ==
+- **Tiered Discount:** Offer increasing discounts based on the number of selected products (volume and bulk pricing).
+- **Fixed Box Size:** Let customers choose predefined box sizes with individual pricing or discounts.
+- **Bundle Price:** Sell a specific number of selected products for one fixed bundle price.
+
+## Installation
 
 1. Install and activate WooCommerce 9.0 or later.
-2. In your admin, go to Plugins > Add New, search for "ProductBoxes" and click Install Now. Or upload the `productboxes-mix-and-match-box-builder` folder to `/wp-content/plugins/`.
-3. Activate ProductBoxes - Mix & Match Box Builder for WooCommerce. On a multisite network each site gets its own defaults.
-4. Open ProductBoxes in the admin menu and choose Create campaign.
-5. Publish the campaign and choose a page, or add the ProductBoxes Box Builder block or the `[mmbb_box id="12"]` shortcode to any page.
+2. Go to **Plugins → Add New** and search for ProductBoxes.
+3. Install and activate ProductBoxes – Mix & Match Box Builder for WooCommerce.
+4. Open ProductBoxes from your WordPress admin menu.
+5. Create a campaign and configure products, discounts, and design.
+6. Publish your campaign or add the ProductBoxes Box Builder block to a page.
 
-== Frequently Asked Questions ==
+Alternatively, upload the `productboxes-mix-and-match-box-builder` folder to `/wp-content/plugins/`.
 
-= How do I put a box builder on a page? =
+### Shortcode
 
-Publish the campaign and choose a page, or add the ProductBoxes Box Builder block to any page and choose a campaign. You can also use the shortcode `[mmbb_box id="12"]`, which takes the optional attributes `layout` (panel, bar or both), `columns` (3, 4 or 5), `hero` (true or false) and `template` (one of the 10 template IDs).
+```bash
+[mmbb_box id="12"]
+```
 
-= Which campaign types are there? =
+Optional attributes: `layout` (panel, bar, both), `columns` (3, 4, 5), `hero` (true, false), and `template` (template ID).
 
-Tiered discount (more items, bigger discount), fixed box size (the shopper picks a size) and bundle price (one price for a set number of items). Each campaign can also offer a gift wrap fee and a gift message.
+## Frequently Asked Questions
 
-= Can I sell a custom box at a fixed price, like any 3 for 18? =
+### Is ProductBoxes free?
 
-Yes. Choose the bundle price campaign type, then set the number of items and the box price. Shoppers can pick any of the products you allow.
+Yes. All features are included in the free plugin. There are no premium upgrades, subscriptions, or account requirements.
 
-= Can shoppers choose product variations? =
+### How do I create a WooCommerce mix and match box?
 
-Yes. Simple products and individual variations can go in a box.
+Create a campaign, select eligible products, configure discount rules, choose a storefront template, and publish it using a page, Gutenberg block, or shortcode.
 
-= Does it work with my theme? =
+### How do I let customers build their own box in WooCommerce?
 
-The builder renders inside your theme's content area with scoped styles and CSS custom properties. In the Design step, choose Match my site to read compatible colors and typography from the active theme, then keep them in sync or use them as a starting point. It was tested with Twenty Twenty-Five and Storefront. On narrow screens it switches to a phone-friendly layout with 44px controls, a sticky summary and a bottom sheet.
+Use ProductBoxes to create a build-your-own-box campaign. Customers choose products from a grid, see their discount update live, and add the completed custom box to the cart.
 
-= Why is the shopper preview in an iframe? =
+### Can I create custom gift boxes?
 
-The iframe loads the real front end of your site, including the active theme's content width and styles, while keeping the full-screen editor controls separate. Desktop, tablet and phone buttons change the preview width. Draft changes are sent only between your editor and your own preview page; nothing is sent to an external service.
+Yes. Create gift boxes with product selection, optional gift wrapping, and personalized gift messages.
 
-= Who can add custom CSS? =
+### Can I offer fixed-price product bundles?
 
-Only users with WordPress's `unfiltered_html` capability can save custom CSS. ProductBoxes strips HTML tags, stores the CSS with the existing plugin settings and prints it through WordPress's inline-style API. On sites where that capability is restricted, such as many multisite installations, the field is not available.
+Yes. Choose Bundle Price and configure the number of products and the total bundle price. For example, customers can pick any 3 eligible products for $18.
 
-= Does ProductBoxes load fonts from another server? =
+### Can I offer bulk or tiered discounts on bundles?
 
-No. The template fonts are bundled as local WOFF2 files and are loaded only when a box uses them. ProductBoxes never requests Google Fonts, a CDN or another font service. You can also choose your theme's typography or the system font stack.
+Yes. Use the Tiered Discount campaign type to give bigger discounts as customers add more products to their box.
 
-= Does it work with the Cart and Checkout blocks? =
+### Can customers choose product variations?
 
-Yes. The box contents, discount, gift message, next-discount hint and "Edit box" link appear in both the classic and block carts, and the box is saved on the order. Locked item quantities in the "Box plus each item" cart mode are fully supported in the classic cart.
+Yes. Simple products and individual WooCommerce variations are supported, so customers can mix sizes, colors, and flavors in one box.
 
-= Does it slow down my site? =
+### Can I customize the box builder design?
 
-No. The builder loads its scripts and styles only on pages that show a builder. You can change this under "Load assets only on pages with a builder" in Settings.
+Yes. Choose from 10 responsive templates and customize colors, typography, spacing, content, and layout. The live preview shows your design inside your active theme.
 
-= How is a box taxed when its items have different tax classes? =
+### Does it work with WooCommerce Cart and Checkout blocks?
 
-By default a box is one cart line, taxed with the tax class of the hidden box product (Standard unless you change it). If your items need their own tax rates, choose "Box plus each item" under Cart in the plugin settings. Each item then becomes its own cart line and is taxed by its own class.
+Yes. ProductBoxes supports classic and block-based carts and checkout, including box details, discounts, and gift messages.
 
-= What is the hidden "Box container" product? =
+### Does it support WooCommerce HPOS?
 
-Each published campaign has one hidden WooCommerce product that carries the box through the cart. ProductBoxes manages its name and price, so edit the campaign, not the product. It is trashed together with the campaign.
+Yes. ProductBoxes supports High-Performance Order Storage (HPOS).
 
-= What happens if WooCommerce is not active? =
+### Does it support WooPayments Multi-Currency?
 
-The plugin stays inactive and nothing breaks. Users who can activate plugins see a dismissible notice on the Plugins screen.
+Yes. Campaign amounts and product prices are compatible with WooPayments Multi-Currency.
 
-= Does uninstalling delete my data or orders? =
+### Is it compatible with my theme?
 
-Data is kept on deactivation and on uninstall unless you turn on "Delete all plugin data" in Settings. Orders are never deleted. On multisite each site has its own setting, off by default.
+ProductBoxes works with WordPress themes in general, with added compatibility for Astra and Blocksy, and a live preview shows the box builder inside your active theme.
 
-= Does it collect personal data or contact external servers? =
+### Will updating to version 2.0.0 delete my existing data?
 
-No external servers are contacted. Optional analytics stay in your own database and record no IP addresses. See the Privacy section below.
+No. Existing campaigns, boxes, settings, orders, and analytics are preserved through versioned migrations.
 
-= Can I build the plugin from source? =
+### Does ProductBoxes use external services?
 
-Yes. See "Source code and build" below.
+No. Scripts, styles, and fonts are bundled locally. No external CDN, remote fonts, telemetry, or license services are used.
 
-= Which hooks and filters are available for developers? =
+### Can I build the plugin from source?
+
+Yes. Source code is included in `src/`. Node.js 20.19 or later is required.
+
+## Screenshots
+
+1. ProductBoxes dashboard with campaign performance and analytics.
+2. Campaign management with searchable boxes and placement links.
+3. Three-step campaign editor with live storefront preview.
+4. Spotlight storefront template for the WooCommerce mix and match box builder.
+5. Gift tray storefront template for custom gift boxes.
+6. Night storefront template.
+7. Responsive mobile box builder with live discount progress.
+
+## Changelog
+
+### 2.0.0
+
+- Redesigned WordPress admin dashboard and campaign management.
+- Added a three-step campaign editor.
+- Added live theme-aware preview for desktop, tablet, and mobile.
+- Introduced 10 customizable responsive storefront templates.
+- Added guided campaign publishing.
+- Redesigned analytics and settings.
+- Added local fonts and accessibility improvements.
+- Added WooPayments Multi-Currency compatibility.
+- Added Astra and Blocksy compatibility.
+- Improved responsive layouts, keyboard navigation, and publishing validation.
+- Preserved existing campaigns, boxes, orders, analytics, hooks, blocks, and shortcodes.
+
+### 1.0.0
+
+- Initial release with tiered discounts, fixed-size boxes, bundle pricing, storefront builder, cart and checkout support, analytics, and settings.
+
+## Upgrade Notice
+
+### 2.0.0
+
+Major redesign featuring 10 storefront templates, a three-step campaign editor, and live theme-aware preview. Existing campaigns, boxes, settings, orders, and analytics are preserved.
+
+### 1.0.0
+
+Initial release.
+
+## External Services
+
+ProductBoxes does not connect to external services. No remote fonts, CDNs, telemetry, license checks, or external preview services are used. All assets are bundled locally.
+
+## Privacy
+
+Optional analytics are stored exclusively in your WordPress database.
+
+- Random session IDs are stored in browser `sessionStorage`; no tracking cookies are created.
+- Only daily salted hashes are stored.
+- No IP addresses or user agents are collected.
+- Raw events are deleted after the retention period (90 days by default).
+- Analytics can be disabled using plugin settings or the `mmbb_track_events` filter.
+- Gift messages are stored with WooCommerce order items and supported by WordPress personal data export and erasure tools.
+
+## Developer Hooks
 
 All hooks use the `mmbb_` prefix.
 
-* `mmbb_campaign_config_defaults` (filter): the config a blank campaign starts from. The result is sanitized again.
-* `mmbb_templates` (filter): the templates in the new campaign picker. Each is an array with id, title, type_label, description, art and a partial config.
-* `mmbb_pricing_quote` (filter): a box quote after the pricing engine has run. Arguments: the quote, the campaign config, the items and the options. Amounts are integer minor units (for example cents).
-* `mmbb_campaign_saved` (action): fires after a campaign is saved. Arguments: the campaign ID and the sanitized config.
-* `mmbb_ensure_container_product` (filter): called when a campaign goes live. Return the hidden container product ID, a WP_Error to stop publishing, or null. Arguments: the current value and the campaign ID.
-* `mmbb_track_events` (filter): return false to stop all analytics collection.
+- `mmbb_campaign_config_defaults` – Customize default campaign configuration.
+- `mmbb_templates` – Customize available storefront templates.
+- `mmbb_pricing_quote` – Modify calculated pricing quotes.
+- `mmbb_campaign_saved` – Fires after a campaign is saved.
+- `mmbb_ensure_container_product` – Customize hidden container product creation.
+- `mmbb_track_events` – Disable analytics collection by returning false.
 
-== Screenshots ==
+## Source Code and Build
 
-1. Home brings setup tasks, key numbers, box performance and most-picked products together.
-2. Boxes provides searchable statuses, placement links and actions in a compact WordPress-style table.
-3. The Design step combines template, style and content controls with a live iframe preview inside the active theme.
-4. Spotlight uses a bold headline, rising discount ladder, product grid and box panel.
-5. Gift tray presents the chosen products in a warm, slot-based gift-box layout.
-6. Night pairs a dark storefront with a progress ring, product deck and high-contrast summary bar.
-7. The phone layout keeps product controls comfortable and the current box total within reach.
+Source code: `src/`
 
-== Changelog ==
+Build configuration: `package.json` and `webpack.config.js`.
 
-= 2.0.0 =
-* Rebuilt the admin experience with a WordPress-style Home screen, searchable Boxes list and focused three-step editor.
-* Added a live, theme-aware iframe preview with desktop, tablet and phone sizes.
-* Added 10 responsive storefront templates with configurable colors, typography, spacing, content and layout.
-* Added a guided publish flow for new pages, existing pages, the Box Builder block and shortcode placement.
-* Redesigned analytics and settings while retaining the existing reports, stored settings and privacy controls.
-* Added local template fonts, accessible mobile summaries, improved keyboard behavior and reduced-motion support.
-* Preserved existing boxes, orders, analytics, hooks, routes, blocks and shortcodes through versioned migrations.
-* Added WooPayments compatibility: Multi-Currency prices and campaign amounts stay correct, and the hidden box product gets no express checkout button.
-* Added a compatibility layer so support for more plugins and themes can be added in one place.
+Requires Node.js 20.19 or later.
 
-= 1.0.0 =
-* Initial release: tiered, fixed-size and bundle-price box campaigns, storefront builder block and shortcode, classic and block cart and checkout support, order and email details, analytics and settings.
+```bash
+npm install
+npm run build
+```
 
-== Upgrade Notice ==
+Composer is only required for development tools.
 
-= 2.0.0 =
-Your existing boxes, settings, orders and analytics are kept. Existing boxes are moved to the Spotlight template, with their current colors, layout and display choices carried forward where possible.
+**Public repository:**
 
-= 1.0.0 =
-Initial release.
+[https://github.com/Razibul-Hasan/productboxes-mix-and-match-box-builder](https://github.com/Razibul-Hasan/productboxes-mix-and-match-box-builder)
 
-== External services ==
+## Credits
 
-This plugin does not connect to any external service. It makes no requests to other servers and uses no CDN, remote fonts, telemetry, or licence or update checks. All scripts, styles and fonts are included in the plugin.
+Locally bundled fonts licensed under SIL Open Font License 1.1:
 
-== Privacy ==
+- Bricolage Grotesque
+- DM Sans
+- Figtree
+- Fraunces
+- Inter
+- Inter Tight
+- Outfit
+- Plus Jakarta Sans
+- Space Grotesk
 
-Optional builder analytics are stored only in this site's database. They record builder views, product picks, tier milestones, cart additions and box purchases.
-
-* A random session ID is kept in the browser's sessionStorage. No tracking cookie is set.
-* Only a daily salted hash of that ID is stored. No IP address or user agent is recorded, and the salt changes every day, so sessions cannot be linked across days.
-* The analytics setting and the `mmbb_track_events` filter stop all collection, including new purchases. Refund and cancellation corrections still apply when tracking is off.
-* Raw events are deleted after the retention period (90 days by default). Daily totals and order-line sales records are kept for reports and late refunds.
-
-Gift messages are stored with WooCommerce order items. The WordPress personal data tools export them, and erase them when WooCommerce's order data removal setting allows it.
-
-== Source code and build ==
-
-The JavaScript and CSS source is included in the `src/` folder, with the build configuration in `package.json` and `webpack.config.js`. React and the @wordpress packages are supplied by WordPress and are not bundled.
-
-To build with Node.js 20.19 or later:
-
-    npm install
-    npm run build
-
-The build writes production files to `build/`. Composer is used only for development tools (coding standards and PHPUnit) and is not needed to run the plugin.
-
-Public repository: https://github.com/Razibul-Hasan/productboxes-mix-and-match-box-builder
-
-== Credits ==
-
-The following Latin-subset fonts are bundled locally under the SIL Open Font License 1.1. No font is fetched from a third-party server. Each licence is included beside the font under `assets/fonts/`:
-
-* Bricolage Grotesque — `BricolageGrotesque-OFL.txt`
-* DM Sans — `DMSans-OFL.txt`
-* Figtree — `Figtree-OFL.txt`
-* Fraunces — `Fraunces-OFL.txt`
-* Inter — `Inter-OFL.txt`
-* Inter Tight — `InterTight-OFL.txt`
-* Outfit — `Outfit-OFL.txt`
-* Plus Jakarta Sans — `PlusJakartaSans-OFL.txt`
-* Space Grotesk — `SpaceGrotesk-OFL.txt`
+License files are included in `assets/fonts/`.
