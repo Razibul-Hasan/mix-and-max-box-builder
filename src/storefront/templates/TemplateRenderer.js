@@ -1,6 +1,11 @@
 import Bold from './Bold';
 import Clean from './Clean';
+import Compact from './Compact';
+import Editorial from './Editorial';
 import Gift from './Gift';
+import Night from './Night';
+import Pastel from './Pastel';
+import Split from './Split';
 import Spotlight from './Spotlight';
 import Steps from './Steps';
 
@@ -10,6 +15,11 @@ const TEMPLATES = {
 	steps: Steps,
 	gift: Gift,
 	bold: Bold,
+	pastel: Pastel,
+	editorial: Editorial,
+	night: Night,
+	split: Split,
+	compact: Compact,
 };
 
 /**

@@ -180,4 +180,14 @@ Public repository: https://github.com/Razibul-Hasan/productboxes-mix-and-match-b
 
 == Credits ==
 
-The Figtree and Bricolage Grotesque fonts are bundled locally under the SIL Open Font License 1.1. Licence files: `assets/fonts/Figtree-OFL.txt` and `assets/fonts/BricolageGrotesque-OFL.txt`.
+The following Latin-subset fonts are bundled locally under the SIL Open Font License 1.1. No font is fetched from a third-party server. Each licence is included beside the font under `assets/fonts/`:
+
+* Bricolage Grotesque — `BricolageGrotesque-OFL.txt`
+* DM Sans — `DMSans-OFL.txt`
+* Figtree — `Figtree-OFL.txt`
+* Fraunces — `Fraunces-OFL.txt`
+* Inter — `Inter-OFL.txt`
+* Inter Tight — `InterTight-OFL.txt`
+* Outfit — `Outfit-OFL.txt`
+* Plus Jakarta Sans — `PlusJakartaSans-OFL.txt`
+* Space Grotesk — `SpaceGrotesk-OFL.txt`

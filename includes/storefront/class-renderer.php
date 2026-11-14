@@ -48,18 +48,19 @@ final class Renderer {
 		}
 
 		++self::$instances;
-		$instance = 'mmbb-' . self::$instances;
-		$payload  = Payload::build(
+		$instance       = 'mmbb-' . self::$instances;
+		$payload        = Payload::build(
 			$campaign,
 			array(
 				'view'    => $view,
 				'preview' => $preview,
 			)
 		);
-		$advanced = $campaign['config']['design']['advanced'];
+		$advanced       = $campaign['config']['design']['advanced'];
+		$template_style = Template_Styles::resolve( $payload['config']['design'] );
 		wp_add_inline_style(
 			Storefront::HANDLE,
-			Template_Styles::rule( self::$instances, (array) $payload['styleVars'] )
+			Template_Styles::font_css( $template_style['fonts'] ) . Template_Styles::rule( self::$instances, (array) $payload['styleVars'] )
 		);
 		if ( '' !== $advanced['custom_css'] ) {
 			wp_add_inline_style(

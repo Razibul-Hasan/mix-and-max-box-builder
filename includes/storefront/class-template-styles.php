@@ -28,7 +28,7 @@ final class Template_Styles {
 	/** Local font slug to a safe CSS family stack. */
 	const FONTS = array(
 		'theme'               => 'inherit',
-		'bricolage-grotesque' => '"MMBB Bricolage Grotesque",system-ui,sans-serif',
+		'bricolage-grotesque' => '"Bricolage Grotesque",system-ui,sans-serif',
 		'inter-tight'         => '"MMBB Inter Tight",system-ui,sans-serif',
 		'plus-jakarta-sans'   => '"MMBB Plus Jakarta Sans",system-ui,sans-serif',
 		'fraunces'            => '"MMBB Fraunces",Georgia,serif',
@@ -36,7 +36,7 @@ final class Template_Styles {
 		'outfit'              => '"MMBB Outfit",system-ui,sans-serif',
 		'inter'               => '"MMBB Inter",system-ui,sans-serif',
 		'space-grotesk'       => '"MMBB Space Grotesk",system-ui,sans-serif',
-		'figtree'             => '"MMBB Figtree",system-ui,sans-serif',
+		'figtree'             => 'Figtree,system-ui,sans-serif',
 		'system'              => 'system-ui,-apple-system,"Segoe UI",sans-serif',
 	);
 
@@ -64,6 +64,8 @@ final class Template_Styles {
 		$savings    = self::value( $colors, 'savings', $defaults[5] );
 		$head_font  = self::font( self::value( $type, 'heading_font', $defaults[6] ), $defaults[6] );
 		$body_font  = self::font( self::value( $type, 'body_font', $defaults[7] ), $defaults[7] );
+		$head_slug  = self::font_slug( self::value( $type, 'heading_font', $defaults[6] ), $defaults[6] );
+		$body_slug  = self::font_slug( self::value( $type, 'body_font', $defaults[7] ), $defaults[7] );
 		$btn_size   = self::value( $buttons, 'size', 'm' );
 		$btn_height = array(
 			's' => '40px',
@@ -115,7 +117,35 @@ final class Template_Styles {
 		return array(
 			'template' => $template,
 			'vars'     => $vars,
+			'fonts'    => array_values( array_unique( array_filter( array( $head_slug, $body_slug ) ) ) ),
 		);
+	}
+
+	/**
+	 * Local @font-face rules for only the families this instance uses.
+	 *
+	 * @param string[] $slugs Bundled font slugs.
+	 * @return string
+	 */
+	public static function font_css( array $slugs ) {
+		$files = array(
+			'inter-tight'       => array( 'MMBB Inter Tight', 'inter-tight-latin-wght-normal.woff2', '100 900' ),
+			'plus-jakarta-sans' => array( 'MMBB Plus Jakarta Sans', 'plus-jakarta-sans-latin-wght-normal.woff2', '200 800' ),
+			'fraunces'          => array( 'MMBB Fraunces', 'fraunces-latin-wght-normal.woff2', '100 900' ),
+			'dm-sans'           => array( 'MMBB DM Sans', 'dm-sans-latin-wght-normal.woff2', '100 1000' ),
+			'outfit'            => array( 'MMBB Outfit', 'outfit-latin-wght-normal.woff2', '100 900' ),
+			'inter'             => array( 'MMBB Inter', 'inter-latin-wght-normal.woff2', '100 900' ),
+			'space-grotesk'     => array( 'MMBB Space Grotesk', 'space-grotesk-latin-wght-normal.woff2', '300 700' ),
+		);
+		$css   = '';
+		foreach ( array_unique( $slugs ) as $slug ) {
+			if ( ! isset( $files[ $slug ] ) ) {
+				continue;
+			}
+			$font = $files[ $slug ];
+			$css .= '@font-face{font-family:"' . $font[0] . '";src:url("' . esc_url( MMBB_URL . 'assets/fonts/' . $font[1] ) . '") format("woff2");font-style:normal;font-weight:' . $font[2] . ';font-display:swap}';
+		}
+		return $css;
 	}
 
 	/**
@@ -157,6 +187,18 @@ final class Template_Styles {
 			return $value;
 		}
 		return self::FONTS[ $fallback ];
+	}
+
+	/**
+	 * The local slug to enqueue, or an empty string for theme/system fonts.
+	 *
+	 * @param string $value    Stored font value.
+	 * @param string $fallback Template font slug.
+	 * @return string
+	 */
+	private static function font_slug( $value, $fallback ) {
+		$slug = isset( self::FONTS[ $value ] ) && '' !== $value ? $value : $fallback;
+		return in_array( $slug, array( 'theme', 'system', 'bricolage-grotesque', 'figtree' ), true ) ? '' : $slug;
 	}
 
 	/**

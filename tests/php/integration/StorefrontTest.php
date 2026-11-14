@@ -108,6 +108,21 @@ class StorefrontTest extends \WP_UnitTestCase {
 		$this->assertStringContainsString( '"' . $b[1] . '"', $inline );
 	}
 
+	/** A template gets only its local font declarations and never a remote URL. */
+	public function test_template_fonts_are_local_and_demand_loaded() {
+		$config                       = $this->campaign['config'];
+		$config['design']['template'] = 'clean';
+		$config['design']['typography']['heading_font'] = '';
+		$config['design']['typography']['body_font']    = '';
+		$this->repo->save( $this->campaign['id'], $config );
+		do_shortcode( '[mmbb_box id="' . $this->campaign['id'] . '"]' );
+		$inline = implode( '', (array) wp_styles()->get_data( Storefront::HANDLE, 'after' ) );
+		$this->assertStringContainsString( '@font-face', $inline );
+		$this->assertStringContainsString( 'inter-tight-latin-wght-normal.woff2', $inline );
+		$this->assertStringNotContainsString( 'fonts.googleapis.com', $inline );
+		$this->assertStringNotContainsString( 'fonts.gstatic.com', $inline );
+	}
+
 	/** Shoppers see nothing for a campaign that is not live; managers get a note. */
 	public function test_unpublished_campaign() {
 		$this->repo->unpublish( $this->campaign['id'] );

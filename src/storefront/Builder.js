@@ -227,8 +227,9 @@ function BuilderView( { payload, preview, navigate } ) {
 			? __( 'Update your box', 'productboxes-mix-and-match-box-builder' )
 			: undefined );
 
-	const showPanel = narrow ? view.layout === 'panel' : view.layout !== 'bar';
-	const showBar = ! showPanel;
+	const forcePanel = config.design.template === 'split';
+	const showPanel = ! narrow && ( forcePanel || view.layout !== 'bar' );
+	const showBar = narrow || ! showPanel;
 	const columns = Math.max(
 		2,
 		narrow ? 2 : view.columns - ( showPanel && width < 1100 ? 1 : 0 )

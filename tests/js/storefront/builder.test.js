@@ -73,6 +73,19 @@ const payload = () => ( {
 const addButtons = () =>
 	screen.getAllByRole( 'button', { name: /^add .+ to box$/i } );
 
+const templateSlugs = [
+	'spotlight',
+	'clean',
+	'steps',
+	'gift',
+	'bold',
+	'pastel',
+	'editorial',
+	'night',
+	'split',
+	'compact',
+];
+
 beforeEach( () => {
 	window.sessionStorage.clear();
 	addBoxToCart.mockReset();
@@ -126,7 +139,7 @@ it( 'keeps the box across a reload, and stores nothing in preview', () => {
 	expect( window.sessionStorage.getItem( 'mmbb:box:5' ) ).toBeNull();
 } );
 
-it.each( [ 'spotlight', 'clean', 'steps', 'gift', 'bold' ] )(
+it.each( templateSlugs )(
 	'renders the %s template through the shared builder',
 	( template ) => {
 		const data = payload();
@@ -138,6 +151,50 @@ it.each( [ 'spotlight', 'clean', 'steps', 'gift', 'bold' ] )(
 		expect( addButtons() ).toHaveLength( 2 );
 	}
 );
+
+it.each( templateSlugs )( 'uses the phone summary for %s', ( template ) => {
+	const data = payload();
+	data.config.design.template = template;
+	const oldWidth = window.innerWidth;
+	Object.defineProperty( window, 'innerWidth', {
+		configurable: true,
+		value: 390,
+	} );
+	render( <Builder payload={ data } preview /> );
+	expect(
+		screen.getByRole( 'button', {
+			name: /your box, 0 of 3. open details/i,
+		} )
+	).toBeTruthy();
+	Object.defineProperty( window, 'innerWidth', {
+		configurable: true,
+		value: oldWidth,
+	} );
+} );
+
+it( 'uses the sticky summary and drawer at phone width', () => {
+	const oldWidth = window.innerWidth;
+	Object.defineProperty( window, 'innerWidth', {
+		configurable: true,
+		value: 390,
+	} );
+	render( <Builder payload={ payload() } preview /> );
+	const opener = screen.getByRole( 'button', {
+		name: /your box, 0 of 3. open details/i,
+	} );
+	opener.focus();
+	fireEvent.click( opener );
+	expect(
+		screen.getByRole( 'dialog', { name: 'Holiday box' } )
+	).toBeTruthy();
+	fireEvent.keyDown( document, { key: 'Escape' } );
+	expect( screen.queryByRole( 'dialog' ) ).toBeNull();
+	expect( document.activeElement ).toBe( opener );
+	Object.defineProperty( window, 'innerWidth', {
+		configurable: true,
+		value: oldWidth,
+	} );
+} );
 
 it( 'falls back to Spotlight for an unknown template', () => {
 	const data = payload();

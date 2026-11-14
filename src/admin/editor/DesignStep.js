@@ -28,6 +28,7 @@ import {
 } from './design-defaults';
 
 const FONT_OPTIONS = [
+	[ '', 'Template default' ],
 	[ 'theme', 'Theme font' ],
 	[ 'bricolage-grotesque', 'Bricolage Grotesque' ],
 	[ 'inter-tight', 'Inter Tight' ],

@@ -29,7 +29,7 @@ final class Config {
 	const LADDERS          = array( 'default', 'custom' );
 	const COUNTDOWNS       = array( 'default', 'custom' );
 	const DESIGN_TEMPLATES = array( 'spotlight', 'clean', 'steps', 'gift', 'bold', 'pastel', 'editorial', 'night', 'split', 'compact' );
-	const DESIGN_FONTS     = array( 'theme', 'bricolage-grotesque', 'inter-tight', 'plus-jakarta-sans', 'fraunces', 'dm-sans', 'outfit', 'inter', 'space-grotesk', 'figtree', 'system' );
+	const DESIGN_FONTS     = array( '', 'theme', 'bricolage-grotesque', 'inter-tight', 'plus-jakarta-sans', 'fraunces', 'dm-sans', 'outfit', 'inter', 'space-grotesk', 'figtree', 'system' );
 	/** Discount ladder colours: the top step, the next step to unlock and the other steps. */
 	const LADDER_COLORS = array( 'ladder_top', 'ladder_top_text', 'ladder_near', 'ladder_near_text', 'ladder_base', 'ladder_base_text' );
 
@@ -124,8 +124,8 @@ final class Config {
 				'sync_theme'       => false,
 				'colors'           => array_fill_keys( array( 'accent', 'button_text', 'background', 'surface', 'text', 'muted', 'savings' ), '' ),
 				'typography'       => array(
-					'heading_font'     => 'theme',
-					'body_font'        => 'theme',
+					'heading_font'     => '',
+					'body_font'        => '',
 					'heading_size'     => 68,
 					'heading_weight'   => 800,
 					'button_uppercase' => false,

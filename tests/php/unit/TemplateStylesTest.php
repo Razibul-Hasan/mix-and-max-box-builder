@@ -40,5 +40,14 @@ final class TemplateStylesTest extends TestCase {
 		$this->assertSame( 5, $result['vars']['--mmbb-cols'] );
 		$this->assertSame( '4 / 5', $result['vars']['--mmbb-ratio'] );
 		$this->assertSame( '72px', $result['vars']['--mmbb-heading-size'] );
+		$this->assertSame( array( 'space-grotesk' ), $result['fonts'] );
+	}
+
+	/** Night keeps accessible dark defaults until the merchant overrides them. */
+	public function test_night_has_dark_defaults() {
+		$result = Template_Styles::resolve( array( 'template' => 'night' ) );
+		$this->assertSame( '#0c0c10', $result['vars']['--mmbb-bg'] );
+		$this->assertSame( '#f4f4f5', $result['vars']['--mmbb-text'] );
+		$this->assertSame( '#c8ff2e', $result['vars']['--mmbb-accent'] );
 	}
 }

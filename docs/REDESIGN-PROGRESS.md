@@ -308,6 +308,22 @@ The existing `mmbb:editor:<id>` localStorage key now also holds `draft` and `bas
 **Skipped checks (and why):** No browser was driven, so the five templates were not screenshot-diffed in Twenty Twenty-Five and Storefront and checkout was not clicked in a real browser. Automated storefront tests exercise every selector plus the shared add-to-cart path, and the legacy/integration suites exercise rendering and checkout data. wp-env was unavailable because Docker is not installed; native Local tests were used.
 **Open issues:** none for this part.
 
+### Part 8 — Templates 06–10, phone layout and fonts (2026-11-14)
+**Done:**
+- Added Pastel, Editorial, Night, Split screen and Compact card to the shared template renderer. Pastel derives alternating product tints from the merchant surface colour; Night supplies dark background/surface defaults with light text and a high-contrast accent; Split keeps the box area on the left; Compact constrains the builder for narrow placements.
+- Completed the under-760px container layout for all ten templates: two product columns (Clean remains a list), a fixed summary bar, and the existing accessible bottom sheet. The drawer lists box lines, options and totals, traps focus, closes on Escape and restores focus to its opener. The existing `ResizeObserver` fallback uses the same 760px boundary.
+- Added the exact heading/body font defaults from the design table. Empty stored font values now mean “template default”; explicit theme/system choices remain available. Seven new variable Latin woff2 files and OFL texts join the existing Bricolage Grotesque and Figtree assets. Per-render `@font-face` rules are generated only for newly bundled families actually used by that box; the two existing token faces are downloaded by the browser only when selected.
+- Listed every bundled family and licence in `readme.txt`. Source/build scans contain no Google Fonts host, CDN or remote font URL.
+- Added PHP coverage for Night defaults and demand-loaded font CSS, integration coverage for local-only font URLs, selector coverage for all ten templates, and 390px summary coverage for every template. The drawer Escape/focus-return behavior is also covered at 390px.
+
+**Decisions:** The plan and `design/REDESIGN.md` say “10 font families”, but the authoritative ten-row template table names only eight unique families. All eight named template families are shipped; Figtree remains as the ninth bundled compatibility family from 1.0. No unrelated tenth family was invented. Bricolage Grotesque and Figtree retain their existing token stylesheet declarations so their established family names and compatibility behavior do not change.
+**Frozen identifiers touched:** none. The existing handles, payload, block, shortcode, storage keys and cart action are unchanged.
+**Data changes and migration steps:** none. Empty font values select the template’s computed defaults at render time; existing explicit stored font choices continue to resolve through the same allowlist.
+**Checks run:** production build ✅ (same two webpack admin size warnings; storefront entry 77.8 KiB) · lint:js ✅ · lint:css ✅ · PHPCS ✅ · test:js ✅ (23 suites, 301 tests) · test:unit ✅ (114 tests, 600 assertions) · integration ✅ (210 tests, 2 skipped, 2,298 assertions) · HPOS integration ✅ (210 tests, 2 skipped, 2,299 assertions) · Plugin Check ✅ (`Success: Checks complete. No errors found.`) · release zip ✅ (863,185 bytes; source, local fonts and OFL files included) · external-host source/build scan ✅ (no Google Fonts hosts).
+**Visual comparison notes:** Pastel uses soft derived tile colours and rounded slots; Editorial uses a restrained magazine/list treatment; Night uses the reference dark canvas and lime highlight; Split uses a coloured left box area with products on the right; Compact uses the narrow centred card treatment. Merchant accent/background/surface/text overrides continue to flow through the shared variable contract.
+**Skipped checks (and why):** No browser was driven, so a real Network panel was not observed, the templates were not screenshot-diffed against the five canvas files, and checkout was not clicked manually at 390px. Automated URL scans, local-font integration assertions, all-template viewport tests, the shared cart tests and both native integration modes cover the executable paths. wp-env was unavailable because Docker is not installed.
+**Open issues:** none for this part.
+
 <!-- Copy for each part:
 
 ### Part N — Title (YYYY-MM-DD)
