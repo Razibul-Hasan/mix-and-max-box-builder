@@ -174,6 +174,7 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 											}
 											value={ row.qty }
 											error={ errors[ base + '.qty' ] }
+											inlineError={ false }
 											min={ 1 }
 											max={ capacity }
 											onChange={ ( value ) =>
@@ -199,6 +200,7 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 											}
 											value={ row.value }
 											error={ errors[ base + '.value' ] }
+											inlineError={ false }
 											onChange={ ( value ) =>
 												set( base + '.value', value )
 											}
@@ -218,6 +220,13 @@ function RowsEditor( { kind, draft, errors, dispatch } ) {
 											__next40pxDefaultSize
 										/>
 									</HStack>
+									{ errors[ base + '.qty' ] ||
+									errors[ base + '.value' ] ? (
+										<Text isDestructive role="alert">
+											{ errors[ base + '.qty' ] ||
+												errors[ base + '.value' ] }
+										</Text>
+									) : null }
 									{ isSizes ? (
 										<SelectControl
 											label={ __(

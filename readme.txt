@@ -99,7 +99,7 @@ Yes. Use **Tiered Discount** for bigger savings as customers add products.
 
 = Does it support variations, blocks, HPOS and multi-currency? =
 
-Yes to all: variable products, Cart and Checkout blocks, HPOS and WooPayments Multi-Currency. It also has added compatibility for Astra and Blocksy.
+Yes to all: variable products, Cart and Checkout blocks, HPOS and WooPayments Multi-Currency. It also has added compatibility for Astra, Blocksy and Inspiro.
 
 = Will updating to 2.0.0 delete my data? =
 
@@ -126,6 +126,9 @@ No. Everything is bundled locally.
 * Fixed: boxes made only of virtual or downloadable products were charged shipping. A box now needs no shipping when everything in it is virtual. A physical item, a physical free gift or gift wrap still ships.
 * Added: "Show headline" and "Show short intro" toggles in the campaign editor's design settings, so you can hide them without custom CSS.
 * Added: a Fixed Box with only one size now skips the "Pick a box size" step and goes straight to choosing products.
+* Fixed: the Style tab showed options that some templates set themselves. It now hides them for Clean list, Gift tray, Pastel, Editorial, Night, Split screen and Compact card.
+* Fixed: "Heading size" now applies to Editorial, Night and Split screen, and "Products per row" now applies to Editorial, Night and Compact card.
+* Added: compatibility for the Elastra, Extendable and Inspiro themes, plus a baseline style fix that keeps theme heading, list, link and image styles out of the box on any theme.
 * Improved: more automated tests for multi-currency prices, shipping on virtual boxes and the new design options.
 
 = 2.0.0 =
@@ -142,7 +145,7 @@ No. Everything is bundled locally.
 == Upgrade Notice ==
 
 = 2.0.1 =
-Fixes cart prices with WooPayments Multi-Currency and removes shipping charges on boxes of virtual products. Adds options to hide the headline and intro. No data changes.
+Fixes cart prices with WooPayments Multi-Currency and removes shipping charges on boxes of virtual products. Style tab options now match each template, and the box looks right on more themes, including Elastra, Extendable and Inspiro. Adds options to hide the headline and intro. No data changes.
 
 = 2.0.0 =
 Major redesign with 10 templates, a three-step editor and live preview. Existing data is preserved.

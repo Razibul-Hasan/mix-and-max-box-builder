@@ -78,7 +78,7 @@ describe( 'Shell', () => {
 		};
 		render(
 			<AdminContext.Provider value={ { urls, storeUrl: '/' } }>
-				<Shell active="analytics" viewStore />
+				<Shell active="analytics" />
 			</AdminContext.Provider>
 		);
 		const bar = screen.getByRole( 'navigation', { name: 'ProductBoxes' } );
@@ -93,8 +93,8 @@ describe( 'Shell', () => {
 			Object.values( urls )
 		);
 		expect(
-			screen.getByRole( 'link', { name: /View store/ } )
-		).toBeTruthy();
+			screen.queryByRole( 'link', { name: /View store/ } )
+		).toBeNull();
 	} );
 } );
 

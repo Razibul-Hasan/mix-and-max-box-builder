@@ -57,6 +57,8 @@ final class Template_Styles {
 
 		$accent     = self::value( $colors, 'accent', $defaults[0] );
 		$button     = self::value( $colors, 'button_text', self::ink( $accent ) );
+		// Text drawn on the accent (counts, the top discount step) has to be readable on it.
+		$button     = self::readable( $button, $accent, 3, $accent );
 		$background = self::value( $colors, 'background', $defaults[1] );
 		$surface    = self::value( $colors, 'surface', $defaults[2] );
 		$text       = self::value( $colors, 'text', $defaults[3] );
@@ -94,6 +96,7 @@ final class Template_Styles {
 			'--mmbb-text'             => $text,
 			'--mmbb-muted'            => $muted,
 			'--mmbb-on-surface'       => $on_surface,
+			'--on-ink'                => self::on_text( $text ),
 			'--mmbb-on-surface-muted' => $on_muted,
 			'--mmbb-savings'          => $savings,
 			'--mmbb-font-heading'     => $head_font,
@@ -227,6 +230,18 @@ final class Template_Styles {
 	private static function font_slug( $value, $fallback ) {
 		$slug = isset( self::FONTS[ $value ] ) && '' !== $value ? $value : $fallback;
 		return in_array( $slug, array( 'theme', 'system', 'bricolage-grotesque', 'figtree' ), true ) ? '' : $slug;
+	}
+
+	/**
+	 * Dark or light text that reads on the page text colour, for things filled with it
+	 * such as the "Max deal" sticker.
+	 *
+	 * @param string $text Page text colour.
+	 * @return string
+	 */
+	private static function on_text( $text ) {
+		$hex = Colors::normalize_hex( $text );
+		return '' === $hex ? '#ffffff' : Colors::ink_on( $hex, '#141414', '#ffffff' );
 	}
 
 	/**

@@ -1,5 +1,6 @@
 import {
 	useEffect,
+	useLayoutEffect,
 	useMemo,
 	useReducer,
 	useRef,
@@ -97,7 +98,7 @@ function BuilderView( { payload, preview, navigate } ) {
 	// 496px wide inside a 560px shell. Keep that layout until genuinely narrow.
 	const narrow = width < ( template === 'compact' ? 480 : NARROW_BELOW );
 
-	useEffect( () => {
+	useLayoutEffect( () => {
 		const root = rootRef.current?.closest( '.mmbb-builder' );
 		if ( ! root ) {
 			return undefined;
@@ -402,7 +403,10 @@ function BuilderView( { payload, preview, navigate } ) {
 						? ' has-uppercase-buttons'
 						: ''
 				}` }
-				style={ { '--mmbb-columns': columns } }
+				style={ {
+					'--mmbb-columns': columns,
+					'--mmbb-capacity': Math.max( 1, capacity ),
+				} }
 			>
 				{ view.showHero ? (
 					<Hero

@@ -2,7 +2,6 @@ import {
 	Button,
 	ColorIndicator,
 	ColorPalette,
-	FontSizePicker,
 	Notice,
 	Panel,
 	PanelBody,
@@ -23,9 +22,11 @@ import {
 	ToggleGroupControlOption,
 } from '../components/wp';
 import {
+	DESIGN_DEFAULTS,
 	normalizeDesign,
 	TEMPLATES,
-	templateDefaults,
+	templateColors,
+	templateFixes,
 } from './design-defaults';
 
 const FONT_OPTIONS = [
@@ -50,7 +51,7 @@ const COLOR_FIELDS = [
 	[ 'surface', 'Cards and image tiles' ],
 	[ 'text', 'Text' ],
 	[ 'muted', 'Secondary text' ],
-	[ 'savings', 'Savings and sale badge' ],
+	[ 'savings', 'Savings text' ],
 ];
 
 function DesignToggle( { label, value, onChange, options } ) {
@@ -165,6 +166,8 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 		set( 'colors', {
 			...design.colors,
 			accent: colorValue( contrast, design.colors.accent ),
+			// Recomputed from the new accent, so the button text stays readable.
+			button_text: '',
 			text: colorValue( contrast, design.colors.text ),
 			background: colorValue( base, design.colors.background ),
 			surface: colorValue( accent, design.colors.surface ),
@@ -197,10 +200,19 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 		setMatched( true );
 	};
 
+	// Clear every style choice so the template's own colours, fonts and shapes apply again.
+	// Partial resets left a stale card or text colour behind, which could be unreadable on
+	// the new template's background.
+	// What the storefront shows for each colour: the merchant's pick, else the template's own.
+	const fallbackColors = templateColors( design.template );
+	const shownColor = ( key ) => design.colors[ key ] || fallbackColors[ key ];
+
 	const resetStyle = () =>
-		Object.entries( templateDefaults( design.template ) ).forEach(
-			( [ key, value ] ) => set( key, { ...design[ key ], ...value } )
+		[ 'colors', 'typography', 'buttons', 'cards' ].forEach( ( key ) =>
+			set( key, { ...DESIGN_DEFAULTS[ key ] } )
 		);
+	const fixed = templateFixes( design.template );
+	const has = ( key ) => ! fixed.includes( key );
 	const options = ( values ) =>
 		values.map( ( value ) => ( { value, label: value } ) );
 
@@ -326,6 +338,15 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 							</Notice>
 						) : null }
 					</div>
+					{ fixed.length ? (
+						<Notice status="info" isDismissible={ false }>
+							{ __(
+								'This template sets some options itself, so they are hidden. Pick another template to change them.',
+								'productboxes-mix-and-match-box-builder'
+							) }
+						</Notice>
+					) : null }
+
 					<Panel>
 						<PanelBody
 							title={ __(
@@ -346,10 +367,7 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 										onClick={ () => setEditing( key ) }
 									>
 										<ColorIndicator
-											colorValue={
-												design.colors[ key ] ||
-												'#ffffff'
-											}
+											colorValue={ shownColor( key ) }
 										/>
 										{ label }
 									</Button>
@@ -357,11 +375,31 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 							</div>
 							<ColorPalette
 								colors={ palette }
-								value={ design.colors[ editing ] || undefined }
+								value={ shownColor( editing ) }
 								onChange={ ( value ) =>
 									set( 'colors.' + editing, value || '' )
 								}
 							/>
+							{ design.colors[ editing ] ? (
+								<Button
+									variant="link"
+									onClick={ () =>
+										set( 'colors.' + editing, '' )
+									}
+								>
+									{ __(
+										'Use the template colour',
+										'productboxes-mix-and-match-box-builder'
+									) }
+								</Button>
+							) : (
+								<small>
+									{ __(
+										'Using the template colour. Pick another to change it.',
+										'productboxes-mix-and-match-box-builder'
+									) }
+								</small>
+							) }
 						</PanelBody>
 						<PanelBody
 							title={ __(
@@ -394,17 +432,23 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 								}
 								__nextHasNoMarginBottom
 							/>
-							<FontSizePicker
-								fontSizes={ theme.data?.font_sizes || [] }
-								value={ design.typography.heading_size }
-								onChange={ ( value ) =>
-									set(
-										'typography.heading_size',
-										value || 68
-									)
-								}
-								withReset={ false }
-							/>
+							{ has( 'typography.heading_size' ) ? (
+								<RangeControl
+									label={ __(
+										'Heading size',
+										'productboxes-mix-and-match-box-builder'
+									) }
+									value={ design.typography.heading_size }
+									min={ 32 }
+									max={ 96 }
+									onChange={ ( value ) =>
+										set(
+											'typography.heading_size',
+											value || 68
+										)
+									}
+								/>
+							) : null }
 							<SelectControl
 								label={ __(
 									'Heading weight',
@@ -495,18 +539,20 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 									[ 'L', 'l' ],
 								] }
 							/>
-							<RangeControl
-								label={ __(
-									'Corner radius',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								value={ design.buttons.radius }
-								min={ 0 }
-								max={ 32 }
-								onChange={ ( value ) =>
-									set( 'buttons.radius', value )
-								}
-							/>
+							{ has( 'buttons.radius' ) ? (
+								<RangeControl
+									label={ __(
+										'Corner radius',
+										'productboxes-mix-and-match-box-builder'
+									) }
+									value={ design.buttons.radius }
+									min={ 0 }
+									max={ 32 }
+									onChange={ ( value ) =>
+										set( 'buttons.radius', value )
+									}
+								/>
+							) : null }
 						</PanelBody>
 						<PanelBody
 							title={ __(
@@ -515,18 +561,20 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 							) }
 							initialOpen={ false }
 						>
-							<RangeControl
-								label={ __(
-									'Products per row',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								value={ design.cards.columns }
-								min={ 2 }
-								max={ 5 }
-								onChange={ ( value ) =>
-									set( 'cards.columns', value )
-								}
-							/>
+							{ has( 'cards.columns' ) ? (
+								<RangeControl
+									label={ __(
+										'Products per row',
+										'productboxes-mix-and-match-box-builder'
+									) }
+									value={ design.cards.columns }
+									min={ 2 }
+									max={ 5 }
+									onChange={ ( value ) =>
+										set( 'cards.columns', value )
+									}
+								/>
+							) : null }
 							<DesignToggle
 								label={ __(
 									'Image shape',
@@ -586,34 +634,38 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 									],
 								] }
 							/>
-							<RangeControl
-								label={ __(
-									'Card corner radius',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								value={ design.cards.radius }
-								min={ 0 }
-								max={ 32 }
-								onChange={ ( value ) =>
-									set( 'cards.radius', value )
-								}
-							/>
-							<SelectControl
-								label={ __(
-									'Card shadow',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								value={ design.cards.shadow }
-								options={ options( [
-									'none',
-									'soft',
-									'strong',
-								] ) }
-								onChange={ ( value ) =>
-									set( 'cards.shadow', value )
-								}
-								__nextHasNoMarginBottom
-							/>
+							{ has( 'cards.radius' ) ? (
+								<RangeControl
+									label={ __(
+										'Card corner radius',
+										'productboxes-mix-and-match-box-builder'
+									) }
+									value={ design.cards.radius }
+									min={ 0 }
+									max={ 32 }
+									onChange={ ( value ) =>
+										set( 'cards.radius', value )
+									}
+								/>
+							) : null }
+							{ has( 'cards.shadow' ) ? (
+								<SelectControl
+									label={ __(
+										'Card shadow',
+										'productboxes-mix-and-match-box-builder'
+									) }
+									value={ design.cards.shadow }
+									options={ options( [
+										'none',
+										'soft',
+										'strong',
+									] ) }
+									onChange={ ( value ) =>
+										set( 'cards.shadow', value )
+									}
+									__nextHasNoMarginBottom
+								/>
+							) : null }
 							<ToggleControl
 								label={ __(
 									'Show compare-at price',
@@ -644,39 +696,41 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 							) }
 							initialOpen={ false }
 						>
-							<DesignToggle
-								label={ __(
-									'Where the box sits',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								value={ design.summary.position }
-								onChange={ ( value ) =>
-									set( 'summary.position', value )
-								}
-								options={ [
-									[
-										__(
-											'Left',
-											'productboxes-mix-and-match-box-builder'
-										),
-										'left',
-									],
-									[
-										__(
-											'Right',
-											'productboxes-mix-and-match-box-builder'
-										),
-										'right',
-									],
-									[
-										__(
-											'Bottom bar',
-											'productboxes-mix-and-match-box-builder'
-										),
-										'bar',
-									],
-								] }
-							/>
+							{ has( 'summary.position' ) ? (
+								<DesignToggle
+									label={ __(
+										'Where the box sits',
+										'productboxes-mix-and-match-box-builder'
+									) }
+									value={ design.summary.position }
+									onChange={ ( value ) =>
+										set( 'summary.position', value )
+									}
+									options={ [
+										[
+											__(
+												'Left',
+												'productboxes-mix-and-match-box-builder'
+											),
+											'left',
+										],
+										[
+											__(
+												'Right',
+												'productboxes-mix-and-match-box-builder'
+											),
+											'right',
+										],
+										[
+											__(
+												'Bottom bar',
+												'productboxes-mix-and-match-box-builder'
+											),
+											'bar',
+										],
+									] }
+								/>
+							) : null }
 							<DesignToggle
 								label={ __(
 									'Progress',
@@ -728,17 +782,6 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 										'numbers',
 									],
 								] }
-							/>
-							<ToggleControl
-								label={ __(
-									'Show discount steps at the top',
-									'productboxes-mix-and-match-box-builder'
-								) }
-								checked={ design.summary.show_ladder }
-								onChange={ ( value ) =>
-									set( 'summary.show_ladder', value )
-								}
-								__nextHasNoMarginBottom
 							/>
 						</PanelBody>
 						<PanelBody
@@ -897,6 +940,26 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 							__nextHasNoMarginBottom
 						/>
 					) : null }
+					<ToggleControl
+						label={ __(
+							'Show discount graph',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						checked={ design.summary.show_ladder }
+						onChange={ ( value ) =>
+							set( 'summary.show_ladder', value )
+						}
+						__nextHasNoMarginBottom
+					/>
+					<ToggleControl
+						label={ __(
+							'Show sticker',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						checked={ design.show_stickers }
+						onChange={ ( value ) => set( 'show_stickers', value ) }
+						__nextHasNoMarginBottom
+					/>
 					<TextControl
 						label={ __(
 							'Add button',

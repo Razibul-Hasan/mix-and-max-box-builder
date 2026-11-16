@@ -8,7 +8,7 @@
 	},
 	"scripts": {
 		"clean": "node -e \"require('fs').rmSync('build',{recursive:true,force:true})\"",
-		"build": "wp-scripts build && node tools/clean-build.mjs",
+		"build": "wp-scripts build && node tools/clean-build.mjs && node tools/button-boost.mjs",
 		"start": "wp-scripts start",
 		"lint:js": "wp-scripts lint-js src tools tests/js webpack.config.js jest-unit.config.js",
 		"lint:css": "wp-scripts lint-style \"src/**/*.css\"",

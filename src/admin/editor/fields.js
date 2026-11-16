@@ -27,19 +27,31 @@ export function useOpenOnError( errors, prefixes, startOpen = false ) {
  * A number field built on the WordPress NumberControl. It reports a number,
  * or an empty string when the box is cleared.
  *
+ * By default an error shows under the field. Pass `inlineError={ false }` to mark the field
+ * invalid but show the message elsewhere: text under one field of a row makes that column
+ * taller than its neighbours and knocks the row out of line.
+ *
  * @param {Object}           props
- * @param {number|string}    props.value    Current value.
- * @param {Function}         props.onChange Receives a number or ''.
- * @param {string|undefined} props.error    Inline error, shown in place of help.
- * @param {string|undefined} props.help     Help text.
+ * @param {number|string}    props.value       Current value.
+ * @param {Function}         props.onChange    Receives a number or ''.
+ * @param {string|undefined} props.error       Error message.
+ * @param {string|undefined} props.help        Help text.
+ * @param {boolean}          props.inlineError Show the error under the field.
  */
-export function NumberField( { value, onChange, error, help, ...rest } ) {
+export function NumberField( {
+	value,
+	onChange,
+	error,
+	help,
+	inlineError = true,
+	...rest
+} ) {
 	return (
 		<NumberControl
 			min={ 0 }
 			{ ...rest }
 			value={ value ?? '' }
-			help={ error || help }
+			help={ inlineError ? error || help : help }
 			aria-invalid={ error ? true : undefined }
 			spinControls="none"
 			__next40pxDefaultSize

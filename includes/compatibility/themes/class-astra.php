@@ -57,7 +57,7 @@ final class Astra extends Integration {
 			. $low . ' :is(ul,ol){padding-inline-start:0;list-style:none}'
 			. $low . ' img{margin:0;max-width:100%;height:auto}'
 			. $low . ' :is(button,input,select,textarea){box-shadow:none;text-transform:none;letter-spacing:normal}'
-			. $low . ' :is(button,[type=button],[type=submit]){min-height:0;line-height:inherit}'
+			. $low . ' :where(button,[type=button],[type=submit]){min-height:0;line-height:inherit}'
 			. '.mmbb-theme-astra .ast-container .mmbb-root,.mmbb-theme-astra .entry-content>.mmbb-root{max-width:100%}'
 			. '.mmbb-theme-astra .mmbb-preview-main{width:100%;padding:24px}';
 	}

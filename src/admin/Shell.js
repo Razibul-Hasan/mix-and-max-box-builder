@@ -18,7 +18,7 @@ export default function Shell( { active, wide, children } ) {
 	const nav = [
 		{
 			id: 'dashboard',
-			label: __( 'Dashboard','productboxes-mix-and-match-box-builder' ),
+			label: __( 'Dashboard', 'productboxes-mix-and-match-box-builder' ),
 		},
 		{
 			id: 'campaigns',

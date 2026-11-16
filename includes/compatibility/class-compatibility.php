@@ -3,7 +3,7 @@
  * Compatibility with other plugins and themes.
  *
  * To support another plugin or theme, add a class that extends Integration and list
- * it in integrations() below. docs/COMPATIBILITY.md has the steps and a template.
+ * it in integrations() below. Copy a class in themes/ or plugins/ as the template.
  *
  * @package MixMax\BoxBuilder
  */
@@ -33,8 +33,12 @@ final class Compatibility {
 			// Plugins.
 			Plugins\Woo_Payments::class,
 			// Themes.
+			Themes\Generic::class,
 			Themes\Astra::class,
 			Themes\Blocksy::class,
+			Themes\Elastra::class,
+			Themes\Extendable::class,
+			Themes\Inspiro::class,
 		);
 	}
 

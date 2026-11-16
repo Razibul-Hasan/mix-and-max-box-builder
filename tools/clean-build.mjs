@@ -12,6 +12,7 @@ const walk = ( dir ) => {
 			walk( file );
 		} else if ( /\.js$/.test( name ) && statSync( file ).size === 0 ) {
 			rmSync( file );
+			// eslint-disable-next-line no-console -- build log.
 			console.log( 'removed empty ' + file );
 		}
 	}

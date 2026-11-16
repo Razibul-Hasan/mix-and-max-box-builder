@@ -473,3 +473,11 @@ body.mmbb-is-fullscreen #wpbody-content > :not(#mmbb-admin) {
 .mmbb-publish__problem-go svg {
 	fill: currentcolor;
 }
+
+/* Segmented controls in the side panel split a narrow column into equal parts. A longer
+   label such as "Fixed amount" then wrapped onto two lines once it was selected and bolder.
+   Keep every label on one line and let the control grow around it. */
+.mmbb-ed__side-scroll .components-toggle-group-control-option-base {
+	padding-inline: 8px;
+	white-space: nowrap;
+}

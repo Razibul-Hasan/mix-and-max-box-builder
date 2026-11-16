@@ -36,6 +36,7 @@ export default function BoxSlots( {
 				>
 					{ it ? (
 						<>
+							<span className="mmbb-slot__num">{ i + 1 }</span>
 							<span className="mmbb-slot__media">
 								<Media
 									image={ it.image }
