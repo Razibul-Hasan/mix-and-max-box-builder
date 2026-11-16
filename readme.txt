@@ -5,7 +5,7 @@ Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
 Requires Plugins: woocommerce
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -121,6 +121,13 @@ No. Everything is bundled locally.
 
 == Changelog ==
 
+= 2.0.1 =
+* Fixed: with WooPayments Multi-Currency, items in an "Each item" cart showed the store-currency price struck through (for example AUD 19.95 shown as GBP 19.95) and a wrong savings label. Regular and sale prices now follow the shopper's currency.
+* Fixed: boxes made only of virtual or downloadable products were charged shipping. A box now needs no shipping when everything in it is virtual. A physical item, a physical free gift or gift wrap still ships.
+* Added: "Show headline" and "Show short intro" toggles in the campaign editor's design settings, so you can hide them without custom CSS.
+* Added: a Fixed Box with only one size now skips the "Pick a box size" step and goes straight to choosing products.
+* Improved: more automated tests for multi-currency prices, shipping on virtual boxes and the new design options.
+
 = 2.0.0 =
 * Redesigned admin dashboard, analytics and settings.
 * Added a three-step campaign editor with live theme-aware preview.
@@ -133,6 +140,9 @@ No. Everything is bundled locally.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 2.0.1 =
+Fixes cart prices with WooPayments Multi-Currency and removes shipping charges on boxes of virtual products. Adds options to hide the headline and intro. No data changes.
 
 = 2.0.0 =
 Major redesign with 10 templates, a three-step editor and live preview. Existing data is preserved.
