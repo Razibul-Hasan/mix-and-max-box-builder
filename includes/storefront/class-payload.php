@@ -161,8 +161,10 @@ final class Payload {
 		if ( '' !== $content['cart_label'] ) {
 			$design['cta_label'] = $content['cart_label'];
 		}
-		$design['columns']     = $design['cards']['columns'];
-		$design['show_ladder'] = $design['summary']['show_ladder'];
+		$design['show_headline'] = (bool) $content['show_headline'];
+		$design['show_intro']    = (bool) $content['show_intro'];
+		$design['columns']       = $design['cards']['columns'];
+		$design['show_ladder']   = $design['summary']['show_ladder'];
 		if ( 'bar' === $design['summary']['position'] ) {
 			$design['layout'] = 'bar';
 		} elseif ( in_array( $design['summary']['position'], array( 'left', 'right' ), true ) ) {

@@ -234,6 +234,9 @@ final class Cart_Lines {
 		$cart->cart_contents[ $key ]['mmbb_box']['quote'] = $quote;
 
 		if ( $items_mode ) {
+			// The header only carries the gift wrap fee, and the item lines decide whether the items ship.
+			// Gift wrap is a physical extra, so a wrapped box still ships.
+			$cart->cart_contents[ $key ]['data']->set_virtual( empty( $gift['enabled'] ) );
 			$cart->cart_contents[ $key ]['data']->set_price( Box_Resolver::to_decimal( $quote['fee'] ) );
 			$this->price_children( $cart, $key, $resolved['items'], $quote );
 			$kept = $this->price_gift_line( $cart, $key, $resolved['free_gift'] );
@@ -245,6 +248,35 @@ final class Cart_Lines {
 
 		$cart->cart_contents[ $key ]['data']->set_price( Box_Resolver::to_decimal( $quote['total'] ) );
 		$cart->cart_contents[ $key ]['data']->set_weight( (string) $this->weight( $resolved['items'] ) );
+		// A box of downloads or services needs no shipping. Gift wrap is a physical extra.
+		$cart->cart_contents[ $key ]['data']->set_virtual( empty( $gift['enabled'] ) && self::all_virtual( $resolved['items'], $resolved['free_gift'] ) );
+	}
+
+	/**
+	 * Whether everything in a box is virtual, so the box needs no shipping.
+	 *
+	 * @param array[]    $items     Box items.
+	 * @param array|null $free_gift Free gift the box earns, when any.
+	 * @return bool False for an empty box or when any product is physical or missing.
+	 */
+	private static function all_virtual( array $items, $free_gift ) {
+		$ids = array();
+		foreach ( $items as $item ) {
+			$ids[] = Box_Rules::key( $item['product_id'], $item['variation_id'] );
+		}
+		if ( is_array( $free_gift ) && ! empty( $free_gift['product_id'] ) ) {
+			$ids[] = (int) $free_gift['product_id'];
+		}
+		if ( ! $ids ) {
+			return false;
+		}
+		foreach ( $ids as $id ) {
+			$product = wc_get_product( $id );
+			if ( ! $product instanceof \WC_Product || ! $product->is_virtual() ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**

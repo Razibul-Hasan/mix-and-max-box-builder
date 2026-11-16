@@ -474,6 +474,92 @@ class CartBoxTest extends \WP_UnitTestCase {
 		$this->assertSame( 20, wc_get_product( $this->products[1]->get_id() )->get_stock_quantity() );
 	}
 
+	/**
+	 * Give the store one shipping method, so WooCommerce asks whether a cart needs shipping at all.
+	 * Without a method, needs_shipping() is always false and a virtual-box test proves nothing.
+	 */
+	private function enable_shipping() {
+		$zone = new \WC_Shipping_Zone( 0 );
+		$zone->add_shipping_method( 'flat_rate' );
+		$this->assertGreaterThan( 0, wc_get_shipping_method_count( true, true ) );
+	}
+
+	/** A box of physical products needs shipping. */
+	public function test_a_box_of_physical_products_needs_shipping() {
+		$this->enable_shipping();
+		$this->add();
+		WC()->cart->calculate_totals();
+		$this->assertFalse( $this->box_line()['data']->is_virtual() );
+		$this->assertTrue( WC()->cart->needs_shipping() );
+	}
+
+	/** A box of downloads is virtual, so no shipping is charged. */
+	public function test_a_box_of_virtual_products_is_virtual() {
+		$this->enable_shipping();
+		$this->products[1]->set_virtual( true );
+		$this->products[1]->save();
+		$this->add();
+		WC()->cart->calculate_totals();
+		$this->assertTrue( $this->box_line()['data']->is_virtual() );
+		$this->assertFalse( WC()->cart->needs_shipping() );
+	}
+
+	/** One physical product is enough to make the box ship. */
+	public function test_a_mixed_box_still_ships() {
+		$this->enable_shipping();
+		$this->products[1]->set_virtual( true );
+		$this->products[1]->save();
+		$this->add(
+			array(
+				'items' => array(
+					array(
+						'product_id' => $this->products[1]->get_id(),
+						'qty'        => 1,
+					),
+					array(
+						'product_id' => $this->products[2]->get_id(),
+						'qty'        => 1,
+					),
+				),
+			)
+		);
+		WC()->cart->calculate_totals();
+		$this->assertFalse( $this->box_line()['data']->is_virtual() );
+		$this->assertTrue( WC()->cart->needs_shipping() );
+	}
+
+	/** Gift wrap is a physical extra, so it keeps a virtual box shippable. */
+	public function test_gift_wrap_keeps_a_virtual_box_shippable() {
+		$this->enable_shipping();
+		$this->products[1]->set_virtual( true );
+		$this->products[1]->save();
+		$this->add( array( 'gift' => array( 'enabled' => true ) ) );
+		WC()->cart->calculate_totals();
+		$this->assertFalse( $this->box_line()['data']->is_virtual() );
+	}
+
+	/** Gift wrap on an items-mode box is a physical extra, so a wrapped box still ships. */
+	public function test_items_mode_gift_wrap_keeps_a_virtual_box_shippable() {
+		$this->enable_shipping();
+		Settings::update( array( 'cart_display' => 'items' ) );
+		$this->products[1]->set_virtual( true );
+		$this->products[1]->save();
+		$this->add( array( 'gift' => array( 'enabled' => '1' ) ) );
+		WC()->cart->calculate_totals();
+		$this->assertFalse( $this->box_line()['data']->is_virtual() );
+		$this->assertTrue( WC()->cart->needs_shipping() );
+	}
+
+	/** In items mode the header is only a fee line; the item lines decide shipping. */
+	public function test_items_mode_header_is_virtual_and_items_decide_shipping() {
+		$this->enable_shipping();
+		Settings::update( array( 'cart_display' => 'items' ) );
+		$this->add();
+		WC()->cart->calculate_totals();
+		$this->assertTrue( $this->box_line()['data']->is_virtual() );
+		$this->assertTrue( WC()->cart->needs_shipping() );
+	}
+
 	/** Items mode: a header line plus one line per item, removed together. */
 	public function test_items_mode_adds_item_lines_under_a_header() {
 		Settings::update( array( 'cart_display' => 'items' ) );

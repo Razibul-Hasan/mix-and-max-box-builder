@@ -51,19 +51,23 @@ export default function Hero( { payload, nowMs, decimals } ) {
 						{ design.sticker }
 					</Sticker>
 				) : null }
-				<h2 className="mmbb-hero__headline">
-					{ pastelBreak > 0 ? (
-						<>
-							<span>
-								{ headline.slice( 0, pastelBreak + 1 ) }
-							</span>
-							<span>{ headline.slice( pastelBreak + 2 ) }</span>
-						</>
-					) : (
-						headline
-					) }
-				</h2>
-				{ design.intro ? (
+				{ design.show_headline !== false ? (
+					<h2 className="mmbb-hero__headline">
+						{ pastelBreak > 0 ? (
+							<>
+								<span>
+									{ headline.slice( 0, pastelBreak + 1 ) }
+								</span>
+								<span>
+									{ headline.slice( pastelBreak + 2 ) }
+								</span>
+							</>
+						) : (
+							headline
+						) }
+					</h2>
+				) : null }
+				{ design.intro && design.show_intro !== false ? (
 					<p className="mmbb-hero__intro">{ design.intro }</p>
 				) : null }
 				{ ends ? (

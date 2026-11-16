@@ -174,6 +174,49 @@ class CompatibilityTest extends \WP_UnitTestCase {
 		$this->assertSame( '', $other->get_meta( Woo_Payments::PRICED ) );
 	}
 
+	/** An item line keeps its regular price in the shopper's currency once it is marked. */
+	public function test_woopayments_keeps_item_list_prices_converted() {
+		$convert = static function ( $price, $product ) {
+			// Stands in for Multi-Currency: it skips marked products, as should_convert_product_price() says.
+			if ( $product instanceof \WC_Product && 'yes' === $product->get_meta( Woo_Payments::PRICED ) ) {
+				return $price;
+			}
+			return '' === $price ? $price : (string) round( (float) $price * 0.5, 2 );
+		};
+		add_filter( 'woocommerce_product_get_regular_price', $convert, 99, 2 );
+		add_filter( 'woocommerce_product_get_sale_price', $convert, 99, 2 );
+
+		$child = new \WC_Product_Simple();
+		$child->set_regular_price( '20.00' );
+		$child->set_sale_price( '16.00' );
+		$box = new \WC_Product_Simple();
+		$box->set_regular_price( '20.00' );
+
+		$cart                = new \WC_Cart();
+		$cart->cart_contents = array(
+			'a' => array(
+				'mmbb_box' => array(),
+				'data'     => $box,
+			),
+			'b' => array(
+				'mmbb_parent' => 'a',
+				'data'        => $child,
+			),
+		);
+		$integration = new Woo_Payments();
+		$integration->mark_priced_lines( $cart );
+		// A second calculation must not convert again.
+		$integration->mark_priced_lines( $cart );
+
+		$regular = $child->get_regular_price();
+		$sale    = $child->get_sale_price();
+		remove_filter( 'woocommerce_product_get_regular_price', $convert, 99 );
+		remove_filter( 'woocommerce_product_get_sale_price', $convert, 99 );
+
+		$this->assertSame( '10', (string) (float) $regular );
+		$this->assertSame( '8', (string) (float) $sale );
+	}
+
 	/** Cached product lists are kept apart when an integration names a context. */
 	public function test_product_cache_is_split_by_context() {
 		\MixMax\BoxBuilder\Installer::install();

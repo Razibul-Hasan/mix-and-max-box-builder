@@ -372,6 +372,8 @@ function BuilderView( { payload, preview, navigate } ) {
 	);
 
 	const sizes = config.type === 'fixed' ? config.sizes : [];
+	// A single size is already chosen, so there is nothing to pick.
+	const showSizes = sizes.length > 1;
 	const step = full ? 2 : 1;
 
 	return (
@@ -419,7 +421,7 @@ function BuilderView( { payload, preview, navigate } ) {
 					</Notice>
 				) : null }
 
-				{ narrow && sizes.length ? (
+				{ narrow && showSizes ? (
 					<Steps
 						compact
 						current={ step }
@@ -446,7 +448,7 @@ function BuilderView( { payload, preview, navigate } ) {
 					}` }
 				>
 					<div className="mmbb-builder__main">
-						{ sizes.length ? (
+						{ showSizes ? (
 							<div className="mmbb-builder__section">
 								<p className="mmbb-builder__step">
 									{ __(

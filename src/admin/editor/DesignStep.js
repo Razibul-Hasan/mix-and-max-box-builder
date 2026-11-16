@@ -849,26 +849,54 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 						}
 						__nextHasNoMarginBottom
 					/>
-					<TextareaControl
+					<ToggleControl
 						label={ __(
-							'Headline',
+							'Show headline',
 							'productboxes-mix-and-match-box-builder'
 						) }
-						value={ design.content.headline }
+						checked={ design.content.show_headline }
 						onChange={ ( value ) =>
-							set( 'content.headline', value )
+							set( 'content.show_headline', value )
 						}
 						__nextHasNoMarginBottom
 					/>
-					<TextareaControl
+					{ design.content.show_headline ? (
+						<TextareaControl
+							label={ __(
+								'Headline',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={ design.content.headline }
+							onChange={ ( value ) =>
+								set( 'content.headline', value )
+							}
+							__nextHasNoMarginBottom
+						/>
+					) : null }
+					<ToggleControl
 						label={ __(
-							'Short intro',
+							'Show short intro',
 							'productboxes-mix-and-match-box-builder'
 						) }
-						value={ design.content.intro }
-						onChange={ ( value ) => set( 'content.intro', value ) }
+						checked={ design.content.show_intro }
+						onChange={ ( value ) =>
+							set( 'content.show_intro', value )
+						}
 						__nextHasNoMarginBottom
 					/>
+					{ design.content.show_intro ? (
+						<TextareaControl
+							label={ __(
+								'Short intro',
+								'productboxes-mix-and-match-box-builder'
+							) }
+							value={ design.content.intro }
+							onChange={ ( value ) =>
+								set( 'content.intro', value )
+							}
+							__nextHasNoMarginBottom
+						/>
+					) : null }
 					<TextControl
 						label={ __(
 							'Add button',

@@ -267,3 +267,55 @@ it( 'falls back to Spotlight for an unknown template', () => {
 		container.querySelector( '.mmbb-template--spotlight' )
 	).toBeTruthy();
 } );
+
+const fixedPayload = ( sizes ) => {
+	const data = payload();
+	data.config.type = 'fixed';
+	data.config.tiers = [];
+	data.config.sizes = sizes;
+	return data;
+};
+
+const size = ( qty ) => ( {
+	qty,
+	discount_type: 'percent',
+	value: 25,
+	tag: '',
+} );
+
+it( 'asks for a box size when there is more than one', () => {
+	render( <Builder payload={ fixedPayload( [ size( 2 ), size( 4 ) ] ) } /> );
+	expect( screen.getByText( 'Pick a box size' ) ).toBeTruthy();
+} );
+
+it( 'skips the box size step when there is only one size', () => {
+	render( <Builder payload={ fixedPayload( [ size( 2 ) ] ) } /> );
+	expect( screen.queryByText( 'Pick a box size' ) ).toBeNull();
+	expect( screen.queryByText( 'Step 1' ) ).toBeNull();
+	// The only size is already chosen, so products can be added straight away.
+	fireEvent.click( addButtons()[ 0 ] );
+	fireEvent.click( addButtons()[ 0 ] );
+	expect(
+		screen.getByRole( 'button', { name: /add box to cart/i } )
+	).toBeTruthy();
+} );
+
+it( 'shows the headline and intro unless they are turned off', () => {
+	const data = payload();
+	data.config.design.intro = 'Pick your favourites.';
+	const first = render( <Builder payload={ data } /> );
+	expect(
+		first.container.querySelector( '.mmbb-hero__headline' )
+	).toBeTruthy();
+	expect( first.container.querySelector( '.mmbb-hero__intro' ) ).toBeTruthy();
+	first.unmount();
+
+	data.config.design.show_headline = false;
+	data.config.design.show_intro = false;
+	const second = render( <Builder payload={ data } /> );
+	expect(
+		second.container.querySelector( '.mmbb-hero__headline' )
+	).toBeNull();
+	expect( second.container.querySelector( '.mmbb-hero__intro' ) ).toBeNull();
+	expect( second.container.querySelector( '.mmbb-hero' ) ).toBeTruthy();
+} );

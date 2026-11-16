@@ -258,8 +258,10 @@ export default function Preview( { draft, products } ) {
 							{ design.sticker }
 						</Sticker>
 					) : null }
-					<p className="mmbb-preview__headline">{ headline }</p>
-					{ design.intro ? (
+					{ design.content?.show_headline !== false ? (
+						<p className="mmbb-preview__headline">{ headline }</p>
+					) : null }
+					{ design.intro && design.content?.show_intro !== false ? (
 						<p className="mmbb-preview__intro">{ design.intro }</p>
 					) : null }
 					{ showCountdown ? <Countdown endsAt={ countTo } /> : null }
@@ -293,7 +295,7 @@ export default function Preview( { draft, products } ) {
 				) : null }
 			</div>
 
-			{ config.type === 'fixed' && fixedSizes.length ? (
+			{ config.type === 'fixed' && fixedSizes.length > 1 ? (
 				<BoxSizePicker
 					name="mmbb-preview-size"
 					sizes={ fixedSizes.map( ( row ) => ( {

@@ -164,10 +164,12 @@ final class Config {
 					'custom_css' => '',
 				),
 				'content'          => array(
-					'headline'   => '',
-					'intro'      => '',
-					'add_label'  => '',
-					'cart_label' => '',
+					'show_headline' => true,
+					'headline'      => '',
+					'show_intro'    => true,
+					'intro'         => '',
+					'add_label'     => '',
+					'cart_label'    => '',
 				),
 			),
 			'placement'            => array(
@@ -565,11 +567,13 @@ final class Config {
 		$advanced                      = self::section( $in, 'advanced' );
 		$out['advanced']['css_class']  = self::css_classes( self::pick( $advanced, 'css_class', $base['advanced']['css_class'] ) );
 		$out['advanced']['custom_css'] = self::custom_css( self::pick( $advanced, 'custom_css', $base['advanced']['custom_css'] ) );
-		$content                       = self::section( $in, 'content' );
-		$out['content']['headline']    = self::text( self::pick( $content, 'headline', $base['content']['headline'] ), 120 );
-		$out['content']['intro']       = self::text( self::pick( $content, 'intro', $base['content']['intro'] ), 500 );
-		$out['content']['add_label']   = self::text( self::pick( $content, 'add_label', $base['content']['add_label'] ), 40 );
-		$out['content']['cart_label']  = self::text( self::pick( $content, 'cart_label', $base['content']['cart_label'] ), 40 );
+		$content                         = self::section( $in, 'content' );
+		$out['content']['show_headline'] = self::bool( self::pick( $content, 'show_headline', $base['content']['show_headline'] ), $base['content']['show_headline'] );
+		$out['content']['headline']      = self::text( self::pick( $content, 'headline', $base['content']['headline'] ), 120 );
+		$out['content']['show_intro']    = self::bool( self::pick( $content, 'show_intro', $base['content']['show_intro'] ), $base['content']['show_intro'] );
+		$out['content']['intro']         = self::text( self::pick( $content, 'intro', $base['content']['intro'] ), 500 );
+		$out['content']['add_label']     = self::text( self::pick( $content, 'add_label', $base['content']['add_label'] ), 40 );
+		$out['content']['cart_label']    = self::text( self::pick( $content, 'cart_label', $base['content']['cart_label'] ), 40 );
 		return $out;
 	}
 

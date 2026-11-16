@@ -122,8 +122,32 @@ final class Woo_Payments extends Integration {
 		}
 		foreach ( $cart->get_cart() as $line ) {
 			if ( ( isset( $line['mmbb_box'] ) || isset( $line['mmbb_parent'] ) ) && isset( $line['data'] ) && $line['data'] instanceof \WC_Product ) {
+				if ( isset( $line['mmbb_parent'] ) && 'yes' !== $line['data']->get_meta( self::PRICED ) ) {
+					$this->freeze_list_prices( $line['data'] );
+				}
 				$line['data']->update_meta_data( self::PRICED, 'yes' );
 			}
+		}
+	}
+
+	/**
+	 * Keep an item line's regular and sale price in the shopper's currency once it is marked.
+	 *
+	 * The marker stops WooPayments converting every price of the product, regular and sale
+	 * included. Without this, the strikethrough price of an item line stays in the store
+	 * currency (for example AUD 19.95 shown as GBP 19.95). The values read here are still
+	 * converted, because the product is not marked yet. The change is in memory only.
+	 *
+	 * @param \WC_Product $product Cart line product, not marked yet.
+	 */
+	private function freeze_list_prices( \WC_Product $product ) {
+		$regular = $product->get_regular_price();
+		$sale    = $product->get_sale_price();
+		if ( '' !== (string) $regular ) {
+			$product->set_regular_price( $regular );
+		}
+		if ( '' !== (string) $sale ) {
+			$product->set_sale_price( $sale );
 		}
 	}
 

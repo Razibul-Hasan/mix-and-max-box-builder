@@ -606,4 +606,19 @@ class ConfigTest extends TestCase {
 		$config['extras']['free_gift']['enabled'] = false;
 		$this->assertNotContains( 'gift_product_required', array_column( Config::validate( $config ), 'code' ) );
 	}
+
+	/** The headline and intro are shown by default and can be hidden one at a time. */
+	public function test_headline_and_intro_can_be_hidden() {
+		$defaults = Config::defaults()['design']['content'];
+		$this->assertTrue( $defaults['show_headline'] );
+		$this->assertTrue( $defaults['show_intro'] );
+
+		$config = Config::sanitize( array( 'design' => array( 'content' => array( 'show_headline' => false ) ) ) );
+		$this->assertFalse( $config['design']['content']['show_headline'] );
+		$this->assertTrue( $config['design']['content']['show_intro'] );
+
+		$config = Config::sanitize( array( 'design' => array( 'content' => array( 'show_intro' => '0' ) ) ), $config );
+		$this->assertFalse( $config['design']['content']['show_headline'] );
+		$this->assertFalse( $config['design']['content']['show_intro'] );
+	}
 }

@@ -136,7 +136,14 @@ export const DESIGN_DEFAULTS = {
 		padding: { top: '56px', right: '64px', bottom: '56px', left: '64px' },
 	},
 	advanced: { css_class: '', custom_css: '' },
-	content: { headline: '', intro: '', add_label: '', cart_label: '' },
+	content: {
+		show_headline: true,
+		headline: '',
+		show_intro: true,
+		intro: '',
+		add_label: '',
+		cart_label: '',
+	},
 };
 
 export function normalizeDesign( design = {} ) {
