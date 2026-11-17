@@ -229,3 +229,57 @@
 	padding: 0 var(--space-2);
 }
 
+
+/* Box image picker in the Design > Content pane. */
+.mmbb-box-image {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	align-items: stretch;
+}
+
+.mmbb-box-image__help {
+	margin: 0 0 8px;
+	font-size: 12px;
+	font-style: normal;
+	color: #757575;
+}
+
+.mmbb-box-image__preview,
+.mmbb-box-image__empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	width: 100%;
+	aspect-ratio: 16 / 10;
+	padding: 0;
+	overflow: hidden;
+	cursor: pointer;
+	background: #f6f7f7;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+}
+
+.mmbb-box-image__empty {
+	font-size: 13px;
+	color: #2271b1;
+	border-style: dashed;
+}
+
+.mmbb-box-image__empty:hover,
+.mmbb-box-image__preview:hover {
+	border-color: #2271b1;
+}
+
+.mmbb-box-image__image {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.mmbb-box-image__actions {
+	display: flex;
+	gap: 4px;
+}

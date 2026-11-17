@@ -252,6 +252,7 @@ export const DESIGN_DEFAULTS = {
 		intro: '',
 		add_label: '',
 		cart_label: '',
+		show_sort: true,
 	},
 };
 

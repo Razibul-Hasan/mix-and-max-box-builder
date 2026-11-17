@@ -21,6 +21,7 @@ import {
 	ToggleGroupControl,
 	ToggleGroupControlOption,
 } from '../components/wp';
+import BoxImageField from './BoxImageField';
 import {
 	DESIGN_DEFAULTS,
 	normalizeDesign,
@@ -892,6 +893,16 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 						}
 						__nextHasNoMarginBottom
 					/>
+					<BoxImageField
+						value={ draft.config.image_id || 0 }
+						onChange={ ( value ) =>
+							dispatch( {
+								type: 'set',
+								path: 'image_id',
+								value,
+							} )
+						}
+					/>
 					<ToggleControl
 						label={ __(
 							'Show headline',
@@ -960,12 +971,31 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 						onChange={ ( value ) => set( 'show_stickers', value ) }
 						__nextHasNoMarginBottom
 					/>
+					<ToggleControl
+						label={ __(
+							'Show sort menu',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'Lets shoppers sort products by price or name.',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						checked={ design.content.show_sort !== false }
+						onChange={ ( value ) =>
+							set( 'content.show_sort', value )
+						}
+						__nextHasNoMarginBottom
+					/>
 					<TextControl
 						label={ __(
 							'Add button',
 							'productboxes-mix-and-match-box-builder'
 						) }
 						value={ design.content.add_label }
+						placeholder={ __(
+							'Add to box',
+							'productboxes-mix-and-match-box-builder'
+						) }
 						__next40pxDefaultSize
 						onChange={ ( value ) =>
 							set( 'content.add_label', value )
@@ -978,18 +1008,20 @@ export default function DesignStep( { draft, errors, dispatch } ) {
 							'productboxes-mix-and-match-box-builder'
 						) }
 						value={ design.content.cart_label }
+						placeholder={ __(
+							'Add box to cart',
+							'productboxes-mix-and-match-box-builder'
+						) }
+						help={ __(
+							'Leave empty to use the default.',
+							'productboxes-mix-and-match-box-builder'
+						) }
 						__next40pxDefaultSize
 						onChange={ ( value ) =>
 							set( 'content.cart_label', value )
 						}
 						__nextHasNoMarginBottom
 					/>
-					<Notice status="info" isDismissible={ false }>
-						{ __(
-							'Leave a field empty to use the translated default text.',
-							'productboxes-mix-and-match-box-builder'
-						) }
-					</Notice>
 				</div>
 			) : null }
 		</div>

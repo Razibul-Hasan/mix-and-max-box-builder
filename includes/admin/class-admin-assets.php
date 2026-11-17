@@ -38,6 +38,8 @@ final class Admin_Assets {
 		$asset = require $asset_file;
 
 		// The app is built on @wordpress/components, so it needs their stylesheet too.
+		// The media library dialog behind the box image picker.
+		wp_enqueue_media();
 		wp_enqueue_style( 'wp-components' );
 		wp_enqueue_style( 'mmbb-components' );
 		wp_enqueue_style( 'mmbb-admin', MMBB_URL . 'build/admin.css', array( 'wp-components', 'mmbb-components' ), $asset['version'] );

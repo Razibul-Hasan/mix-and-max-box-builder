@@ -170,12 +170,14 @@ final class Config {
 					'intro'         => '',
 					'add_label'     => '',
 					'cart_label'    => '',
+					'show_sort'     => true,
 				),
 			),
 			'placement'            => array(
 				'page_id' => 0,
 			),
 			'container_product_id' => 0,
+			'image_id'             => 0,
 		);
 	}
 
@@ -239,6 +241,11 @@ final class Config {
 		$out['placement'] = array(
 			'page_id' => max( 0, (int) self::pick( $placement, 'page_id', $base['placement']['page_id'] ) ),
 		);
+
+		if ( isset( $input['image_id'] ) ) {
+			$image_id        = max( 0, (int) $input['image_id'] );
+			$out['image_id'] = $image_id && wp_attachment_is_image( $image_id ) ? $image_id : 0;
+		}
 
 		if ( isset( $input['container_product_id'] ) ) {
 			$out['container_product_id'] = max( 0, (int) $input['container_product_id'] );
@@ -574,6 +581,7 @@ final class Config {
 		$out['content']['intro']         = self::text( self::pick( $content, 'intro', $base['content']['intro'] ), 500 );
 		$out['content']['add_label']     = self::text( self::pick( $content, 'add_label', $base['content']['add_label'] ), 40 );
 		$out['content']['cart_label']    = self::text( self::pick( $content, 'cart_label', $base['content']['cart_label'] ), 40 );
+		$out['content']['show_sort']     = self::bool( self::pick( $content, 'show_sort', $base['content']['show_sort'] ), $base['content']['show_sort'] );
 		return $out;
 	}
 

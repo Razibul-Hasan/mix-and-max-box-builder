@@ -203,6 +203,22 @@ class CartBoxTest extends \WP_UnitTestCase {
 		$this->assertSame( (int) $campaign['id'], (int) $product->get_meta( '_mmbb_campaign_id' ) );
 	}
 
+	/** The box image picked in the builder becomes the container's photo; a photo set in WooCommerce is kept without one. */
+	public function test_container_takes_the_builder_image() {
+		$campaign = $this->repo->find( $this->campaign['id'] );
+		$product  = wc_get_product( $campaign['config']['container_product_id'] );
+		$manual   = self::factory()->attachment->create_object( 'manual.jpg', 0, array( 'post_mime_type' => 'image/jpeg' ) );
+		$picked   = self::factory()->attachment->create_object( 'picked.jpg', 0, array( 'post_mime_type' => 'image/jpeg' ) );
+
+		$product->set_image_id( $manual );
+		$product->save();
+		$this->repo->save( $this->campaign['id'], array(), 'Test box' );
+		$this->assertSame( $manual, (int) wc_get_product( $product->get_id() )->get_image_id() );
+
+		$this->repo->save( $this->campaign['id'], array( 'image_id' => $picked ), 'Test box' );
+		$this->assertSame( $picked, (int) wc_get_product( $product->get_id() )->get_image_id() );
+	}
+
 	/** The container follows the campaign name and goes to the trash with it. */
 	public function test_container_follows_the_campaign() {
 		$this->repo->save( $this->campaign['id'], array(), 'Renamed box' );
@@ -246,7 +262,7 @@ class CartBoxTest extends \WP_UnitTestCase {
 		$line = $this->box_line();
 		$data = wp_list_pluck( apply_filters( 'woocommerce_get_item_data', array(), $line ), 'value', 'key' );
 
-		$this->assertStringContainsString( '2 × Cookie 1', $data['Contents'] );
+		$this->assertStringContainsString( '2 Ã— Cookie 1', $data['Contents'] );
 		$this->assertStringContainsString( '10%', $data['Box discount'] );
 		$this->assertStringContainsString( 'Add 2 more items to get 20% off', $data['Next discount'] );
 	}
@@ -444,7 +460,7 @@ class CartBoxTest extends \WP_UnitTestCase {
 		$items = array_values( $order->get_items() );
 
 		$this->assertNotEmpty( $items[0]->get_meta( Order_Boxes::META_BOX ) );
-		$this->assertStringContainsString( '2 × Cookie 1', $items[0]->get_meta( 'Contents' ) );
+		$this->assertStringContainsString( '2 Ã— Cookie 1', $items[0]->get_meta( 'Contents' ) );
 		$this->assertNotSame( '', $items[0]->get_meta( 'Box discount' ) );
 		$this->assertSame( '1', (string) $order->get_meta( Order_Boxes::META_ORDER ) );
 		$this->assertTrue( (bool) get_option( 'mmbb_setup_test_done' ) );
@@ -462,6 +478,39 @@ class CartBoxTest extends \WP_UnitTestCase {
 		$order = wc_get_order( $order->get_id() );
 		wc_increase_stock_levels( $order );
 		$this->assertSame( 20, wc_get_product( $this->products[1]->get_id() )->get_stock_quantity() );
+	}
+
+	/** A one-line box grants download access to its downloadable items, once, and lists the links. */
+	public function test_one_line_box_grants_item_downloads() {
+		// Remote or unlisted file URLs are refused while WooCommerce restricts download directories.
+		update_option( 'wc_downloads_approved_directories_mode', 'disabled' );
+		$item = wc_get_product( $this->products[1]->get_id() );
+		$item->set_downloadable( true );
+		$item->set_virtual( true );
+		$item->set_downloads(
+			array(
+				array(
+					'name' => 'Guide',
+					'file' => wp_get_upload_dir()['baseurl'] . '/guide.pdf',
+				),
+			)
+		);
+		$item->save();
+
+		$this->add();
+		$order = $this->order_from_cart();
+		$order->set_billing_email( 'buyer@example.com' );
+		$order->save();
+
+		wc_downloadable_product_permissions( $order->get_id(), true );
+		wc_downloadable_product_permissions( $order->get_id(), true );
+
+		$store = \WC_Data_Store::load( 'customer-download' );
+		$this->assertCount( 1, $store->get_downloads( array( 'order_id' => $order->get_id(), 'product_id' => $item->get_id() ) ) );
+
+		$links = wc_get_order( $order->get_id() )->get_downloadable_items();
+		$this->assertCount( 1, $links );
+		$this->assertSame( 'Guide', $links[0]['download_name'] );
 	}
 
 	/** With the setting off, item stock is left alone. */

@@ -3,7 +3,7 @@
  * Plugin Name:       ProductBoxes - Mix & Match Box Builder for WooCommerce
  * Plugin URI:        https://bestwebexpert.com/productboxes
  * Description:       Let shoppers pick products into a build-your-own box and unlock tiered discounts as the box fills. For WooCommerce.
- * Version:           2.0.1
+ * Version:           2.0.2
  * Requires at least: 6.6
  * Requires PHP:      7.4
  * Requires Plugins:  woocommerce
@@ -21,7 +21,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'MMBB_VERSION', '2.0.1' );
+define( 'MMBB_VERSION', '2.0.2' );
 define( 'MMBB_FILE', __FILE__ );
 define( 'MMBB_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MMBB_URL', plugin_dir_url( __FILE__ ) );

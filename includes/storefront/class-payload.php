@@ -163,6 +163,7 @@ final class Payload {
 		}
 		$design['show_headline'] = (bool) $content['show_headline'];
 		$design['show_intro']    = (bool) $content['show_intro'];
+		$design['show_sort']     = ! isset( $content['show_sort'] ) || (bool) $content['show_sort'];
 		$design['columns']       = $design['cards']['columns'];
 		$design['show_ladder']   = $design['summary']['show_ladder'];
 		if ( 'bar' === $design['summary']['position'] ) {

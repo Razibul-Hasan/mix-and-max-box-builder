@@ -5,7 +5,7 @@ Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
 Requires Plugins: woocommerce
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -121,6 +121,14 @@ No. Everything is bundled locally.
 
 == Changelog ==
 
+= 2.0.2 =
+* Fixed: a box sold as "One line" did not deliver downloads. The order, the confirmation page and the customer email now list the files of every downloadable product in the box, and My Account → Downloads shows them too. Download limits and expiry follow each product's own settings.
+* Added: a "Box image" picker under Design → Content in the campaign editor. The image you choose is used as the box's photo in the cart, at checkout and in order emails.
+* Improved: without a box image, the box uses the photo of the first product it offers instead of a grey placeholder. A photo you set yourself in WooCommerce → Products is never replaced.
+* Improved: more automated tests for box downloads and box images.
+* Improved: a smaller plugin download (about 0.8 MB, down from 1.2 MB). Files the plugin never loaded are no longer included: an unused image, two font files that were bundled twice, and two right-to-left stylesheets nothing used.
+* Added: a Live Preview on the plugin page. Try a demo store with 10 working box campaigns, one for each storefront template, using real product photos and sample analytics, without installing anything.
+
 = 2.0.1 =
 * Fixed: with WooPayments Multi-Currency, items in an "Each item" cart showed the store-currency price struck through (for example AUD 19.95 shown as GBP 19.95) and a wrong savings label. Regular and sale prices now follow the shopper's currency.
 * Fixed: boxes made only of virtual or downloadable products were charged shipping. A box now needs no shipping when everything in it is virtual. A physical item, a physical free gift or gift wrap still ships.
@@ -143,6 +151,9 @@ No. Everything is bundled locally.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 2.0.2 =
+Fixes missing download links and permissions for boxes sold as one line, and adds a box image picker so the cart and order emails show a photo of your box. Smaller download. No data changes.
 
 = 2.0.1 =
 Fixes cart prices with WooPayments Multi-Currency and removes shipping charges on boxes of virtual products. Style tab options now match each template, and the box looks right on more themes, including Elastra, Extendable and Inspiro. Adds options to hide the headline and intro. No data changes.
@@ -171,7 +182,7 @@ Optional analytics stay in your WordPress database. Session IDs use browser `ses
 
 Source is in `src/`. Build with Node.js 20.19+: `npm install` then `npm run build`. Config: `package.json`, `webpack.config.js`.
 
-Repository: https://github.com/Razibul-Hasan/productboxes-mix-and-match-box-builder
+Repository: https://github.com/Razibul-Hasan/mix-and-max-box-builder
 
 == Credits ==
 

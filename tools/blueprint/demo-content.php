@@ -2,9 +2,12 @@
 /**
  * Demo store for the WordPress.org live preview (WordPress Playground).
  *
- * The blueprint built by tools/blueprint/build.mjs inlines this file, writes
- * it to /tmp and calls mmbb_demo_seed() once WooCommerce and the plugin are
- * active. It is never shipped in the plugin zip.
+ * The blueprint built by tools/blueprint/build.mjs writes the product photos to
+ * /tmp/mmbb-demo/, inlines this file, writes it to /tmp and calls mmbb_demo_seed()
+ * once WooCommerce and the plugin are active. It is never shipped in the plugin zip.
+ *
+ * The store has ten live box campaigns, one for each storefront design template,
+ * each on its own page, plus a gallery page that links them all.
  *
  * @package MixMax\BoxBuilder
  */
@@ -17,6 +20,9 @@ use MixMax\BoxBuilder\Analytics\Query;
 use MixMax\BoxBuilder\Campaigns\Campaign_Repository;
 use MixMax\BoxBuilder\Campaigns\Config;
 use MixMax\BoxBuilder\Campaigns\Publisher;
+
+/** Where the blueprint puts the product photos. */
+const MMBB_DEMO_PHOTOS = '/tmp/mmbb-demo';
 
 /** Build the whole demo: store settings, products, campaigns, pages and analytics. */
 function mmbb_demo_seed() {
@@ -36,16 +42,32 @@ function mmbb_demo_seed() {
 	mmbb_demo_store();
 	$products  = mmbb_demo_products();
 	$campaigns = mmbb_demo_campaigns( $products );
-	mmbb_demo_navigation( $campaigns );
+	$gallery   = mmbb_demo_gallery_page();
+	mmbb_demo_navigation( $campaigns, $gallery );
 	mmbb_demo_analytics( $campaigns, $products );
 
+	$pages = array();
+	foreach ( $campaigns as $key => $campaign ) {
+		if ( $campaign['page_id'] ) {
+			$pages[] = array(
+				'key'      => $key,
+				'template' => $campaign['template'],
+				'name'     => $campaign['name'],
+				'title'    => $campaign['title'],
+				'type'     => $campaign['type'],
+				'blurb'    => $campaign['blurb'],
+				'page_id'  => $campaign['page_id'],
+				'campaign' => $campaign['id'],
+				'images'   => $campaign['images'],
+			);
+		}
+	}
 	update_option(
 		'mmbb_demo_links',
 		array(
-			'holiday'  => $campaigns['holiday']['page_id'],
-			'spa'      => $campaigns['spa']['page_id'],
-			'trio'     => $campaigns['trio']['page_id'],
-			'campaign' => $campaigns['holiday']['id'],
+			'gallery'  => $gallery,
+			'pages'    => $pages,
+			'campaign' => $pages ? $pages[0]['campaign'] : 0,
 		),
 		false
 	);
@@ -58,8 +80,8 @@ function mmbb_demo_store() {
 	flush_rewrite_rules();
 
 	$options = array(
-		'blogname'                                 => 'Northwind Pantry',
-		'blogdescription'                          => 'Small-batch treats, tea and candles',
+		'blogname'                                 => 'Common Goods',
+		'blogdescription'                          => 'Coffee, self-care and everyday objects, boxed your way',
 		'woocommerce_store_address'                => '120 Harbor Street',
 		'woocommerce_store_city'                   => 'San Francisco',
 		'woocommerce_store_postcode'               => '94105',
@@ -104,16 +126,18 @@ function mmbb_demo_store() {
 }
 
 /**
- * Create the categories and products, each with an illustrated image.
+ * Create the categories and products, each with its photo.
  *
- * @return array Product rows from mmbb_demo_catalog(), keyed by slug, with `id` added.
+ * @return array Product rows from mmbb_demo_catalog(), keyed by slug, with `id` and `image` added.
  */
 function mmbb_demo_products() {
 	$categories = array();
 	foreach ( array(
-		'sweets'  => 'Sweets',
-		'tea'     => 'Tea & honey',
-		'candles' => 'Candles & bath',
+		'coffee-tea'  => 'Coffee & tea',
+		'sweets'      => 'Sweets',
+		'self-care'   => 'Self-care',
+		'home'        => 'Home',
+		'accessories' => 'Accessories',
 	) as $slug => $name ) {
 		$term                = wp_insert_term( $name, 'product_cat', array( 'slug' => $slug ) );
 		$categories[ $slug ] = is_wp_error( $term ) ? (int) $term->get_error_data( 'term_exists' ) : (int) $term['term_id'];
@@ -130,15 +154,16 @@ function mmbb_demo_products() {
 			$product->set_sale_price( $row['sale'] );
 		}
 		$product->set_short_description( $row['blurb'] );
+		$product->set_description( $row['blurb'] );
 		$product->set_category_ids( array( $categories[ $row['cat'] ] ) );
 		if ( isset( $row['stock'] ) ) {
 			$product->set_manage_stock( true );
 			$product->set_stock_quantity( $row['stock'] );
 			$product->set_stock_status( $row['stock'] > 0 ? 'instock' : 'outofstock' );
 		}
-		$image = mmbb_demo_image( $slug, $row['name'], $row['art'], isset( $row['swap'] ) ? $row['swap'] : array() );
-		if ( $image ) {
-			$product->set_image_id( $image );
+		$row['image'] = mmbb_demo_photo( $slug, $row['name'] );
+		if ( $row['image'] ) {
+			$product->set_image_id( $row['image'] );
 		}
 		$row['id']         = $product->save();
 		$products[ $slug ] = $row;
@@ -147,212 +172,376 @@ function mmbb_demo_products() {
 }
 
 /**
- * The demo catalog. `art` names a ProductArt drawing; `swap` recolours it.
- * `weight` is how often shoppers pick it in the seeded analytics.
+ * The demo catalog. `photo` is an Unsplash photo id (free to use under the
+ * Unsplash license); build.mjs downloads each one. `weight` is how often
+ * shoppers pick it in the seeded analytics.
+ *
+ * Keep the slugs and photo ids in step with PHOTOS in build.mjs.
  *
  * @return array[]
  */
 function mmbb_demo_catalog() {
 	return array(
-		'brown-butter-chip'      => array(
-			'name'   => 'Brown Butter Chip',
-			'cat'    => 'sweets',
-			'art'    => 'cookie',
-			'price'  => '4.50',
-			'weight' => 10,
-			'blurb'  => 'Chewy brown butter cookie with dark chocolate chips. 85 g.',
-		),
-		'raspberry-macaron-duo'  => array(
-			'name'   => 'Raspberry Macaron Duo',
-			'cat'    => 'sweets',
-			'art'    => 'macaron',
-			'price'  => '5.00',
-			'weight' => 8,
-			'blurb'  => 'Two almond shells filled with raspberry ganache.',
-		),
-		'glazed-ring'            => array(
-			'name'   => 'Glazed Ring',
-			'cat'    => 'sweets',
-			'art'    => 'donut',
-			'price'  => '3.50',
-			'weight' => 6,
-			'blurb'  => 'Brioche ring with a pink berry glaze and sprinkles.',
-		),
-		'dark-bar-70'            => array(
-			'name'   => '70% Dark Bar',
-			'cat'    => 'sweets',
-			'art'    => 'chocolate',
-			'price'  => '5.50',
-			'weight' => 5,
-			'blurb'  => 'Single-origin dark chocolate. 80 g.',
-		),
-		'double-chocolate-chunk' => array(
-			'name'   => 'Double Chocolate Chunk',
-			'cat'    => 'sweets',
-			'art'    => 'cookie',
-			'price'  => '4.75',
-			'weight' => 7,
-			'swap'   => array(
-				'#c98a4b' => '#6e4227',
-				'#5a3519' => '#f3e3cc',
-				'#f3e3cc' => '#ecdcd0',
+		// Coffee & tea.
+		'espresso-roast'       => array( 'name' => 'Espresso Roast', 'cat' => 'coffee-tea', 'price' => '16.00', 'weight' => 10, 'blurb' => 'Chocolatey dark roast for espresso and moka pot. 250 g whole bean.' ),
+		'pour-over-blend'      => array( 'name' => 'Pour-Over Blend', 'cat' => 'coffee-tea', 'price' => '18.00', 'sale' => '15.00', 'weight' => 8, 'blurb' => 'Bright, fruity light roast made for filter brewing. 250 g.' ),
+		'barista-latte-kit'    => array( 'name' => 'Barista Latte Kit', 'cat' => 'coffee-tea', 'price' => '22.00', 'weight' => 6, 'blurb' => 'Espresso blend, cocoa dust and a stencil for latte art at home.' ),
+		'breakfast-leaf-tea'   => array( 'name' => 'Breakfast Leaf Tea', 'cat' => 'coffee-tea', 'price' => '12.00', 'weight' => 7, 'blurb' => 'Malty Assam and Ceylon loose leaf. 100 g tin.' ),
+		'herbal-tea-sachets'   => array( 'name' => 'Herbal Tea Sachets', 'cat' => 'coffee-tea', 'price' => '9.50', 'weight' => 6, 'blurb' => 'Chamomile, mint and lemongrass pyramids. 15 sachets.' ),
+		'cold-brew-black-tea'  => array( 'name' => 'Cold-Brew Black Tea', 'cat' => 'coffee-tea', 'price' => '10.00', 'weight' => 4, 'blurb' => 'Steep overnight for a smooth iced tea. 12 bags.' ),
+		'raw-wildflower-honey' => array( 'name' => 'Raw Wildflower Honey', 'cat' => 'coffee-tea', 'price' => '11.00', 'stock' => 6, 'weight' => 6, 'blurb' => 'Unfiltered honey from small local apiaries. 340 g jar.' ),
+		// Sweets.
+		'brown-butter-cookies' => array( 'name' => 'Brown Butter Cookies', 'cat' => 'sweets', 'price' => '8.00', 'weight' => 10, 'blurb' => 'Six chewy cookies with pools of dark chocolate.' ),
+		'bakery-cookie-bag'    => array( 'name' => 'Bakery Cookie Bag', 'cat' => 'sweets', 'price' => '12.00', 'sale' => '9.60', 'weight' => 7, 'blurb' => 'A dozen classic chocolate chip cookies, baked fresh.' ),
+		'dark-chocolate-shards' => array( 'name' => '70% Dark Shards', 'cat' => 'sweets', 'price' => '7.50', 'weight' => 6, 'blurb' => 'Single-origin dark chocolate, broken by hand. 120 g.' ),
+		'white-almond-bar'     => array( 'name' => 'White Chocolate Almond', 'cat' => 'sweets', 'price' => '7.00', 'weight' => 4, 'blurb' => 'Creamy white chocolate with roasted almonds. 100 g.' ),
+		'salted-chocolate-bark' => array( 'name' => 'Salted Chocolate Bark', 'cat' => 'sweets', 'price' => '9.00', 'weight' => 5, 'blurb' => 'Dark chocolate bark with sea salt, nuts and dried fruit.' ),
+		// Self-care.
+		'amber-face-serum'     => array( 'name' => 'Amber Face Serum', 'cat' => 'self-care', 'price' => '28.00', 'weight' => 8, 'blurb' => 'Vitamin C serum in an amber dropper bottle. 30 ml.' ),
+		'botanical-face-oil'   => array( 'name' => 'Botanical Face Oil', 'cat' => 'self-care', 'price' => '24.00', 'weight' => 7, 'blurb' => 'Squalane and rosehip for a dewy finish. 30 ml.' ),
+		'charcoal-clay-mask'   => array( 'name' => 'Charcoal Clay Mask', 'cat' => 'self-care', 'price' => '19.00', 'weight' => 5, 'blurb' => 'Deep-cleansing mask with activated charcoal. 50 ml.' ),
+		'herbal-body-oil'      => array( 'name' => 'Herbal Body Oil', 'cat' => 'self-care', 'price' => '21.00', 'sale' => '17.00', 'weight' => 6, 'blurb' => 'Lavender and cedar body oil for after the shower. 100 ml.' ),
+		'hemp-seed-balm'       => array( 'name' => 'Hemp Seed Balm', 'cat' => 'self-care', 'price' => '16.00', 'weight' => 4, 'blurb' => 'Rich balm for hands, elbows and heels. 60 g.' ),
+		'shower-trio'          => array( 'name' => 'Shower Essentials Trio', 'cat' => 'self-care', 'price' => '32.00', 'weight' => 5, 'blurb' => 'Shampoo, conditioner and body wash in refillable bottles.' ),
+		'nail-cuticle-oil'     => array( 'name' => 'Nail & Cuticle Oil', 'cat' => 'self-care', 'price' => '12.00', 'weight' => 4, 'blurb' => 'Jojoba nail oil with a precision brush. 10 ml.' ),
+		'makeup-brush-set'     => array( 'name' => 'Makeup Brush Set', 'cat' => 'self-care', 'price' => '26.00', 'stock' => 0, 'weight' => 2, 'blurb' => 'Five vegan brushes for face and eyes.' ),
+		// Home.
+		'amber-soy-candle'     => array( 'name' => 'Amber Soy Candle', 'cat' => 'home', 'price' => '18.00', 'sale' => '14.40', 'stock' => 4, 'weight' => 8, 'blurb' => 'Hand-poured soy wax with amber and vanilla. 40-hour burn.' ),
+		'everyday-mug'         => array( 'name' => 'Everyday Ceramic Mug', 'cat' => 'home', 'price' => '14.00', 'weight' => 7, 'blurb' => 'Matte white stoneware mug. 350 ml.' ),
+		'stoneware-cup-set'    => array( 'name' => 'Stoneware Cup Set', 'cat' => 'home', 'price' => '30.00', 'weight' => 5, 'blurb' => 'Four handleless cups with a speckled glaze.' ),
+		'oak-serving-board'    => array( 'name' => 'Oak Serving Board', 'cat' => 'home', 'price' => '34.00', 'weight' => 4, 'blurb' => 'Solid oak board for bread, cheese and brunch.' ),
+		'ivory-bud-vase'       => array( 'name' => 'Ivory Bud Vase', 'cat' => 'home', 'price' => '22.00', 'weight' => 5, 'blurb' => 'Hand-thrown ceramic vase with a soft matte glaze.' ),
+		'dot-grid-notebook'    => array( 'name' => 'Dot-Grid Notebook', 'cat' => 'home', 'price' => '9.00', 'weight' => 6, 'blurb' => 'A5 lay-flat notebook with 160 dotted pages.' ),
+		// Accessories.
+		'insulated-bottle'     => array( 'name' => 'Insulated Steel Bottle', 'cat' => 'accessories', 'price' => '24.00', 'weight' => 7, 'blurb' => 'Keeps drinks cold for 24 hours. 500 ml.' ),
+		'canvas-market-tote'   => array( 'name' => 'Canvas Market Tote', 'cat' => 'accessories', 'price' => '15.00', 'weight' => 6, 'blurb' => 'Heavy cotton tote with long shoulder handles.' ),
+		'round-sunglasses'     => array( 'name' => 'Round Sunglasses', 'cat' => 'accessories', 'price' => '38.00', 'weight' => 5, 'blurb' => 'Gold wire frames with polarised green lenses.' ),
+		'minimal-white-watch'  => array( 'name' => 'Minimal White Watch', 'cat' => 'accessories', 'price' => '59.00', 'sale' => '49.00', 'weight' => 6, 'blurb' => 'Clean dial and silicone strap. Water resistant to 50 m.' ),
+		'studio-headphones'    => array( 'name' => 'Studio Headphones', 'cat' => 'accessories', 'price' => '69.00', 'weight' => 4, 'blurb' => 'Closed-back over-ear headphones with a 3 m cable.' ),
+		'tan-crossbody-bag'    => array( 'name' => 'Tan Crossbody Bag', 'cat' => 'accessories', 'price' => '48.00', 'stock' => 3, 'weight' => 4, 'blurb' => 'Vegan leather bag with an adjustable strap.' ),
+		'filigree-bracelet'    => array( 'name' => 'Filigree Gold Bracelet', 'cat' => 'accessories', 'price' => '36.00', 'weight' => 3, 'blurb' => 'Gold-plated bracelet with an openwork pattern.' ),
+	);
+}
+
+/**
+ * The ten campaigns, one per storefront design template.
+ *
+ * `starter` is the plugin's own campaign starter the campaign is created from;
+ * `config` is saved on top, exactly as the editor would save it.
+ *
+ * @param callable $ids Slugs to product ids.
+ * @param callable $day Days from now to an ISO date.
+ * @return array[]
+ */
+function mmbb_demo_plans( $ids, $day ) {
+	$step = static function ( $qty, $type, $value, $tag = '' ) {
+		$row = array(
+			'qty'           => $qty,
+			'discount_type' => $type,
+			'value'         => $value,
+		);
+		if ( '' !== $tag ) {
+			$row['tag'] = $tag;
+		}
+		return $row;
+	};
+
+	return array(
+		'coffee'    => array(
+			'template' => 'spotlight',
+			'starter'  => 'holiday',
+			'title'    => 'Coffee Break Box',
+			'slug'     => 'coffee-break-box',
+			'blurb'    => 'Tiered discounts that grow with the box, a live countdown and a discount ladder.',
+			'config'   => array(
+				'type'     => 'tiered',
+				'box'      => array(
+					'capacity'         => 12,
+					'min_items'        => 4,
+					'allow_duplicates' => true,
+					'max_per_product'  => 6,
+				),
+				'tiers'    => array( $step( 4, 'percent', 10 ), $step( 8, 'percent', 15 ), $step( 12, 'percent', 25 ) ),
+				'products' => array( 'ids' => $ids( array( 'espresso-roast', 'pour-over-blend', 'barista-latte-kit', 'breakfast-leaf-tea', 'herbal-tea-sachets', 'raw-wildflower-honey', 'brown-butter-cookies', 'bakery-cookie-bag', 'dark-chocolate-shards', 'salted-chocolate-bark', 'everyday-mug', 'amber-soy-candle' ) ) ),
+				'schedule' => array(
+					'end'            => $day( 9 ),
+					'countdown_days' => 14,
+				),
+				'extras'   => array( 'gift_message' => true ),
+				'design'   => array(
+					'headline' => 'Mix any 12. Save up to 25%.',
+					'intro'    => 'Beans, tea and something sweet, packed in one box. The more you add, the more you save.',
+					'sticker'  => 'Best seller',
+				),
 			),
-			'blurb'  => 'Cocoa dough with white chocolate chunks. 85 g.',
 		),
-		'pistachio-macaron-duo'  => array(
-			'name'   => 'Pistachio Macaron Duo',
-			'cat'    => 'sweets',
-			'art'    => 'macaron',
-			'price'  => '5.00',
-			'weight' => 6,
-			'swap'   => array(
-				'#e88aa6' => '#9fc48c',
-				'#f6dfe6' => '#e6efdc',
+		'desk'      => array(
+			'template' => 'clean',
+			'starter'  => 'spa',
+			'title'    => 'Desk Essentials Kit',
+			'slug'     => 'desk-essentials-kit',
+			'blurb'    => 'A quiet product list with two fixed box sizes and a size tag on each.',
+			'config'   => array(
+				'type'     => 'fixed',
+				'box'      => array(
+					'capacity'         => 5,
+					'min_items'        => 3,
+					'allow_duplicates' => false,
+					'max_per_product'  => 1,
+				),
+				'sizes'    => array( $step( 3, 'percent', 10, 'popular' ), $step( 5, 'percent', 18, 'best_value' ) ),
+				'products' => array( 'ids' => $ids( array( 'dot-grid-notebook', 'everyday-mug', 'insulated-bottle', 'studio-headphones', 'minimal-white-watch', 'canvas-market-tote', 'ivory-bud-vase', 'espresso-roast' ) ) ),
+				'extras'   => array(
+					'gift_wrap' => array(
+						'enabled' => false,
+						'fee'     => 0,
+					),
+				),
+				'design'   => array(
+					'headline' => 'Build your desk kit',
+					'intro'    => 'Pick 3 or 5 everyday pieces for the desk. The bigger kit saves you 18%.',
+					'sticker'  => 'Save 18%',
+				),
 			),
-			'blurb'  => 'Two almond shells filled with roasted pistachio cream.',
 		),
-		'strawberry-sprinkle'    => array(
-			'name'   => 'Strawberry Sprinkle Ring',
-			'cat'    => 'sweets',
-			'art'    => 'donut',
-			'price'  => '3.75',
-			'weight' => 4,
-			'swap'   => array(
-				'#d9577a' => '#f3a6bf',
-				'#fbe6d4' => '#fde8ee',
+		'ritual'    => array(
+			'template' => 'steps',
+			'starter'  => 'spa',
+			'title'    => 'Self-Care Ritual',
+			'slug'     => 'self-care-ritual',
+			'blurb'    => 'Guided steps walk shoppers through size, products and gift wrap.',
+			'config'   => array(
+				'type'     => 'fixed',
+				'box'      => array(
+					'capacity'         => 6,
+					'min_items'        => 4,
+					'allow_duplicates' => false,
+					'max_per_product'  => 1,
+				),
+				'sizes'    => array( $step( 4, 'percent', 10, 'popular' ), $step( 6, 'percent', 15, 'best_value' ) ),
+				'products' => array( 'ids' => $ids( array( 'amber-face-serum', 'botanical-face-oil', 'charcoal-clay-mask', 'herbal-body-oil', 'hemp-seed-balm', 'shower-trio', 'nail-cuticle-oil', 'amber-soy-candle', 'herbal-tea-sachets', 'makeup-brush-set' ) ) ),
+				'extras'   => array(
+					'gift_wrap' => array(
+						'enabled' => true,
+						'fee'     => 4,
+					),
+				),
+				'design'   => array(
+					'headline' => 'Your self-care ritual, in three steps',
+					'intro'    => 'Choose a size, fill it with favourites and add gift wrap if it is for someone else.',
+					'sticker'  => 'Save up to 15%',
+				),
 			),
-			'blurb'  => 'Brioche ring with strawberry icing.',
 		),
-		'sea-salt-milk-bar'      => array(
-			'name'   => 'Sea Salt Milk Bar',
-			'cat'    => 'sweets',
-			'art'    => 'chocolate',
-			'price'  => '5.50',
-			'sale'   => '4.40',
-			'weight' => 4,
-			'swap'   => array(
-				'#6b3e26' => '#a86b45',
-				'#4e2b19' => '#865230',
-				'#eadcd2' => '#f4e6da',
+		'gift'      => array(
+			'template' => 'gift',
+			'starter'  => 'gift',
+			'title'    => 'Build-a-Gift Box',
+			'slug'     => 'build-a-gift',
+			'blurb'    => 'A gift tray with a handwritten note, gift wrap and no prices on the packing slip.',
+			'config'   => array(
+				'type'     => 'fixed',
+				'box'      => array(
+					'capacity'         => 4,
+					'min_items'        => 4,
+					'allow_duplicates' => false,
+					'max_per_product'  => 1,
+				),
+				'sizes'    => array( $step( 4, 'percent', 10 ) ),
+				'products' => array( 'ids' => $ids( array( 'amber-soy-candle', 'raw-wildflower-honey', 'breakfast-leaf-tea', 'salted-chocolate-bark', 'everyday-mug', 'ivory-bud-vase', 'botanical-face-oil', 'filigree-bracelet' ) ) ),
+				'extras'   => array(
+					'gift_message' => true,
+					'gift_wrap'    => array(
+						'enabled' => true,
+						'fee'     => 5,
+					),
+				),
+				'design'   => array(
+					'headline' => 'Four thoughtful things, one gift',
+					'intro'    => 'Fill the tray with four favourites. We wrap it, tuck in your note and leave the prices out.',
+					'sticker'  => 'Gift ready',
+				),
 			),
-			'blurb'  => 'Creamy milk chocolate with flakes of sea salt. 80 g.',
 		),
-		'smoky-earl-grey'        => array(
-			'name'   => 'Smoky Earl Grey',
-			'cat'    => 'tea',
-			'art'    => 'tea',
-			'price'  => '8.75',
-			'sale'   => '7.00',
-			'weight' => 7,
-			'blurb'  => 'Lapsang and bergamot loose-leaf tea. 50 g tin.',
-		),
-		'wildflower-honey'       => array(
-			'name'   => 'Wildflower Honey',
-			'cat'    => 'tea',
-			'art'    => 'honey',
-			'price'  => '8.00',
-			'stock'  => 5,
-			'weight' => 6,
-			'blurb'  => 'Raw spring honey from local hives. 250 g.',
-		),
-		'jasmine-green'          => array(
-			'name'   => 'Jasmine Green',
-			'cat'    => 'tea',
-			'art'    => 'tea',
-			'price'  => '7.50',
-			'weight' => 5,
-			'swap'   => array(
-				'#3f6b5c' => '#3d5a85',
-				'#2f5246' => '#2c4263',
-				'#efe8d8' => '#e6ebf3',
+		'travel'    => array(
+			'template' => 'bold',
+			'starter'  => 'holiday',
+			'title'    => 'Travel Essentials',
+			'slug'     => 'travel-essentials',
+			'blurb'    => 'Big colour blocks and a bold ladder for a short, punchy tiered offer.',
+			'config'   => array(
+				'type'     => 'tiered',
+				'box'      => array(
+					'capacity'         => 8,
+					'min_items'        => 3,
+					'allow_duplicates' => false,
+					'max_per_product'  => 1,
+				),
+				'tiers'    => array( $step( 3, 'percent', 10 ), $step( 5, 'percent', 15 ), $step( 8, 'percent', 20 ) ),
+				'products' => array( 'ids' => $ids( array( 'insulated-bottle', 'round-sunglasses', 'studio-headphones', 'canvas-market-tote', 'minimal-white-watch', 'dot-grid-notebook', 'hemp-seed-balm', 'nail-cuticle-oil', 'cold-brew-black-tea', 'tan-crossbody-bag' ) ) ),
+				'schedule' => array(
+					'countdown_days' => 0,
+				),
+				'design'   => array(
+					'headline' => 'Pack smarter. Save up to 20%.',
+					'intro'    => 'Carry-on favourites for the next trip. Add 3, 5 or 8 and the discount steps up.',
+					'sticker'  => 'Up to 20% off',
+				),
 			),
-			'blurb'  => 'Green tea scented with jasmine blossom. 50 g tin.',
 		),
-		'orange-blossom-honey'   => array(
-			'name'   => 'Orange Blossom Honey',
-			'cat'    => 'tea',
-			'art'    => 'honey',
-			'price'  => '8.50',
-			'weight' => 4,
-			'swap'   => array(
-				'#e6a52c' => '#ef8a3a',
-				'#fbefd0' => '#fde7d6',
+		'glow'      => array(
+			'template' => 'pastel',
+			'starter'  => 'snack',
+			'title'    => 'Glow Skincare Bundle',
+			'slug'     => 'glow-skincare-bundle',
+			'blurb'    => 'Soft pastel bundle: any 3 skincare picks for one fixed price.',
+			'config'   => array(
+				'type'     => 'bundle',
+				'box'      => array(
+					'capacity'         => 3,
+					'min_items'        => 3,
+					'allow_duplicates' => false,
+					'max_per_product'  => 1,
+				),
+				'bundle'   => array(
+					'qty'   => 3,
+					'price' => 55,
+				),
+				'products' => array( 'ids' => $ids( array( 'amber-face-serum', 'botanical-face-oil', 'charcoal-clay-mask', 'herbal-body-oil', 'hemp-seed-balm', 'shower-trio', 'nail-cuticle-oil', 'makeup-brush-set' ) ) ),
+				'design'   => array(
+					'headline' => 'Any 3 for $55',
+					'intro'    => 'Build a glow routine from our skincare shelf. Three products, one simple price.',
+					'sticker'  => 'Bundle price',
+				),
 			),
-			'blurb'  => 'Light, floral honey from orange groves. 250 g.',
 		),
-		'fig-cedar-candle'       => array(
-			'name'   => 'Fig & Cedar Candle',
-			'cat'    => 'candles',
-			'art'    => 'candle',
-			'price'  => '12.00',
-			'sale'   => '9.00',
-			'stock'  => 3,
-			'weight' => 6,
-			'blurb'  => 'Soy candle with notes of green fig and cedarwood. 120 g.',
-		),
-		'sea-salt-candle'        => array(
-			'name'   => 'Sea Salt Candle',
-			'cat'    => 'candles',
-			'art'    => 'candle',
-			'price'  => '11.00',
-			'weight' => 4,
-			'swap'   => array(
-				'#7d9a7a' => '#6f9cc0',
-				'#e5ece4' => '#e4ecf2',
+		'tea'       => array(
+			'template' => 'editorial',
+			'starter'  => 'snack',
+			'title'    => 'The Tea Edit',
+			'slug'     => 'the-tea-edit',
+			'blurb'    => 'Magazine-style serif layout for a curated, story-led bundle.',
+			'config'   => array(
+				'type'     => 'bundle',
+				'box'      => array(
+					'capacity'         => 3,
+					'min_items'        => 3,
+					'allow_duplicates' => true,
+					'max_per_product'  => 2,
+				),
+				'bundle'   => array(
+					'qty'   => 3,
+					'price' => 30,
+				),
+				'products' => array( 'ids' => $ids( array( 'breakfast-leaf-tea', 'herbal-tea-sachets', 'cold-brew-black-tea', 'raw-wildflower-honey', 'everyday-mug', 'brown-butter-cookies', 'white-almond-bar' ) ) ),
+				'schedule' => array(
+					'end'            => $day( 4 ),
+					'countdown_days' => 7,
+				),
+				'design'   => array(
+					'headline' => 'The Tea Edit: any three, $30',
+					'intro'    => 'A slow afternoon in a box. Pair a leaf tea with honey, a mug or something sweet.',
+					'sticker'  => 'Editor’s pick',
+				),
 			),
-			'blurb'  => 'Soy candle with sea salt and driftwood. 120 g.',
 		),
-		'oat-milk-soap'          => array(
-			'name'   => 'Oat Milk Soap',
-			'cat'    => 'candles',
-			'art'    => 'soap',
-			'price'  => '6.50',
-			'weight' => 5,
-			'blurb'  => 'Gentle bar soap with colloidal oats. 100 g.',
-		),
-		'lavender-soap'          => array(
-			'name'   => 'Lavender Soap',
-			'cat'    => 'candles',
-			'art'    => 'soap',
-			'price'  => '6.50',
-			'weight' => 4,
-			'swap'   => array(
-				'#a9c6dc' => '#b7a5d8',
-				'#d6e6f1' => '#e3dbf2',
-				'#e4ecf2' => '#eee8f6',
+		'midnight'  => array(
+			'template' => 'night',
+			'starter'  => 'snack',
+			'title'    => 'Midnight Snack Box',
+			'slug'     => 'midnight-snack-box',
+			'blurb'    => 'A dark, neon-accented bundle: any 6 sweets for one price.',
+			'config'   => array(
+				'type'     => 'bundle',
+				'box'      => array(
+					'capacity'         => 6,
+					'min_items'        => 6,
+					'allow_duplicates' => true,
+					'max_per_product'  => 6,
+				),
+				'bundle'   => array(
+					'qty'   => 6,
+					'price' => 42,
+				),
+				'products' => array( 'ids' => $ids( array( 'brown-butter-cookies', 'bakery-cookie-bag', 'dark-chocolate-shards', 'white-almond-bar', 'salted-chocolate-bark', 'cold-brew-black-tea', 'espresso-roast' ) ) ),
+				'design'   => array(
+					'headline' => 'Any 6 late-night treats for $42',
+					'intro'    => 'Cookies, chocolate and a little caffeine. Mix freely, doubles welcome.',
+					'sticker'  => 'After dark',
+				),
 			),
-			'blurb'  => 'Bar soap with French lavender oil. 100 g.',
 		),
-		'rose-clay-soap'         => array(
-			'name'   => 'Rose Clay Soap',
-			'cat'    => 'candles',
-			'art'    => 'soap',
-			'price'  => '6.50',
-			'stock'  => 0,
-			'weight' => 2,
-			'swap'   => array(
-				'#a9c6dc' => '#e3a4a4',
-				'#d6e6f1' => '#f3d4d4',
-				'#e4ecf2' => '#f8e8e6',
+		'ceramics'  => array(
+			'template' => 'split',
+			'starter'  => 'spa',
+			'title'    => 'Home Ceramics Set',
+			'slug'     => 'home-ceramics-set',
+			'blurb'    => 'Split screen: products on one side, the box always in view on the other.',
+			'config'   => array(
+				'type'     => 'fixed',
+				'box'      => array(
+					'capacity'         => 4,
+					'min_items'        => 2,
+					'allow_duplicates' => true,
+					'max_per_product'  => 2,
+				),
+				'sizes'    => array( $step( 2, 'percent', 8 ), $step( 4, 'percent', 15, 'best_value' ) ),
+				'products' => array( 'ids' => $ids( array( 'everyday-mug', 'stoneware-cup-set', 'oak-serving-board', 'ivory-bud-vase', 'amber-soy-candle', 'dot-grid-notebook' ) ) ),
+				'extras'   => array(
+					'gift_wrap' => array(
+						'enabled' => false,
+						'fee'     => 0,
+					),
+				),
+				'design'   => array(
+					'headline' => 'Set the table, your way',
+					'intro'    => 'Pair two pieces or style a set of four. Duplicates allowed, so matching sets are easy.',
+					'sticker'  => 'Save 15%',
+				),
 			),
-			'blurb'  => 'Bar soap with pink kaolin clay. 100 g.',
+		),
+		'accessory' => array(
+			'template' => 'compact',
+			'starter'  => 'holiday',
+			'title'    => 'Accessories Mix',
+			'slug'     => 'accessories-mix',
+			'blurb'    => 'Compact cards that fit more products on screen, made for phones.',
+			'config'   => array(
+				'type'     => 'tiered',
+				'box'      => array(
+					'capacity'         => 6,
+					'min_items'        => 2,
+					'allow_duplicates' => false,
+					'max_per_product'  => 1,
+				),
+				'tiers'    => array( $step( 2, 'percent', 10 ), $step( 4, 'percent', 20 ), $step( 6, 'fixed_amount', 50 ) ),
+				'products' => array( 'ids' => $ids( array( 'round-sunglasses', 'minimal-white-watch', 'filigree-bracelet', 'tan-crossbody-bag', 'canvas-market-tote', 'insulated-bottle', 'studio-headphones' ) ) ),
+				'schedule' => array(
+					'countdown_days' => 0,
+				),
+				'design'   => array(
+					'headline' => 'Mix accessories, unlock up to $50 off',
+					'intro'    => '10% off two, 20% off four, and $50 off a full box of six.',
+					'sticker'  => 'Mix & save',
+				),
+			),
 		),
 	);
 }
 
 /**
  * Create the campaigns through the plugin's own repository and publisher, so
- * they are exactly what the wizard would save.
+ * they are exactly what the editor would save, and publish each to its page.
  *
  * @param array $products Products from mmbb_demo_products().
- * @return array Keyed by campaign: { id, page_id, config }.
+ * @return array Keyed by campaign: { id, page_id, config, template, name, title, type, blurb, images }.
  */
 function mmbb_demo_campaigns( array $products ) {
-	$ids = static function ( $cats, $skip = array() ) use ( $products ) {
+	$ids = static function ( array $slugs ) use ( $products ) {
 		$list = array();
-		foreach ( $products as $slug => $row ) {
-			if ( in_array( $row['cat'], (array) $cats, true ) && ! in_array( $slug, $skip, true ) ) {
-				$list[] = $row['id'];
+		foreach ( $slugs as $slug ) {
+			if ( isset( $products[ $slug ] ) ) {
+				$list[] = $products[ $slug ]['id'];
 			}
 		}
 		return $list;
@@ -360,105 +549,48 @@ function mmbb_demo_campaigns( array $products ) {
 	$day = static function ( $days ) {
 		return gmdate( 'Y-m-d\TH:i:s\Z', time() + $days * DAY_IN_SECONDS );
 	};
-
-	$plans = array(
-		'holiday' => array(
-			'template' => 'holiday',
-			'title'    => 'Holiday Treat Box',
-			'slug'     => 'holiday-treat-box',
-			'config'   => array(
-				'products' => array(
-					'source' => 'manual',
-					'ids'    => $ids( array( 'sweets', 'tea', 'candles' ) ),
-					'order'  => 'manual',
-				),
-				'schedule' => array(
-					'end'            => $day( 12 ),
-					'countdown_days' => 14,
-				),
-				'extras'   => array( 'gift_message' => true ),
-				'design'   => array(
-					'headline' => 'Mix 12 treats. Save 25%.',
-					'intro'    => 'Pick anything below and we pack it in a gift-ready box. The more you add, the more you save. Discounts apply automatically.',
-					'sticker'  => 'Holiday drop',
-				),
-			),
-		),
-		'spa'     => array(
-			'template' => 'spa',
-			'title'    => 'Build-a-Spa Kit',
-			'slug'     => 'spa-kit',
-			'config'   => array(
-				'products' => array(
-					'source' => 'manual',
-					'ids'    => $ids( array( 'candles', 'tea' ) ),
-					'order'  => 'manual',
-				),
-				'design'   => array(
-					'headline' => 'Build your own spa kit',
-					'intro'    => 'Choose 4 or 6 calming favourites. The bigger kit saves you 15%, and we can gift-wrap it.',
-					'sticker'  => 'Save up to 15%',
-					'theme'    => 'dark',
-				),
-			),
-		),
-		'trio'    => array(
-			'template' => 'snack',
-			'title'    => 'Tea Lover Trio',
-			'slug'     => 'tea-trio',
-			'config'   => array(
-				'box'      => array(
-					'capacity'         => 3,
-					'min_items'        => 3,
-					'allow_duplicates' => true,
-					'max_per_product'  => 3,
-				),
-				'bundle'   => array(
-					'qty'   => 3,
-					'price' => 18,
-				),
-				'products' => array(
-					'source' => 'manual',
-					'ids'    => array_merge( $ids( 'tea' ), $ids( 'sweets', array( 'strawberry-sprinkle', 'sea-salt-milk-bar', 'glazed-ring' ) ) ),
-					'order'  => 'manual',
-				),
-				'schedule' => array(
-					'end'            => $day( 3 ),
-					'countdown_days' => 7,
-				),
-				'design'   => array(
-					'headline' => 'Any 3 for one bundle price',
-					'intro'    => 'Two teas and a honey, or a cookie for every cup. Pick any three and the bundle price applies.',
-					'sticker'  => 'Bundle deal',
-				),
-			),
-		),
-		'gift'    => array(
-			'template' => 'gift',
-			'title'    => 'Valentine’s Gift Box',
-			'slug'     => '',
-			'config'   => array(
-				'products' => array(
-					'source' => 'manual',
-					'ids'    => $ids( array( 'candles', 'tea' ) ),
-					'order'  => 'manual',
-				),
-			),
-		),
+	$images = array();
+	foreach ( $products as $row ) {
+		$images[ $row['id'] ] = $row['image'];
+	}
+	$names = array(
+		'spotlight' => 'Spotlight',
+		'clean'     => 'Clean list',
+		'steps'     => 'Guided steps',
+		'gift'      => 'Gift tray',
+		'bold'      => 'Color block',
+		'pastel'    => 'Pastel',
+		'editorial' => 'Editorial',
+		'night'     => 'Night',
+		'split'     => 'Split screen',
+		'compact'   => 'Compact card',
+	);
+	$types = array(
+		'tiered' => 'Tiered discount',
+		'fixed'  => 'Fixed box sizes',
+		'bundle' => 'Bundle price',
 	);
 
 	$repo      = new Campaign_Repository();
 	$publisher = new Publisher( $repo );
 	$campaigns = array();
-	// Created oldest first, so the list (newest first) opens on the draft.
-	foreach ( $plans as $key => $plan ) {
-		$campaign = $repo->create_from_template( $plan['template'], $plan['title'] );
+	// Created in reverse, so the campaign list (newest first) reads in gallery order.
+	foreach ( array_reverse( mmbb_demo_plans( $ids, $day ), true ) as $key => $plan ) {
+		$campaign = $repo->create_from_template( $plan['starter'], $plan['title'] );
 		if ( is_wp_error( $campaign ) ) {
 			continue;
 		}
-		$campaign = $repo->save( $campaign['id'], $plan['config'] );
-		$page_id  = 0;
-		if ( '' !== $plan['slug'] && ! Config::validate( $campaign['config'] ) ) {
+		$config                       = $plan['config'];
+		$config['products']['source'] = 'manual';
+		$config['products']['order']  = 'manual';
+		$config['design']['template'] = $plan['template'];
+
+		$campaign = $repo->save( $campaign['id'], $config );
+		if ( is_wp_error( $campaign ) ) {
+			continue;
+		}
+		$page_id = 0;
+		if ( ! Config::validate( $campaign['config'] ) ) {
 			$published = $publisher->publish(
 				$campaign['id'],
 				array(
@@ -470,52 +602,85 @@ function mmbb_demo_campaigns( array $products ) {
 			if ( ! is_wp_error( $published ) ) {
 				$campaign = $published;
 				$page_id  = (int) $campaign['config']['placement']['page_id'];
-				mmbb_demo_wide_page( $page_id, $campaign['id'] );
+				mmbb_demo_wide_page( $page_id, $campaign['id'], $plan['template'] );
 			}
 		}
 		$campaigns[ $key ] = array(
-			'id'      => (int) $campaign['id'],
-			'page_id' => $page_id,
-			'config'  => $campaign['config'],
+			'id'       => (int) $campaign['id'],
+			'page_id'  => $page_id,
+			'config'   => $campaign['config'],
+			'template' => $plan['template'],
+			'name'     => $names[ $plan['template'] ],
+			'title'    => $plan['title'],
+			'type'     => $types[ $campaign['config']['type'] ],
+			'blurb'    => $plan['blurb'],
+			'images'   => array_values( array_filter( array_map( static function ( $id ) use ( $images ) {
+				return isset( $images[ $id ] ) ? (int) $images[ $id ] : 0;
+			}, array_slice( $campaign['config']['products']['ids'], 0, 3 ) ) ) ),
 		);
 	}
-
-	if ( $campaigns['holiday']['page_id'] ) {
-		update_option( 'show_on_front', 'page' );
-		update_option( 'page_on_front', $campaigns['holiday']['page_id'] );
-	}
-	return $campaigns;
+	return array_reverse( $campaigns, true );
 }
 
 /**
  * Show the builder wide, under the theme header but without a page title.
  *
- * @param int $page_id     Page id.
- * @param int $campaign_id Campaign id.
+ * @param int    $page_id     Page id.
+ * @param int    $campaign_id Campaign id.
+ * @param string $template    Design template, remembered for the demo navigation.
  */
-function mmbb_demo_wide_page( $page_id, $campaign_id ) {
+function mmbb_demo_wide_page( $page_id, $campaign_id, $template ) {
 	wp_update_post(
 		array(
 			'ID'           => $page_id,
 			'post_content' => '<!-- wp:mmbb/box-builder {"campaignId":' . (int) $campaign_id . ',"align":"wide"} /-->',
 		)
 	);
+	update_post_meta( $page_id, '_mmbb_demo_template', $template );
 	if ( array_key_exists( 'page-no-title', wp_get_theme()->get_page_templates() ) ) {
 		update_post_meta( $page_id, '_wp_page_template', 'page-no-title' );
 	}
 }
 
 /**
- * A header menu with the three boxes. Block themes fall back to the newest menu.
+ * The front page: a gallery of the ten templates. demo-site.php renders the shortcode.
+ *
+ * @return int Page id.
+ */
+function mmbb_demo_gallery_page() {
+	$page_id = wp_insert_post(
+		array(
+			'post_type'    => 'page',
+			'post_status'  => 'publish',
+			'post_title'   => 'Templates',
+			'post_name'    => 'templates',
+			'post_content' => '<!-- wp:shortcode -->[mmbb_demo_gallery]<!-- /wp:shortcode -->',
+		)
+	);
+	if ( is_wp_error( $page_id ) || ! $page_id ) {
+		return 0;
+	}
+	if ( array_key_exists( 'page-no-title', wp_get_theme()->get_page_templates() ) ) {
+		update_post_meta( $page_id, '_wp_page_template', 'page-no-title' );
+	}
+	update_option( 'show_on_front', 'page' );
+	update_option( 'page_on_front', $page_id );
+	return (int) $page_id;
+}
+
+/**
+ * A short header menu. Block themes fall back to the newest menu.
  *
  * @param array $campaigns Campaigns from mmbb_demo_campaigns().
+ * @param int   $gallery   Gallery page id.
  */
-function mmbb_demo_navigation( array $campaigns ) {
+function mmbb_demo_navigation( array $campaigns, $gallery ) {
+	$first   = reset( $campaigns );
 	$links   = array(
+		array( 'All templates', $gallery ),
+		array( 'Live box', $first ? $first['page_id'] : 0 ),
 		array( 'Shop', wc_get_page_id( 'shop' ) ),
-		array( 'Holiday box', $campaigns['holiday']['page_id'] ),
-		array( 'Spa kit', $campaigns['spa']['page_id'] ),
-		array( 'Tea trio', $campaigns['trio']['page_id'] ),
+		array( 'Cart', wc_get_page_id( 'cart' ) ),
 	);
 	$content = '';
 	foreach ( $links as $link ) {
@@ -556,11 +721,18 @@ function mmbb_demo_analytics( array $campaigns, array $products ) {
 		$weights[ $row['id'] ] = $row['weight'];
 	}
 
-	// Boxes a day at the start, growth over the period, conversion, average unit price, and how boxes split across tiers.
+	// Boxes a day at the start, growth over the period, conversion and average unit price.
 	$plans = array(
-		'holiday' => array( 6.5, 0.9, 0.085, 5.1, array( 3, 3.5, 3.5 ) ),
-		'spa'     => array( 3.5, 0.4, 0.072, 8.2, array( 5.5, 4.5 ) ),
-		'trio'    => array( 2.5, 0.2, 0.064, 7.4, array( 1 ) ),
+		'coffee'    => array( 6.5, 0.9, 0.085, 11 ),
+		'desk'      => array( 2.2, 0.3, 0.061, 26 ),
+		'ritual'    => array( 3.5, 0.5, 0.072, 21 ),
+		'gift'      => array( 3.0, 0.7, 0.069, 20 ),
+		'travel'    => array( 2.0, 0.4, 0.058, 33 ),
+		'glow'      => array( 2.8, 0.6, 0.074, 22 ),
+		'tea'       => array( 2.4, 0.3, 0.066, 11 ),
+		'midnight'  => array( 4.0, 0.5, 0.081, 9 ),
+		'ceramics'  => array( 1.6, 0.2, 0.052, 24 ),
+		'accessory' => array( 1.8, 0.4, 0.055, 38 ),
 	);
 
 	$days     = 60;
@@ -571,7 +743,7 @@ function mmbb_demo_analytics( array $campaigns, array $products ) {
 		if ( empty( $campaigns[ $key ]['page_id'] ) ) {
 			continue;
 		}
-		list( $base, $growth, $conversion, $unit, $split ) = $plan;
+		list( $base, $growth, $conversion, $unit ) = $plan;
 
 		$config = $campaigns[ $key ]['config'];
 		$tiers  = 'tiered' === $config['type'] ? $config['tiers'] : $config['sizes'];
@@ -583,6 +755,11 @@ function mmbb_demo_analytics( array $campaigns, array $products ) {
 					'value'         => $config['bundle']['price'],
 				),
 			);
+		}
+		// Bigger boxes sell a little less often than the entry size.
+		$split = array();
+		foreach ( $tiers as $index => $tier ) {
+			$split[] = max( 1, 4 - $index );
 		}
 		$pool = array_intersect_key( $weights, array_flip( $config['products']['ids'] ) );
 
@@ -606,6 +783,8 @@ function mmbb_demo_analytics( array $campaigns, array $products ) {
 				$subtotal = $items * $unit * wp_rand( 92, 108 ) / 100;
 				if ( 'box_price' === $tier['discount_type'] ) {
 					$value = $count * (float) $tier['value'];
+				} elseif ( 'fixed_amount' === $tier['discount_type'] ) {
+					$value = max( 0, $subtotal - $count * (float) $tier['value'] );
 				} else {
 					$value = $subtotal * ( 1 - (float) $tier['value'] / 100 );
 				}
@@ -683,87 +862,25 @@ function mmbb_demo_weighted( array $weights ) {
 }
 
 /**
- * Draw a product image and add it to the media library.
+ * Add a product photo the blueprint downloaded to the media library.
  *
- * @param string $slug  File name.
- * @param string $title Attachment title.
- * @param string $kind  Drawing from mmbb_demo_art().
- * @param array  $swap  Colour replacements, '#from' => '#to'.
- * @return int Attachment id, or 0 when GD is missing or the upload fails.
+ * @param string $slug  Product slug, which is also the photo's file name.
+ * @param string $title Attachment title and alt text.
+ * @return int Attachment id, or 0 when the photo is missing or the upload fails.
  */
-function mmbb_demo_image( $slug, $title, $kind, array $swap ) {
-	if ( ! function_exists( 'imagecreatetruecolor' ) ) {
+function mmbb_demo_photo( $slug, $title ) {
+	$source = MMBB_DEMO_PHOTOS . '/' . $slug . '.jpg';
+	if ( ! is_readable( $source ) || filesize( $source ) < 1024 ) {
 		return 0;
 	}
-	$art = mmbb_demo_art();
-	$art = $art[ $kind ];
-
-	// Drawn at twice the size and scaled down, which smooths GD's hard edges.
-	$scale = 12;
-	$size  = 100 * $scale;
-	$img   = imagecreatetruecolor( $size, $size );
-	$color = static function ( $hex ) use ( $img, $swap ) {
-		$hex = isset( $swap[ $hex ] ) ? $swap[ $hex ] : $hex;
-		return imagecolorallocate( $img, hexdec( substr( $hex, 1, 2 ) ), hexdec( substr( $hex, 3, 2 ) ), hexdec( substr( $hex, 5, 2 ) ) );
-	};
-	$px    = static function ( $value ) use ( $scale ) {
-		return (int) round( $value * $scale );
-	};
-
-	imagefilledrectangle( $img, 0, 0, $size - 1, $size - 1, $color( $art['bg'] ) );
-	foreach ( $art['shapes'] as $shape ) {
-		$fill = $color( end( $shape ) );
-		switch ( $shape[0] ) {
-			case 'circle':
-				imagefilledellipse( $img, $px( $shape[1] ), $px( $shape[2] ), $px( 2 * $shape[3] ), $px( 2 * $shape[3] ), $fill );
-				break;
-			case 'rect':
-				mmbb_demo_rounded( $img, $px( $shape[1] ), $px( $shape[2] ), $px( $shape[3] ), $px( $shape[4] ), $px( $shape[5] ), $fill );
-				break;
-			case 'line':
-				// Axis-aligned stroke: x1, y1, x2, y2, width.
-				$half = $shape[5] / 2;
-				imagefilledrectangle( $img, $px( $shape[1] - ( $shape[1] === $shape[3] ? $half : 0 ) ), $px( $shape[2] - ( $shape[2] === $shape[4] ? $half : 0 ) ), $px( $shape[3] + ( $shape[1] === $shape[3] ? $half : 0 ) ), $px( $shape[4] + ( $shape[2] === $shape[4] ? $half : 0 ) ), $fill );
-				break;
-			case 'sprinkle':
-				// A rounded bar: x, y, width, height, rotated by an angle around a point.
-				list( , $x, $y, $w, $h, $angle, $ox, $oy ) = $shape;
-				$ends                                      = array();
-				foreach ( array( $x + $h / 2, $x + $w - $h / 2 ) as $ex ) {
-					$rad    = deg2rad( $angle );
-					$ey     = $y + $h / 2;
-					$ends[] = array(
-						$ox + ( $ex - $ox ) * cos( $rad ) - ( $ey - $oy ) * sin( $rad ),
-						$oy + ( $ex - $ox ) * sin( $rad ) + ( $ey - $oy ) * cos( $rad ),
-					);
-				}
-				imagesetthickness( $img, $px( $h ) );
-				imageline( $img, $px( $ends[0][0] ), $px( $ends[0][1] ), $px( $ends[1][0] ), $px( $ends[1][1] ), $fill );
-				imagesetthickness( $img, 1 );
-				foreach ( $ends as $end ) {
-					imagefilledellipse( $img, $px( $end[0] ), $px( $end[1] ), $px( $h ), $px( $h ), $fill );
-				}
-				break;
-			case 'flame':
-				$points = array();
-				foreach ( mmbb_demo_flame() as $point ) {
-					$points[] = $px( $point[0] );
-					$points[] = $px( $point[1] );
-				}
-				// Playground runs PHP 8, where the point count is optional (and deprecated since 8.1).
-				imagefilledpolygon( $img, $points, $fill ); // phpcs:ignore PHPCompatibility.FunctionUse.RequiredToOptionalFunctionParameters
-				break;
-		}
+	// media_handle_sideload() moves the file, so hand it a copy.
+	$file = wp_tempnam( $slug . '.jpg' );
+	if ( ! copy( $source, $file ) ) {
+		return 0;
 	}
-
-	$out = imagecreatetruecolor( 600, 600 );
-	imagecopyresampled( $out, $img, 0, 0, 0, 0, 600, 600, $size, $size );
-	$file = wp_tempnam( $slug . '.png' );
-	imagepng( $out, $file, 6 );
-
 	$id = media_handle_sideload(
 		array(
-			'name'     => $slug . '.png',
+			'name'     => $slug . '.jpg',
 			'tmp_name' => $file,
 		),
 		0,
@@ -775,139 +892,4 @@ function mmbb_demo_image( $slug, $title, $kind, array $swap ) {
 	}
 	update_post_meta( $id, '_wp_attachment_image_alt', $title );
 	return (int) $id;
-}
-
-/**
- * A filled rounded rectangle in pixels.
- *
- * @param resource|\GdImage $img    Image.
- * @param int               $x      Left.
- * @param int               $y      Top.
- * @param int               $w      Width.
- * @param int               $h      Height.
- * @param int               $r      Corner radius.
- * @param int               $fill   Colour.
- */
-function mmbb_demo_rounded( $img, $x, $y, $w, $h, $r, $fill ) {
-	$r = min( $r, (int) floor( $w / 2 ), (int) floor( $h / 2 ) );
-	if ( $r < 1 ) {
-		imagefilledrectangle( $img, $x, $y, $x + $w - 1, $y + $h - 1, $fill );
-		return;
-	}
-	imagefilledrectangle( $img, $x + $r, $y, $x + $w - $r - 1, $y + $h - 1, $fill );
-	imagefilledrectangle( $img, $x, $y + $r, $x + $w - 1, $y + $h - $r - 1, $fill );
-	foreach ( array( array( $x + $r, $y + $r ), array( $x + $w - $r - 1, $y + $r ), array( $x + $r, $y + $h - $r - 1 ), array( $x + $w - $r - 1, $y + $h - $r - 1 ) ) as $corner ) {
-		imagefilledellipse( $img, $corner[0], $corner[1], 2 * $r, 2 * $r, $fill );
-	}
-}
-
-/**
- * The candle flame from ProductArt, `M50 17c4 5 5 8 5 10a5 5 0 0 1-10 0c0-2 1-5 5-10z`, as points.
- *
- * @return array[] Points in the 100 × 100 view box.
- */
-function mmbb_demo_flame() {
-	$curve  = static function ( $p0, $p1, $p2, $p3, $t ) {
-		$u = 1 - $t;
-		return array(
-			$u * $u * $u * $p0[0] + 3 * $u * $u * $t * $p1[0] + 3 * $u * $t * $t * $p2[0] + $t * $t * $t * $p3[0],
-			$u * $u * $u * $p0[1] + 3 * $u * $u * $t * $p1[1] + 3 * $u * $t * $t * $p2[1] + $t * $t * $t * $p3[1],
-		);
-	};
-	$points = array();
-	for ( $i = 0; $i <= 16; $i++ ) {
-		$points[] = $curve( array( 50, 17 ), array( 54, 22 ), array( 55, 25 ), array( 55, 27 ), $i / 16 );
-	}
-	for ( $i = 1; $i < 16; $i++ ) {
-		$points[] = array( 50 + 5 * cos( M_PI * $i / 16 ), 27 + 5 * sin( M_PI * $i / 16 ) );
-	}
-	for ( $i = 0; $i <= 16; $i++ ) {
-		$points[] = $curve( array( 45, 27 ), array( 45, 25 ), array( 46, 22 ), array( 50, 17 ), $i / 16 );
-	}
-	return $points;
-}
-
-/**
- * The drawings from src/components/ProductArt.js, in its 100 × 100 view box.
- * Shapes: circle (cx, cy, r), rect (x, y, w, h, radius), line (x1, y1, x2, y2, width),
- * sprinkle (x, y, w, h, angle, origin x, origin y) and flame. The colour comes last.
- *
- * @return array[]
- */
-function mmbb_demo_art() {
-	return array(
-		'cookie'    => array(
-			'bg'     => '#f3e3cc',
-			'shapes' => array(
-				array( 'circle', 50, 52, 27, '#c98a4b' ),
-				array( 'circle', 41, 44, 3.5, '#5a3519' ),
-				array( 'circle', 58, 47, 3, '#5a3519' ),
-				array( 'circle', 47, 60, 3.5, '#5a3519' ),
-				array( 'circle', 61, 61, 2.5, '#5a3519' ),
-				array( 'circle', 37, 56, 2.2, '#5a3519' ),
-			),
-		),
-		'macaron'   => array(
-			'bg'     => '#f6dfe6',
-			'shapes' => array(
-				array( 'rect', 26, 33, 48, 16, 8, '#e88aa6' ),
-				array( 'rect', 29, 47, 42, 8, 4, '#fff3e8' ),
-				array( 'rect', 26, 53, 48, 16, 8, '#e88aa6' ),
-			),
-		),
-		'candle'    => array(
-			'bg'     => '#e5ece4',
-			'shapes' => array(
-				array( 'rect', 33, 38, 34, 36, 6, '#f7f3ea' ),
-				array( 'rect', 33, 52, 34, 10, 0, '#7d9a7a' ),
-				array( 'rect', 49, 30, 2, 9, 0, '#3b3b3b' ),
-				array( 'flame', '#f2a541' ),
-			),
-		),
-		'soap'      => array(
-			'bg'     => '#e4ecf2',
-			'shapes' => array(
-				array( 'rect', 24, 36, 52, 30, 12, '#a9c6dc' ),
-				array( 'rect', 32, 42, 22, 6, 3, '#d6e6f1' ),
-			),
-		),
-		'tea'       => array(
-			'bg'     => '#efe8d8',
-			'shapes' => array(
-				array( 'rect', 34, 30, 32, 44, 4, '#3f6b5c' ),
-				array( 'rect', 32, 26, 36, 9, 3, '#2f5246' ),
-				array( 'rect', 34, 46, 32, 14, 0, '#e8d9b5' ),
-			),
-		),
-		'donut'     => array(
-			'bg'     => '#fbe6d4',
-			'shapes' => array(
-				array( 'circle', 50, 52, 26, '#e2a86b' ),
-				array( 'circle', 50, 50, 22, '#d9577a' ),
-				array( 'circle', 50, 50, 8, '#fbe6d4' ),
-				array( 'sprinkle', 36, 38, 7, 2.5, -30, 39, 39, '#fff3e8' ),
-				array( 'sprinkle', 58, 40, 7, 2.5, 40, 61, 41, '#ffd23f' ),
-				array( 'sprinkle', 55, 60, 7, 2.5, -10, 58, 61, '#fff3e8' ),
-				array( 'sprinkle', 37, 58, 7, 2.5, 25, 40, 59, '#ffd23f' ),
-			),
-		),
-		'chocolate' => array(
-			'bg'     => '#eadcd2',
-			'shapes' => array(
-				array( 'rect', 28, 28, 44, 46, 4, '#6b3e26' ),
-				array( 'line', 28, 43.3, 72, 43.3, 2, '#4e2b19' ),
-				array( 'line', 28, 58.6, 72, 58.6, 2, '#4e2b19' ),
-				array( 'line', 42.7, 28, 42.7, 74, 2, '#4e2b19' ),
-				array( 'line', 57.3, 28, 57.3, 74, 2, '#4e2b19' ),
-			),
-		),
-		'honey'     => array(
-			'bg'     => '#fbefd0',
-			'shapes' => array(
-				array( 'rect', 32, 36, 36, 38, 8, '#e6a52c' ),
-				array( 'rect', 34, 28, 32, 10, 3, '#6b4a1f' ),
-				array( 'rect', 38, 48, 24, 14, 3, '#fff7e0' ),
-			),
-		),
-	);
 }

@@ -17,6 +17,9 @@ final class Container_Products {
 	/** Product meta that marks a container and names its campaign. */
 	const META = '_mmbb_campaign_id';
 
+	/** Product meta holding the photo we set, so a photo chosen in WooCommerce is never overwritten. */
+	const META_IMAGE = '_mmbb_synced_image';
+
 	/**
 	 * Campaign ids being set up, so a save inside ensure() does not start a second run.
 	 *
@@ -88,6 +91,7 @@ final class Container_Products {
 			$existing = self::existing( $campaign );
 			if ( $existing instanceof \WC_Product ) {
 				self::sync_title( $existing, $campaign['title'] );
+				self::sync_image( $existing, $campaign );
 				return (int) $existing->get_id();
 			}
 
@@ -100,6 +104,7 @@ final class Container_Products {
 			$product->set_regular_price( '0' );
 			$product->set_sold_individually( false );
 			$product->update_meta_data( self::META, (int) $campaign_id );
+			self::apply_image( $product, $campaign );
 			$product_id = $product->save();
 			if ( ! $product_id ) {
 				return new \WP_Error( 'mmbb_container_failed', __( 'The box product could not be created.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 500 ) );
@@ -145,6 +150,100 @@ final class Container_Products {
 			$product->set_name( $wanted );
 			$product->save();
 		}
+	}
+
+	/**
+	 * Keep the product photo in step with the campaign and save it when it changed.
+	 *
+	 * @param \WC_Product $product  Container product.
+	 * @param array       $campaign Campaign from the repository.
+	 */
+	private static function sync_image( \WC_Product $product, array $campaign ) {
+		if ( self::apply_image( $product, $campaign ) ) {
+			$product->save();
+		}
+	}
+
+	/**
+	 * Set the product photo, without saving.
+	 *
+	 * The photo picked in the builder always wins. Without one, the first product's photo is used, but only
+	 * while the product has no photo or still has the one we set, so a photo added in WooCommerce stays.
+	 *
+	 * @param \WC_Product $product  Container product.
+	 * @param array       $campaign Campaign from the repository.
+	 * @return bool Whether the product changed.
+	 */
+	private static function apply_image( \WC_Product $product, array $campaign ) {
+		$current  = (int) $product->get_image_id();
+		$synced   = (int) $product->get_meta( self::META_IMAGE );
+		$picked   = isset( $campaign['config']['image_id'] ) ? (int) $campaign['config']['image_id'] : 0;
+		$explicit = $picked > 0 && wp_attachment_is_image( $picked );
+
+		if ( $explicit ) {
+			$wanted = $picked;
+		} elseif ( 0 === $current || $current === $synced ) {
+			$wanted = self::fallback_image_id( $campaign );
+		} else {
+			return false;
+		}
+
+		if ( $wanted === $current && $wanted === $synced ) {
+			return false;
+		}
+		$product->set_image_id( $wanted ? $wanted : '' );
+		$product->update_meta_data( self::META_IMAGE, $wanted );
+		return true;
+	}
+
+	/**
+	 * The photo of the first product the box offers.
+	 *
+	 * @param array $campaign Campaign from the repository.
+	 * @return int Attachment id, or 0.
+	 */
+	private static function fallback_image_id( array $campaign ) {
+		$products = isset( $campaign['config']['products'] ) ? $campaign['config']['products'] : array();
+		$args     = array(
+			'status' => 'publish',
+			'limit'  => 1,
+			'return' => 'ids',
+		);
+		if ( ! empty( $products['ids'] ) && 'manual' === $products['source'] ) {
+			$args['include'] = array_map( 'absint', array_slice( (array) $products['ids'], 0, 20 ) );
+			$args['orderby'] = 'post__in';
+		} elseif ( ! empty( $products['term_ids'] ) && 'category' === $products['source'] ) {
+			$terms            = get_terms(
+				array(
+					'taxonomy'   => 'product_cat',
+					'include'    => array_map( 'absint', (array) $products['term_ids'] ),
+					'fields'     => 'slugs',
+					'hide_empty' => false,
+				)
+			);
+			$args['category'] = is_array( $terms ) ? $terms : array();
+		} elseif ( ! empty( $products['term_ids'] ) && 'tag' === $products['source'] ) {
+			$terms       = get_terms(
+				array(
+					'taxonomy'   => 'product_tag',
+					'include'    => array_map( 'absint', (array) $products['term_ids'] ),
+					'fields'     => 'slugs',
+					'hide_empty' => false,
+				)
+			);
+			$args['tag'] = is_array( $terms ) ? $terms : array();
+		} else {
+			return 0;
+		}
+		// Search by photo: the first matching product that has one.
+		$args['limit'] = 20;
+		foreach ( (array) wc_get_products( $args ) as $id ) {
+			$image = (int) get_post_thumbnail_id( $id );
+			if ( $image > 0 ) {
+				return $image;
+			}
+		}
+		return 0;
 	}
 
 	/**

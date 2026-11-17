@@ -531,7 +531,8 @@ function BuilderView( { payload, preview, navigate } ) {
 							) : (
 								<span />
 							) }
-							{ visible.length > 1 ? (
+							{ config.design.show_sort !== false &&
+							visible.length > 1 ? (
 								<SelectField
 									className="mmbb-builder__sort"
 									aria-label={ __(
