@@ -18,6 +18,78 @@ final class Order_Downloads {
 	public function register() {
 		add_action( 'woocommerce_grant_product_download_permissions', array( $this, 'grant' ) );
 		add_filter( 'woocommerce_order_get_downloadable_items', array( $this, 'add_links' ), 10, 2 );
+		add_filter( 'woocommerce_order_downloads_table_show_downloads', array( $this, 'show_table' ), 10, 2 );
+		add_action( 'woocommerce_email_after_order_table', array( $this, 'email_table' ), 10, 4 );
+	}
+
+	/**
+	 * Show the order page downloads table when the only downloads are inside boxes.
+	 *
+	 * @param bool      $show  Whether WooCommerce will show the table.
+	 * @param \WC_Order $order Order.
+	 * @return bool
+	 */
+	public function show_table( $show, $order ) {
+		return $show || $this->only_in_boxes( $order );
+	}
+
+	/**
+	 * Print the downloads table in customer emails when the only downloads are inside boxes.
+	 *
+	 * WooCommerce skips its own table because the order's lines are container products without files.
+	 *
+	 * @param \WC_Order $order         Order.
+	 * @param bool      $sent_to_admin Whether this email is for the merchant.
+	 * @param bool      $plain_text    Whether the email is plain text.
+	 * @param \WC_Email $email         Email object.
+	 */
+	public function email_table( $order, $sent_to_admin = false, $plain_text = false, $email = '' ) {
+		if ( $sent_to_admin || is_a( $email, 'WC_Email_Customer_Refunded_Order' ) || ! $this->only_in_boxes( $order ) ) {
+			return;
+		}
+		$downloads = $order->get_downloadable_items();
+		if ( ! $downloads ) {
+			return;
+		}
+		/** This filter is documented in WooCommerce, WC_Emails::order_downloads(). */
+		$columns = apply_filters(
+			'woocommerce_email_downloads_columns',
+			array(
+				'download-product' => __( 'Product', 'woocommerce' ),
+				'download-expires' => __( 'Expires', 'woocommerce' ),
+				'download-file'    => __( 'Download', 'woocommerce' ),
+			),
+			$order
+		);
+		wc_get_template(
+			$plain_text ? 'emails/plain/email-downloads.php' : 'emails/email-downloads.php',
+			array(
+				'order'         => $order,
+				'sent_to_admin' => $sent_to_admin,
+				'plain_text'    => $plain_text,
+				'email'         => $email,
+				'downloads'     => $downloads,
+				'columns'       => $columns,
+			)
+		);
+	}
+
+	/**
+	 * Whether the order has downloads only inside one-line boxes, so WooCommerce shows none of its own.
+	 *
+	 * @param mixed $order Order.
+	 * @return bool
+	 */
+	private function only_in_boxes( $order ) {
+		if ( ! $order instanceof \WC_Order || $order->has_downloadable_item() || ! $order->is_download_permitted() ) {
+			return false;
+		}
+		foreach ( $this->boxes( $order ) as $row ) {
+			if ( $this->products( $row['box'] ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

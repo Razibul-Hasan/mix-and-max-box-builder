@@ -5,7 +5,7 @@ Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
 Requires Plugins: woocommerce
-Stable tag: 2.0.2
+Stable tag: 2.0.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -121,6 +121,9 @@ No. Everything is bundled locally.
 
 == Changelog ==
 
+= 2.0.3 =
+* Fixed: a box sold as "One line" did not include the download links in the customer's order email. The email now lists the files of every downloadable product in the box, and the order page and My Account → Downloads show them too, even when the box is the only item in the order.
+
 = 2.0.2 =
 * Fixed: a box sold as "One line" did not deliver downloads. The order, the confirmation page and the customer email now list the files of every downloadable product in the box, and My Account → Downloads shows them too. Download limits and expiry follow each product's own settings.
 * Added: a "Box image" picker under Design → Content in the campaign editor. The image you choose is used as the box's photo in the cart, at checkout and in order emails.
@@ -151,6 +154,9 @@ No. Everything is bundled locally.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 2.0.3 =
+Fixes missing download links in customer emails for boxes sold as one line. No data changes.
 
 = 2.0.2 =
 Fixes missing download links and permissions for boxes sold as one line, and adds a box image picker so the cart and order emails show a photo of your box. Smaller download. No data changes.
