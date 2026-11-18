@@ -53,11 +53,12 @@ final class Order_Downloads {
 		}
 		/** This filter is documented in WooCommerce, WC_Emails::order_downloads(). */
 		$columns = apply_filters(
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WooCommerce core filter, so stores that customise these columns keep working.
 			'woocommerce_email_downloads_columns',
 			array(
-				'download-product' => __( 'Product', 'woocommerce' ),
-				'download-expires' => __( 'Expires', 'woocommerce' ),
-				'download-file'    => __( 'Download', 'woocommerce' ),
+				'download-product' => __( 'Product', 'productboxes-mix-and-match-box-builder' ),
+				'download-expires' => __( 'Expires', 'productboxes-mix-and-match-box-builder' ),
+				'download-file'    => __( 'Download', 'productboxes-mix-and-match-box-builder' ),
 			),
 			$order
 		);
