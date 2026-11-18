@@ -7,5 +7,6 @@ export { default as EmptyState } from './EmptyState';
 export { default as Notices, NOTICE_CONTEXT, useSnackbar } from './Notices';
 export { default as PageHeader } from './PageHeader';
 export { default as PageSkeleton } from './PageSkeleton';
+export { default as Skeleton } from './Skeleton';
 export { default as StatCard, StatGroup } from './StatCard';
 export { default as StatusBadge } from './StatusBadge';

@@ -1,4 +1,4 @@
-import { Button, Modal, Notice, Spinner } from '@wordpress/components';
+import { Button, Modal, Notice } from '@wordpress/components';
 import {
 	useCallback,
 	useEffect,
@@ -12,7 +12,7 @@ import { check, external, redo, undo } from '@wordpress/icons';
 import { addQueryArgs } from '@wordpress/url';
 import { originOf } from '../../shared/preview-bridge';
 import { getCampaign, publishCampaign, saveCampaign } from '../api';
-import { useSnackbar } from '../components';
+import { Skeleton, useSnackbar } from '../components';
 import { ToggleGroupControl, ToggleGroupControlOption } from '../components/wp';
 import { useAdmin } from '../context';
 import { errorMessage, readStored, useRequest, writeStored } from '../hooks';
@@ -757,13 +757,13 @@ export default function Editor( { id } ) {
 						</Button>
 					</Notice>
 				) : (
-					<p role="status">
-						<Spinner />
-						{ __(
+					<Skeleton
+						lines={ 4 }
+						label={ __(
 							'Loading box…',
 							'productboxes-mix-and-match-box-builder'
 						) }
-					</p>
+					/>
 				) }
 			</div>
 		</div>

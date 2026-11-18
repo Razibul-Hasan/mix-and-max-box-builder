@@ -5,7 +5,6 @@ import {
 	MenuItem,
 	Notice,
 	SearchControl,
-	Spinner,
 } from '@wordpress/components';
 import { useEffect, useReducer, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
@@ -19,6 +18,7 @@ import {
 	DataTable,
 	EmptyState,
 	PageHeader,
+	Skeleton,
 	StatusBadge,
 	useSnackbar,
 } from '../components';
@@ -266,6 +266,7 @@ export default function Campaigns( { openCreate = false } ) {
 							( c.config.products && c.config.products.ids ) || []
 						}
 						images={ images }
+						boxImageId={ Number( c.config.image_id ) || 0 }
 						max={ 3 }
 					/>
 					<div>
@@ -424,10 +425,13 @@ export default function Campaigns( { openCreate = false } ) {
 	);
 
 	let emptyMessage = (
-		<span className="mmbb-app-loading">
-			<Spinner />
-			{ __( 'Loading boxes…', 'productboxes-mix-and-match-box-builder' ) }
-		</span>
+		<Skeleton
+			lines={ 3 }
+			label={ __(
+				'Loading boxes…',
+				'productboxes-mix-and-match-box-builder'
+			) }
+		/>
 	);
 	if ( data ) {
 		emptyMessage = __(
@@ -551,7 +555,6 @@ export default function Campaigns( { openCreate = false } ) {
 								) ) }
 							</div>
 							<div className="mmbb-app-toolbar__search">
-								{ loading && data ? <Spinner /> : null }
 								<SearchControl
 									__nextHasNoMarginBottom
 									label={ __(

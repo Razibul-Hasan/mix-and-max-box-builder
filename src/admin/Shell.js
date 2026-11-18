@@ -9,7 +9,7 @@ import { useAdmin } from './context';
  * button and the WordPress menu keep working.
  *
  * @param {Object}  props
- * @param {string}  props.active   Page id: dashboard, campaigns, analytics or settings.
+ * @param {string}  props.active   Page id: dashboard, campaigns, analytics, settings or plugins.
  * @param {boolean} props.wide     Let the content use the full width.
  * @param {*}       props.children Screen content.
  */
@@ -31,6 +31,10 @@ export default function Shell( { active, wide, children } ) {
 		{
 			id: 'settings',
 			label: __( 'Settings', 'productboxes-mix-and-match-box-builder' ),
+		},
+		{
+			id: 'plugins',
+			label: __( 'Plugins', 'productboxes-mix-and-match-box-builder' ),
 		},
 	].map( ( item ) => ( { ...item, href: urls[ item.id ] } ) );
 

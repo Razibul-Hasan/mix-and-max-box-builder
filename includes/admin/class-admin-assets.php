@@ -45,6 +45,11 @@ final class Admin_Assets {
 		wp_enqueue_style( 'mmbb-admin', MMBB_URL . 'build/admin.css', array( 'wp-components', 'mmbb-components' ), $asset['version'] );
 		wp_style_add_data( 'mmbb-admin', 'rtl', 'replace' );
 
+		if ( 'plugins' === $page && current_user_can( 'install_plugins' ) ) {
+			// wp.updates installs a plugin over AJAX, so the button never leaves this page.
+			wp_enqueue_script( 'updates' );
+		}
+
 		wp_enqueue_script( 'mmbb-admin', MMBB_URL . 'build/admin.js', $asset['dependencies'], $asset['version'], true );
 		wp_set_script_translations( 'mmbb-admin', 'productboxes-mix-and-match-box-builder', MMBB_PATH . 'languages' );
 		wp_add_inline_script( 'mmbb-admin', 'window.mmbbAdmin = ' . wp_json_encode( self::get_data( $page ) ) . ';', 'before' );
@@ -75,6 +80,7 @@ final class Admin_Assets {
 			'page'        => $page,
 			'urls'        => $urls,
 			'templates'   => $templates,
+			'plugins'     => Our_Plugins::plugins(),
 			'money'       => Assets::get_money_settings(),
 			'themeAccent' => Colors::theme_accent(),
 			'adminUrl'    => admin_url(),

@@ -75,23 +75,6 @@
 	flex: 1 1 320px;
 }
 
-.mmbb-app-loading {
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-	min-height: 40px;
-	color: var(--mmbb-app-gray-700);
-}
-
-.mmbb-app-loading .components-spinner,
-.mmbb-app-toolbar__search .components-spinner {
-	margin: 0;
-}
-
-.mmbb-app-stat__value .components-spinner {
-	margin: 8px 0;
-}
-
 .mmbb-app-page-head__actions .mmbb-app-period {
 	width: auto;
 }
@@ -497,6 +480,21 @@
 	background: linear-gradient(90deg, #ececec 25%, #f6f6f6 50%, #ececec 75%);
 	background-size: 200% 100%;
 	animation: mmbb-skeleton 1.4s ease-in-out infinite;
+}
+
+.mmbb-app-skeleton.is-lines {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	width: 100%;
+	max-width: 480px;
+}
+
+.mmbb-app-skeleton__bar.is-inline {
+	display: inline-block;
+	width: 64px;
+	height: 24px;
+	vertical-align: middle;
 }
 
 .mmbb-app-skeleton__bar.is-title {

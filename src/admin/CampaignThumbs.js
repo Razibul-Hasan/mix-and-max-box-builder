@@ -1,26 +1,16 @@
+import apiFetch from '@wordpress/api-fetch';
 import { useEffect, useState } from '@wordpress/element';
-import { Icon } from '../components';
-import Media from '../components/Media';
+import { addQueryArgs } from '@wordpress/url';
 import { getProducts } from './api';
 
-const ART = [
-	'cookie',
-	'macaron',
-	'donut',
-	'chocolate',
-	'soap',
-	'candle',
-	'honey',
-	'tea',
-];
 const SHOWN = 3;
 
 /**
- * Product images for the first few products of each campaign on the page. A failed
- * request only means the placeholders stay.
+ * Thumbnails for the campaigns on the page: the first few product images, plus the
+ * box image when a campaign has one. A failed request only means the placeholders stay.
  *
  * @param {Object[]} campaigns Campaigns from the REST API.
- * @return {Object} Product id => image object.
+ * @return {Object} Product id => image object, and `box-<attachment id>` => image object.
  */
 export function useProductImages( campaigns ) {
 	const [ images, setImages ] = useState( {} );
@@ -34,27 +24,52 @@ export function useProductImages( campaigns ) {
 			)
 		),
 	];
-	const key = ids.join( ',' );
+	const boxIds = [
+		...new Set(
+			campaigns
+				.map( ( c ) => Number( c.config.image_id ) || 0 )
+				.filter( Boolean )
+		),
+	];
+	const key = ids.join( ',' ) + '|' + boxIds.join( ',' );
 
 	useEffect( () => {
-		if ( ids.length === 0 ) {
+		if ( ids.length === 0 && boxIds.length === 0 ) {
 			return;
 		}
 		let cancelled = false;
-		getProducts( { include: ids, per_page: 50 } )
-			.then( ( products ) => {
-				if ( cancelled ) {
-					return;
+		const products = ids.length
+			? getProducts( { include: ids, per_page: 50 } ).catch( () => [] )
+			: Promise.resolve( [] );
+		const media = boxIds.length
+			? apiFetch( {
+					path: addQueryArgs( '/wp/v2/media', {
+						include: boxIds.join( ',' ),
+						per_page: 100,
+						_fields: 'id,source_url,media_details.sizes',
+					} ),
+			  } ).catch( () => [] )
+			: Promise.resolve( [] );
+		Promise.all( [ products, media ] ).then( ( [ prods, files ] ) => {
+			if ( cancelled ) {
+				return;
+			}
+			const next = {};
+			prods.forEach( ( p ) => {
+				if ( p.image ) {
+					next[ p.id ] = { ...p.image, name: p.name };
 				}
-				const next = {};
-				products.forEach( ( p ) => {
-					if ( p.image ) {
-						next[ p.id ] = { ...p.image, name: p.name };
-					}
-				} );
-				setImages( next );
-			} )
-			.catch( () => {} );
+			} );
+			files.forEach( ( m ) => {
+				const src =
+					m.media_details?.sizes?.thumbnail?.source_url ||
+					m.source_url;
+				if ( src ) {
+					next[ 'box-' + m.id ] = { src };
+				}
+			} );
+			setImages( next );
+		} );
 		return () => {
 			cancelled = true;
 		};
@@ -62,36 +77,4 @@ export function useProductImages( campaigns ) {
 	}, [ key ] );
 
 	return images;
-}
-
-// Overlapping 36px tiles, like the design. With no products picked yet, one neutral tile.
-export default function CampaignThumbs( { campaign, images = {} } ) {
-	const products = campaign.config.products || {};
-	const ids = ( products.ids || [] ).slice( 0, SHOWN );
-	const tiles = [];
-
-	if ( ids.length === 0 && products.source === 'manual' ) {
-		return (
-			<span className="mmbb-thumbs" aria-hidden="true">
-				<span className="mmbb-thumb mmbb-thumb--empty">
-					<Icon name="image" size={ 18 } />
-				</span>
-			</span>
-		);
-	}
-
-	const count = ids.length || SHOWN;
-	for ( let i = 0; i < count; i++ ) {
-		const art = ART[ ( campaign.id + i ) % ART.length ];
-		tiles.push(
-			<span className="mmbb-thumb" key={ i }>
-				<Media image={ images[ ids[ i ] ] } art={ art } name="" />
-			</span>
-		);
-	}
-	return (
-		<span className="mmbb-thumbs" aria-hidden="true">
-			{ tiles }
-		</span>
-	);
 }

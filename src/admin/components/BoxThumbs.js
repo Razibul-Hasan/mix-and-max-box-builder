@@ -4,11 +4,34 @@
  * neutral tile. Decorative: the box name next to it carries the meaning.
  *
  * @param {Object}   props
- * @param {number[]} props.ids    Product ids in the box, in order.
- * @param {Object}   props.images Product id => { src, srcset, sizes }.
- * @param {number}   props.max    Most tiles to show.
+ * @param {number[]} props.ids        Product ids in the box, in order.
+ * @param {Object}   props.images     Product id => { src, srcset, sizes }.
+ * @param {number}   props.max        Most tiles to show.
+ * @param {number}   props.boxImageId Box image attachment id; when set, it replaces the product tiles.
  */
-export default function BoxThumbs( { ids = [], images = {}, max = 3 } ) {
+export default function BoxThumbs( {
+	ids = [],
+	images = {},
+	max = 3,
+	boxImageId = 0,
+} ) {
+	if ( boxImageId ) {
+		const image = images[ 'box-' + boxImageId ];
+		return (
+			<span className="mmbb-app-thumbs" aria-hidden="true">
+				{ image && image.src ? (
+					<img
+						className="mmbb-app-thumb"
+						src={ image.src }
+						alt=""
+						loading="lazy"
+					/>
+				) : (
+					<span className="mmbb-app-thumb is-empty" />
+				) }
+			</span>
+		);
+	}
 	const shown = ids.slice( 0, max );
 	const tiles = shown.length ? shown : [ 0 ];
 	return (

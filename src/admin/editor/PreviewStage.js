@@ -1,6 +1,6 @@
-import { Spinner } from '@wordpress/components';
 import { useEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { Skeleton } from '../components';
 import usePreviewBridge from './usePreviewBridge';
 
 /** Width each preview size renders at before it is scaled to fit. */
@@ -146,14 +146,14 @@ export default function PreviewStage( {
 				} }
 			/>
 			{ ! ready ? (
-				<div className="mmbb-ed__loading" role="status">
-					<Spinner />
-					<span className="screen-reader-text">
-						{ __(
+				<div className="mmbb-ed__loading">
+					<Skeleton
+						lines={ 5 }
+						label={ __(
 							'Loading the preview…',
 							'productboxes-mix-and-match-box-builder'
 						) }
-					</span>
+					/>
 				</div>
 			) : null }
 		</div>

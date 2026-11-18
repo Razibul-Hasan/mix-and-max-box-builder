@@ -9,7 +9,7 @@ namespace MixMax\BoxBuilder\Admin;
 
 defined( 'ABSPATH' ) || exit;
 
-/** Add the ProductBoxes menu with its four pages. */
+/** Add the ProductBoxes menu with its five pages. */
 final class Menu {
 	const CAPABILITY = 'manage_woocommerce';
 	const SLUG       = 'mmbb';
@@ -54,6 +54,7 @@ final class Menu {
 			'campaigns' => 'mmbb-campaigns',
 			'analytics' => 'mmbb-analytics',
 			'settings'  => 'mmbb-settings',
+			'plugins'   => 'mmbb-our-plugins',
 		);
 	}
 
@@ -81,13 +82,14 @@ final class Menu {
 		return false === $page ? '' : (string) $page;
 	}
 
-	/** Add the top-level menu and the four pages. */
+	/** Add the top-level menu and the five pages. */
 	public function add_menu() {
 		$labels = array(
 			'dashboard' => __( 'Dashboard','productboxes-mix-and-match-box-builder' ),
 			'campaigns' => __( 'Boxes', 'productboxes-mix-and-match-box-builder' ),
 			'analytics' => __( 'Analytics', 'productboxes-mix-and-match-box-builder' ),
 			'settings'  => __( 'Settings', 'productboxes-mix-and-match-box-builder' ),
+			'plugins'   => __( 'Plugins', 'productboxes-mix-and-match-box-builder' ),
 		);
 
 		// WooCommerce puts Products at 55.5, so 56 sits right after it.

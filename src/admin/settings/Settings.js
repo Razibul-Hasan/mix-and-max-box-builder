@@ -461,18 +461,6 @@ export default function Settings() {
 						) }
 					/>
 				</SettingsCard>
-				<p className="mmbb-settings__developer">
-					{ __(
-						'Developers: REST routes live under',
-						'productboxes-mix-and-match-box-builder'
-					) }{ ' ' }
-					<code>/wp-json/mmbb/v1</code>.{ ' ' }
-					{ __(
-						'Hooks start with',
-						'productboxes-mix-and-match-box-builder'
-					) }{ ' ' }
-					<code>mmbb_</code>.
-				</p>
 			</div>
 		</Shell>
 	);

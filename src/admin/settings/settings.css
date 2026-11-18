@@ -115,16 +115,6 @@
 	color: var(--mmbb-app-negative);
 }
 
-.mmbb-app .mmbb-settings__developer {
-	margin: 0;
-	color: var(--mmbb-app-gray-700);
-	font-size: 12px;
-}
-
-.mmbb-app .mmbb-settings__developer code {
-	font-size: inherit;
-}
-
 @media (max-width: 600px) {
 
 	.mmbb-app .mmbb-settings__choices > div {

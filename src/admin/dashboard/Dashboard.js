@@ -1,4 +1,4 @@
-import { Button, Notice, Spinner } from '@wordpress/components';
+import { Button, Notice } from '@wordpress/components';
 import { useEffect, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { plus } from '@wordpress/icons';
@@ -17,6 +17,7 @@ import {
 	DataTable,
 	EmptyState,
 	PageHeader,
+	Skeleton,
 	StatCard,
 	StatGroup,
 	StatusBadge,
@@ -118,7 +119,7 @@ export default function Dashboard() {
 	// ---- Key numbers ----
 	const kpis = stats.data ? stats.data.kpis : null;
 	const period = days( range );
-	const pending = <Spinner />;
+	const pending = <Skeleton inline />;
 
 	const signed = ( diff, format ) =>
 		( diff > 0 ? '+' : '−' ) + format( Math.abs( diff ) );
@@ -183,6 +184,7 @@ export default function Dashboard() {
 							( c.config.products && c.config.products.ids ) || []
 						}
 						images={ images }
+						boxImageId={ Number( c.config.image_id ) || 0 }
 						max={ 1 }
 					/>
 					<div>
@@ -260,10 +262,13 @@ export default function Dashboard() {
 	);
 
 	const loadingRow = (
-		<span className="mmbb-app-loading">
-			<Spinner />
-			{ __( 'Loading boxes…', 'productboxes-mix-and-match-box-builder' ) }
-		</span>
+		<Skeleton
+			lines={ 3 }
+			label={ __(
+				'Loading boxes…',
+				'productboxes-mix-and-match-box-builder'
+			) }
+		/>
 	);
 
 	return (
@@ -544,9 +549,7 @@ export default function Dashboard() {
 						</div>
 						<div className="mmbb-app-card__body">
 							{ ! stats.data && ! stats.error ? (
-								<span className="mmbb-app-loading">
-									<Spinner />
-								</span>
+								<Skeleton lines={ 3 } />
 							) : null }
 							{ stats.data && picks.length === 0 ? (
 								<p className="mmbb-app-muted">

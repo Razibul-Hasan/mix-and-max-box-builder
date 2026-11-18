@@ -5,6 +5,7 @@ import Analytics from './analytics/Analytics';
 import { AdminContext, readAdminData } from './context';
 import Dashboard from './dashboard/Dashboard';
 import Editor from './editor/Editor';
+import OurPlugins from './plugins/OurPlugins';
 import Settings from './settings/Settings';
 import { ToastProvider } from './toast';
 
@@ -23,7 +24,7 @@ export function pickScreen( page, params ) {
 		}
 		return params.get( 'action' ) === 'new' ? 'campaigns-new' : 'campaigns';
 	}
-	if ( page === 'analytics' || page === 'settings' ) {
+	if ( page === 'analytics' || page === 'settings' || page === 'plugins' ) {
 		return page;
 	}
 	return 'dashboard';
@@ -41,6 +42,8 @@ function Screen( { name, id } ) {
 			return <Analytics />;
 		case 'settings':
 			return <Settings />;
+		case 'plugins':
+			return <OurPlugins />;
 		default:
 			return <Dashboard />;
 	}
