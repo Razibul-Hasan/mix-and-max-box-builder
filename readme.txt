@@ -15,14 +15,14 @@ Free WooCommerce mix and match box builder. Let shoppers build their own box or 
 
 **ProductBoxes** is a free WooCommerce mix and match, product bundle and build-your-own-box plugin. Shoppers pick products from a grid, watch their bundle discount grow live, and add the finished box to the cart in one click.
 
-Sell gift boxes, gift baskets, snack boxes, clothing bundles, beauty kits and samplers. Offer "pick any 3 for $18" deals, fixed-size boxes, or tiered volume discounts. No coding required.
+Sell gift boxes, gift baskets, snack boxes, clothing bundles, beauty kits and samplers. Offer "pick any 3 for $18" deals, fixed-size boxes, or tiered volume discounts.
 
 = Live Demos & Documentation =
 
 * **[ProductBoxes Website, Features & Documentation](https://bestwebexpert.com/productboxes/)**
-* **[Demo: Build Your Own Capsule Wardrobe Box](https://bestwebexpert.com/capsule-wardrobe-box/)** - tiered discounts
-* **[Demo: Gift Box Builder](https://bestwebexpert.com/gift-box-builder/)** - gift wrap and message
-* **[Demo: Mix & Match Shirt Bundle](https://bestwebexpert.com/shirt-bundle/)** - any 3 for one price
+* **[Demo: Build Your Own Capsule Wardrobe Box](https://bestwebexpert.com/capsule-wardrobe-box/)** - Tiered discounts
+* **[Demo: Gift Box Builder](https://bestwebexpert.com/gift-box-builder/)** - Gift Wrap and Message
+* **[Demo: Mix & Match Shirt Bundle](https://bestwebexpert.com/shirt-bundle/)** - Any 3 for one price
 
 = Watch the Video =
 
@@ -77,38 +77,73 @@ Optional: `layout` (panel, bar, both), `columns` (3, 4, 5), `hero` (true, false)
 
 == Frequently Asked Questions ==
 
-= Is ProductBoxes free? =
+= Is ProductBoxes a free WooCommerce mix and match box builder? =
 
-Yes. Every feature is included. No premium version or account required.
+Yes. ProductBoxes is 100% free, with all features included. There is no premium version, subscription, license key or separate account required.
 
-= How do I create a WooCommerce mix and match box? =
+= How do I create a build-your-own-box in WooCommerce? =
 
-Create a campaign, pick products, set discount rules, choose a template and publish it with a page, the block or the shortcode. See the [documentation](https://bestwebexpert.com/productboxes/).
+Go to **ProductBoxes** in your WordPress dashboard and create a campaign. Select the products customers can choose, configure your pricing or discount rules, pick a storefront template and publish the box on your site. Follow the [ProductBoxes documentation](https://bestwebexpert.com/productboxes/) for details.
 
-= Can I create custom gift boxes? =
+= Can customers mix and match products in the same box? =
 
-Yes, with optional gift wrap and a personal message. See the [gift box demo](https://bestwebexpert.com/gift-box-builder/).
+Yes. Customers can build their own box from the products you make available, including simple products and product variations such as sizes, colors or flavors.
 
-= Can I offer fixed-price bundles? =
+= Can I choose which WooCommerce products appear in a box? =
 
-Yes. Use **Bundle Price**, for example any 3 products for $18. See the [shirt bundle demo](https://bestwebexpert.com/shirt-bundle/).
+Yes. Add products manually or select them by WooCommerce category or tag to control the choices shown in each campaign.
 
-= Can I offer bulk or tiered discounts? =
+= Can I offer tiered or volume discounts on product bundles? =
 
-Yes. Use **Tiered Discount** for bigger savings as customers add products.
+Yes. Choose the **Tiered Discount** campaign type to offer percentage-based or fixed discounts as customers add more products. A live progress bar shows their current savings and next discount milestone. Try the [tiered discount demo](https://bestwebexpert.com/capsule-wardrobe-box/).
 
-= Does it support variations, blocks, HPOS and multi-currency? =
+= Can I create boxes with different sizes and prices? =
 
-Yes to all: variable products, Cart and Checkout blocks, HPOS and WooPayments Multi-Currency. It also has added compatibility for Astra, Blocksy and Inspiro.
+Yes. The **Fixed Box Size** campaign type lets you offer predefined box sizes, such as small, medium and large, with individual pricing.
 
-= Will updating to 2.0.0 delete my data? =
+= Can I sell a fixed-price bundle, such as any 3 products for $18? =
 
-No. Campaigns, boxes, settings, orders and analytics are preserved.
+Yes. Use the **Bundle Price** campaign type to set a price for a specific number of products. See the [mix and match shirt bundle demo](https://bestwebexpert.com/shirt-bundle/).
 
-= Does it use external services? =
+= Can I create personalized gift boxes or gift baskets? =
 
-No. Everything is bundled locally.
+Yes. Create gift boxes and gift baskets that customers fill with their chosen products. You can also offer gift wrapping and a personal gift message. See the [gift box builder demo](https://bestwebexpert.com/gift-box-builder/).
 
+= Can I customize the design of my box builder? =
+
+Yes. Choose from 10 responsive storefront templates and use the live preview to see how a box looks in your theme on desktop, tablet and mobile. You can also set a box image for use in the cart, checkout and order emails.
+
+= How do I add a mix and match box to a WordPress page? =
+
+Use the **ProductBoxes Box Builder** Gutenberg block or insert the shortcode `[mmbb_box id="12"]`, replacing `12` with your campaign ID. Shortcode options include `layout`, `columns`, `hero` and `template`.
+
+= Does ProductBoxes work on mobile devices? =
+
+Yes. The box builder is responsive and includes a mobile-friendly sticky summary and bottom sheet to help customers review their selections.
+
+= Can customers edit a box after adding it to the cart? =
+
+Yes. Customers can edit their box selections from the WooCommerce cart.
+
+= Does ProductBoxes support WooCommerce Cart and Checkout blocks and HPOS? =
+
+Yes. ProductBoxes works with classic and block-based Cart and Checkout experiences and supports WooCommerce High-Performance Order Storage (HPOS) and stock management.
+
+= Does ProductBoxes work with multi-currency stores? =
+
+ProductBoxes supports **WooPayments Multi-Currency**, including shopper-currency pricing in the cart. Compatibility with other currency-switching plugins is not specified here.
+
+= Can I include virtual or downloadable products in a box? =
+
+Yes. Downloadable products in a purchased box keep their individual download permissions, limits and expiry settings. Customers can access downloads through their order information and **My Account > Downloads**. Boxes containing only virtual products do not require shipping unless a physical item or gift wrap is included.
+
+= Does the plugin include campaign analytics? =
+
+Yes. Optional analytics track campaign views, product picks, conversions, revenue and discounts. Analytics data is stored in your WordPress database and can be disabled in the plugin settings.
+
+= Where can I find documentation, demos or support? =
+
+Visit the [ProductBoxes documentation and demos](https://bestwebexpert.com/productboxes/). For help with the plugin, use its support forum on WordPress.org.
 == Screenshots ==
 
 1. Dashboard with campaign performance and analytics.
@@ -123,6 +158,11 @@ No. Everything is bundled locally.
 
 = 2.0.3 =
 * Fixed: a box sold as "One line" did not include the download links in the customer's order email. The email now lists the files of every downloadable product in the box, and the order page and My Account → Downloads show them too, even when the box is the only item in the order.
+* Added: a Plugins page in the ProductBoxes menu that lists our other free plugins, ProductReels and MigrateLift, with an Install Now / Activate button that works without leaving the page.
+* Improved: the Boxes list and the Dashboard now show a box's image as its thumbnail when you have set one. Without a box image they still show the product photos.
+* Improved: admin screens now show grey placeholder bars while they load, instead of spinners.
+* Improved: removed the developer note about REST routes and hooks from the Settings page.
+* Improved: a smaller plugin download. An unused image and seven unused interface components were removed.
 
 = 2.0.2 =
 * Fixed: a box sold as "One line" did not deliver downloads. The order, the confirmation page and the customer email now list the files of every downloadable product in the box, and My Account → Downloads shows them too. Download limits and expiry follow each product's own settings.
@@ -156,7 +196,7 @@ No. Everything is bundled locally.
 == Upgrade Notice ==
 
 = 2.0.3 =
-Fixes missing download links in customer emails for boxes sold as one line. No data changes.
+Fixes missing download links in customer emails for boxes sold as one line, shows your box image in the Boxes list, and adds a Plugins page. No data changes.
 
 = 2.0.2 =
 Fixes missing download links and permissions for boxes sold as one line, and adds a box image picker so the cart and order emails show a photo of your box. Smaller download. No data changes.
