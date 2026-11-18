@@ -16,18 +16,10 @@ const samples = {
 	Sticker: { children: 'Save 25%', tilt: true },
 	TextField: { label: 'Campaign name', help: 'Shown on your store.' },
 	SelectField: { label: 'Builder page', options: [ 'Holiday box' ] },
-	Toggle: { label: 'Show countdown', defaultChecked: true },
 	Checkbox: { label: 'Gift wrap this box', indeterminate: true },
-	ChoiceCard: {
-		title: 'Tiered mix',
-		icon: 'percent',
-		value: 'tiered',
-		name: 'type',
-	},
 	QuantityStepper: { defaultValue: 2 },
 	SegmentedControl: { options: [ '7 days', '30 days' ], label: 'Date range' },
 	Chips: { options: [ 'All', 'Cookies' ], label: 'Categories' },
-	Tabs: { tabs: [ { id: 'all', label: 'All', count: 4 } ], label: 'Status' },
 	Steps: { steps: [ 'Basics', 'Products', 'Box rules' ], current: 1 },
 	Card: { title: 'Box rules', children: 'Up to 12 items.' },
 	PageHeader: {
@@ -46,7 +38,6 @@ const samples = {
 	},
 	Toast: { children: 'Campaign saved', action: 'Undo', onDismiss: jest.fn() },
 	Modal: { title: 'Delete campaign?', children: 'This cannot be undone.' },
-	AdminShell: { active: 'campaigns', children: 'Campaigns' },
 	StatCard: {
 		label: 'Box revenue',
 		value: '12,480',
@@ -62,19 +53,6 @@ const samples = {
 	LineChart: {
 		labels: [ 'Oct 1', 'Oct 2' ],
 		series: [ { name: 'Revenue', data: [ 200, 400 ], label: true } ],
-	},
-	BarList: { items: [ { label: 'Brown Butter Chip', value: 486 } ] },
-	FunnelChart: {
-		steps: [
-			{ label: 'Viewed builder', value: 100 },
-			{ label: 'Added first item', value: 55 },
-		],
-	},
-	ProgressBar: {
-		value: 3,
-		max: 5,
-		label: 'Setup',
-		valueLabel: '3 of 5 done',
 	},
 	ProductArt: { kind: 'cookie', label: 'Cookie' },
 	ProductTile: { ...item, stock: 3, qty: 1, onChange: jest.fn() },

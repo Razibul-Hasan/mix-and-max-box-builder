@@ -34,7 +34,6 @@
 		"languages/",
 		"package.json",
 		"webpack.config.js",
-		"!assets/images/productbox.png",
 		"!assets/fonts/bricolage-grotesque-latin-wght-normal.woff2",
 		"!assets/fonts/figtree-latin-wght-normal.woff2",
 		"!build/tokens-rtl.css",

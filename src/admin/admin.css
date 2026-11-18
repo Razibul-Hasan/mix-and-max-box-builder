@@ -128,10 +128,6 @@ body.mmbb-admin-page #wpfooter {
 	align-items: flex-start;
 }
 
-.mmbb-root .mmbb-dash__intro-text .mmbb-progress {
-	align-self: stretch;
-}
-
 .mmbb-root .mmbb-dash__intro-text p {
 	margin: 0 0 var(--space-3);
 	color: var(--ink-muted);

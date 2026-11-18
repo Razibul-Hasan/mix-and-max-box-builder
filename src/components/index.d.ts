@@ -78,17 +78,6 @@ export interface SelectFieldProps extends React.SelectHTMLAttributes<HTMLSelectE
 }
 export declare function SelectField(props: SelectFieldProps): React.ReactElement;
 
-export interface ToggleProps {
-  checked?: boolean;
-  defaultChecked?: boolean;
-  onChange?: (checked: boolean) => void;
-  label?: React.ReactNode;
-  description?: React.ReactNode;
-  disabled?: boolean;
-  id?: string;
-}
-export declare function Toggle(props: ToggleProps): React.ReactElement;
-
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   label?: React.ReactNode;
   description?: React.ReactNode;
@@ -96,21 +85,6 @@ export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputE
   onChange?: (checked: boolean, event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 export declare function Checkbox(props: CheckboxProps): React.ReactElement;
-
-export interface ChoiceCardProps {
-  selected?: boolean;
-  onSelect?: (value: string) => void;
-  name?: string;
-  value?: string;
-  title: React.ReactNode;
-  description?: React.ReactNode;
-  /** Right-aligned value such as a price. */ meta?: React.ReactNode;
-  /** Pop sticker on the top edge ("Top seller"). */ tag?: React.ReactNode;
-  icon?: IconName;
-  disabled?: boolean;
-  children?: React.ReactNode;
-}
-export declare function ChoiceCard(props: ChoiceCardProps): React.ReactElement;
 
 export interface QuantityStepperProps {
   value?: number;
@@ -146,15 +120,6 @@ export interface ChipsProps<V = string | number> {
 export declare function Chips<V = string | number>(props: ChipsProps<V>): React.ReactElement;
 
 /* ---------- Navigation & layout ---------- */
-export interface TabsProps {
-  tabs: Array<{ id: string; label: React.ReactNode; count?: number }>;
-  value?: string;
-  defaultValue?: string;
-  onChange?: (id: string) => void;
-  label?: string;
-}
-export declare function Tabs(props: TabsProps): React.ReactElement;
-
 export interface StepsProps {
   /** Labels, or { label, href } to make a step a link. */ steps: Array<React.ReactNode | { label: React.ReactNode; href?: string }>;
   /** Zero-based index of the current step. */ current?: number;
@@ -227,16 +192,6 @@ export interface ModalProps {
 }
 export declare function Modal(props: ModalProps): React.ReactElement;
 
-export interface AdminNavItem { id: string; label: React.ReactNode; icon: IconName; count?: number; /** e.g. admin.php?page=mmbb-campaigns; default #/id */ href?: string }
-export interface AdminShellProps {
-  active?: string;
-  onNavigate?: (id: string) => void;
-  /** Default: Dashboard, Campaigns, Analytics, Settings. */ nav?: AdminNavItem[];
-  /** Right side of the bar; default a Help button. */ right?: React.ReactNode;
-  children?: React.ReactNode;
-}
-export declare function AdminShell(props: AdminShellProps): React.ReactElement;
-
 /* ---------- Data ---------- */
 export interface SparklineProps { data: number[]; width?: number; height?: number }
 export declare function Sparkline(props: SparklineProps): React.ReactElement | null;
@@ -293,30 +248,6 @@ export interface LineChartProps {
   /** Default: shown when there are 2+ series. */ legend?: boolean;
 }
 export declare function LineChart(props: LineChartProps): React.ReactElement;
-
-export interface BarListProps {
-  items: Array<{ label: string; value: number; meta?: React.ReactNode }>;
-  formatValue?: (v: number) => React.ReactNode;
-  color?: 'chart-1' | 'chart-2' | 'chart-3';
-  max?: number;
-}
-export declare function BarList(props: BarListProps): React.ReactElement;
-
-export interface FunnelChartProps {
-  steps: Array<{ label: string; value: number; sub?: React.ReactNode }>;
-  formatValue?: (v: number) => React.ReactNode;
-}
-export declare function FunnelChart(props: FunnelChartProps): React.ReactElement;
-
-export interface ProgressBarProps {
-  value: number;
-  max?: number;
-  label?: React.ReactNode;
-  valueLabel?: React.ReactNode;
-  tone?: 'ink' | 'max' | 'win';
-  size?: 'md' | 'lg';
-}
-export declare function ProgressBar(props: ProgressBarProps): React.ReactElement;
 
 /* ---------- Storefront ---------- */
 export type ArtKind = 'cookie' | 'macaron' | 'candle' | 'soap' | 'tea' | 'donut' | 'chocolate' | 'honey';
