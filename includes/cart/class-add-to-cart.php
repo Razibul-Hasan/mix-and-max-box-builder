@@ -126,15 +126,16 @@ final class Add_To_Cart {
 		if ( \MixMax\BoxBuilder\Analytics\Collector::enabled() ) {
 			$session = isset( $_POST['analytics_session'] ) ? sanitize_key( wp_unslash( $_POST['analytics_session'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
 			if ( ! preg_match( '/^[a-f0-9]{32}$/', $session ) ) {
-				$session = md5( wp_generate_password( 64, true, true ) ); }
-				\MixMax\BoxBuilder\Analytics\Collector::insert(
-					array(
-						'campaign_id' => $campaign_id,
-						'event'       => 'add_to_cart',
-					),
-					\MixMax\BoxBuilder\Analytics\Collector::session_hash( $session )
-				);
-				\MixMax\BoxBuilder\Analytics\Query::bust();
+				$session = md5( wp_generate_password( 64, true, true ) );
+			}
+			// Like the other builder events, this does not bust the report cache.
+			\MixMax\BoxBuilder\Analytics\Collector::insert(
+				array(
+					'campaign_id' => $campaign_id,
+					'event'       => 'add_to_cart',
+				),
+				\MixMax\BoxBuilder\Analytics\Collector::session_hash( $session )
+			);
 		}
 
 		wp_send_json_success(

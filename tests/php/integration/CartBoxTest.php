@@ -262,7 +262,7 @@ class CartBoxTest extends \WP_UnitTestCase {
 		$line = $this->box_line();
 		$data = wp_list_pluck( apply_filters( 'woocommerce_get_item_data', array(), $line ), 'value', 'key' );
 
-		$this->assertStringContainsString( '2 Ã— Cookie 1', $data['Contents'] );
+		$this->assertStringContainsString( '2 × Cookie 1', $data['Contents'] );
 		$this->assertStringContainsString( '10%', $data['Box discount'] );
 		$this->assertStringContainsString( 'Add 2 more items to get 20% off', $data['Next discount'] );
 	}
@@ -460,7 +460,7 @@ class CartBoxTest extends \WP_UnitTestCase {
 		$items = array_values( $order->get_items() );
 
 		$this->assertNotEmpty( $items[0]->get_meta( Order_Boxes::META_BOX ) );
-		$this->assertStringContainsString( '2 Ã— Cookie 1', $items[0]->get_meta( 'Contents' ) );
+		$this->assertStringContainsString( '2 × Cookie 1', $items[0]->get_meta( 'Contents' ) );
 		$this->assertNotSame( '', $items[0]->get_meta( 'Box discount' ) );
 		$this->assertSame( '1', (string) $order->get_meta( Order_Boxes::META_ORDER ) );
 		$this->assertTrue( (bool) get_option( 'mmbb_setup_test_done' ) );
@@ -500,13 +500,23 @@ class CartBoxTest extends \WP_UnitTestCase {
 		$this->add();
 		$order = $this->order_from_cart();
 		$order->set_billing_email( 'buyer@example.com' );
+		// Links show only once downloads are permitted, as on WooCommerce's own downloads table.
+		$order->set_status( 'completed' );
 		$order->save();
 
 		wc_downloadable_product_permissions( $order->get_id(), true );
 		wc_downloadable_product_permissions( $order->get_id(), true );
 
 		$store = \WC_Data_Store::load( 'customer-download' );
-		$this->assertCount( 1, $store->get_downloads( array( 'order_id' => $order->get_id(), 'product_id' => $item->get_id() ) ) );
+		$this->assertCount(
+			1,
+			$store->get_downloads(
+				array(
+					'order_id'   => $order->get_id(),
+					'product_id' => $item->get_id(),
+				)
+			)
+		);
 
 		$links = wc_get_order( $order->get_id() )->get_downloadable_items();
 		$this->assertCount( 1, $links );
@@ -775,5 +785,150 @@ class CartBoxTest extends \WP_UnitTestCase {
 		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE campaign_id = %d AND event = %s', $wpdb->prefix . 'mmbb_events', $this->campaign['id'], 'add_to_cart' ), ARRAY_A );
 		$this->assertSame( \MixMax\BoxBuilder\Analytics\Collector::session_hash( $session ), $row['session'] );
 		$this->assertNotSame( $session, $row['session'] );
+	}
+
+	/**
+	 * A saved fixed-cart coupon.
+	 *
+	 * @param string $code   Coupon code.
+	 * @param float  $amount Amount off the cart.
+	 * @return \WC_Coupon
+	 */
+	private function cart_coupon( $code, $amount ) {
+		$coupon = new \WC_Coupon();
+		$coupon->set_code( $code );
+		$coupon->set_discount_type( 'fixed_cart' );
+		$coupon->set_amount( $amount );
+		$coupon->save();
+		return $coupon;
+	}
+
+	/** A fixed-cart coupon skips box lines unless the campaign allows coupons. */
+	public function test_fixed_cart_coupons_skip_box_lines_unless_allowed() {
+		$this->add();
+		$other = WC()->cart->add_to_cart( $this->products[3]->get_id(), 1 );
+		$this->cart_coupon( 'fivecart', 5 );
+		$this->assertTrue( WC()->cart->apply_coupon( 'fivecart' ) );
+		WC()->cart->calculate_totals();
+		wc_clear_notices();
+
+		$box = $this->box_line();
+		$this->assertEqualsWithDelta( 18.0, (float) $box['line_total'], 0.001, 'The box keeps its own price.' );
+		$this->assertEqualsWithDelta( 5.0, (float) WC()->cart->get_cart_item( $other )['line_subtotal'] - (float) WC()->cart->get_cart_item( $other )['line_total'], 0.001, 'The other line takes the whole coupon.' );
+
+		$config                         = $this->campaign['config'];
+		$config['box']['allow_coupons'] = true;
+		$this->repo->save( $this->campaign['id'], $config );
+		WC()->cart->calculate_totals();
+		$this->assertLessThan( 18.0, (float) $this->box_line()['line_total'], 'Allowed, the coupon reaches the box too.' );
+	}
+
+	/** Coupons applied to an order (by the merchant, in admin) skip box lines too. */
+	public function test_order_coupons_skip_box_lines() {
+		$this->add();
+		$order = $this->order_from_cart();
+		$lines = array_values( $order->get_items() );
+
+		$this->assertFalse( \MixMax\BoxBuilder\Cart\Cart_Lines::coupons_allowed( $lines[0] ) );
+		$plain = new \WC_Order_Item_Product();
+		$plain->set_product( $this->products[3] );
+		$this->assertNull( \MixMax\BoxBuilder\Cart\Cart_Lines::coupons_allowed( $plain ) );
+	}
+
+	/** A one-line box is taxed like its items when they share a tax class, and as standard when they mix. */
+	public function test_bundle_box_takes_its_items_tax_class() {
+		foreach ( array( 1, 2 ) as $i ) {
+			$this->products[ $i ]->set_tax_class( 'reduced-rate' );
+			$this->products[ $i ]->save();
+		}
+		$this->add(
+			array(
+				'items' => array(
+					array(
+						'product_id' => $this->products[1]->get_id(),
+						'qty'        => 1,
+					),
+					array(
+						'product_id' => $this->products[2]->get_id(),
+						'qty'        => 1,
+					),
+				),
+			)
+		);
+		$this->assertSame( 'reduced-rate', $this->box_line()['data']->get_tax_class() );
+
+		WC()->cart->empty_cart();
+		$this->add(
+			array(
+				'items' => array(
+					array(
+						'product_id' => $this->products[1]->get_id(),
+						'qty'        => 1,
+					),
+					array(
+						'product_id' => $this->products[3]->get_id(),
+						'qty'        => 1,
+					),
+				),
+			)
+		);
+		$this->assertSame( '', $this->box_line()['data']->get_tax_class(), 'Mixed classes keep the container product\'s own.' );
+	}
+
+	/** Refunding a box with "restock" puts its items back once; a later cancel does not add them again. */
+	public function test_refund_restock_returns_box_items_once() {
+		$this->add();
+		$order = $this->order_from_cart();
+		wc_reduce_stock_levels( $order->get_id() );
+		$this->assertSame( 18, wc_get_product( $this->products[1]->get_id() )->get_stock_quantity() );
+
+		$item_id = array_keys( $order->get_items() )[0];
+		$refund  = wc_create_refund(
+			array(
+				'order_id'      => $order->get_id(),
+				'amount'        => 0,
+				'line_items'    => array(
+					$item_id => array(
+						'qty'          => 1,
+						'refund_total' => 0,
+					),
+				),
+				'restock_items' => true,
+			)
+		);
+		$this->assertNotWPError( $refund );
+		$this->assertSame( 20, wc_get_product( $this->products[1]->get_id() )->get_stock_quantity() );
+
+		wc_increase_stock_levels( wc_get_order( $order->get_id() ) );
+		$this->assertSame( 20, wc_get_product( $this->products[1]->get_id() )->get_stock_quantity() );
+	}
+
+	/** Order meta saved under another language's keys is still found, ordered and formatted. */
+	public function test_order_meta_saved_in_another_language_is_found() {
+		$item = new \WC_Order_Item_Product();
+		$item->set_product( $this->products[1] );
+		$item->add_meta_data(
+			Order_Boxes::META_BOX,
+			wp_json_encode(
+				array(
+					'campaign_id' => $this->campaign['id'],
+					'items'       => array(
+						array(
+							'product_id'   => $this->products[1]->get_id(),
+							'variation_id' => 0,
+							'qty'          => 2,
+						),
+					),
+				)
+			)
+		);
+		$item->add_meta_data( 'Contenu', 'raw text', true );
+		$item->add_meta_data( Order_Boxes::META_LABELS, wp_json_encode( array( 'contents' => 'Contenu' ) ), true );
+		$item->save();
+
+		$meta = array_values( wp_list_filter( $item->get_formatted_meta_data(), array( 'key' => 'Contenu' ) ) );
+		$this->assertCount( 1, $meta );
+		$this->assertStringContainsString( '2 × Cookie 1', $meta[0]->display_value );
+		$this->assertNotContains( Order_Boxes::META_LABELS, wp_list_pluck( $item->get_formatted_meta_data(), 'key' ) );
 	}
 }

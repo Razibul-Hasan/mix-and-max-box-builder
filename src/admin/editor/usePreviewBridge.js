@@ -8,13 +8,14 @@ import {
 import { previewCampaign } from '../api';
 
 /** How long the draft must stay still before the preview is updated. */
-export const PREVIEW_DEBOUNCE_MS = 150;
+export const PREVIEW_DEBOUNCE_MS = 300;
 
 /**
  * Keep the preview iframe in step with the draft.
  *
- * Waits for the iframe's `ready`, then on every draft change (debounced 150ms)
+ * Waits for the iframe's `ready`, then on every draft change (debounced 300ms)
  * asks the server for the draft's storefront payload and posts it to the iframe.
+ * A request still running when the draft changes again is aborted.
  * Only messages from the iframe's window and origin are read.
  *
  * @param {Object}  args
@@ -79,9 +80,12 @@ export default function usePreviewBridge( {
 		if ( sentDraft.current === draft ) {
 			return undefined;
 		}
+		// Cancels the request when the draft moves on: the browser drops the stale answer and frees
+		// the connection for the next one. PHP may still finish the old request on the server.
+		const controller = new window.AbortController();
 		const timer = setTimeout( () => {
 			const mine = ++sequence.current;
-			previewCampaign( boxId, draft )
+			previewCampaign( boxId, draft, { signal: controller.signal } )
 				.then( ( payload ) => {
 					const frame = frameRef.current;
 					// Only the newest answer counts; an older one may arrive last.
@@ -102,9 +106,13 @@ export default function usePreviewBridge( {
 				} )
 				.catch( () => {
 					// The preview keeps the last good draft; saving reports real errors.
+					// An aborted request (AbortError) is ignored the same way.
 				} );
 		}, PREVIEW_DEBOUNCE_MS );
-		return () => clearTimeout( timer );
+		return () => {
+			clearTimeout( timer );
+			controller.abort();
+		};
 	}, [ ready, changed, draft, boxId, origin, frameRef ] );
 
 	return { ready, height };

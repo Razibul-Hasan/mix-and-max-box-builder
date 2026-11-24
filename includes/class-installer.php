@@ -14,6 +14,9 @@ final class Installer {
 	/** Database schema version; bump when the schema registry changes or Upgrades gains a step. */
 	const DB_VERSION = '2.0.2';
 
+	/** Option row that marks an upgrade in progress. */
+	const LOCK_OPTION = 'mmbb_upgrade_lock';
+
 	/** Register upgrade and network-site hooks. */
 	public function register() {
 		add_action( 'admin_init', array( self::class, 'maybe_upgrade' ) );
@@ -35,9 +38,48 @@ final class Installer {
 
 	/** Upgrade only when a stored plugin or database version is older. */
 	public static function maybe_upgrade() {
-		if ( version_compare( (string) get_option( 'mmbb_version', '0' ), MMBB_VERSION, '<' ) || version_compare( (string) get_option( 'mmbb_db_version', '0' ), self::DB_VERSION, '<' ) ) {
-			self::install();
+		if ( ! version_compare( (string) get_option( 'mmbb_version', '0' ), MMBB_VERSION, '<' ) && ! version_compare( (string) get_option( 'mmbb_db_version', '0' ), self::DB_VERSION, '<' ) ) {
+			return;
 		}
+		// Storefront and REST traffic can reach this at the same moment after an automatic update.
+		if ( ! self::lock() ) {
+			return;
+		}
+		try {
+			self::install();
+		} finally {
+			self::unlock();
+		}
+	}
+
+	/**
+	 * Take the upgrade lock, so only one request runs the upgrade.
+	 *
+	 * INSERT IGNORE is atomic, unlike add_option(). A lock older than ten minutes belongs to a
+	 * request that died and is taken over.
+	 *
+	 * @return bool Whether this request holds the lock.
+	 */
+	private static function lock() {
+		global $wpdb;
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- A lock must read and write the live row, past the options cache.
+		$taken = $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO %i (option_name, option_value, autoload) VALUES (%s, %s, 'off')", $wpdb->options, self::LOCK_OPTION, (string) time() ) );
+		if ( 1 === (int) $taken ) {
+			return true;
+		}
+		$since = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT option_value FROM %i WHERE option_name = %s', $wpdb->options, self::LOCK_OPTION ) );
+		if ( $since > time() - 10 * MINUTE_IN_SECONDS ) {
+			return false;
+		}
+		$moved = $wpdb->query( $wpdb->prepare( 'UPDATE %i SET option_value = %s WHERE option_name = %s AND option_value = %s', $wpdb->options, (string) time(), self::LOCK_OPTION, (string) $since ) );
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return 1 === (int) $moved;
+	}
+
+	/** Release the upgrade lock. */
+	private static function unlock() {
+		global $wpdb;
+		$wpdb->delete( $wpdb->options, array( 'option_name' => self::LOCK_OPTION ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Lock row written past the options cache.
 	}
 
 	/** Create registered tables, seed defaults and run pending migration steps for the current site. */

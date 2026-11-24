@@ -65,13 +65,19 @@ final class Preview {
 	 * The preview address: the page that shows the box, or the home page. Only the
 	 * id and a nonce are added.
 	 *
-	 * @param array $campaign Campaign from the repository.
-	 * @param bool  $bare     Show the box alone on the preview template, without the page's
-	 *                        header, footer and other content. For a frame inside a page builder.
+	 * @param array               $campaign Campaign from the repository.
+	 * @param bool                $bare     Show the box alone on the preview template, without the page's
+	 *                                      header, footer and other content. For a frame inside a page builder.
+	 * @param \WP_Post|false|null $page     The page from Placement::page() when the caller already has it;
+	 *                                      false when it found no page; null (the default) looks it up.
 	 * @return string
 	 */
-	public static function url( array $campaign, $bare = false ) {
-		$page = Placement::page( $campaign );
+	public static function url( array $campaign, $bare = false, $page = null ) {
+		if ( false === $page ) {
+			$page = null;
+		} elseif ( ! $page instanceof \WP_Post ) {
+			$page = Placement::page( $campaign );
+		}
 		$base = $page && 'publish' === $page->post_status ? get_permalink( $page ) : '';
 		if ( ! $base ) {
 			$base = home_url( '/' );

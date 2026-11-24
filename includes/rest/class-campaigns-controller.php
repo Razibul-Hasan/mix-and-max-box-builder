@@ -319,7 +319,7 @@ final class Campaigns_Controller extends Base_Controller {
 
 		$items = array();
 		foreach ( $result['items'] as $campaign ) {
-			$items[] = $this->prepare_campaign( $campaign );
+			$items[] = $this->prepare_campaign( $campaign, $totals );
 		}
 
 		$response = rest_ensure_response(
@@ -495,10 +495,13 @@ final class Campaigns_Controller extends Base_Controller {
 			$config = $this->protect_custom_css( $request['config'], $campaign['config'] );
 			if ( is_array( $config ) ) {
 				// The same sanitizing as a full save (PUT), without writing anything.
-				$container                                  = $campaign['config']['container_product_id'];
+				$saved                                      = $campaign['config'];
+				$container                                  = $saved['container_product_id'];
 				$campaign['config']                         = Config::sanitize( $config, Campaign_Repository::defaults() );
 				$campaign['config']['container_product_id'] = $container;
-				$fresh                                      = true;
+				// Only the product selection changes the product list; design, text and extras
+				// (the free gift is built separately) can reuse the saved campaign's cached list.
+				$fresh = $campaign['config']['products'] !== $saved['products'];
 			}
 			if ( $request->has_param( 'title' ) ) {
 				$campaign['title'] = (string) $request['title'];
@@ -769,11 +772,18 @@ final class Campaigns_Controller extends Base_Controller {
 	/**
 	 * Shape a campaign for a response.
 	 *
-	 * @param array $campaign Campaign from the repository.
+	 * @param array      $campaign Campaign from the repository.
+	 * @param array|null $totals   Sales figures by campaign id from Query::campaign_totals(), when
+	 *                             the caller already has them; null loads them.
 	 * @return array
 	 */
-	private function prepare_campaign( array $campaign ) {
-		$totals = Query::campaign_totals();
+	private function prepare_campaign( array $campaign, $totals = null ) {
+		if ( null === $totals ) {
+			$totals = Query::campaign_totals();
+		}
+		// The saved page may be deleted or edited; the merchant may have placed the builder elsewhere by hand.
+		// Looked up once: finding a moved builder searches post content.
+		$page = Placement::page( $campaign );
 		return array(
 			'id'          => $campaign['id'],
 			'title'       => $campaign['title'],
@@ -782,7 +792,7 @@ final class Campaigns_Controller extends Base_Controller {
 			'paused'      => $campaign['paused'],
 			'type'        => $campaign['config']['type'],
 			'config'      => $campaign['config'],
-			'placement'   => $this->placement( $campaign ),
+			'placement'   => $this->placement( $campaign, $page ),
 			'stats'       => array_merge(
 				array(
 					'boxes_sold' => 0,
@@ -792,7 +802,7 @@ final class Campaigns_Controller extends Base_Controller {
 				isset( $totals[ $campaign['id'] ] ) ? $totals[ $campaign['id'] ] : array()
 			),
 			'edit_url'    => admin_url( 'admin.php?page=mmbb-campaigns&action=edit&id=' . $campaign['id'] ),
-			'preview_url' => Preview::url( $campaign ),
+			'preview_url' => Preview::url( $campaign, false, $page ? $page : false ),
 			'created'     => $campaign['created'],
 			'modified'    => $campaign['modified'],
 		);
@@ -801,10 +811,11 @@ final class Campaigns_Controller extends Base_Controller {
 	/**
 	 * Describe where the builder is placed.
 	 *
-	 * @param array $campaign Campaign.
+	 * @param array         $campaign Campaign.
+	 * @param \WP_Post|null $page     The page from Placement::page(), or null when there is none.
 	 * @return array
 	 */
-	private function placement( array $campaign ) {
+	private function placement( array $campaign, $page ) {
 		$out = array(
 			'page_id'    => 0,
 			'page_title' => '',
@@ -812,9 +823,7 @@ final class Campaigns_Controller extends Base_Controller {
 			'method'     => 'none',
 			'shortcode'  => sprintf( '[mmbb_box id="%d"]', $campaign['id'] ),
 		);
-		// The saved page may be deleted or edited; the merchant may have placed the builder elsewhere by hand.
-		$page = Placement::page( $campaign );
-		if ( ! $page ) {
+		if ( ! $page instanceof \WP_Post ) {
 			return $out;
 		}
 

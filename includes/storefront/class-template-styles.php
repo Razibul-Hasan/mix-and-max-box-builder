@@ -55,8 +55,8 @@ final class Template_Styles {
 		$cards    = isset( $design['cards'] ) && is_array( $design['cards'] ) ? $design['cards'] : array();
 		$spacing  = isset( $design['spacing'] ) && is_array( $design['spacing'] ) ? $design['spacing'] : array();
 
-		$accent     = self::value( $colors, 'accent', $defaults[0] );
-		$button     = self::value( $colors, 'button_text', self::ink( $accent ) );
+		$accent = self::value( $colors, 'accent', $defaults[0] );
+		$button = self::value( $colors, 'button_text', self::ink( $accent ) );
 		// Text drawn on the accent (counts, the top discount step) has to be readable on it.
 		$button     = self::readable( $button, $accent, 3, $accent );
 		$background = self::value( $colors, 'background', $defaults[1] );

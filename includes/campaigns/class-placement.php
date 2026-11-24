@@ -12,6 +12,13 @@ defined( 'ABSPATH' ) || exit;
 /** Finds the page that shows a campaign, even when the merchant moved the builder by hand. */
 final class Placement {
 	/**
+	 * Posts found by candidates(), by needle, for this request.
+	 *
+	 * @var array<string, \WP_Post[]>
+	 */
+	private static $candidates = array();
+
+	/**
 	 * The page that shows the campaign: the saved page while it still holds the
 	 * builder, else a published page or post that does, else the saved page.
 	 *
@@ -19,8 +26,10 @@ final class Placement {
 	 * @return \WP_Post|null Null when there is no usable page.
 	 */
 	public static function page( array $campaign ) {
-		$id    = isset( $campaign['id'] ) ? (int) $campaign['id'] : 0;
-		$saved = isset( $campaign['config']['placement']['page_id'] ) ? get_post( (int) $campaign['config']['placement']['page_id'] ) : null;
+		$id      = isset( $campaign['id'] ) ? (int) $campaign['id'] : 0;
+		$page_id = isset( $campaign['config']['placement']['page_id'] ) ? (int) $campaign['config']['placement']['page_id'] : 0;
+		// get_post( 0 ) returns the global post (the page being viewed), never "no page".
+		$saved = $page_id > 0 ? get_post( $page_id ) : null;
 		if ( $saved && 'trash' === $saved->post_status ) {
 			$saved = null;
 		}
@@ -42,7 +51,26 @@ final class Placement {
 			return null;
 		}
 		foreach ( array( 'mmbb/box-builder', 'mmbb_box' ) as $needle ) {
-			$posts = get_posts(
+			foreach ( self::candidates( $needle ) as $post ) {
+				if ( Page_Content::contains( $post->post_content, $campaign_id ) ) {
+					return $post;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Published pages and posts whose content mentions a needle, searched once per request.
+	 *
+	 * A list of campaigns looks each one up, so the search is shared by all of them.
+	 *
+	 * @param string $needle Block name or shortcode tag.
+	 * @return \WP_Post[]
+	 */
+	private static function candidates( $needle ) {
+		if ( ! isset( self::$candidates[ $needle ] ) ) {
+			self::$candidates[ $needle ] = get_posts(
 				array(
 					'post_type'      => array( 'page', 'post' ),
 					'post_status'    => 'publish',
@@ -51,12 +79,12 @@ final class Placement {
 					'no_found_rows'  => true,
 				)
 			);
-			foreach ( $posts as $post ) {
-				if ( Page_Content::contains( $post->post_content, $campaign_id ) ) {
-					return $post;
-				}
-			}
 		}
-		return null;
+		return self::$candidates[ $needle ];
+	}
+
+	/** Forget the searched posts. On `clean_post_cache`, so a saved page is searched again. */
+	public static function flush() {
+		self::$candidates = array();
 	}
 }

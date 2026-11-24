@@ -29,14 +29,14 @@ class AdminMenuTest extends \WP_UnitTestCase {
 	}
 
 	/** The top-level menu has four submenus guarded by manage_woocommerce. */
-	public function test_menu_has_four_pages_with_the_capability() {
+	public function test_menu_has_five_pages_with_the_capability() {
 		global $submenu;
 		$this->build_menu();
 		$this->assertArrayHasKey( 'mmbb', $submenu );
 		$slugs = wp_list_pluck( $submenu['mmbb'], 2 );
 		$this->assertSame( array( 'mmbb', 'mmbb-campaigns', 'mmbb-analytics', 'mmbb-settings', 'mmbb-our-plugins' ), $slugs );
 		// Labels follow the redesign (Home, Boxes); the slugs above are frozen.
-		$this->assertSame( array( 'Dashboard','Boxes', 'Analytics', 'Settings' ), wp_list_pluck( $submenu['mmbb'], 0 ) );
+		$this->assertSame( array( 'Dashboard', 'Boxes', 'Analytics', 'Settings', 'Plugins' ), wp_list_pluck( $submenu['mmbb'], 0 ) );
 		foreach ( $submenu['mmbb'] as $item ) {
 			$this->assertSame( 'manage_woocommerce', $item[1] );
 		}

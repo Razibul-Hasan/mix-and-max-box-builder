@@ -198,12 +198,16 @@ final class Box_Resolver {
 	 * Every product or variation id the campaign offers.
 	 *
 	 * @param array $config Campaign config.
+	 * @param int   $limit  Most ids to return; -1 (the default) returns all of them. Checks that a
+	 *                      pick belongs to the campaign must keep the default.
 	 * @return int[]
 	 */
-	public static function allowed_ids( array $config ) {
+	public static function allowed_ids( array $config, $limit = -1 ) {
+		$limit    = (int) $limit;
 		$products = $config['products'];
 		if ( 'manual' === $products['source'] ) {
-			return array_map( 'intval', $products['ids'] );
+			$ids = array_map( 'intval', $products['ids'] );
+			return $limit > 0 ? array_slice( $ids, 0, $limit ) : $ids;
 		}
 
 		$taxonomy = 'category' === $products['source'] ? 'product_cat' : 'product_tag';
@@ -221,7 +225,7 @@ final class Box_Resolver {
 		$args = array(
 			'status' => 'publish',
 			'type'   => array( 'simple' ),
-			'limit'  => -1,
+			'limit'  => $limit > 0 ? $limit : -1,
 			'return' => 'ids',
 		);
 		if ( 'product_cat' === $taxonomy ) {

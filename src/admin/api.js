@@ -97,11 +97,13 @@ export function saveCampaign( id, payload, { autosave = false } = {} ) {
 }
 
 // The storefront payload for an unsaved draft. The server sanitizes it and stores nothing.
-export function previewCampaign( id, draft ) {
+// `signal` (an AbortSignal) cancels the request when a newer draft replaces it.
+export function previewCampaign( id, draft, { signal } = {} ) {
 	return apiFetch( {
 		path: BASE + '/campaigns/' + id + '/preview',
 		method: 'POST',
 		data: { title: draft.title, config: draft.config },
+		signal,
 	} );
 }
 

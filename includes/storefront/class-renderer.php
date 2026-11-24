@@ -163,7 +163,7 @@ final class Renderer {
 		if ( ! current_user_can( 'manage_woocommerce' ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce registers this capability.
 			return '';
 		}
-		$count = Payload::unpriced_count( $campaign['config'] );
+		$count = Payload::unpriced_count( $campaign['config'], (int) $campaign['id'] );
 		if ( $count < 1 ) {
 			return '';
 		}

@@ -237,7 +237,14 @@ class Analytics_Controller extends Base_Controller {
 	 * @return string
 	 */
 	public static function csv_cell( $value ) {
+		// Numbers, negative ones too, stay numbers. Only text a spreadsheet would run as a formula is escaped.
+		if ( is_int( $value ) || is_float( $value ) ) {
+			return (string) $value;
+		}
 		$value = (string) $value;
+		if ( preg_match( '/^-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?$/D', $value ) ) {
+			return $value;
+		}
 		return preg_match( '/^[\s]*[=+@-]/', $value ) ? "'" . $value : $value;
 	}
 	/** Serve CSV without REST JSON encoding.
@@ -255,24 +262,6 @@ class Analytics_Controller extends Base_Controller {
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CSV bytes are formula-escaped by export(); HTML escaping would corrupt the file.
 		echo $result->get_data();
 		return true;
-	}
-
-	/**
-	 * List the Y-m-d days from one date to another, both included.
-	 *
-	 * @param string $from First day, Y-m-d.
-	 * @param string $to   Last day, Y-m-d.
-	 * @return string[]
-	 */
-	protected function days( $from, $to ) {
-		$days = array();
-		$day  = new \DateTimeImmutable( $from, wp_timezone() );
-		$end  = new \DateTimeImmutable( $to, wp_timezone() );
-		while ( $day <= $end ) {
-			$days[] = $day->format( 'Y-m-d' );
-			$day    = $day->modify( '+1 day' );
-		}
-		return $days;
 	}
 
 	/**

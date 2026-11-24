@@ -12,9 +12,38 @@ defined( 'ABSPATH' ) || exit;
 // phpcs:disable WordPress.DB.DirectDatabaseQuery -- Owned tables; reports cached for ten minutes with a mutation generation.
 /** Merge durable daily summaries with unrolled events and the permanent sales ledger. */
 final class Query {
-	/** Invalidate reports after every collection, purchase, refund or rollup. */
+	/** Option holding the last store day the daily rollup has summarised, Y-m-d. */
+	const ROLLED_OPTION = 'mmbb_rollup_through';
+
+	/**
+	 * Invalidate reports after a purchase, refund or rollup.
+	 *
+	 * Builder events (views, picks, carts) do not call this: busting on every event would leave
+	 * reports uncached on a busy store. Reports pick those up when their ten-minute cache ends.
+	 */
 	public static function bust() {
 		update_option( 'mmbb_analytics_generation', wp_generate_uuid4(), false );
+	}
+
+	/**
+	 * The last store day the daily rollup has summarised. Days up to it are read from
+	 * `mmbb_stats_daily` only; later days from the raw events.
+	 *
+	 * @return string Y-m-d, or '' before the first rollup.
+	 */
+	public static function rolled_through() {
+		$day = (string) get_option( self::ROLLED_OPTION, '' );
+		return preg_match( '/^\d{4}-\d{2}-\d{2}$/', $day ) ? $day : '';
+	}
+
+	/**
+	 * The day after a store day.
+	 *
+	 * @param string $day Y-m-d.
+	 * @return string Y-m-d.
+	 */
+	public static function next_day( $day ) {
+		return ( new \DateTimeImmutable( $day, wp_timezone() ) )->modify( '+1 day' )->format( 'Y-m-d' );
 	}
 	/** Get UTC boundaries for inclusive store dates.
 	 *
@@ -35,36 +64,47 @@ final class Query {
 	 */
 	public static function raw_days( $from, $to, $campaign ) {
 		global $wpdb;
+		$table               = $wpdb->prefix . 'mmbb_events';
 		list( $start, $end ) = self::bounds( $from, $to );
-		$events              = $wpdb->get_results( $wpdb->prepare( 'SELECT campaign_id,event,session,product_id,created_at FROM %i WHERE created_at >= %s AND created_at < %s AND (%d = 0 OR campaign_id = %d)', $wpdb->prefix . 'mmbb_events', $start, $end, $campaign, $campaign ), ARRAY_A );
-		$groups              = array();
-		$map                 = array(
+		// Start at the first day that has events, so an open range does not walk empty days.
+		$first = $wpdb->get_var( $wpdb->prepare( 'SELECT MIN(created_at) FROM %i WHERE created_at >= %s AND created_at < %s AND (%d = 0 OR campaign_id = %d)', $table, $start, $end, $campaign, $campaign ) );
+		if ( ! $first ) {
+			return array();
+		}
+		$day    = max( (string) $from, wp_date( 'Y-m-d', strtotime( $first . ' UTC' ), wp_timezone() ) );
+		$groups = array();
+		$map    = array(
 			'view'         => 'views',
 			'add_item'     => 'started',
 			'tier_reached' => 'tier_reached',
 			'add_to_cart'  => 'carts',
 		);
-		foreach ( $events as $event ) {
-			$day = wp_date( 'Y-m-d', strtotime( $event['created_at'] . ' UTC' ), wp_timezone() );
-			$key = $day . ':' . $event['campaign_id'];
-			if ( ! isset( $groups[ $key ] ) ) {
-				$groups[ $key ] = array(
-					'day'          => $day,
-					'campaign_id'  => (int) $event['campaign_id'],
-					'views'        => array(),
-					'started'      => array(),
-					'tier_reached' => array(),
-					'carts'        => array(),
-					'products'     => array(),
-				);
+		// One query per store day: each groups that day's events by session, so no raw rows reach PHP.
+		while ( $day <= $to ) {
+			list( $day_start, $day_end ) = self::bounds( $day, $day );
+			$events                      = $wpdb->get_results( $wpdb->prepare( 'SELECT campaign_id,event,session,product_id,COUNT(*) AS n FROM %i WHERE created_at >= %s AND created_at < %s AND (%d = 0 OR campaign_id = %d) GROUP BY campaign_id,event,session,product_id', $table, $day_start, $day_end, $campaign, $campaign ), ARRAY_A );
+			foreach ( $events as $event ) {
+				$key = $day . ':' . $event['campaign_id'];
+				if ( ! isset( $groups[ $key ] ) ) {
+					$groups[ $key ] = array(
+						'day'          => $day,
+						'campaign_id'  => (int) $event['campaign_id'],
+						'views'        => array(),
+						'started'      => array(),
+						'tier_reached' => array(),
+						'carts'        => array(),
+						'products'     => array(),
+					);
+				}
+				if ( isset( $map[ $event['event'] ] ) ) {
+					$groups[ $key ][ $map[ $event['event'] ] ][ $event['session'] ] = true;
+				}
+				if ( 'add_item' === $event['event'] ) {
+					$id                                = (int) $event['product_id'];
+					$groups[ $key ]['products'][ $id ] = ( isset( $groups[ $key ]['products'][ $id ] ) ? $groups[ $key ]['products'][ $id ] : 0 ) + (int) $event['n'];
+				}
 			}
-			if ( isset( $map[ $event['event'] ] ) ) {
-				$groups[ $key ][ $map[ $event['event'] ] ][ $event['session'] ] = true;
-			}
-			if ( 'add_item' === $event['event'] ) {
-				$id                                = (int) $event['product_id'];
-				$groups[ $key ]['products'][ $id ] = isset( $groups[ $key ]['products'][ $id ] ) ? $groups[ $key ]['products'][ $id ] + 1 : 1;
-			}
+			$day = self::next_day( $day );
 		}
 		foreach ( $groups as &$row ) {
 			foreach ( $map as $column ) {
@@ -76,7 +116,10 @@ final class Query {
 		unset( $row );
 		return array_values( $groups );
 	}
-	/** Read daily rows, falling back to raw events when a day has not rolled up.
+	/** Read daily rows, falling back to raw events for days the rollup has not summarised yet.
+	 *
+	 * Only days after Query::rolled_through() are read from the raw events, so a report reads the
+	 * small daily table plus, usually, today's events. Before the first rollup every day is read raw.
 	 *
 	 * @param string $from First date.
 	 * @param string $to Last date.
@@ -90,7 +133,12 @@ final class Query {
 		foreach ( $rows as $row ) {
 			$merged[ $row['day'] . ':' . $row['campaign_id'] ] = $row;
 		}
-		foreach ( self::raw_days( $from, $to, $campaign ) as $row ) {
+		$rolled   = self::rolled_through();
+		$raw_from = '' !== $rolled && $rolled >= $from ? self::next_day( $rolled ) : $from;
+		if ( $raw_from > $to ) {
+			return array_values( $merged );
+		}
+		foreach ( self::raw_days( $raw_from, $to, $campaign ) as $row ) {
 			$merged[ $row['day'] . ':' . $row['campaign_id'] ] = $row;
 		}
 		return array_values( $merged );
@@ -145,7 +193,6 @@ final class Query {
 			'campaigns'         => $current['campaigns'],
 		);
 		set_transient( $key, $result, 10 * MINUTE_IN_SECONDS );
-		Collector::remember( $key );
 		return $result;
 	}
 	/** Aggregate one period.
@@ -344,7 +391,6 @@ final class Query {
 		}
 
 		set_transient( $key, $totals, 10 * MINUTE_IN_SECONDS );
-		Collector::remember( $key );
 		return $totals;
 	}
 

@@ -605,7 +605,7 @@ describe( 'box editor', () => {
 			target: { value: 'Summer box' },
 		} );
 		await act( async () => {
-			jest.advanceTimersByTime( 100 );
+			jest.advanceTimersByTime( 200 );
 		} );
 		expect( api.previewCampaign ).not.toHaveBeenCalled();
 		await act( async () => {

@@ -21,13 +21,13 @@ final class Our_Plugins {
 		$plugins = array(
 			array(
 				'name'        => 'ProductReels',
-				'description' => 'Shoppable video reels for WooCommerce. Turn product videos, reviews and tutorials into interactive reels with product tags and add-to-cart buttons.',
+				'description' => __( 'Shoppable video reels for WooCommerce. Turn product videos, reviews and tutorials into interactive reels with product tags and add-to-cart buttons.', 'productboxes-mix-and-match-box-builder' ),
 				'slug'        => 'productreels',
 				'url'         => 'https://wordpress.org/plugins/productreels/',
 			),
 			array(
 				'name'        => 'MigrateLift',
-				'description' => 'WordPress migration, backup and restore. Move your site to a new host or domain, restore from an archive, or clone to staging, all from the dashboard.',
+				'description' => __( 'WordPress migration, backup and restore. Move your site to a new host or domain, restore from an archive, or clone to staging, all from the dashboard.', 'productboxes-mix-and-match-box-builder' ),
 				'slug'        => 'migrate-lift',
 				'url'         => 'https://wordpress.org/plugins/migrate-lift/',
 			),

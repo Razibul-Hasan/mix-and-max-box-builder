@@ -439,8 +439,9 @@ final class Config {
 	 * @return array
 	 */
 	private static function sanitize_products( array $in, array $base, $capacity ) {
-		$caps = array();
-		foreach ( self::pick( $in, 'caps', $base['caps'] ) as $id => $cap ) {
+		$caps     = array();
+		$raw_caps = self::pick( $in, 'caps', $base['caps'] );
+		foreach ( is_array( $raw_caps ) ? $raw_caps : array() as $id => $cap ) {
 			$id = (int) $id;
 			if ( $id > 0 && is_numeric( $cap ) ) {
 				$caps[ $id ] = self::clamp_int( $cap, 1, $capacity );
@@ -571,9 +572,9 @@ final class Config {
 			$out['spacing']['padding'][ $side ] = self::css_length( self::pick( $padding, $side, $base['spacing']['padding'][ $side ] ), $base['spacing']['padding'][ $side ] );
 		}
 
-		$advanced                      = self::section( $in, 'advanced' );
-		$out['advanced']['css_class']  = self::css_classes( self::pick( $advanced, 'css_class', $base['advanced']['css_class'] ) );
-		$out['advanced']['custom_css'] = self::custom_css( self::pick( $advanced, 'custom_css', $base['advanced']['custom_css'] ) );
+		$advanced                        = self::section( $in, 'advanced' );
+		$out['advanced']['css_class']    = self::css_classes( self::pick( $advanced, 'css_class', $base['advanced']['css_class'] ) );
+		$out['advanced']['custom_css']   = self::custom_css( self::pick( $advanced, 'custom_css', $base['advanced']['custom_css'] ) );
 		$content                         = self::section( $in, 'content' );
 		$out['content']['show_headline'] = self::bool( self::pick( $content, 'show_headline', $base['content']['show_headline'] ), $base['content']['show_headline'] );
 		$out['content']['headline']      = self::text( self::pick( $content, 'headline', $base['content']['headline'] ), 120 );
@@ -649,16 +650,39 @@ final class Config {
 	/**
 	 * Strip markup and limit campaign custom CSS to 10 KB.
 	 *
+	 * CSS that loads anything (url(), image-set() and friends, @import) is refused as a whole. The
+	 * check runs on the CSS with its escapes and comments decoded, so `\75rl(` is caught too.
+	 *
 	 * @param mixed $value Raw value.
 	 * @return string
 	 */
 	private static function custom_css( $value ) {
 		$value = is_scalar( $value ) ? strip_tags( (string) $value ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.strip_tags_strip_tags -- Pure class, no WordPress available.
-		if ( preg_match( '/(?:url\s*\(|@import)/i', $value ) ) {
+		if ( preg_match( '/(?:^|[^a-z0-9_-])(?:-[a-z]+-)?(?:url|src|image|image-set|cross-fade|element|expression)\s*\(|@import/i', self::decode_css( $value ) ) ) {
 			return '';
 		}
 		$value = str_replace( array( '{', '}' ), '', $value );
 		return substr( $value, 0, 10240 );
+	}
+
+	/**
+	 * CSS as a browser reads it: comments removed, `\hex` and `\char` escapes decoded.
+	 *
+	 * @param string $css Raw CSS.
+	 * @return string
+	 */
+	private static function decode_css( $css ) {
+		$css = (string) preg_replace( '#/\*.*?(?:\*/|$)#s', '', $css );
+		$css = (string) preg_replace_callback(
+			'/\\\\([0-9a-fA-F]{1,6})\s?/',
+			static function ( $escape ) {
+				$code = hexdec( $escape[1] );
+				// Only ASCII spells a CSS function name; anything else cannot complete one.
+				return $code > 0 && $code < 0x80 ? chr( $code ) : "\u{FFFD}";
+			},
+			$css
+		);
+		return (string) preg_replace( '/\\\\(.)/su', '$1', $css );
 	}
 
 	/**

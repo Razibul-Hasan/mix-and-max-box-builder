@@ -14,7 +14,8 @@ defined( 'ABSPATH' ) || exit;
 final class Rollup {
 	/** Register scheduling and order lifecycle hooks. */
 	public function register() {
-		add_action( 'init', array( $this, 'schedule' ), 20 );
+		// Checking the schedule is a database query, so it runs on admin screens, not on every page.
+		add_action( 'admin_init', array( $this, 'schedule' ), 20 );
 		add_action( 'mmbb_rollup_daily', array( $this, 'run' ) );
 		add_action( 'woocommerce_order_status_processing', array( $this, 'purchase' ) );
 		add_action( 'woocommerce_order_status_completed', array( $this, 'purchase' ) );
@@ -106,17 +107,19 @@ final class Rollup {
 	public function run() {
 		global $wpdb;
 		Collector::session_hash( '' );
-		$today = new \DateTimeImmutable( 'today', wp_timezone() );
-		$end   = $today->setTimezone( new \DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' );
-		$dates = $wpdb->get_col( $wpdb->prepare( 'SELECT DISTINCT created_at FROM %i WHERE created_at < %s', $wpdb->prefix . 'mmbb_events', $end ) );
-		$days  = array();
-		foreach ( $dates as $date ) {
-			$days[ wp_date( 'Y-m-d', strtotime( $date . ' UTC' ), wp_timezone() ) ] = true;
-		}
-		foreach ( array_keys( $days ) as $day ) {
-			foreach ( Query::raw_days( $day, $day, 0 ) as $row ) {
+		$today     = new \DateTimeImmutable( 'today', wp_timezone() );
+		$yesterday = $today->modify( '-1 day' )->format( 'Y-m-d' );
+		// Summarise only the days since the last run. Events are never back-dated, so a day
+		// the rollup has summarised does not change. Before the first run, start at the oldest event.
+		$rolled = Query::rolled_through();
+		$from   = '' !== $rolled ? Query::next_day( $rolled ) : '1970-01-01';
+		if ( $from <= $yesterday ) {
+			foreach ( Query::raw_days( $from, $yesterday, 0 ) as $row ) {
 				$wpdb->replace( $wpdb->prefix . 'mmbb_stats_daily', $row );
 			}
+		}
+		if ( $rolled < $yesterday ) {
+			update_option( Query::ROLLED_OPTION, $yesterday, false );
 		}
 		$this->sync_sales();
 		$cutoff = $today->modify( '-' . (int) \MixMax\BoxBuilder\Settings\Settings::get( 'analytics_retention_days' ) . ' days' )->setTimezone( new \DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' );

@@ -121,8 +121,16 @@ final class Collector {
 	 */
 	public function collect( $request ) {
 		$validated = array();
+		$repo      = new Campaign_Repository();
+		// A batch usually repeats one campaign: load it and its product list once.
+		$campaigns = array();
+		$allowed   = array();
 		foreach ( $request['events'] as $event ) {
-			$campaign = ( new Campaign_Repository() )->find( $event['campaign_id'] );
+			$campaign_id = absint( $event['campaign_id'] );
+			if ( ! array_key_exists( $campaign_id, $campaigns ) ) {
+				$campaigns[ $campaign_id ] = $repo->find( $campaign_id );
+			}
+			$campaign = $campaigns[ $campaign_id ];
 			if ( ! $campaign || ! Status::is_live( $campaign['status'] ) ) {
 				return new \WP_Error( 'mmbb_invalid_event', __( 'This campaign is unavailable.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 400 ) );
 			}
@@ -133,7 +141,10 @@ final class Collector {
 			} else {
 				$tiers = array_column( 'fixed' === $campaign['config']['type'] ? $campaign['config']['sizes'] : $campaign['config']['tiers'], 'qty' );
 			}
-			if ( ( 'add_item' === $event['event'] && ! in_array( $product, Box_Resolver::allowed_ids( $campaign['config'] ), true ) ) || ( 'tier_reached' === $event['event'] && ! in_array( $qty, $tiers, true ) ) ) {
+			if ( 'add_item' === $event['event'] && ! isset( $allowed[ $campaign_id ] ) ) {
+				$allowed[ $campaign_id ] = array_flip( Box_Resolver::allowed_ids( $campaign['config'] ) );
+			}
+			if ( ( 'add_item' === $event['event'] && ! isset( $allowed[ $campaign_id ][ $product ] ) ) || ( 'tier_reached' === $event['event'] && ! in_array( $qty, $tiers, true ) ) ) {
 				return new \WP_Error( 'mmbb_invalid_event', __( 'The event does not belong to this campaign.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 400 ) );
 			}
 			$validated[] = array(
@@ -149,28 +160,13 @@ final class Collector {
 		if ( $used + count( $validated ) > 120 ) {
 			return new \WP_Error( 'mmbb_rate_limit', __( 'Too many analytics events.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 429 ) );
 		}
+		// The counter expires on its own within the hour, so it needs no uninstall bookkeeping.
 		set_transient( $key, $used + count( $validated ), HOUR_IN_SECONDS );
-		self::remember( $key );
 		foreach ( $validated as $event ) {
 			self::insert( $event, $hash );
 		}
-		Query::bust();
+		// No Query::bust(): reports take new events in when their short cache ends.
 		return new \WP_REST_Response( null, 204 );
-	}
-	/** Track transient names for persistent-cache uninstall cleanup.
-	 *
-	 * @param string $key Transient name.
-	 */
-	public static function remember( $key ) {
-		$keys         = get_option( 'mmbb_analytics_transients', array() );
-		$keys         = array_filter(
-			(array) $keys,
-			static function ( $expires ) {
-				return $expires > time();
-			}
-		);
-		$keys[ $key ] = time() + HOUR_IN_SECONDS;
-		update_option( 'mmbb_analytics_transients', $keys, false );
 	}
 	/** Insert a trusted event.
 	 *

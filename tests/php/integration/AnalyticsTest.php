@@ -218,10 +218,89 @@ class AnalyticsTest extends \WP_UnitTestCase {
 		$this->assertSame( 200, $response->get_status() );
 		$this->assertStringContainsString( "'=Formula campaign", $response->get_data() );
 		$this->assertStringContainsString( 'text/csv', $response->get_headers()['Content-Type'] );
-		foreach ( array( '=x', '+x', '-x', '@x', '  =x', "\tx" ) as $value ) {
+		foreach ( array( '=x', '+x', '-x', '@x', '  =x', "\tx", "\t=x" ) as $value ) {
 			$expected = "\tx" === $value ? $value : "'" . $value;
 			$this->assertSame( $expected, \MixMax\BoxBuilder\Rest\Analytics_Controller::csv_cell( $value ) );
 		}
+		// Numbers, negative ones included, stay numbers.
+		foreach ( array( -5, -12.5, '-5', '-12.5', '0', '1e3' ) as $number ) {
+			$this->assertSame( (string) $number, \MixMax\BoxBuilder\Rest\Analytics_Controller::csv_cell( $number ) );
+		}
+	}
+
+	/** Builder events go into the table without invalidating every cached report. */
+	public function test_events_do_not_bust_report_caches() {
+		$generation = get_option( 'mmbb_analytics_generation' );
+		$this->assertSame( 204, $this->batch( array( $this->event() ) )->get_status() );
+		$this->assertSame( $generation, get_option( 'mmbb_analytics_generation' ) );
+		$this->assertFalse( get_option( 'mmbb_analytics_transients' ), 'No transient bookkeeping per event.' );
+	}
+
+	/** Days the rollup has summarised come from the daily table; only later days are read raw. */
+	public function test_reports_read_rolled_days_from_the_daily_table() {
+		global $wpdb;
+		$repo      = new Campaign_Repository();
+		$campaign  = $repo->create_from_template( 'blank', 'Rolled campaign' )['id'];
+		$today     = wp_date( 'Y-m-d' );
+		$yesterday = ( new \DateTimeImmutable( 'yesterday', wp_timezone() ) )->format( 'Y-m-d' );
+		update_option( Query::ROLLED_OPTION, $yesterday, false );
+		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Fixture rows in an owned table.
+			$wpdb->prefix . 'mmbb_stats_daily',
+			array(
+				'day'         => $yesterday,
+				'campaign_id' => $campaign,
+				'views'       => 12,
+				'products'    => '{}',
+			)
+		);
+		// Raw events of a rolled day are already in the daily row, so they must not count twice.
+		list( $start ) = Query::bounds( $yesterday, $yesterday );
+		foreach ( array( 'old-1', 'old-2', 'old-3' ) as $session ) {
+			Collector::insert(
+				array(
+					'campaign_id' => $campaign,
+					'event'       => 'view',
+					'created_at'  => gmdate( 'Y-m-d H:i:s', strtotime( $start . ' UTC' ) + HOUR_IN_SECONDS ),
+				),
+				$session
+			);
+		}
+		foreach ( array( 'new-1', 'new-2' ) as $session ) {
+			Collector::insert(
+				array(
+					'campaign_id' => $campaign,
+					'event'       => 'view',
+				),
+				$session
+			);
+		}
+		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Fixture rows in an owned table.
+			$wpdb->prefix . 'mmbb_purchases',
+			array(
+				'order_id'    => 7001,
+				'line_id'     => 1,
+				'campaign_id' => $campaign,
+				'day'         => $today,
+				'boxes'       => 7,
+				'items'       => 7,
+				'value'       => '70.00',
+			)
+		);
+		Query::bust();
+
+		$totals = Query::campaign_totals();
+		$this->assertEqualsWithDelta( 50.0, $totals[ $campaign ]['conversion'], 0.001, '7 boxes over 12 rolled + 2 raw views.' );
+		$report = ( new Query() )->report( $yesterday, $today, $campaign, false );
+		$this->assertSame( 14, $report['funnel'][0]['count'] );
+	}
+
+	/** The nightly rollup summarises only days it has not done, and records how far it got. */
+	public function test_rollup_records_its_progress() {
+		$rollup = new Rollup();
+		$rollup->run();
+		$yesterday = ( new \DateTimeImmutable( 'yesterday', wp_timezone() ) )->format( 'Y-m-d' );
+		$this->assertSame( $yesterday, Query::rolled_through() );
+		$this->assertSame( $yesterday, get_option( Query::ROLLED_OPTION ) );
 	}
 	/** Gift messages export and erase both copies, respecting WooCommerce policy. */
 	public function test_privacy_tools() {

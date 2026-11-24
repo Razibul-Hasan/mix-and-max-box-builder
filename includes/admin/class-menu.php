@@ -85,7 +85,7 @@ final class Menu {
 	/** Add the top-level menu and the five pages. */
 	public function add_menu() {
 		$labels = array(
-			'dashboard' => __( 'Dashboard','productboxes-mix-and-match-box-builder' ),
+			'dashboard' => __( 'Dashboard', 'productboxes-mix-and-match-box-builder' ),
 			'campaigns' => __( 'Boxes', 'productboxes-mix-and-match-box-builder' ),
 			'analytics' => __( 'Analytics', 'productboxes-mix-and-match-box-builder' ),
 			'settings'  => __( 'Settings', 'productboxes-mix-and-match-box-builder' ),

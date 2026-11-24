@@ -22,6 +22,8 @@ final class Post_Type {
 	/** Register hooks. */
 	public function register() {
 		add_action( 'init', array( $this, 'register_post_type' ) );
+		// Placement caches its post search for the request; any post change can move a builder.
+		add_action( 'clean_post_cache', array( Placement::class, 'flush' ) );
 	}
 
 	/** Register the post type. */

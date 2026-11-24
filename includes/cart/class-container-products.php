@@ -8,6 +8,7 @@
 namespace MixMax\BoxBuilder\Cart;
 
 use MixMax\BoxBuilder\Campaigns\Campaign_Repository;
+use MixMax\BoxBuilder\Campaigns\Placement;
 use MixMax\BoxBuilder\Campaigns\Post_Type;
 
 defined( 'ABSPATH' ) || exit;
@@ -42,6 +43,49 @@ final class Container_Products {
 		add_filter( 'woocommerce_is_purchasable', array( $this, 'filter_purchasable' ), 10, 2 );
 		add_filter( 'display_post_states', array( $this, 'post_states' ), 10, 2 );
 		add_action( 'edit_form_top', array( $this, 'edit_screen_warning' ) );
+		add_action( 'template_redirect', array( $this, 'redirect_product_page' ) );
+	}
+
+	/**
+	 * The container is a published, hidden product, so its own page still opens, with a price of
+	 * zero and nothing to buy. Send visitors to the box's page instead, or show a 404 when the box
+	 * has none.
+	 */
+	public function redirect_product_page() {
+		if ( ! is_singular( 'product' ) ) {
+			return;
+		}
+		$target = self::product_page_target( (int) get_queried_object_id() );
+		if ( null === $target ) {
+			return;
+		}
+		if ( '' !== $target ) {
+			wp_safe_redirect( $target, 302 );
+			exit;
+		}
+		global $wp_query;
+		$wp_query->set_404();
+		status_header( 404 );
+		nocache_headers();
+	}
+
+	/**
+	 * Where a container product's page should lead.
+	 *
+	 * @param int $product_id Product id.
+	 * @return string|null The box page address, '' for a 404, or null when the product is not a container.
+	 */
+	public static function product_page_target( $product_id ) {
+		$campaign_id = (int) get_post_meta( $product_id, self::META, true );
+		if ( $campaign_id < 1 ) {
+			return null;
+		}
+		$campaign = ( new Campaign_Repository() )->find( $campaign_id );
+		$page     = $campaign ? Placement::page( $campaign ) : null;
+		if ( ! $page || 'publish' !== $page->post_status || (int) $page->ID === (int) $product_id || ! in_array( $page->post_type, array( 'page', 'post' ), true ) ) {
+			return '';
+		}
+		return (string) get_permalink( $page );
 	}
 
 	/**

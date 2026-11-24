@@ -282,13 +282,21 @@ final class Payload {
 	/**
 	 * How many of the box's published products have no price. WooCommerce does not sell a
 	 * product without a price, so the box leaves them out (see Box_Resolver::is_offerable()).
-	 * Not cached: only store managers see the count.
+	 * Only store managers see the count. It is cached like the product list, per campaign and
+	 * catalog generation, so bust() drops it too.
 	 *
-	 * @param array $config Campaign config.
+	 * @param array $config      Campaign config.
+	 * @param int   $campaign_id Campaign id, for the cache key.
 	 * @return int
 	 */
-	public static function unpriced_count( array $config ) {
-		$ids = array_slice( Box_Resolver::allowed_ids( $config ), 0, self::MAX_PRODUCTS );
+	public static function unpriced_count( array $config, $campaign_id ) {
+		$key    = self::TRANSIENT_PREFIX . 'unpriced_' . (int) $campaign_id . '_' . (int) get_option( self::GENERATION_OPTION, 0 );
+		$cached = get_transient( $key );
+		if ( is_numeric( $cached ) ) {
+			return (int) $cached;
+		}
+
+		$ids = array_slice( Box_Resolver::allowed_ids( $config, self::MAX_PRODUCTS * 2 ), 0, self::MAX_PRODUCTS );
 		self::prime_caches( $ids );
 		$count = 0;
 		foreach ( $ids as $id ) {
@@ -297,6 +305,7 @@ final class Payload {
 				++$count;
 			}
 		}
+		set_transient( $key, $count, self::CACHE_TTL );
 		return $count;
 	}
 
@@ -308,7 +317,8 @@ final class Payload {
 	 * @return array[]
 	 */
 	private static function resolve_products( array $config, $threshold ) {
-		$ids     = Box_Resolver::allowed_ids( $config );
+		// Twice the cap leaves room for products that turn out not to be offerable.
+		$ids     = Box_Resolver::allowed_ids( $config, self::MAX_PRODUCTS * 2 );
 		$ranked  = array();
 		$decimal = wc_get_price_decimals();
 		self::prime_caches( $ids );
@@ -362,7 +372,7 @@ final class Payload {
 		$related = array();
 		foreach ( $ids as $id ) {
 			$post = get_post( $id );
-			if ( $post instanceof WP_Post && $post->post_parent ) {
+			if ( $post instanceof \WP_Post && $post->post_parent ) {
 				$related[] = (int) $post->post_parent;
 			}
 		}

@@ -380,15 +380,15 @@ final class Divi extends Integration {
 
 		$content = (string) preg_replace_callback(
 			'/' . $section . '/',
-			static function ( $match ) {
-				return self::section( $match[1] );
+			static function ( $found ) {
+				return self::section( $found[1] );
 			},
 			$content
 		);
 		return (string) preg_replace_callback(
 			'/' . $text . '/',
-			static function ( $match ) {
-				return self::code_module( $match[1] );
+			static function ( $found ) {
+				return self::code_module( $found[1] );
 			},
 			$content
 		);

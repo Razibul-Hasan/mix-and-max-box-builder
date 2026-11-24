@@ -342,7 +342,7 @@ class CompatibilityTest extends \WP_UnitTestCase {
 				'data'        => $child,
 			),
 		);
-		$integration = new Woo_Payments();
+		$integration         = new Woo_Payments();
 		$integration->mark_priced_lines( $cart );
 		// A second calculation must not convert again.
 		$integration->mark_priced_lines( $cart );

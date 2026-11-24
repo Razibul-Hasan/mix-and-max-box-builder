@@ -381,6 +381,34 @@ class ConfigTest extends TestCase {
 		$this->assertLessThanOrEqual( 10240, strlen( $design['advanced']['custom_css'] ) );
 	}
 
+	/** Custom CSS that loads anything is refused, escaped or not; plain CSS is kept. */
+	public function test_custom_css_refuses_loading_even_when_escaped() {
+		$css = static function ( $value ) {
+			return Config::sanitize( array( 'design' => array( 'advanced' => array( 'custom_css' => $value ) ) ) )['design']['advanced']['custom_css'];
+		};
+		foreach ( array(
+			'background:url(https://x.test/a.png)',
+			'background:\75rl(https://x.test/a.png)',
+			'background:\000075 rl(https://x.test/a.png)',
+			'background:u\rl(https://x.test/a.png)',
+			'background:URL (https://x.test/a.png)',
+			'background:image-set("https://x.test/a.png" 1x)',
+			'background:-webkit-image-set("https://x.test/a.png" 1x)',
+			'@\69mport "https://x.test/a.css";',
+			'content:src("https://x.test/a.png")',
+		) as $bad ) {
+			$this->assertSame( '', $css( $bad ), $bad );
+		}
+		$this->assertSame( 'color:#f00;background-image:linear-gradient(red,blue);content:"\201C"', $css( 'color:#f00;background-image:linear-gradient(red,blue);content:"\201C"' ) );
+		$this->assertSame( 'border-image-width:2px', $css( 'border-image-width:2px' ) );
+	}
+
+	/** A caps value that is not a list is ignored instead of raising a PHP warning. */
+	public function test_caps_must_be_a_list() {
+		$this->assertSame( array(), Config::sanitize( array( 'products' => array( 'caps' => 'x' ) ) )['products']['caps'] );
+		$this->assertSame( array(), Config::sanitize( array( 'products' => array( 'caps' => 5 ) ) )['products']['caps'] );
+	}
+
 	/** An always-on campaign with a countdown needs its own countdown time to go live. */
 	public function test_countdown_end() {
 		$config = Config::sanitize( array( 'schedule' => array( 'countdown_days' => 7 ) ) );

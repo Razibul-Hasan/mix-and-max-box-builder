@@ -73,6 +73,7 @@ final class Cart_Lines {
 		add_filter( 'rest_request_after_callbacks', array( $this, 'leave_store_api' ), 10, 3 );
 		add_filter( 'woocommerce_store_api_cart_item_images', array( $this, 'mark_store_api_item' ), 10, 3 );
 		add_filter( 'woocommerce_coupon_is_valid_for_product', array( $this, 'coupon_valid_for_product' ), 10, 4 );
+		add_filter( 'woocommerce_coupon_get_items_to_apply', array( $this, 'coupon_items_to_apply' ), 10, 2 );
 		add_filter( 'woocommerce_cart_item_quantity', array( $this, 'lock_quantity' ), 10, 3 );
 		add_filter( 'woocommerce_store_api_product_quantity_editable', array( $this, 'quantity_editable' ), 10, 3 );
 		add_filter( 'woocommerce_cart_item_remove_link', array( $this, 'hide_child_remove_link' ), 10, 2 );
@@ -248,8 +249,41 @@ final class Cart_Lines {
 
 		$cart->cart_contents[ $key ]['data']->set_price( Box_Resolver::to_decimal( $quote['total'] ) );
 		$cart->cart_contents[ $key ]['data']->set_weight( (string) $this->weight( $resolved['items'] ) );
+		self::apply_item_tax( $cart->cart_contents[ $key ]['data'], $resolved['items'] );
 		// A box of downloads or services needs no shipping. Gift wrap is a physical extra.
 		$cart->cart_contents[ $key ]['data']->set_virtual( empty( $gift['enabled'] ) && self::all_virtual( $resolved['items'], $resolved['free_gift'] ) );
+	}
+
+	/**
+	 * Tax a one-line box like its items when they all share one tax status and tax class.
+	 *
+	 * One cart line can carry only one tax class, so a box that mixes classes (say standard and
+	 * reduced rate) keeps the container product's own tax settings. Shops that sell such mixes and
+	 * need each rate charged should use the "items" cart display, where every item is its own line.
+	 *
+	 * @param \WC_Product $container The box line's product object.
+	 * @param array[]     $items     Resolved items.
+	 */
+	private static function apply_item_tax( \WC_Product $container, array $items ) {
+		$status = null;
+		$class  = null;
+		foreach ( $items as $item ) {
+			$product = wc_get_product( Box_Rules::key( $item['product_id'], $item['variation_id'] ) );
+			if ( ! $product instanceof \WC_Product ) {
+				return;
+			}
+			if ( null === $status ) {
+				$status = $product->get_tax_status();
+				$class  = $product->get_tax_class();
+			} elseif ( $status !== $product->get_tax_status() || $class !== $product->get_tax_class() ) {
+				return;
+			}
+		}
+		if ( null === $status ) {
+			return;
+		}
+		$container->set_tax_status( $status );
+		$container->set_tax_class( $class );
 	}
 
 	/**
@@ -621,31 +655,104 @@ final class Cart_Lines {
 	}
 
 	/**
-	 * Keep coupons off box lines unless the merchant allows them.
+	 * Keep product coupons (percent, fixed product) off box lines unless the merchant allows them.
 	 *
-	 * @param bool        $valid   Whether the coupon applies to this product.
-	 * @param \WC_Product $product Product.
-	 * @param \WC_Coupon  $coupon  Coupon.
-	 * @param array|null  $values  Cart item, when there is one.
+	 * @param bool                              $valid   Whether the coupon applies to this product.
+	 * @param \WC_Product                       $product Product.
+	 * @param \WC_Coupon                        $coupon  Coupon.
+	 * @param array|\WC_Order_Item_Product|null $values  Cart item or order item, when there is one.
 	 * @return bool
 	 */
 	public function coupon_valid_for_product( $valid, $product, $coupon, $values = null ) {
 		if ( ! $valid ) {
 			return $valid;
 		}
-		if ( is_array( $values ) && ( isset( $values['mmbb_box'] ) || isset( $values['mmbb_parent'] ) ) ) {
-			$box = isset( $values['mmbb_box'] ) && is_array( $values['mmbb_box'] ) ? $values['mmbb_box'] : array();
-			if ( isset( $values['mmbb_parent'] ) && function_exists( 'WC' ) && WC()->cart instanceof \WC_Cart ) {
-				$parent = WC()->cart->get_cart_item( $values['mmbb_parent'] );
+		$allowed = self::coupons_allowed( $values );
+		return null === $allowed ? $valid : $allowed;
+	}
+
+	/**
+	 * Keep cart coupons (fixed cart) off box lines unless the merchant allows them.
+	 *
+	 * WooCommerce skips `woocommerce_coupon_is_valid_for_product` for cart coupons, because
+	 * `WC_Coupon::is_valid_for_cart()` is true for them, so they are filtered out here instead.
+	 * The coupon's amount is then spread over the other lines only.
+	 *
+	 * @param array      $items  Items the coupon will discount, each with the cart or order line in `object`.
+	 * @param \WC_Coupon $coupon Coupon.
+	 * @return array
+	 */
+	public function coupon_items_to_apply( $items, $coupon ) {
+		unset( $coupon );
+		if ( ! is_array( $items ) ) {
+			return $items;
+		}
+		$kept = array();
+		foreach ( $items as $item ) {
+			$line = is_object( $item ) && isset( $item->object ) ? $item->object : null;
+			if ( false !== self::coupons_allowed( $line ) ) {
+				$kept[] = $item;
+			}
+		}
+		return $kept;
+	}
+
+	/**
+	 * Whether coupons may discount a line of a box.
+	 *
+	 * @param mixed $line Cart item array or order item.
+	 * @return bool|null Null when the line is not part of a box.
+	 */
+	public static function coupons_allowed( $line ) {
+		$campaign_id = self::box_campaign_id( $line );
+		if ( null === $campaign_id ) {
+			return null;
+		}
+		$campaign = $campaign_id > 0 ? ( new Campaign_Repository() )->find( $campaign_id ) : null;
+		return $campaign && isset( $campaign['config']['box']['allow_coupons'] )
+			? (bool) $campaign['config']['box']['allow_coupons']
+			: (bool) Settings::get( 'allow_coupons' );
+	}
+
+	/**
+	 * The campaign a cart or order line's box belongs to.
+	 *
+	 * @param mixed $line Cart item array or order item.
+	 * @return int|null Campaign id, 0 when the box is part of no known campaign, null when the line is not part of a box.
+	 */
+	private static function box_campaign_id( $line ) {
+		if ( is_array( $line ) ) {
+			if ( ! isset( $line['mmbb_box'] ) && ! isset( $line['mmbb_parent'] ) ) {
+				return null;
+			}
+			$box = isset( $line['mmbb_box'] ) && is_array( $line['mmbb_box'] ) ? $line['mmbb_box'] : array();
+			if ( isset( $line['mmbb_parent'] ) ) {
+				$parent = function_exists( 'WC' ) && WC()->cart instanceof \WC_Cart ? WC()->cart->get_cart_item( $line['mmbb_parent'] ) : array();
 				$box    = isset( $parent['mmbb_box'] ) && is_array( $parent['mmbb_box'] ) ? $parent['mmbb_box'] : array();
 			}
-			$campaign = ! empty( $box['campaign_id'] ) ? ( new Campaign_Repository() )->find( (int) $box['campaign_id'] ) : null;
-			$allowed  = $campaign && isset( $campaign['config']['box']['allow_coupons'] )
-				? (bool) $campaign['config']['box']['allow_coupons']
-				: (bool) Settings::get( 'allow_coupons' );
-			return $allowed;
+			return isset( $box['campaign_id'] ) ? (int) $box['campaign_id'] : 0;
 		}
-		return $valid;
+		if ( ! $line instanceof \WC_Order_Item_Product ) {
+			return null;
+		}
+
+		// An order: the box line keeps the box, an items-mode item points at its box line's cart key.
+		$json = (string) $line->get_meta( Order_Boxes::META_BOX );
+		if ( '' === $json ) {
+			$parent_key = (string) $line->get_meta( 'mmbb_box_parent' );
+			if ( '' === $parent_key ) {
+				return $line->get_meta( Order_Boxes::META_PART ) ? 0 : null;
+			}
+			$order = $line->get_order();
+			foreach ( $order instanceof \WC_Order ? $order->get_items() : array() as $item ) {
+				if ( (string) $item->get_meta( 'mmbb_box_key' ) === $parent_key ) {
+					$json = (string) $item->get_meta( Order_Boxes::META_BOX );
+					break;
+				}
+			}
+		}
+		$box = '' !== $json ? json_decode( $json, true ) : null;
+		return is_array( $box ) && isset( $box['campaign_id'] ) ? (int) $box['campaign_id'] : 0;
 	}
 
 	/**

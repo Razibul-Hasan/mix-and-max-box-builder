@@ -99,24 +99,6 @@ class Stats_Controller extends Base_Controller {
 	}
 
 	/**
-	 * List the Y-m-d days from one date to another, both included.
-	 *
-	 * @param string $from First day, Y-m-d.
-	 * @param string $to   Last day, Y-m-d.
-	 * @return string[]
-	 */
-	protected function days( $from, $to ) {
-		$days = array();
-		$day  = new \DateTimeImmutable( $from, wp_timezone() );
-		$end  = new \DateTimeImmutable( $to, wp_timezone() );
-		while ( $day <= $end ) {
-			$days[] = $day->format( 'Y-m-d' );
-			$day    = $day->modify( '+1 day' );
-		}
-		return $days;
-	}
-
-	/**
 	 * Stats schema.
 	 *
 	 * @return array

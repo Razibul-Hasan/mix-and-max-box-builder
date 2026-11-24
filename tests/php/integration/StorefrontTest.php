@@ -187,6 +187,30 @@ class StorefrontTest extends \WP_UnitTestCase {
 		$this->assertContains( 'Renamed', $names );
 	}
 
+	/** A sale's stock count change keeps the cached list; a stock status change drops it. */
+	public function test_stock_count_changes_keep_the_cache() {
+		$product = $this->products[1];
+		$product->set_manage_stock( true );
+		$product->set_stock_quantity( 5 );
+		$product->save();
+
+		$generation = (int) get_option( Payload::GENERATION_OPTION, 0 );
+		wc_update_product_stock( $product, 1, 'decrease' );
+		$this->assertSame( $generation, (int) get_option( Payload::GENERATION_OPTION, 0 ), 'Selling one leaves the cache.' );
+
+		wc_update_product_stock( $product, 4, 'decrease' );
+		$this->assertSame( 'outofstock', wc_get_product( $product->get_id() )->get_stock_status() );
+		$this->assertGreaterThan( $generation, (int) get_option( Payload::GENERATION_OPTION, 0 ), 'Selling out drops it.' );
+
+		// A merchant's edit that changes the price along with the stock still drops it.
+		$generation = (int) get_option( Payload::GENERATION_OPTION, 0 );
+		$edited     = wc_get_product( $product->get_id() );
+		$edited->set_stock_quantity( 9 );
+		$edited->set_regular_price( '12.00' );
+		$edited->save();
+		$this->assertGreaterThan( $generation, (int) get_option( Payload::GENERATION_OPTION, 0 ), 'A price change drops it.' );
+	}
+
 	/** The block renders through the same path. */
 	public function test_block_renders() {
 		$html = do_blocks( '<!-- wp:mmbb/box-builder {"campaignId":' . $this->campaign['id'] . '} /-->' );

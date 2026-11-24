@@ -66,16 +66,21 @@ final class Order_Display {
 			return $metadata;
 		}
 
-		$labels  = array(
-			'discount' => __( 'Box discount', 'productboxes-mix-and-match-box-builder' ),
-			'contents' => __( 'Contents', 'productboxes-mix-and-match-box-builder' ),
-			'gift'     => __( 'Gift message', 'productboxes-mix-and-match-box-builder' ),
-		);
+		// Match the keys in today's language and in the language the order was placed in.
+		$types = array();
+		$saved = json_decode( (string) $item->get_meta( Order_Boxes::META_LABELS ), true );
+		foreach ( array( Order_Boxes::labels(), is_array( $saved ) ? $saved : array() ) as $labels ) {
+			foreach ( array( 'discount', 'contents', 'gift' ) as $type ) {
+				if ( isset( $labels[ $type ] ) && is_string( $labels[ $type ] ) && '' !== $labels[ $type ] ) {
+					$types[ $labels[ $type ] ] = $type;
+				}
+			}
+		}
 		$ordered = array();
 		$other   = array();
 
 		foreach ( $metadata as $id => $meta ) {
-			$type = array_search( $meta->key, $labels, true );
+			$type = isset( $types[ $meta->key ] ) ? $types[ $meta->key ] : false;
 			if ( false === $type ) {
 				$other[ $id ] = $meta;
 				continue;
