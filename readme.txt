@@ -157,54 +157,43 @@ Visit the [ProductBoxes documentation and demos](https://bestwebexpert.com/produ
 == Changelog ==
 
 = 2.0.4 =
-* Fixed: Compact template. The add button no longer covers the price.
-* Fixed: Night template. Names no longer run into prices, and the item counter stays inside the box on phones.
-* Fixed: Split and Bold templates on phones. Split cards are no longer too narrow, and the Bold header no longer spills past the box.
-* Fixed: the phone checkout bar and product cards now fit on small phones, even with items in the box.
-* Added: Divi theme compatibility. Boxes keep their own styling, the phone drawer and sticky summary clear Divi's fixed header, and publishing to a Divi Builder page adds the box as a Divi section.
-* Added: the Divi Visual Builder shows a live preview of the box and an "Edit box" link, instead of an empty box.
-* Fixed: saving a box moves its shortcode out of a Divi Text module into a Code module, so Divi no longer wraps it in paragraphs.
-* Added: store managers see a note above a box when products are hidden because they have no price, and the product picker flags those products.
-* Fixed: a box no longer fails with an error on pages that load an older version of React. Boxes added to the page after it loads now start too.
-* Fixed: the box builder no longer breaks when SiteGround Optimizer's JavaScript minification is on.
-* Fixed: fixed-cart coupons no longer discount boxes when the box does not allow coupons.
-* Fixed: refunding a "One line" box with "Restock refunded items" now puts its items back in stock.
-* Improved: a "One line" box now uses its items' tax class when they all share one.
-* Improved: faster Analytics and Boxes screens on busy stores.
+* Added: Divi theme and Divi Builder compatibility.
+* Added: notice for products hidden for having no price.
+* Fixed: Compact, Night, Split and Bold templates on phones.
+* Fixed: SiteGround Optimizer JavaScript minification.
+* Fixed: older React versions on the page.
+* Fixed: fixed-cart coupons on boxes that do not allow coupons.
+* Fixed: restocking refunded "One line" boxes.
+* Improved: tax class for "One line" boxes.
+* Improved: Analytics and Boxes screen speed.
 
 = 2.0.3 =
-* Fixed: a box sold as "One line" did not include the download links in the customer's order email. The email now lists the files of every downloadable product in the box, and the order page and My Account → Downloads show them too, even when the box is the only item in the order.
-* Added: a Plugins page in the ProductBoxes menu that lists our other free plugins, ProductReels and MigrateLift, with an Install Now / Activate button that works without leaving the page.
-* Improved: the Boxes list and the Dashboard now show a box's image as its thumbnail when you have set one. Without a box image they still show the product photos.
-* Improved: admin screens now show grey placeholder bars while they load, instead of spinners.
-* Improved: removed the developer note about REST routes and hooks from the Settings page.
-* Improved: a smaller plugin download. An unused image and seven unused interface components were removed.
+* Fixed: download links in customer emails for "One line" boxes.
+* Added: Plugins page.
+* Improved: box image thumbnails in the Boxes list and Dashboard.
+* Improved: loading placeholders on admin screens.
+* Improved: smaller plugin download.
 
 = 2.0.2 =
-* Fixed: a box sold as "One line" did not deliver downloads. The order, the confirmation page and the customer email now list the files of every downloadable product in the box, and My Account → Downloads shows them too. Download limits and expiry follow each product's own settings.
-* Added: a "Box image" picker under Design → Content in the campaign editor. The image you choose is used as the box's photo in the cart, at checkout and in order emails.
-* Improved: without a box image, the box uses the photo of the first product it offers instead of a grey placeholder. A photo you set yourself in WooCommerce → Products is never replaced.
-* Improved: more automated tests for box downloads and box images.
-* Improved: a smaller plugin download (about 0.8 MB, down from 1.2 MB). Files the plugin never loaded are no longer included: an unused image, two font files that were bundled twice, and two right-to-left stylesheets nothing used.
-* Added: a Live Preview on the plugin page. Try a demo store with 10 working box campaigns, one for each storefront template, using real product photos and sample analytics, without installing anything.
+* Fixed: downloads for "One line" boxes.
+* Added: box image picker.
+* Added: Live Preview demo store.
+* Improved: product photo fallback for boxes.
+* Improved: smaller plugin download.
 
 = 2.0.1 =
-* Fixed: with WooPayments Multi-Currency, items in an "Each item" cart showed the store-currency price struck through (for example AUD 19.95 shown as GBP 19.95) and a wrong savings label. Regular and sale prices now follow the shopper's currency.
-* Fixed: boxes made only of virtual or downloadable products were charged shipping. A box now needs no shipping when everything in it is virtual. A physical item, a physical free gift or gift wrap still ships.
-* Added: "Show headline" and "Show short intro" toggles in the campaign editor's design settings, so you can hide them without custom CSS.
-* Added: a Fixed Box with only one size now skips the "Pick a box size" step and goes straight to choosing products.
-* Fixed: the Style tab showed options that some templates set themselves. It now hides them for Clean list, Gift tray, Pastel, Editorial, Night, Split screen and Compact card.
-* Fixed: "Heading size" now applies to Editorial, Night and Split screen, and "Products per row" now applies to Editorial, Night and Compact card.
-* Added: compatibility for the Elastra, Extendable and Inspiro themes, plus a baseline style fix that keeps theme heading, list, link and image styles out of the box on any theme.
-* Improved: more automated tests for multi-currency prices, shipping on virtual boxes and the new design options.
+* Fixed: WooPayments Multi-Currency prices in the cart.
+* Fixed: shipping on boxes of virtual products.
+* Fixed: Style tab options per template.
+* Added: show/hide headline and intro.
+* Added: single-size Fixed Box skips the size step.
+* Added: Elastra, Extendable and Inspiro theme compatibility.
 
 = 2.0.0 =
-* Redesigned admin dashboard, analytics and settings.
-* Added a three-step campaign editor with live theme-aware preview.
-* Added 10 responsive storefront templates and guided publishing.
-* Added local fonts, accessibility improvements and WooPayments Multi-Currency support.
-* Added Astra and Blocksy compatibility.
-* Preserved existing campaigns, boxes, orders, analytics, hooks, blocks and shortcodes.
+* Redesigned admin, analytics and settings.
+* Added: three-step campaign editor with live preview.
+* Added: 10 storefront templates.
+* Added: WooPayments Multi-Currency, Astra and Blocksy support.
 
 = 1.0.0 =
 * Initial release.
