@@ -157,12 +157,11 @@ Visit the [ProductBoxes documentation and demos](https://bestwebexpert.com/produ
 == Changelog ==
 
 = 2.0.4 =
-* Fixed: Compact template. The add button sat on top of the price, and on four columns the price hid behind it and the quantity control stuck out of the card. The button now sits in the corner of the photo, and the price moves under a long name instead of running into it.
-* Fixed: Night template. Product names ran into their prices on narrow cards, and on phones the item counter ring was pushed past the edge of the box.
-* Fixed: Split template. On phones the products kept their desktop padding, so the cards were too narrow and "Add to box" was cut off.
-* Fixed: Bold template. On phones the coloured header spilled 48px past each side of the box. The phone checkout bar and the Compact card no longer stick out of a narrow box either, for example in a theme's sidebar column.
-* Fixed: small phones. Once the box had items in it, the phone checkout bar was wider than the screen, so its button and discount progress ran off the edge. On two-column product cards, "Add to box" could be cut off and the quantity control's plus button hidden. The bar and the cards now fit down to the smallest phones.
-* Added: Divi theme compatibility. Divi's list, paragraph, heading and font-weight styles no longer change the box on any template. The phone drawer opens above Divi's fixed header, also on Divi Builder pages. The summary panel stays below the fixed header as you scroll. Nothing in the box makes the page scroll sideways. On phones the box uses more of the screen than Divi's narrow content column. Publishing a box to a Divi Builder page adds it as a Divi section with a Code module. A new page made for a box uses Divi's no-sidebar layout.
+* Fixed: Compact template. The add button no longer covers the price.
+* Fixed: Night template. Names no longer run into prices, and the item counter stays inside the box on phones.
+* Fixed: Split and Bold templates on phones. Split cards are no longer too narrow, and the Bold header no longer spills past the box.
+* Fixed: the phone checkout bar and product cards now fit on small phones, even with items in the box.
+* Added: Divi theme compatibility. Boxes keep their own styling, the phone drawer and sticky summary clear Divi's fixed header, and publishing to a Divi Builder page adds the box as a Divi section.
 
 = 2.0.3 =
 * Fixed: a box sold as "One line" did not include the download links in the customer's order email. The email now lists the files of every downloadable product in the box, and the order page and My Account → Downloads show them too, even when the box is the only item in the order.
@@ -204,7 +203,7 @@ Visit the [ProductBoxes documentation and demos](https://bestwebexpert.com/produ
 == Upgrade Notice ==
 
 = 2.0.4 =
-Adds Divi theme compatibility and fixes the Compact, Night, Split and Bold templates and the phone checkout bar on small screens. No data changes.
+Adds Divi theme compatibility and fixes several templates on phones. No data changes.
 
 = 2.0.3 =
 Fixes missing download links in customer emails for boxes sold as one line, shows your box image in the Boxes list, and adds a Plugins page. No data changes.
