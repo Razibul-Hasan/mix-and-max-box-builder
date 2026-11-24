@@ -32,6 +32,7 @@ final class Compatibility {
 		return array(
 			// Plugins.
 			Plugins\Woo_Payments::class,
+			Plugins\Siteground_Optimizer::class,
 			// Themes.
 			Themes\Generic::class,
 			Themes\Astra::class,

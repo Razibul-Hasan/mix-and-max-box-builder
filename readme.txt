@@ -166,6 +166,7 @@ Visit the [ProductBoxes documentation and demos](https://bestwebexpert.com/produ
 * Fixed: saving a box moves its shortcode out of a Divi Text module into a Code module, so Divi no longer wraps it in paragraphs.
 * Added: store managers see a note above a box when products are hidden because they have no price, and the product picker flags those products.
 * Fixed: a box no longer fails with an error on pages that load an older version of React. Boxes added to the page after it loads now start too.
+* Fixed: the box builder no longer breaks when SiteGround Optimizer's JavaScript minification is on.
 
 = 2.0.3 =
 * Fixed: a box sold as "One line" did not include the download links in the customer's order email. The email now lists the files of every downloadable product in the box, and the order page and My Account → Downloads show them too, even when the box is the only item in the order.
@@ -207,7 +208,7 @@ Visit the [ProductBoxes documentation and demos](https://bestwebexpert.com/produ
 == Upgrade Notice ==
 
 = 2.0.4 =
-Adds Divi theme and Divi Builder compatibility, flags products hidden for having no price, and fixes several templates on phones. No data changes.
+Adds Divi theme and Divi Builder compatibility, flags products hidden for having no price, fixes boxes that would not load with SiteGround Optimizer's JavaScript minification on, and fixes several templates on phones. No data changes.
 
 = 2.0.3 =
 Fixes missing download links in customer emails for boxes sold as one line, shows your box image in the Boxes list, and adds a Plugins page. No data changes.

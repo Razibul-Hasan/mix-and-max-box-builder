@@ -11,6 +11,9 @@ defined( 'ABSPATH' ) || exit;
 
 /** Register shared styles without loading them on unrelated screens. */
 final class Assets {
+	/** Handle of the shared components script and style. */
+	const HANDLE = 'mmbb-components';
+
 	/** Register hooks. */
 	public function register() {
 		add_action( 'init', array( $this, 'register_assets' ) );
@@ -35,9 +38,9 @@ final class Assets {
 		$script_asset = MMBB_PATH . 'build/components.asset.php';
 		if ( file_exists( $script_asset ) ) {
 			$asset = require $script_asset;
-			wp_register_script( 'mmbb-components', MMBB_URL . 'build/components.js', $asset['dependencies'], $asset['version'], true );
-			wp_set_script_translations( 'mmbb-components', 'productboxes-mix-and-match-box-builder', MMBB_PATH . 'languages' );
-			wp_add_inline_script( 'mmbb-components', 'window.mmbbMoneySettings = ' . wp_json_encode( self::get_money_settings() ) . ';', 'before' );
+			wp_register_script( self::HANDLE, MMBB_URL . 'build/components.js', $asset['dependencies'], $asset['version'], true );
+			wp_set_script_translations( self::HANDLE, 'productboxes-mix-and-match-box-builder', MMBB_PATH . 'languages' );
+			wp_add_inline_script( self::HANDLE, 'window.mmbbMoneySettings = ' . wp_json_encode( self::get_money_settings() ) . ';', 'before' );
 		}
 	}
 

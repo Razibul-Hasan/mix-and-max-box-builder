@@ -9,10 +9,12 @@ namespace MixMax\BoxBuilder\Tests\Integration;
 
 defined( 'ABSPATH' ) || exit;
 
+use MixMax\BoxBuilder\Assets;
 use MixMax\BoxBuilder\Campaigns\Campaign_Repository;
 use MixMax\BoxBuilder\Cart\Container_Products;
 use MixMax\BoxBuilder\Compatibility\Compatibility;
 use MixMax\BoxBuilder\Compatibility\Integration;
+use MixMax\BoxBuilder\Compatibility\Plugins\Siteground_Optimizer;
 use MixMax\BoxBuilder\Compatibility\Plugins\Woo_Payments;
 use MixMax\BoxBuilder\Compatibility\Themes\Divi;
 use MixMax\BoxBuilder\Currency;
@@ -20,6 +22,7 @@ use MixMax\BoxBuilder\Quotes;
 use MixMax\BoxBuilder\Settings\Settings;
 use MixMax\BoxBuilder\Storefront\Payload;
 use MixMax\BoxBuilder\Storefront\Renderer;
+use MixMax\BoxBuilder\Storefront\Storefront;
 
 require_once dirname( __DIR__, 2 ) . '/fixtures/compat/class-active-integration.php';
 require_once dirname( __DIR__, 2 ) . '/fixtures/compat/class-inactive-integration.php';
@@ -234,6 +237,23 @@ class CompatibilityTest extends \WP_UnitTestCase {
 		update_post_meta( $kept, '_et_pb_page_layout', 'et_left_sidebar' );
 		$divi->page_layout( $kept );
 		$this->assertSame( 'et_left_sidebar', get_post_meta( $kept, '_et_pb_page_layout', true ) );
+	}
+
+	/** SiteGround Optimizer is not installed in the test site, so its integration stays off. */
+	public function test_siteground_optimizer_is_inactive_without_the_plugin() {
+		$this->assertFalse( defined( 'SiteGround_Optimizer\VERSION' ) );
+		$this->assertFalse( ( new Siteground_Optimizer() )->is_active() );
+		$this->assertFalse( has_filter( 'sgo_js_minify_exclude' ) );
+	}
+
+	/** Once registered, every SG Optimizer exclude list gets the plugin's script handles. */
+	public function test_siteground_optimizer_excludes_scripts_from_every_list() {
+		$integration = new Siteground_Optimizer();
+		$integration->register();
+		foreach ( array( 'sgo_js_minify_exclude', 'sgo_javascript_combine_exclude', 'sgo_js_async_exclude' ) as $hook ) {
+			$this->assertSame( array( 'foo', Storefront::HANDLE, Assets::HANDLE ), apply_filters( $hook, array( 'foo' ) ), $hook );
+			remove_filter( $hook, array( $integration, 'exclude' ) );
+		}
 	}
 
 	/** WooPayments is not installed in the test site, so its integration stays off. */
