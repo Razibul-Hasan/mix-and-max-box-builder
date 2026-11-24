@@ -80,6 +80,8 @@ final class Installer {
 	private static function unlock() {
 		global $wpdb;
 		$wpdb->delete( $wpdb->options, array( 'option_name' => self::LOCK_OPTION ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Lock row written past the options cache.
+		// Never read through get_option(), but drop any cached copy so the options cache cannot outlive the row.
+		wp_cache_delete( self::LOCK_OPTION, 'options' );
 	}
 
 	/** Create registered tables, seed defaults and run pending migration steps for the current site. */
