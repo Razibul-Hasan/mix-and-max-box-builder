@@ -31,7 +31,24 @@ const PER_PAGE = 20;
 const TERM_LIMIT = 100;
 const TAXONOMY = { category: 'product_cat', tag: 'product_tag' };
 
+/**
+ * Whether the picker should flag a product as having no price. Shoppers never see such
+ * a product: WooCommerce does not sell it, so the box leaves it out.
+ *
+ * @param {Object} product Product from the products endpoint.
+ * @return {boolean} True when it has no price.
+ */
+export function hasNoPrice( product ) {
+	return product.has_price === false;
+}
+
 function stockNote( product ) {
+	if ( hasNoPrice( product ) ) {
+		return __(
+			'No price: hidden from shoppers',
+			'productboxes-mix-and-match-box-builder'
+		);
+	}
 	if ( product.stock_status === 'outofstock' ) {
 		return __( 'Out of stock', 'productboxes-mix-and-match-box-builder' );
 	}
@@ -295,7 +312,11 @@ function ProductPicker( { draft, errors, dispatch, remember, byId } ) {
 												</Text>
 											</VStack>
 											<Text>
-												{ formatMoney( product.price ) }
+												{ hasNoPrice( product )
+													? '—'
+													: formatMoney(
+															product.price
+													  ) }
 											</Text>
 										</HStack>
 									</Item>

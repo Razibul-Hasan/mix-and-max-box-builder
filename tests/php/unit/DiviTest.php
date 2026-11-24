@@ -61,4 +61,69 @@ final class DiviTest extends TestCase {
 		$this->assertStringEndsWith( '[/et_pb_section]', $section );
 		$this->assertTrue( Page_Content::contains( $section, 7 ) );
 	}
+
+	/** A section Divi made from a classic page, holding only the box's Text module, becomes Divi::section(). */
+	public function test_migration_replaces_a_text_only_section() {
+		$before = 'Intro [et_pb_section fb_built="1" _builder_version="4.27.9"][et_pb_row _builder_version="4.27.9"][et_pb_column type="4_4" _builder_version="4.27.9"]'
+			. '[et_pb_text _builder_version="4.27.9"]<p>[mmbb_box id="7"]</p>[/et_pb_text]'
+			. '[/et_pb_column][/et_pb_row][/et_pb_section] Outro';
+
+		$after = Divi::migrate_shortcode( $before, 7 );
+
+		$this->assertSame( 'Intro ' . Divi::section( '[mmbb_box id="7"]' ) . ' Outro', $after );
+		$this->assertStringNotContainsString( 'et_pb_text', $after );
+		$this->assertStringNotContainsString( '<p>', $after );
+	}
+
+	/** In a section with other modules, only the Text module turns into a Code module; the rest stays. */
+	public function test_migration_swaps_the_module_in_place() {
+		$heading = '[et_pb_text admin_label="Heading"]<h2>Build a box</h2>[/et_pb_text]';
+		$before  = '[et_pb_section fb_built="1" background_color="#fafafa"][et_pb_row][et_pb_column type="4_4"]'
+			. $heading
+			. '[et_pb_text text_font_size="18px"]' . "\n<p>[mmbb_box id=\"7\" layout=\"bar\"]</p>\n" . '[/et_pb_text]'
+			. '[/et_pb_column][/et_pb_row][/et_pb_section]';
+
+		$after = Divi::migrate_shortcode( $before, 7 );
+
+		$this->assertSame(
+			'[et_pb_section fb_built="1" background_color="#fafafa"][et_pb_row][et_pb_column type="4_4"]'
+				. $heading
+				. Divi::code_module( '[mmbb_box id="7" layout="bar"]' )
+				. '[/et_pb_column][/et_pb_row][/et_pb_section]',
+			$after
+		);
+	}
+
+	/** A bare shortcode in a Text module (no paragraph) moves too. */
+	public function test_migration_handles_a_bare_shortcode() {
+		$after = Divi::migrate_shortcode( '[et_pb_column type="1_2"][et_pb_text][mmbb_box id="7"][/et_pb_text][/et_pb_column]', 7 );
+		$this->assertSame( '[et_pb_column type="1_2"]' . Divi::code_module( '[mmbb_box id="7"]' ) . '[/et_pb_column]', $after );
+	}
+
+	/** Running the migration again changes nothing. */
+	public function test_migration_is_idempotent() {
+		$before = '[et_pb_section][et_pb_row][et_pb_column type="4_4"][et_pb_text]<p>[mmbb_box id="7"]</p>[/et_pb_text][/et_pb_column][/et_pb_row][/et_pb_section]'
+			. '[et_pb_section][et_pb_row][et_pb_column type="4_4"][et_pb_image src="a.jpg"][/et_pb_image][et_pb_text]<p>[mmbb_box id="7"]</p>[/et_pb_text][/et_pb_column][/et_pb_row][/et_pb_section]';
+		$once   = Divi::migrate_shortcode( $before, 7 );
+		$this->assertNotSame( $before, $once );
+		$this->assertSame( $once, Divi::migrate_shortcode( $once, 7 ) );
+		$this->assertSame( 2, substr_count( $once, '[mmbb_box id="7"]' ) );
+	}
+
+	/** Other boxes, other shortcodes, Text modules with more text and Code modules are left alone. */
+	public function test_migration_leaves_other_content_alone() {
+		$cases = array(
+			'other box'         => '[et_pb_section][et_pb_row][et_pb_column type="4_4"][et_pb_text]<p>[mmbb_box id="70"]</p>[/et_pb_text][/et_pb_column][/et_pb_row][/et_pb_section]',
+			'other shortcode'   => '[et_pb_text]<p>[gallery ids="7"]</p>[/et_pb_text]',
+			'text around it'    => '[et_pb_text]<p>Pick three.</p><p>[mmbb_box id="7"]</p>[/et_pb_text]',
+			'already in code'   => Divi::section( '[mmbb_box id="7"]' ),
+			'outside a module'  => '<p>[mmbb_box id="7"]</p>',
+			'no divi at all'    => '<!-- wp:mmbb/box-builder {"campaignId":7} /-->',
+			'id in another att' => '[et_pb_text]<p>[mmbb_box template="7" id="8"]</p>[/et_pb_text]',
+		);
+		foreach ( $cases as $name => $content ) {
+			$this->assertSame( $content, Divi::migrate_shortcode( $content, 7 ), $name );
+		}
+		$this->assertSame( '[et_pb_text]<p>[mmbb_box id="7"]</p>[/et_pb_text]', Divi::migrate_shortcode( '[et_pb_text]<p>[mmbb_box id="7"]</p>[/et_pb_text]', 0 ) );
+	}
 }

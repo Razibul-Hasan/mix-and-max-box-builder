@@ -19,6 +19,7 @@ use MixMax\BoxBuilder\Currency;
 use MixMax\BoxBuilder\Quotes;
 use MixMax\BoxBuilder\Settings\Settings;
 use MixMax\BoxBuilder\Storefront\Payload;
+use MixMax\BoxBuilder\Storefront\Renderer;
 
 require_once dirname( __DIR__, 2 ) . '/fixtures/compat/class-active-integration.php';
 require_once dirname( __DIR__, 2 ) . '/fixtures/compat/class-inactive-integration.php';
@@ -138,6 +139,88 @@ class CompatibilityTest extends \WP_UnitTestCase {
 		$this->assertSame( '[mmbb_box id="9"]', $divi->page_marker( '[mmbb_box id="9"]', $plain ) );
 		$this->assertSame( Divi::section( '[mmbb_box id="9"]' ), $divi->page_marker( '[mmbb_box id="9"]', $builder ) );
 		$this->assertSame( Divi::section( '[mmbb_box id="9"]' ), $divi->page_marker( '<!-- wp:mmbb/box-builder {"campaignId":9} /-->', $builder ) );
+	}
+
+	/** The Divi Builder's query args and render actions count as builder requests, for editors only. */
+	public function test_divi_detects_builder_requests() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$this->assertFalse( Divi::is_builder_request(), 'A plain request.' );
+		$this->assertFalse( Divi::is_divi_5() );
+
+		$_GET['et_fb'] = '1';
+		$this->assertTrue( Divi::is_builder_request(), 'The Visual Builder.' );
+		wp_set_current_user( 0 );
+		$this->assertFalse( Divi::is_builder_request(), 'A shopper who adds ?et_fb=1 gets the box.' );
+		unset( $_GET['et_fb'] );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$_GET['et_pb_preview'] = 'true';
+		$this->assertTrue( Divi::is_builder_request(), 'The module preview.' );
+		unset( $_GET['et_pb_preview'] );
+
+		add_filter( 'wp_doing_ajax', '__return_true' );
+		$_REQUEST['action'] = 'et_fb_ajax_render_shortcode';
+		$this->assertTrue( Divi::is_builder_request(), 'Divi rendering a module over admin-ajax.' );
+		$_REQUEST['action'] = 'et_fb_retrieve_builder_data';
+		$this->assertTrue( Divi::is_builder_request() );
+		$_REQUEST['action'] = 'woocommerce_get_refreshed_fragments';
+		$this->assertFalse( Divi::is_builder_request(), 'Other admin-ajax calls.' );
+		remove_filter( 'wp_doing_ajax', '__return_true' );
+		$_REQUEST['action'] = 'et_fb_ajax_render_shortcode';
+		$this->assertFalse( Divi::is_builder_request(), 'The action counts only in admin-ajax.' );
+		unset( $_REQUEST['action'] );
+	}
+
+	/** The Divi integration answers `mmbb_is_page_builder_request`, which Renderer reads. */
+	public function test_divi_answers_the_builder_filter() {
+		$divi = new Divi();
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$this->assertFalse( Renderer::is_page_builder_request() );
+
+		add_filter( 'mmbb_is_page_builder_request', array( $divi, 'page_builder_request' ) );
+		$this->assertFalse( Renderer::is_page_builder_request() );
+		$_GET['et_fb'] = '1';
+		$this->assertTrue( Renderer::is_page_builder_request() );
+		$this->assertTrue( $divi->page_builder_request( true ), 'Another integration\'s yes is kept.' );
+		unset( $_GET['et_fb'] );
+		remove_filter( 'mmbb_is_page_builder_request', array( $divi, 'page_builder_request' ) );
+	}
+
+	/** Saving a box moves its shortcode out of a Text module on its Divi Builder page, once. */
+	public function test_divi_moves_the_shortcode_out_of_a_text_module_on_save() {
+		$admin = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		wp_set_current_user( $admin );
+		$divi    = new Divi();
+		$text    = '[et_pb_section fb_built="1"][et_pb_row][et_pb_column type="4_4"][et_pb_text]<p>[mmbb_box id="7"]</p>[/et_pb_text][/et_pb_column][/et_pb_row][/et_pb_section]';
+		$other   = '[et_pb_section][et_pb_row][et_pb_column type="4_4"][et_pb_text]<p>Hello</p>[/et_pb_text][/et_pb_column][/et_pb_row][/et_pb_section]';
+		$builder = self::factory()->post->create(
+			array(
+				'post_type'    => 'page',
+				'post_content' => $text . $other,
+			)
+		);
+		update_post_meta( $builder, '_et_pb_use_builder', 'on' );
+		$plain = self::factory()->post->create(
+			array(
+				'post_type'    => 'page',
+				'post_content' => $text,
+			)
+		);
+
+		$divi->migrate_text_module( 7, array( 'placement' => array( 'page_id' => $builder ) ) );
+		$after = get_post_field( 'post_content', $builder );
+		$this->assertSame( Divi::section( '[mmbb_box id="7"]' ) . $other, $after );
+
+		$modified = get_post_field( 'post_modified_gmt', $builder );
+		$divi->migrate_text_module( 7, array( 'placement' => array( 'page_id' => $builder ) ) );
+		$this->assertSame( $after, get_post_field( 'post_content', $builder ), 'A second save changes nothing.' );
+		$this->assertSame( $modified, get_post_field( 'post_modified_gmt', $builder ) );
+
+		$divi->migrate_text_module( 7, array( 'placement' => array( 'page_id' => $plain ) ) );
+		$this->assertSame( $text, get_post_field( 'post_content', $plain ), 'A page without the Divi Builder is left alone.' );
+
+		$divi->migrate_text_module( 8, array( 'placement' => array( 'page_id' => $builder ) ) );
+		$this->assertSame( $after, get_post_field( 'post_content', $builder ), 'Another box id is left alone.' );
 	}
 
 	/** A page made for a box gets Divi's no-sidebar layout, unless it already has a layout. */

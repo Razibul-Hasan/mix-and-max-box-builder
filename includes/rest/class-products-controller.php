@@ -216,6 +216,7 @@ class Products_Controller extends Base_Controller {
 			'stock_status'   => (string) $product->get_stock_status(),
 			'stock_quantity' => $product->managing_stock() ? $product->get_stock_quantity() : null,
 			'purchasable'    => (bool) $product->is_purchasable(),
+			'has_price'      => '' !== (string) $product->get_price(),
 			'image'          => $image,
 			'categories'     => $category_names,
 		);
@@ -289,6 +290,11 @@ class Products_Controller extends Base_Controller {
 				),
 				'purchasable'    => array(
 					'description' => __( 'Whether the product can be bought.', 'productboxes-mix-and-match-box-builder' ),
+					'type'        => 'boolean',
+					'context'     => array( 'view' ),
+				),
+				'has_price'      => array(
+					'description' => __( 'Whether the product has a price. Boxes leave out products without one.', 'productboxes-mix-and-match-box-builder' ),
 					'type'        => 'boolean',
 					'context'     => array( 'view' ),
 				),

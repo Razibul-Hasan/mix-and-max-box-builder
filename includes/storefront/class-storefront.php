@@ -111,9 +111,12 @@ final class Storefront {
 		return true;
 	}
 
-	/** With "Load assets only on pages with a builder" turned off, load them on every page. */
+	/**
+	 * With "Load assets only on pages with a builder" turned off, load them on every page,
+	 * except in a page builder's editor, where boxes are placeholders.
+	 */
 	public function maybe_enqueue_everywhere() {
-		if ( Settings::get( 'enabled' ) && ! Settings::get( 'assets_only_on_builder' ) ) {
+		if ( Settings::get( 'enabled' ) && ! Settings::get( 'assets_only_on_builder' ) && ! Renderer::is_page_builder_request() ) {
 			self::enqueue();
 		}
 	}

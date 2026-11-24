@@ -162,6 +162,10 @@ Visit the [ProductBoxes documentation and demos](https://bestwebexpert.com/produ
 * Fixed: Split and Bold templates on phones. Split cards are no longer too narrow, and the Bold header no longer spills past the box.
 * Fixed: the phone checkout bar and product cards now fit on small phones, even with items in the box.
 * Added: Divi theme compatibility. Boxes keep their own styling, the phone drawer and sticky summary clear Divi's fixed header, and publishing to a Divi Builder page adds the box as a Divi section.
+* Added: the Divi Visual Builder shows a live preview of the box and an "Edit box" link, instead of an empty box.
+* Fixed: saving a box moves its shortcode out of a Divi Text module into a Code module, so Divi no longer wraps it in paragraphs.
+* Added: store managers see a note above a box when products are hidden because they have no price, and the product picker flags those products.
+* Fixed: a box no longer fails with an error on pages that load an older version of React. Boxes added to the page after it loads now start too.
 
 = 2.0.3 =
 * Fixed: a box sold as "One line" did not include the download links in the customer's order email. The email now lists the files of every downloadable product in the box, and the order page and My Account → Downloads show them too, even when the box is the only item in the order.
@@ -203,7 +207,7 @@ Visit the [ProductBoxes documentation and demos](https://bestwebexpert.com/produ
 == Upgrade Notice ==
 
 = 2.0.4 =
-Adds Divi theme compatibility and fixes several templates on phones. No data changes.
+Adds Divi theme and Divi Builder compatibility, flags products hidden for having no price, and fixes several templates on phones. No data changes.
 
 = 2.0.3 =
 Fixes missing download links in customer emails for boxes sold as one line, shows your box image in the Boxes list, and adds a Plugins page. No data changes.

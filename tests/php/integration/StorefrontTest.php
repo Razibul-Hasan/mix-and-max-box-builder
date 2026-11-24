@@ -12,6 +12,7 @@ defined( 'ABSPATH' ) || exit;
 use MixMax\BoxBuilder\Campaigns\Campaign_Repository;
 use MixMax\BoxBuilder\Settings\Settings;
 use MixMax\BoxBuilder\Storefront\Payload;
+use MixMax\BoxBuilder\Storefront\Preview;
 use MixMax\BoxBuilder\Storefront\Storefront;
 
 /** Rendering, escaping, caching and who sees what. */
@@ -222,6 +223,104 @@ class StorefrontTest extends \WP_UnitTestCase {
 		get_user_by( 'id', $user )->add_cap( 'manage_woocommerce' );
 		wp_set_current_user( $user );
 		$this->assertStringContainsString( 'Box builders are disabled', do_shortcode( '[mmbb_box id="' . $this->campaign['id'] . '"]' ) );
+	}
+
+	/**
+	 * Sign in a store manager.
+	 *
+	 * @return int User id.
+	 */
+	private function sign_in_manager() {
+		$user = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		get_user_by( 'id', $user )->add_cap( 'manage_woocommerce' );
+		wp_set_current_user( $user );
+		return $user;
+	}
+
+	/** In a page builder's editor a manager gets a placeholder with a preview frame, and no assets load. */
+	public function test_page_builder_gets_a_placeholder() {
+		wp_dequeue_script( Storefront::HANDLE );
+		wp_dequeue_style( Storefront::HANDLE );
+		$this->sign_in_manager();
+		add_filter( 'mmbb_is_page_builder_request', '__return_true' );
+		$html = do_shortcode( '[mmbb_box id="' . $this->campaign['id'] . '"]' );
+		Settings::update( array( 'assets_only_on_builder' => false ) );
+		( new Storefront() )->maybe_enqueue_everywhere();
+		remove_filter( 'mmbb_is_page_builder_request', '__return_true' );
+
+		$this->assertStringContainsString( 'class="mmbb-builder-placeholder"', $html );
+		$this->assertStringContainsString( 'data-campaign="' . $this->campaign['id'] . '"', $html );
+		$this->assertStringContainsString( '<h2 class="mmbb-builder-placeholder__title"', $html );
+		$this->assertStringNotContainsString( '<b>box</b>', $html, 'The title is escaped.' );
+		$this->assertStringNotContainsString( 'data-mmbb-id', $html, 'The storefront script never mounts it.' );
+		$this->assertMatchesRegularExpression( '/<iframe class="mmbb-builder-placeholder__frame" src="[^"]*mmbb_preview=' . $this->campaign['id'] . '[^"]*" title="[^"]*" loading="lazy" style="[^"]*height:600px/', $html );
+		$this->assertStringContainsString( Preview::BARE_ARG . '=1', $html );
+		$this->assertMatchesRegularExpression( '/<a href="[^"]*page=mmbb-campaigns[^"]*action=edit[^"]*id=' . $this->campaign['id'] . '" target="_blank" rel="noopener">Edit box<\/a>/', $html );
+
+		$this->assertFalse( wp_script_is( Storefront::HANDLE, 'enqueued' ), 'Neither the shortcode nor "load everywhere" loads the script.' );
+		$this->assertFalse( wp_style_is( Storefront::HANDLE, 'enqueued' ) );
+	}
+
+	/** Someone who may edit pages but not manage the store gets the placeholder alone. */
+	public function test_page_builder_placeholder_without_store_access() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		add_filter( 'mmbb_is_page_builder_request', '__return_true' );
+		$html = do_shortcode( '[mmbb_box id="' . $this->campaign['id'] . '"]' );
+		remove_filter( 'mmbb_is_page_builder_request', '__return_true' );
+
+		$this->assertStringContainsString( 'mmbb-builder-placeholder__title', $html );
+		$this->assertStringContainsString( 'mmbb-builder-placeholder__label', $html );
+		$this->assertStringNotContainsString( '<iframe', $html );
+		$this->assertStringNotContainsString( 'Edit box', $html );
+	}
+
+	/** The box-only preview address opens the preview template even when a page holds the box. */
+	public function test_bare_preview_uses_the_box_only_template() {
+		$this->sign_in_manager();
+		$campaign = $this->repo->find( $this->campaign['id'] );
+		$this->assertStringNotContainsString( Preview::BARE_ARG, Preview::url( $campaign ) );
+
+		$_GET[ Preview::BARE_ARG ] = '1';
+		Preview::start( $campaign['id'] );
+		$this->assertSame( MMBB_PATH . 'includes/storefront/preview-template.php', apply_filters( 'template_include', 'page.php' ) );
+		unset( $_GET[ Preview::BARE_ARG ] );
+		Preview::reset();
+		remove_filter( 'template_include', array( Preview::class, 'template' ), 99 );
+		remove_action( 'wp_enqueue_scripts', array( Preview::class, 'enqueue' ) );
+		remove_filter( 'wp_robots', 'wp_robots_no_robots' );
+	}
+
+	/** Managers learn how many products are hidden for having no price; shoppers see nothing. */
+	public function test_no_price_notice() {
+		$id = $this->campaign['id'];
+		$this->sign_in_manager();
+		$this->assertStringNotContainsString( 'no price', do_shortcode( '[mmbb_box id="' . $id . '"]' ), 'No notice while every product has a price.' );
+
+		$ids = array( $this->products[1]->get_id(), $this->products[2]->get_id(), $this->products[3]->get_id() );
+		for ( $i = 1; $i <= 2; $i++ ) {
+			$product = new \WC_Product_Simple();
+			$product->set_name( 'Unpriced ' . $i );
+			$product->set_regular_price( '' );
+			$product->set_status( 'publish' );
+			$product->save();
+			$ids[] = $product->get_id();
+			if ( 1 === $i ) {
+				$this->repo->save( $id, array( 'products' => array( 'ids' => $ids ) ) );
+				$html = do_shortcode( '[mmbb_box id="' . $id . '"]' );
+				$this->assertStringContainsString( '1 product is hidden because it has no price.', $html );
+			}
+		}
+		$this->repo->save( $id, array( 'products' => array( 'ids' => $ids ) ) );
+
+		$html = do_shortcode( '[mmbb_box id="' . $id . '"]' );
+		$this->assertStringContainsString( '<p class="mmbb-builder-notice">2 products are hidden because they have no price.', $html );
+		$this->assertLessThan( strpos( $html, 'data-mmbb-id' ), strpos( $html, 'mmbb-builder-notice' ), 'The notice sits above the box.' );
+		$this->assertCount( 3, Payload::build( $this->repo->find( $id ) )['products'], 'The products themselves stay out of the box.' );
+
+		wp_set_current_user( 0 );
+		$html = do_shortcode( '[mmbb_box id="' . $id . '"]' );
+		$this->assertStringNotContainsString( 'mmbb-builder-notice', $html );
+		$this->assertStringContainsString( 'data-mmbb-id', $html );
 	}
 
 	/** Only a box from the same campaign preloads from `?mmbb_edit=`. */

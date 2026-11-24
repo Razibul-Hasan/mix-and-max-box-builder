@@ -25,6 +25,9 @@ final class Preview {
 	/** Query arg that carries the nonce. */
 	const NONCE_ARG = '_wpnonce';
 
+	/** Query arg that asks for the box alone, without the page around it. */
+	const BARE_ARG = 'mmbb_bare';
+
 	/** Capability needed to see a preview. */
 	const CAPABILITY = 'manage_woocommerce';
 
@@ -63,21 +66,24 @@ final class Preview {
 	 * id and a nonce are added.
 	 *
 	 * @param array $campaign Campaign from the repository.
+	 * @param bool  $bare     Show the box alone on the preview template, without the page's
+	 *                        header, footer and other content. For a frame inside a page builder.
 	 * @return string
 	 */
-	public static function url( array $campaign ) {
+	public static function url( array $campaign, $bare = false ) {
 		$page = Placement::page( $campaign );
 		$base = $page && 'publish' === $page->post_status ? get_permalink( $page ) : '';
 		if ( ! $base ) {
 			$base = home_url( '/' );
 		}
-		return add_query_arg(
-			array(
-				self::QUERY_ARG => (int) $campaign['id'],
-				self::NONCE_ARG => wp_create_nonce( self::nonce_action( $campaign['id'] ) ),
-			),
-			$base
+		$args = array(
+			self::QUERY_ARG => (int) $campaign['id'],
+			self::NONCE_ARG => wp_create_nonce( self::nonce_action( $campaign['id'] ) ),
 		);
+		if ( $bare ) {
+			$args[ self::BARE_ARG ] = '1';
+		}
+		return add_query_arg( $args, $base );
 	}
 
 	/**
@@ -148,6 +154,11 @@ final class Preview {
 		add_filter( 'wp_robots', 'wp_robots_no_robots' );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue' ) );
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- start() runs only for a preview whose nonce was verified.
+		if ( isset( $_GET[ self::BARE_ARG ] ) ) {
+			add_filter( 'template_include', array( self::class, 'template' ), 99 );
+			return;
+		}
 		if ( self::page_holds_box() ) {
 			return;
 		}

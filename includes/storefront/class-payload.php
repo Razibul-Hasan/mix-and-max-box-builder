@@ -11,6 +11,7 @@ use MixMax\BoxBuilder\Assets;
 use MixMax\BoxBuilder\Cart\Add_To_Cart;
 use MixMax\BoxBuilder\Cart\Box_Resolver;
 use MixMax\BoxBuilder\Cart\Box_Rules;
+use MixMax\BoxBuilder\Cart\Container_Products;
 use MixMax\BoxBuilder\Campaigns\Config;
 use MixMax\BoxBuilder\Currency;
 use MixMax\BoxBuilder\Pricing;
@@ -276,6 +277,27 @@ final class Payload {
 		$products = self::resolve_products( $campaign['config'], $threshold );
 		set_transient( $key, $products, self::CACHE_TTL );
 		return $products;
+	}
+
+	/**
+	 * How many of the box's published products have no price. WooCommerce does not sell a
+	 * product without a price, so the box leaves them out (see Box_Resolver::is_offerable()).
+	 * Not cached: only store managers see the count.
+	 *
+	 * @param array $config Campaign config.
+	 * @return int
+	 */
+	public static function unpriced_count( array $config ) {
+		$ids = array_slice( Box_Resolver::allowed_ids( $config ), 0, self::MAX_PRODUCTS );
+		self::prime_caches( $ids );
+		$count = 0;
+		foreach ( $ids as $id ) {
+			$product = wc_get_product( $id );
+			if ( $product instanceof \WC_Product && 'publish' === $product->get_status() && '' === (string) $product->get_price() && ! $product->is_purchasable() && ! Container_Products::is_container( $product ) ) {
+				++$count;
+			}
+		}
+		return $count;
 	}
 
 	/**
