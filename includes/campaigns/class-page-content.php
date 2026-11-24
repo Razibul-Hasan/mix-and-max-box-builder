@@ -54,14 +54,19 @@ final class Page_Content {
 	 * @param string $content      Existing post content.
 	 * @param int    $campaign_id  Campaign id.
 	 * @param bool   $uses_blocks  True when the content is block content.
+	 * @param string $marker       What to put first, such as the shortcode inside a page builder's
+	 *                             own section. Empty for the block or the shortcode.
 	 * @return string
 	 */
-	public static function prepend( $content, $campaign_id, $uses_blocks ) {
+	public static function prepend( $content, $campaign_id, $uses_blocks, $marker = '' ) {
 		$content = (string) $content;
 		if ( self::contains( $content, $campaign_id ) ) {
 			return $content;
 		}
-		$marker = $uses_blocks ? self::block( $campaign_id ) : self::shortcode( $campaign_id );
+		$marker = (string) $marker;
+		if ( '' === trim( $marker ) ) {
+			$marker = $uses_blocks ? self::block( $campaign_id ) : self::shortcode( $campaign_id );
+		}
 		return '' === trim( $content ) ? $marker : $marker . "\n\n" . $content;
 	}
 }

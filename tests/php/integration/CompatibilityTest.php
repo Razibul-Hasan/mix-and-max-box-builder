@@ -14,6 +14,7 @@ use MixMax\BoxBuilder\Cart\Container_Products;
 use MixMax\BoxBuilder\Compatibility\Compatibility;
 use MixMax\BoxBuilder\Compatibility\Integration;
 use MixMax\BoxBuilder\Compatibility\Plugins\Woo_Payments;
+use MixMax\BoxBuilder\Compatibility\Themes\Divi;
 use MixMax\BoxBuilder\Currency;
 use MixMax\BoxBuilder\Quotes;
 use MixMax\BoxBuilder\Settings\Settings;
@@ -115,6 +116,41 @@ class CompatibilityTest extends \WP_UnitTestCase {
 
 		$this->assertSame( 600, $quote['fee'] );
 		$this->assertSame( 2600, $quote['total'] );
+	}
+
+	/** Divi is not the test site's theme, so its integration stays off. */
+	public function test_divi_is_inactive_without_the_theme() {
+		$this->assertFalse( ( new Divi() )->is_active() );
+	}
+
+	/** Only a Divi Builder page gets the shortcode inside a Divi section. */
+	public function test_divi_wraps_the_marker_on_builder_pages_only() {
+		$divi    = new Divi();
+		$plain   = self::factory()->post->create_and_get( array( 'post_type' => 'page' ) );
+		$builder = self::factory()->post->create_and_get(
+			array(
+				'post_type'    => 'page',
+				'post_content' => '[et_pb_section][/et_pb_section]',
+			)
+		);
+		update_post_meta( $builder->ID, '_et_pb_use_builder', 'on' );
+
+		$this->assertSame( '[mmbb_box id="9"]', $divi->page_marker( '[mmbb_box id="9"]', $plain ) );
+		$this->assertSame( Divi::section( '[mmbb_box id="9"]' ), $divi->page_marker( '[mmbb_box id="9"]', $builder ) );
+		$this->assertSame( Divi::section( '[mmbb_box id="9"]' ), $divi->page_marker( '<!-- wp:mmbb/box-builder {"campaignId":9} /-->', $builder ) );
+	}
+
+	/** A page made for a box gets Divi's no-sidebar layout, unless it already has a layout. */
+	public function test_divi_gives_a_new_box_page_no_sidebar() {
+		$divi = new Divi();
+		$page = self::factory()->post->create( array( 'post_type' => 'page' ) );
+		$divi->page_layout( $page );
+		$this->assertSame( 'et_no_sidebar', get_post_meta( $page, '_et_pb_page_layout', true ) );
+
+		$kept = self::factory()->post->create( array( 'post_type' => 'page' ) );
+		update_post_meta( $kept, '_et_pb_page_layout', 'et_left_sidebar' );
+		$divi->page_layout( $kept );
+		$this->assertSame( 'et_left_sidebar', get_post_meta( $kept, '_et_pb_page_layout', true ) );
 	}
 
 	/** WooPayments is not installed in the test site, so its integration stays off. */

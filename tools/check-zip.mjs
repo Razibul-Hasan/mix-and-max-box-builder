@@ -44,6 +44,7 @@ const REQUIRED = [
 	'build/admin.js',
 	'build/storefront.js',
 	'build/button-boost.css',
+	'build/list-boost.css',
 	'build/blocks/box-builder/block.json',
 	'languages/README.txt',
 ];

@@ -36,6 +36,7 @@ final class Compatibility {
 			Themes\Generic::class,
 			Themes\Astra::class,
 			Themes\Blocksy::class,
+			Themes\Divi::class,
 			Themes\Elastra::class,
 			Themes\Extendable::class,
 			Themes\Inspiro::class,

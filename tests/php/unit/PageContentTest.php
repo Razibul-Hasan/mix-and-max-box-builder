@@ -51,4 +51,15 @@ class PageContentTest extends TestCase {
 		$already = "<p>Hi</p>\n[mmbb_box id=\"5\"]";
 		$this->assertSame( $already, Page_Content::prepend( $already, 5, false ) );
 	}
+
+	/** A page builder's own wrapper replaces the bare marker, and an empty one falls back to it. */
+	public function test_prepend_uses_a_given_marker() {
+		$marker = '[section][mmbb_box id="5"][/section]';
+		$this->assertSame( $marker . "\n\n[section]Old[/section]", Page_Content::prepend( '[section]Old[/section]', 5, false, $marker ) );
+		$this->assertSame( "[mmbb_box id=\"5\"]\n\n<p>Shop</p>", Page_Content::prepend( '<p>Shop</p>', 5, false, '  ' ) );
+
+		$placed = $marker . "\n\n[section]Old[/section]";
+		$this->assertTrue( Page_Content::contains( $placed, 5 ) );
+		$this->assertSame( $placed, Page_Content::prepend( $placed, 5, false, $marker ) );
+	}
 }

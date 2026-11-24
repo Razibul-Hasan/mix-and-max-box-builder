@@ -681,6 +681,9 @@
 
   .mmbb-root .mmbb-bar__chev { display: none; }
 
+  /* A filled box's total at 22px left too little room for the count and the button on a phone. */
+  .mmbb-root .mmbb-bar__total b { font-size: 18px; line-height: 24px; }
+
   .mmbb-root .mmbb-bar .mmbb-btn { min-width: 0; min-height: calc(var(--space-3) * 4); height: auto; padding: var(--space-2) var(--space-3); font-size: 14px; line-height: 20px; white-space: normal; }
 }
 

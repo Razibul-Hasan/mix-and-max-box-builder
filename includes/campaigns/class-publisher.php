@@ -124,7 +124,19 @@ final class Publisher {
 		}
 
 		$page_id = wp_insert_post( $post, true );
-		return is_wp_error( $page_id ) ? $page_id : (int) $page_id;
+		if ( is_wp_error( $page_id ) ) {
+			return $page_id;
+		}
+
+		/**
+		 * A page was created to hold only this campaign's builder. A theme integration can give
+		 * it the theme's best layout for a box, such as no sidebar.
+		 *
+		 * @param int $page_id     Page id.
+		 * @param int $campaign_id Campaign id.
+		 */
+		do_action( 'mmbb_box_page_created', (int) $page_id, $campaign_id );
+		return (int) $page_id;
 	}
 
 	/**
@@ -144,7 +156,24 @@ final class Publisher {
 			return new \WP_Error( 'mmbb_cannot_edit_page', __( 'You are not allowed to edit that page.', 'productboxes-mix-and-match-box-builder' ), array( 'status' => 403 ) );
 		}
 
-		$content = Page_Content::prepend( $page->post_content, $campaign_id, has_blocks( $page->post_content ) || '' === trim( $page->post_content ) );
+		$uses_blocks = has_blocks( $page->post_content ) || '' === trim( $page->post_content );
+
+		/**
+		 * What goes first on an existing page: the block for block content, the shortcode for
+		 * classic content. A page builder that keeps its layout in the content (Divi) can wrap the
+		 * shortcode in its own section, so its editor keeps the builder in place.
+		 *
+		 * @param string   $marker      Block or shortcode.
+		 * @param \WP_Post $page        The page.
+		 * @param int      $campaign_id Campaign id.
+		 */
+		$marker  = apply_filters(
+			'mmbb_page_marker',
+			$uses_blocks ? Page_Content::block( $campaign_id ) : Page_Content::shortcode( $campaign_id ),
+			$page,
+			$campaign_id
+		);
+		$content = Page_Content::prepend( $page->post_content, $campaign_id, $uses_blocks, is_string( $marker ) ? $marker : '' );
 		if ( $content !== $page->post_content ) {
 			$result = wp_update_post(
 				array(
